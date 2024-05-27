@@ -1,5 +1,4 @@
 const {get, OAuth2Requester} = require('@friggframework/core');
-const moment = require('moment');
 
 class Api extends OAuth2Requester {
     constructor(params) {
@@ -8,7 +7,7 @@ class Api extends OAuth2Requester {
         this.baseUrl = `https://api.zoom.us/v2/`;
         this.client_id = process.env.ZOOM_CLIENT_ID;
         this.client_secret = process.env.ZOOM_CLIENT_SECRET;
-        this.redirect_uri = 'https://29a3f7035dbb.ngrok.io';
+        this.redirect_uri = process.env.REDIRECT_URI;
 
         this.authorizationUri = encodeURI(
             `https://zoom.us/oauth/authorize?client_id=${this.client_id}&response_type=code&redirect_uri=${this.redirect_uri}`
@@ -67,8 +66,7 @@ class Api extends OAuth2Requester {
     async createNewMeeting(userId, topic) {
         console.log('createNewMeeting');
         let url = `users/${userId}/meetings`;
-        let time = moment().format();
-        let startTime = time.slice(0, -6) + 'Z';
+				let startTime = new Date().toISOString();
         let body = {
             topic: topic,
             type: 2,

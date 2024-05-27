@@ -66,7 +66,7 @@ class Api extends OAuth2Requester {
     async createNewMeeting(userId, topic) {
         console.log('createNewMeeting');
         let url = `users/${userId}/meetings`;
-				let startTime = new Date().toISOString();
+        let startTime = new Date().toISOString();
         let body = {
             topic: topic,
             type: 2,

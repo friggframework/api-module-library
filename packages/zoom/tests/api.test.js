@@ -11,7 +11,7 @@ const api = new Api(apiParams);
 
 const getRandomId = () => randomBytes(10).toString('hex');
 
-describe(`${config.label} Zoom API tests`, () => {
+describe(`${config.label} API tests`, () => {
 
     beforeEach(() => {
         jest.clearAllMocks();

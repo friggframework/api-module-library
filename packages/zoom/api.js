@@ -7,7 +7,6 @@ class Api extends OAuth2Requester {
         this.baseUrl = `https://api.zoom.us/v2/`;
         this.client_id = process.env.ZOOM_CLIENT_ID;
         this.client_secret = process.env.ZOOM_CLIENT_SECRET;
-        this.redirect_uri = process.env.REDIRECT_URI;
 
         this.authorizationUri = encodeURI(
             `https://zoom.us/oauth/authorize?client_id=${this.client_id}&response_type=code&redirect_uri=${this.redirect_uri}`

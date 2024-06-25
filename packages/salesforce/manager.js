@@ -23,8 +23,8 @@ class Manager extends ModuleManager {
 
         // initializes the credentials and the Api
         const salesforceParams = {delegate: instance};
-        salesforceParams.key = process.env.SALESFORCE_CONSUMER_KEY;
-        salesforceParams.secret = process.env.SALESFORCE_CONSUMER_SECRET;
+        salesforceParams.client_id = process.env.SALESFORCE_CONSUMER_KEY;
+        salesforceParams.client_secret = process.env.SALESFORCE_CONSUMER_SECRET;
         salesforceParams.redirect_uri = `${process.env.REDIRECT_URI}/salesforce`;
 
         if (params.entityId) {

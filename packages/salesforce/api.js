@@ -5,8 +5,8 @@ class Api extends OAuth2Requester {
     constructor(params) {
         super(params);
         this.jsforce = jsforce;
-        this.key = get(params, 'key');
-        this.secret = get(params, 'secret');
+        this.key = get(params, 'client_id');
+        this.secret = get(params, 'client_secret');
         this.instanceUrl = get(params, 'instanceUrl', null);
         this.isSandbox = get(params, 'isSandbox', false);
         if (this.isSandbox) {
@@ -15,8 +15,8 @@ class Api extends OAuth2Requester {
             this.loginUrl = 'https://login.salesforce.com';
         }
         this.oauth2 = new jsforce.OAuth2({
-            clientId: this.key,
-            clientSecret: this.secret,
+            clientId: this.client_id,
+            clientSecret: this.client_secret,
             redirectUri: this.redirect_uri,
             loginUrl: this.loginUrl,
         });
@@ -47,8 +47,8 @@ class Api extends OAuth2Requester {
 
     resetToSandbox() {
         this.oauth2 = new jsforce.OAuth2({
-            clientId: this.key,
-            clientSecret: this.secret,
+            clientId: this.client_id,
+            clientSecret: this.client_secret,
             redirectUri: this.redirectUri,
             loginUrl: 'https://test.salesforce.com',
         });
@@ -59,6 +59,7 @@ class Api extends OAuth2Requester {
             refreshToken: this.refresh_token,
             instanceUrl: this.instanceUrl,
         });
+        this.isSandbox = true;
     }
 
     async getAccessToken(code) {
@@ -83,6 +84,10 @@ class Api extends OAuth2Requester {
         this.instanceUrl = this.conn.instanceUrl;
         await this.setTokens(OAuthDetails);
         return this.conn.accessToken;
+    }
+
+    async getUserInfo() {
+        return this.get('User', this.conn.userInfo.id);
     }
 
     async create(object, data) {

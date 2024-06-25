@@ -1,5 +1,4 @@
-const {Entity: Parent} = require('@friggframework/core');
-const mongoose = require('mongoose');
+const {Entity: Parent, mongoose} = require('@friggframework/core');
 
 const schema = new mongoose.Schema({
     isSandbox: Boolean,

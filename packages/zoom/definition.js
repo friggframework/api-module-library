@@ -18,8 +18,8 @@ const Definition = {
         getEntityDetails: async function (api, callbackParams, tokenResponse, userId) {
             const userDetails = await api.getUserDetails();
             return {
-                identifiers: {externalId: userDetails.portalId, user: userId},
-                details: {name: userDetails.hub_domain},
+                identifiers: {externalId: userDetails.id, user: userId},
+                details: {name: userDetails.display_name},
             }
         },
         apiPropertiesToPersist: {
@@ -31,7 +31,7 @@ const Definition = {
         getCredentialDetails: async function (api, userId) {
             const userDetails = await api.getUserDetails();
             return {
-                identifiers: {externalId: userDetails.portalId, user: userId},
+                identifiers: {externalId: userDetails.id, user: userId},
                 details: {}
             };
         },
@@ -42,6 +42,7 @@ const Definition = {
     env: {
         client_id: process.env.ZOOM_CLIENT_ID,
         client_secret: process.env.ZOOM_CLIENT_SECRET,
+        redirect_uri: `${process.env.REDIRECT_URI}/zoom`,
     }
 };
 

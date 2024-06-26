@@ -12,6 +12,10 @@ class Api extends OAuth2Requester {
             `https://zoom.us/oauth/authorize?client_id=${this.client_id}&response_type=code&redirect_uri=${this.redirect_uri}`
         );
 
+        this.URLs = {
+            user: 'users/me',
+        }
+
         this.tokenUri = `https://zoom.us/oauth/token`;
 
         this.access_token = get(params, 'access_token', null);
@@ -19,7 +23,15 @@ class Api extends OAuth2Requester {
     }
 
     async getTokenFromCode(code) {
+        delete this.access_token;
         return await this.getTokenFromCodeBasicAuthHeader(code);
+    }
+
+    async getUserDetails() {
+        const options = {
+            url: this.baseUrl + this.URLs.user,
+        }
+        return this._get(options);
     }
 
     async getUserList() {

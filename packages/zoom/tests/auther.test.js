@@ -1,40 +1,52 @@
 const {connectToDatabase, disconnectFromDatabase, createObjectId, Auther} = require('@friggframework/core');
-const {Authenticator, testAutherDefinition} = require('@friggframework/devtools');
+const {testAutherDefinition} = require('@friggframework/devtools');
+const {Authenticator} = require('@friggframework/test');
 const {Definition} = require('../definition');
 
 
 const mocks = {
     getUserDetails: {
-        "portalId": 111111111,
-        "timeZone": "US/Eastern",
-        "accountType": "DEVELOPER_TEST",
-        "currency": "USD",
-        "utcOffset": "-05:00",
-        "utcOffsetMilliseconds": -18000000,
-        "token": "test-token",
-        "user": "projectteam@lefthook.co",
-        "hub_domain": "Testing Object Things-dev-44613847.com",
-        "scopes": [
-            "content",
-            "oauth",
-            "crm.objects.contacts.read",
-            "crm.objects.contacts.write",
-            "crm.objects.companies.write",
-            "crm.objects.companies.read",
-            "crm.objects.deals.read",
-            "crm.schemas.deals.read"
+        "id": "<id>",
+        "first_name": "Jane",
+        "last_name": "Doe",
+        "display_name": "Jane Doe",
+        "email": "jane.doe@lefthook.com",
+        "type": 1,
+        "role_name": "Owner",
+        "pmi": 0,
+        "use_pmi": false,
+        "personal_meeting_url": "https://us04web.zoom.us/j/redacted?pwd=redacted",
+        "timezone": "",
+        "verified": 0,
+        "dept": "",
+        "created_at": "2023-07-26T14:16:21Z",
+        "last_login_time": "2024-06-26T15:58:30Z",
+        "last_client_version": "5.17.11.34827(win)",
+        "pic_url": "https://us04web.zoom.us/p/v2/",
+        "cms_user_id": "",
+        "jid": "test@xmpp.zoom.us",
+        "group_ids": [],
+        "im_group_ids": [],
+        "account_id": "<account_id>",
+        "language": "en-US",
+        "phone_country": "",
+        "phone_number": "",
+        "status": "active",
+        "job_title": "",
+        "location": "",
+        "login_types": [
+            1
         ],
-        "hub_id": 111111111,
-        "app_id": 22222222,
-        "expires_in": 1704,
-        "user_id": 33333333,
-        "token_type": "access"
+        "role_id": "0",
+        "cluster": "us04",
+        "user_created_at": "2023-07-26T14:16:21Z"
     },
     tokenResponse: {
+        "access_token": "redacted",
         "token_type": "bearer",
-        "refresh_token": "test-refresh-token",
-        "access_token": "test-access-token",
-        "expires_in": 1800
+        "refresh_token": "redacted",
+        "expires_in": 3599,
+        "scope": "user:read:user user:read:email meeting:read:list_meetings meeting:write:meeting meeting:update:meeting"
     },
     authorizeResponse: {
         "base": "/redirect/zoom",
@@ -65,7 +77,7 @@ describe.skip('Zoom Module Live Tests', () => {
 
     describe('getAuthorizationRequirements() test', () => {
         it('should return auth requirements', async () => {
-            const requirements = module.getAuthorizationRequirements();
+            const requirements = await module.getAuthorizationRequirements();
             expect(requirements).toBeDefined();
             expect(requirements.type).toEqual('oauth2');
             expect(requirements.url).toBeDefined();
@@ -86,7 +98,8 @@ describe.skip('Zoom Module Live Tests', () => {
             expect(firstRes.entity_id).toBeDefined();
             expect(firstRes.credential_id).toBeDefined();
         });
-        it.skip('retrieves existing entity on subsequent calls', async () => {
+        it('retrieves existing entity on subsequent calls', async () => {
+            await new Promise(resolve => setTimeout(resolve, 1000));
             const response = await Authenticator.oauth2(authUrl);
             const res = await module.processAuthorizationCallback({
                 data: {
@@ -94,6 +107,11 @@ describe.skip('Zoom Module Live Tests', () => {
                 },
             });
             expect(res).toEqual(firstRes);
+        });
+        it('refresh the token', async () => {
+            module.api.access_token = 'foobar';
+            const res = await module.testAuth();
+            expect(res).toBeTruthy();
         });
     });
     describe('Test credential retrieval and module instantiation', () => {

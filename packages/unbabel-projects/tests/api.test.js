@@ -19,7 +19,7 @@ describe('Unbabel Projects API Tests', () => {
     });
 
     describe('OAuth Flow Tests', () => {
-        it('Should generate an tokens', async () => {
+        it('Should generate a tokens', async () => {
             expect(api.access_token).not.toBeNull();
             expect(api.refresh_token).not.toBeNull();
         });
@@ -41,7 +41,7 @@ describe('Unbabel Projects API Tests', () => {
     });
 
     it('Test auth request', async () => {
-        const supportedExtensions = await api.getSupportedExtensions();
+        const {results: supportedExtensions} = await api.getSupportedExtensions();
         expect(supportedExtensions).toBeDefined();
         expect(supportedExtensions).toHaveProperty('length');
     });

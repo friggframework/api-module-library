@@ -23,7 +23,7 @@ const mocks = {
         refresh_token: 'redacted'
     },
     getSupportedExtensions: {
-        results: {}
+        results: []
     }
 }
 

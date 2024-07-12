@@ -21,5 +21,8 @@
   },
   "dependencies": {
     "@friggframework/core": "^1.1.2"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

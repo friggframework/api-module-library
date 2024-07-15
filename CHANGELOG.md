@@ -1,3 +1,26 @@
+# (Mon Jul 15 2024)
+
+:tada: This release contains work from a new contributor! :tada:
+
+Thank you, Igor Schechtel ([@igorschechtel](https://github.com/igorschechtel)), for all your work!
+
+#### 🐛 Bug Fix
+
+- `@friggframework/api-module-asana@1.1.4`, `@friggframework/api-module-unbabel-projects@1.0.1`, `@friggframework/api-module-unbabel@1.1.3`, `@friggframework/api-module-zoho-crm@1.0.1`
+  - Unbabel Projects, Asana, and Zoho CRM [#10](https://github.com/friggframework/api-module-library/pull/10) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- `@friggframework/api-module-asana@1.1.4`
+  - Add API module for Asana [#2](https://github.com/friggframework/api-module-library/pull/2) ([@igorschechtel](https://github.com/igorschechtel))
+- `@friggframework/api-module-zoho-crm@1.0.1`
+  - Added Zoho CRM API module [#4](https://github.com/friggframework/api-module-library/pull/4) ([@aaj](https://github.com/aaj))
+
+#### Authors: 3
+
+- [@MichaelRyanWebber](https://github.com/MichaelRyanWebber)
+- Armando Alvarado ([@aaj](https://github.com/aaj))
+- Igor Schechtel ([@igorschechtel](https://github.com/igorschechtel))
+
+---
+
 # (Thu May 09 2024)
 
 :tada: This release contains work from a new contributor! :tada:

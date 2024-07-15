@@ -21,8 +21,6 @@ const parsedBody = async function async(resp) {
 }
 
 describe(`${config.label} API tests`, () => {
-
-
     const apiParams = {
         client_id: process.env.HUBSPOT_CLIENT_ID,
         client_secret: process.env.HUBSPOT_CLIENT_SECRET,
@@ -56,6 +54,8 @@ describe(`${config.label} API tests`, () => {
 
         await api.getTokenFromCode(response.data.code);
     });
+
+    const testObjType = 'tests';
 
     describe('HS User Info', () => {
         it('should return the user details', async () => {
@@ -548,7 +548,6 @@ describe(`${config.label} API tests`, () => {
 
     describe('HS Custom Objects', () => {
         let allCustomObjects;
-        const testObjType = 'tests';
         let oneWord;
         const createWord = 'Test Custom Object Create';
         const updateWord = 'Test Custom Object Update';
@@ -733,6 +732,10 @@ describe(`${config.label} API tests`, () => {
             // HS has a typo in the response "recordsIds" instead of "recordIds"
             expect(response.recordsIdsAdded).toHaveLength(1);
         })
+        it('Should remove all records from list', async () => {
+            const response = await api.removeAllListMembers(createdListId);
+            expect(response.status).toBe(204);
+        })
         it('Should delete a list', async () => {
             const response = await api.deleteList(createdListId);
             expect(response).toBeDefined();
@@ -745,7 +748,204 @@ describe(`${config.label} API tests`, () => {
             const labels = await api.getAssociationLabels('COMPANY', 'CONTACT');
             expect(labels).toBeDefined();
             expect(labels.results).toHaveProperty('length');
-            expect(labels.results.find(label => label.label === 'Primary')).toBeTruthy();
+            expect(labels.results.find(label => label.label && label.label.includes('Primary'))).toBeTruthy();
         })
+
+        let createdBatch;
+        let toCompany;
+        beforeAll(async () => {
+            const batchSize = 20;
+            const range = Array.from({length: batchSize}, (_, i) => i);
+            const objectsToCreate = range.map(i => ({
+                properties: {
+                    word: `Test Bulk Create ${Date.now()}${i}`
+                },
+            }))
+            const response = await api.bulkCreateCustomObjects(
+                testObjType,
+                {inputs: objectsToCreate}
+            );
+            expect(response.results).toHaveProperty('length');
+            expect(response.results.length).toBe(batchSize);
+            createdBatch = response.results;
+
+            const companyResponse = await api.listCompanies();
+            toCompany = companyResponse.results[0].id;
+        })
+
+        it('Should create batch default associations', async () => {
+            const inputs = createdBatch.map(o => {
+                return {
+                    from: {id: o.id},
+                    to: {id: toCompany}
+                }
+            });
+            const response = await api.createBatchAssociationsDefault(
+                testObjType,
+                'COMPANY',
+                inputs
+            );
+            expect(response).toBeDefined();
+            expect(response).toHaveProperty('length');
+            expect(response.length).toBe(createdBatch.length * 2);
+        })
+
+        let createdLabel;
+        it('Should create a test association label', async () => {
+            const response = await api.createAssociationLabel(testObjType, 'COMPANY', {
+                inverseLabel: 'ooF',
+                name: 'Foo',
+                label: 'Foo',
+            });
+            expect(response).toBeDefined();
+            const {results} = response;
+            expect(results).toHaveProperty('length');
+            expect(results.length).toBe(2);
+            expect(results.find(label => label.label && label.label === 'Foo')).toBeTruthy();
+            createdLabel = results.find(label => label.label && label.label === 'Foo');
+        })
+
+        it('Should get association labels', async () => {
+            const labels = await api.getAssociationLabels(testObjType, 'COMPANY');
+            expect(labels).toBeDefined();
+            expect(labels.results).toHaveProperty('length');
+            expect(labels.results.find(label => label.label && label.label === 'Foo')).toBeTruthy();
+            const created = labels.results.find(label => label.label && label.label === 'Foo');
+            expect(created).toEqual(createdLabel);
+        })
+
+        it('Should associate a batch of objects', async () => {
+            const inputs = createdBatch.map(o => {
+                return {
+                    types: [{
+                        associationCategory: createdLabel.category,
+                        associationTypeId: createdLabel.typeId
+                    }],
+                    from: {id: o.id},
+                    to: {id: toCompany}
+                }
+            });
+            const response = await api.createBatchAssociations(
+                testObjType,
+                'COMPANY',
+                inputs
+            );
+            expect(response).toBeDefined();
+            expect(response).toHaveProperty('length');
+            expect(response.length).toBe(createdBatch.length);
+        });
+
+        it('Should read the associations of a batch of objects', async () => {
+            const inputs = createdBatch.map(o => ({id: o.id}));
+            const response = await api.getBatchAssociations(
+                testObjType,
+                'COMPANY',
+                inputs
+            )
+            expect(response).toBeDefined();
+            expect(response).toHaveProperty('length');
+            expect(response.length).toBe(createdBatch.length);
+            for (const a of response) {
+                expect(a).toHaveProperty('to');
+                expect(a.to[0].associationTypes).toHaveProperty('length');
+                expect(a.to[0].associationTypes.some(t => t.typeId === createdLabel.typeId)).toBe(true);
+            }
+        })
+
+        it('Should remove the specific labelled associations of a batch of objects', async () => {
+            const inputs = createdBatch.map(o => {
+                return {
+                    types: [{
+                        associationCategory: createdLabel.category,
+                        associationTypeId: createdLabel.typeId
+                    }],
+                    from: {id: o.id},
+                    to: {id: toCompany}
+                }
+            });
+            const response = await api.deleteBatchAssociationLabels(
+                testObjType,
+                'COMPANY',
+                inputs
+            );
+            expect(response).toBeDefined();
+            expect(response.status).toBe(204);
+        })
+
+        it('Should delete an association label', async () => {
+            const response = await api.deleteAssociationLabel(testObjType, 'COMPANY', createdLabel.typeId);
+            expect(response).toBeDefined();
+            expect(response.status).toBe(204);
+        })
+
+        afterAll(async () => {
+            const inputs = createdBatch.map(o => {
+                return {id: o.id}
+            });
+            const response = await api.bulkArchiveCustomObjects(
+                testObjType,
+                {
+                    inputs
+                }
+            );
+            expect(response).toBeDefined();
+            expect(response).toBe("");
+        });
+    });
+
+    describe('Properties requests', () => {
+        let groupeName;
+        it('Should retrieve a property', async () => {
+            const response = await api.getPropertyByName('tests', 'word');
+            expect(response).toBeDefined();
+            expect(response).toHaveProperty('label');
+            expect(response.label).toBe('Word');
+            groupeName = response.groupName;
+        });
+
+        it('Should create a property', async () => {
+            const response = await api.createProperty('tests', {
+                "name": "test_field",
+                "label": "Test Field",
+                "type": "enumeration",
+                "fieldType": "select",
+                "groupName": groupeName,
+                "description": "A test of enumerated fields",
+                "options": [
+                    {
+                        "label": "Item One",
+                        "value": "item_one"
+                    },
+                    {
+                        "label": "Item Two",
+                        "value": "item_two"
+                    }
+                ]
+            });
+            expect(response).toBeDefined();
+            expect(response).toHaveProperty('label');
+            expect(response.name).toBe('test_field');
+        });
+
+        it('Should update a property', async () => {
+            const existing = await api.getPropertyByName('tests', 'test_field');
+            existing.options.push(
+                {
+                    "label": "Item Three",
+                    "value": "item_three",
+                }
+            )
+            const response = await api.updateProperty('tests', 'test_field', existing);
+            expect(response).toBeDefined();
+            expect(response).toHaveProperty('options');
+            expect(response.options.some(o => o.label === 'Item Three')).toBeTruthy();
+        });
+
+        it('Should delete a property', async () => {
+            const response = await api.deleteProperty('tests', 'test_field');
+            expect(response).toBeDefined();
+            expect(response.status).toBe(204);
+        })
+
     })
 });

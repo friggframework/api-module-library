@@ -15,10 +15,19 @@ class Api extends ApiKeyRequester {
             appleSearch: 'ios/apps/search.json',
             appleQuery: 'ios/apps/query.json',
             tencentLookup: 'tencent/android/apps/lookup.json',
-            amazonLookup: 'amazon/android/apps/lookup.json'
+            amazonLookup: 'amazon/android/apps/lookup.json',
+            sdks: 'sdks/search.json'
         }
         this.URLs = {}
         this.generateUrls();
+        // v1 schema json
+        this.v1BaseUrl = 'https://data.42matters.com/api/';
+        this.v1Endpoints = {
+            androidCountries: 'meta/android/apps/app_countries.json',
+            iosCountries: 'meta/ios/apps/app_countries.json',
+            androidCategories: 'meta/android/apps/app_categories.json',
+            iosCategories: 'meta/ios/apps/app_secondary_genres.json',
+        }
     }
 
     generateUrls() {
@@ -67,6 +76,45 @@ class Api extends ApiKeyRequester {
     async getAccountStatus() {
         const options = {
             url: this.URLs.accountStatus
+        }
+        return this._get(options);
+    }
+
+    async getGoogleCategories() {
+        const options = {
+            url: this.v1BaseUrl + this.v1Endpoints.androidCategories
+        }
+        return this._get(options);
+    }
+
+    async getAppleGenres() {
+        const options = {
+            url: this.v1BaseUrl + this.v1Endpoints.iosCategories
+        }
+        return this._get(options);
+    }
+
+    async getGoogleCountries() {
+        const options = {
+            url: this.v1BaseUrl + this.v1Endpoints.androidCountries
+        }
+        return this._get(options);
+    }
+
+    async getAppleCountries() {
+        const options = {
+            url: this.v1BaseUrl + this.v1Endpoints.iosCountries
+        }
+        return this._get(options);
+    }
+
+    async getSDKs() {
+        const options = {
+            url: this.URLs.sdks,
+            query: {
+                platform: 'all',
+                q: '*'
+            }
         }
         return this._get(options);
     }

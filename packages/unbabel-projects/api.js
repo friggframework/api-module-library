@@ -1,4 +1,4 @@
-const {get,} = require('core');
+const {get, OAuth2Requester} = require('@friggframework/core');
 
 class Api extends OAuth2Requester {
     constructor(params) {
@@ -77,13 +77,16 @@ class Api extends OAuth2Requester {
         return this._get(options);
     }
 
-    async createProject(body) {
+    async createProject(body, webhookUrl= null) {
         const options = {
             url: this.URLs.projects,
             body,
             headers: {
                 'Content-Type': 'application/json',
             },
+        }
+        if (webhookUrl) {
+            options.headers.Link = `${webhookUrl}; rel="delivery-callback"`;
         }
         return this._post(options);
     }
@@ -94,6 +97,62 @@ class Api extends OAuth2Requester {
         }
         return this._get(options);
     }
+
+    async submitProject(projectId) {
+        const options = {
+            url: this.URLs.projectById(projectId) + ':submit',
+        }
+        return this._post(options);
+    }
+    async cancelProject(projectId) {
+        // only works on pre-submitted projects
+        const options = {
+            url: this.URLs.projectById(projectId),
+        }
+        return this._delete(options);
+    }
+
+    async addFileToProject(projectId, name, description, extension, tags= null) {
+        const fileDefinition = {
+            name,
+            description,
+            extension,
+        }
+        if (tags) {
+            // should be of the form { tag: ['tag1', 'tag2'] }
+            fileDefinition.tags = tags
+        }
+        const options = {
+            url: this.URLs.projectFiles(projectId),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: fileDefinition
+        }
+        return this._post(options);
+    }
+
+    getFile(projectId, fileId) {
+        const options = {
+            url: this.URLs.projectFileById(projectId, fileId),
+        }
+        return this._get(options);
+    }
+
+    uploadFile(uploadUrl, file, webhookUrl= null) {
+        const options = {
+            method: 'PUT',
+            body: file,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }
+        if (webhookUrl) {
+            options.headers['Link'] = `${webhookUrl};`
+        }
+        return fetch(uploadUrl, options);
+    }
+
 }
 
 module.exports = {Api};

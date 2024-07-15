@@ -26,8 +26,16 @@ class Api extends OAuth2Requester {
             deals: '/crm/v3/objects/deals',
             dealById: (dealId) => `/crm/v3/objects/deals/${dealId}`,
             searchDeals: '/crm/v3/objects/deals/search',
-            getBatchAssociations: (fromObject, toObject) =>
-                `/crm/v3/associations/${fromObject}/${toObject}/batch/read`,
+            readBatchAssociations: (fromObjectType, toObjectType) =>
+                `/crm/v4/associations/${fromObjectType}/${toObjectType}/batch/read`,
+            createBatchAssociations: (fromObjectType, toObjectType) =>
+                `/crm/v4/associations/${fromObjectType}/${toObjectType}/batch/create`,
+            createBatchAssociationsDefault: (fromObjectType, toObjectType) =>
+                `/crm/v4/associations/${fromObjectType}/${toObjectType}/batch/associate/default`,
+            deleteBatchAssociations: (fromObjectType, toObjectType) =>
+                `/crm/v4/associations/${fromObjectType}/${toObjectType}/batch/archive`,
+            deleteBatchAssociationLabels: (fromObjectType, toObjectType) =>
+                `/crm/v4/associations/${fromObjectType}/${toObjectType}/batch/labels/archive`,
             v1DealInfo: (dealId) => `/deals/v1/deal/${dealId}`,
             getPipelineDetails: (objType) => `/crm/v3/pipelines/${objType}`,
             getOwnerById: (ownerId) => `/owners/v2/owners/${ownerId}`,
@@ -59,7 +67,8 @@ class Api extends OAuth2Requester {
             lists: '/crm/v3/lists',
             listById: (listId) => `/crm/v3/lists/${listId}`,
             listSearch: '/crm/v3/lists/search',
-            listMembership: (listId) => `/crm/v3/lists/${listId}/memberships/add-and-remove`,
+            listMemberships: (listId) => `/crm/v3/lists/${listId}/memberships`,
+            listMembershipsAddRemove: (listId) => `/crm/v3/lists/${listId}/memberships/add-and-remove`,
             associations: (fromObject, toObject) => `/crm/v4/associations/${fromObject}/${toObject}`,
             associationLabels: (fromObject, toObject) => `/crm/v4/associations/${fromObject}/${toObject}/labels`,
 
@@ -833,23 +842,71 @@ class Api extends OAuth2Requester {
         return this._get(options);
     }
 
-    async batchGetAssociations(params) {
-        const fromObject = get(params, 'fromObject');
-        const toObject = get(params, 'toObject');
-        const inputs = get(params, 'inputs');
-
+    async getBatchAssociations(fromObjectType, toObjectType, inputs) {
         const postBody = {inputs};
 
         const options = {
             url:
                 this.baseUrl +
-                this.URLs.getBatchAssociations(fromObject, toObject),
+                this.URLs.readBatchAssociations(fromObjectType, toObjectType),
             body: postBody,
         };
 
         const res = await this._post(options);
         const {results} = res;
         return results;
+    }
+
+    async createBatchAssociations(fromObjectType, toObjectType, inputs) {
+        const postBody = {inputs};
+
+        const options = {
+            url:
+                this.baseUrl +
+                this.URLs.createBatchAssociations(fromObjectType, toObjectType),
+            body: postBody,
+        };
+
+        const res = await this._post(options);
+        const {results} = res;
+        return results;
+    }
+
+    async createBatchAssociationsDefault(fromObjectType, toObjectType, inputs) {
+        const options = {
+            url:
+                this.baseUrl +
+                this.URLs.createBatchAssociationsDefault(fromObjectType, toObjectType),
+            body: {inputs},
+        };
+
+        const res = await this._post(options);
+        const {results} = res;
+        return results;
+    }
+
+    async deleteBatchAssociations(fromObjectType, toObjectType, inputs) {
+        const options = {
+            url:
+                this.baseUrl +
+                this.URLs.deleteBatchAssociations(fromObjectType, toObjectType),
+            body: {inputs},
+            returnFullRes: true,
+        };
+
+        return this._post(options);
+    }
+
+    async deleteBatchAssociationLabels(fromObjectType, toObjectType, inputs) {
+        const options = {
+            url:
+                this.baseUrl +
+                this.URLs.deleteBatchAssociationLabels(fromObjectType, toObjectType),
+            body: {inputs},
+            returnFullRes: true,
+        };
+
+        return this._post(options);
     }
 
     async _propertiesList(objType) {
@@ -867,6 +924,21 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.associationLabels(fromObjType, toObjType),
         };
         return this._get(options);
+    }
+
+    async createAssociationLabel(fromObjType, toObjType, label) {
+        const options = {
+            url: this.baseUrl + this.URLs.associationLabels(fromObjType, toObjType),
+            body: label
+        };
+        return this._post(options);
+    }
+
+    async deleteAssociationLabel(fromObjType, toObjType, associationTypeId) {
+        const options = {
+            url: this.baseUrl + this.URLs.associationLabels(fromObjType, toObjType) + `/${associationTypeId}`,
+        };
+        return this._delete(options, false);
     }
 
     async searchLists(query = "", offset = 0, count = 500, additionalProperties = []) {
@@ -909,15 +981,33 @@ class Api extends OAuth2Requester {
         return this._delete(options);
     }
 
-    async addToList(listId, recordIds)  {
+    async removeAllListMembers(listId) {
         const options = {
-            url: this.baseUrl + this.URLs.listMembership(listId),
+            url: this.baseUrl + this.URLs.listMemberships(listId),
+        };
+        return this._delete(options);
+    }
+
+    async addAndRemoveFromList(listId, idsToAdd, idsToRemove)  {
+        const options = {
+            url: this.baseUrl + this.URLs.listMembershipsAddRemove(listId),
             body: {
-                "recordIdsToAdd": recordIds
+                "recordIdsToAdd": idsToAdd,
+                "recordIdsToRemove": idsToRemove
             },
         };
         return this._put(options);
     }
+
+    async addToList(listId, recordIds)  {
+        return this.addAndRemoveFromList(listId, recordIds, []);
+    }
+
+    async removeFromList(listId, recordIds)  {
+        return this.addAndRemoveFromList(listId, [], recordIds);
+    }
+
+
 }
 
 module.exports = {Api};

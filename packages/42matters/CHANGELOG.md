@@ -1,3 +1,16 @@
+# v1.1.3 (Mon May 06 2024)
+
+#### 🐛 Bug Fix
+
+- 42matters api method updates [#6](https://github.com/friggframework/api-module-library/pull/6) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- add the schema related requests to the api module and tests ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+
+#### Authors: 1
+
+- [@MichaelRyanWebber](https://github.com/MichaelRyanWebber)
+
+---
+
 # v1.1.0 (Wed Mar 20 2024)
 
 #### 🚀 Enhancement

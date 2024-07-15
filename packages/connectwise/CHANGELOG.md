@@ -1,3 +1,20 @@
+# v1.0.3 (Thu May 09 2024)
+
+:tada: This release contains work from a new contributor! :tada:
+
+Thank you, null[@aaj-lh](https://github.com/aaj-lh), for all your work!
+
+#### 🐛 Bug Fix
+
+- ConnectWise cleanup [#7](https://github.com/friggframework/api-module-library/pull/7) ([@aaj-lh](https://github.com/aaj-lh))
+- Remove manager and its tests ([@aaj-lh](https://github.com/aaj-lh))
+
+#### Authors: 1
+
+- [@aaj-lh](https://github.com/aaj-lh)
+
+---
+
 # v0.10.0 (Wed Mar 20 2024)
 
 :tada: This release contains work from new contributors! :tada:

@@ -18,8 +18,40 @@ describe('42matters API Tests', () => {
         });
     });
 
-    describe('API requests', () => {
-        describe('App Data requests', () => {
+    describe('Metadata requests', () => {
+        it('Should retrieve SDKs', async () => {
+            const {results: sdks} = await api.getSDKs();
+            expect(sdks).toBeDefined();
+            expect(sdks.length).toBeGreaterThan(0);
+        })
+
+        it('Should retrieve Google countries', async () => {
+            const {countries} = await api.getGoogleCountries();
+            expect(countries).toBeDefined();
+            expect(countries.length).toBeGreaterThan(0);
+        })
+
+        it('Should retrieve Apple countries', async () => {
+            const {countries} = await api.getAppleCountries();
+            expect(countries).toBeDefined();
+            expect(countries.length).toBeGreaterThan(0);
+        })
+
+        it('Should retrieve Google categories', async () => {
+            const {categories} = await api.getGoogleCategories();
+            expect(categories).toBeDefined();
+            expect(categories.length).toBeGreaterThan(0);
+        })
+
+        it('Should retrieve Apple categories', async () => {
+            const {genres} = await api.getAppleGenres();
+            expect(genres).toBeDefined();
+            expect(genres.length).toBeGreaterThan(0);
+        })
+    })
+
+    describe('App Data requests', () => {
+        describe('Basic requests', () => {
             it('Should retrieve an android app', async () => {
                 const appData = await api.getGoogleAppData('com.facebook.katana');
                 expect(appData).toBeDefined();

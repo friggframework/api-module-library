@@ -1,3 +1,40 @@
+# v1.1.5 (Mon May 06 2024)
+
+:tada: This release contains work from a new contributor! :tada:
+
+Thank you, Sean Matthews ([@seanspeaks](https://github.com/seanspeaks)), for all your work!
+
+#### 🐛 Bug Fix
+
+- HubSpot API Method Updates [#5](https://github.com/friggframework/api-module-library/pull/5) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- remove .only ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- differentiate the two versions of batch association delete, generic and label specific ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- correct inherited parameter naming (confusion between object and object type) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- add method for clearing list ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- Merge branch 'refs/heads/main' into feature/42m-needed-hubspot-api-methods ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- property update working ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- update implementation of properties methods ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- association label and association batch requests implemented and tested ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- Bump independent versions \[skip ci\] ([@seanspeaks](https://github.com/seanspeaks))
+- remove .only tests [#3](https://github.com/friggframework/api-module-library/pull/3) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- update to getListById to follow convention in this api at least [#3](https://github.com/friggframework/api-module-library/pull/3) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- add getList [#3](https://github.com/friggframework/api-module-library/pull/3) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- remove client reference [#3](https://github.com/friggframework/api-module-library/pull/3) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- add list addition, creation, deletion [#3](https://github.com/friggframework/api-module-library/pull/3) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- remove unnecessary dependency [#1](https://github.com/friggframework/api-module-library/pull/1) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- add methods and tests for list search and label retrieval [#1](https://github.com/friggframework/api-module-library/pull/1) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+
+#### ⚠️ Pushed to `main`
+
+- Publish ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+
+#### Authors: 2
+
+- [@MichaelRyanWebber](https://github.com/MichaelRyanWebber)
+- Sean Matthews ([@seanspeaks](https://github.com/seanspeaks))
+
+---
+
 # v1.1.4 (Wed Apr 17 2024)
 
 #### 🐛 Bug Fix

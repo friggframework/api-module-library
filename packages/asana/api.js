@@ -52,6 +52,13 @@ class Api extends OAuth2Requester {
         return this.authorizationUri;
     }
 
+    async getTokenFromCode(code) {
+        // The token request will fail if Bearer header is applied
+        // Therefore,  there happens to be an access_token, remove it
+        delete this.access_token;
+        return super.getTokenFromCode(code);
+    }
+
     addJsonHeaders(options) {
         const jsonHeaders = {
             'Content-Type': 'application/json',

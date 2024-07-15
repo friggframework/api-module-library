@@ -1,4 +1,4 @@
-const {Entity: Parent} = require('@friggframework/core');
+const {Entity: Parent, mongoose} = require('@friggframework/core');
 
 const schema = new mongoose.Schema({});
 const name = 'UnbabelProjectsEntity';

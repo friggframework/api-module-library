@@ -4,10 +4,10 @@ const {testAutherDefinition} = require('@friggframework/devtools');
 const {Definition} = require('../definition');
 
 const testAuthData = {
-    client_id: process.env.UNBABEL_CLIENT_ID,
-    username: process.env.UNBABEL_TEST_USERNAME,
-    password: `${process.env.UNBABEL_TEST_PASSWORD}#`,//hack to workaround dotenv eating the #
-    customer_id: process.env.UNBABEL_TEST_CUSTOMER_ID
+    client_id: process.env.UNBABEL_PROJECTS_CLIENT_ID,
+    username: process.env.UNBABEL_PROJECTS_USERNAME,
+    password: process.env.UNBABEL_PROJECTS_PASSWORD,
+    customer_id: process.env.UNBABEL_PROJECTS_CUSTOMER_ID
 };
 
 const mocks = {
@@ -22,8 +22,8 @@ const mocks = {
         access_token: 'redacted',
         refresh_token: 'redacted'
     },
-    searchTranslations: {
-        results: {}
+    getSupportedExtensions: {
+        results: []
     }
 }
 

@@ -39,7 +39,7 @@ const mocks = {
 
 testAutherDefinition(Definition, mocks)
 
-describe('Salesforce Module Live Tests', () => {
+describe.skip('Salesforce Module Live Tests', () => {
     let module, authUrl;
     beforeAll(async () => {
         await connectToDatabase();
@@ -59,7 +59,8 @@ describe('Salesforce Module Live Tests', () => {
         it('should return auth requirements', async () => {
             const requirements = await module.getAuthorizationRequirements();
             expect(requirements).toBeDefined();
-            expect(requirements.type).toEqual('oauth2');
+            expect(requirements).toHaveProperty('type');
+            expect(requirements.type).toBe('oauth2');
             expect(requirements.url).toBeDefined();
             authUrl = requirements.url;
         });

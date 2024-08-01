@@ -1,4 +1,4 @@
-const {Api} = require('./api/graph');
+const {graphApi:Api} = require('./api/graph');
 const {Credential} = require('./models/credential');
 const {Entity} = require('./models/entity');
 const ModuleManager = require('./manager');

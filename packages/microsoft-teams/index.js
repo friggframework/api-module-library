@@ -1,13 +1,9 @@
-const {graphApi:Api} = require('./api/graph');
-const {Credential} = require('./models/credential');
-const {Entity} = require('./models/entity');
-const ModuleManager = require('./manager');
+const {Api} = require('./api/api');
 const Config = require('./defaultConfig');
+const {Definition} = require('./definition');
 
 module.exports = {
     Api,
-    Credential,
-    Entity,
-    ModuleManager,
     Config,
+    Definition
 };

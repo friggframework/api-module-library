@@ -1,3 +1,20 @@
+# v1.0.1 (Thu Aug 01 2024)
+
+#### 🐛 Bug Fix
+
+- Salesforce V1 and some HubSpot API methods [#11](https://github.com/friggframework/api-module-library/pull/11) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- delete node_modules and regen lock file ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- salesforce module v1 ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- update module to pass current manager tests ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- Bump independent versions \[skip ci\] ([@seanspeaks](https://github.com/seanspeaks))
+
+#### Authors: 2
+
+- [@MichaelRyanWebber](https://github.com/MichaelRyanWebber)
+- Sean Matthews ([@seanspeaks](https://github.com/seanspeaks))
+
+---
+
 # v0.10.0 (Wed Mar 20 2024)
 
 :tada: This release contains work from new contributors! :tada:

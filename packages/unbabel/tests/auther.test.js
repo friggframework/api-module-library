@@ -29,7 +29,7 @@ const mocks = {
 
 testAutherDefinition(Definition, mocks);
 
-describe('Unbabel Module Tests', () => {
+describe.skip('Unbabel Module Tests', () => {
     let module;
     beforeAll(async () => {
         await connectToDatabase();

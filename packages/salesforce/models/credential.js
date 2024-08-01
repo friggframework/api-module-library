@@ -1,5 +1,4 @@
-const {Credential: Parent} = require('@friggframework/core');
-const mongoose = require('mongoose');
+const {Credential: Parent, mongoose} = require('@friggframework/core');
 
 const schema = new mongoose.Schema({
     accessToken: {

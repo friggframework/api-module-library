@@ -1,3 +1,41 @@
+# (Thu Aug 01 2024)
+
+:tada: This release contains work from a new contributor! :tada:
+
+Thank you, Igor Schechtel ([@igorschechtel](https://github.com/igorschechtel)), for all your work!
+
+#### 🐛 Bug Fix
+
+- `@friggframework/api-module-hubspot@1.1.6`, `@friggframework/api-module-salesforce@1.0.1`, `@friggframework/api-module-unbabel@1.1.4`
+  - Salesforce V1 and some HubSpot API methods [#11](https://github.com/friggframework/api-module-library/pull/11) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- `@friggframework/api-module-asana@1.1.5`, `@friggframework/api-module-unbabel-projects@1.0.2`, `@friggframework/api-module-unbabel@1.1.4`, `@friggframework/api-module-zoho-crm@1.0.2`
+  - Unbabel Projects, Asana, and Zoho CRM [#10](https://github.com/friggframework/api-module-library/pull/10) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- `@friggframework/api-module-asana@1.1.5`
+  - Add API module for Asana [#2](https://github.com/friggframework/api-module-library/pull/2) ([@igorschechtel](https://github.com/igorschechtel))
+- `@friggframework/api-module-zoho-crm@1.0.2`
+  - Added Zoho CRM API module [#4](https://github.com/friggframework/api-module-library/pull/4) ([@aaj](https://github.com/aaj))
+
+#### Authors: 3
+
+- [@MichaelRyanWebber](https://github.com/MichaelRyanWebber)
+- Armando Alvarado ([@aaj](https://github.com/aaj))
+- Igor Schechtel ([@igorschechtel](https://github.com/igorschechtel))
+
+---
+
+# (Thu Aug 01 2024)
+
+#### 🐛 Bug Fix
+
+- `@friggframework/api-module-microsoft-teams@1.1.3`
+  - Merge pull request #12 [#12](https://github.com/friggframework/api-module-library/pull/12) ([@seanspeaks](https://github.com/seanspeaks))
+
+#### Authors: 1
+
+- Sean Matthews ([@seanspeaks](https://github.com/seanspeaks))
+
+---
+
 # (Mon Jul 15 2024)
 
 :tada: This release contains work from a new contributor! :tada:

@@ -1,3 +1,16 @@
+# v1.1.3 (Thu Aug 01 2024)
+
+#### 🐛 Bug Fix
+
+- Merge pull request #12 [#12](https://github.com/friggframework/api-module-library/pull/12) ([@seanspeaks](https://github.com/seanspeaks))
+- Exporting a non-existant class ([@seanspeaks](https://github.com/seanspeaks))
+
+#### Authors: 1
+
+- Sean Matthews ([@seanspeaks](https://github.com/seanspeaks))
+
+---
+
 # v1.1.0 (Wed Mar 20 2024)
 
 :tada: This release contains work from new contributors! :tada:

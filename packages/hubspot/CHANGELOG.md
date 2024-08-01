@@ -1,3 +1,31 @@
+# v1.1.6 (Thu Aug 01 2024)
+
+:tada: This release contains work from new contributors! :tada:
+
+Thanks for all your work!
+
+:heart: Igor Schechtel ([@igorschechtel](https://github.com/igorschechtel))
+
+:heart: Armando Alvarado ([@aaj](https://github.com/aaj))
+
+#### 🐛 Bug Fix
+
+- Salesforce V1 and some HubSpot API methods [#11](https://github.com/friggframework/api-module-library/pull/11) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- Add API module for Asana [#2](https://github.com/friggframework/api-module-library/pull/2) ([@igorschechtel](https://github.com/igorschechtel))
+- update module to pass current manager tests ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- Added Zoho CRM API module [#4](https://github.com/friggframework/api-module-library/pull/4) ([@aaj](https://github.com/aaj))
+- Bump independent versions \[skip ci\] ([@seanspeaks](https://github.com/seanspeaks))
+- Merge branch 'friggframework:main' into main ([@igorschechtel](https://github.com/igorschechtel))
+
+#### Authors: 4
+
+- [@MichaelRyanWebber](https://github.com/MichaelRyanWebber)
+- Armando Alvarado ([@aaj](https://github.com/aaj))
+- Igor Schechtel ([@igorschechtel](https://github.com/igorschechtel))
+- Sean Matthews ([@seanspeaks](https://github.com/seanspeaks))
+
+---
+
 # v1.1.5 (Mon May 06 2024)
 
 :tada: This release contains work from a new contributor! :tada:

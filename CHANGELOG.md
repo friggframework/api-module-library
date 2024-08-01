@@ -1,5 +1,19 @@
 # (Thu Aug 01 2024)
 
+#### 🐛 Bug Fix
+
+- `@friggframework/api-module-microsoft-teams@1.1.4`
+  - Merge pull request #13 [#13](https://github.com/friggframework/api-module-library/pull/13) ([@seanspeaks](https://github.com/seanspeaks))
+  - Exporting a non-existant class [#12](https://github.com/friggframework/api-module-library/pull/12) ([@seanspeaks](https://github.com/seanspeaks))
+
+#### Authors: 1
+
+- Sean Matthews ([@seanspeaks](https://github.com/seanspeaks))
+
+---
+
+# (Thu Aug 01 2024)
+
 :tada: This release contains work from a new contributor! :tada:
 
 Thank you, Igor Schechtel ([@igorschechtel](https://github.com/igorschechtel)), for all your work!

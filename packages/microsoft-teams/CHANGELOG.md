@@ -1,3 +1,19 @@
+# v1.1.4 (Thu Aug 01 2024)
+
+#### 🐛 Bug Fix
+
+- Merge pull request #13 [#13](https://github.com/friggframework/api-module-library/pull/13) ([@seanspeaks](https://github.com/seanspeaks))
+- Merge branch 'refs/heads/main' into fix/microsoft-teams-export-bug ([@seanspeaks](https://github.com/seanspeaks))
+- Better export update :sweat-smile: ([@seanspeaks](https://github.com/seanspeaks))
+- Exporting a non-existant class [#12](https://github.com/friggframework/api-module-library/pull/12) ([@seanspeaks](https://github.com/seanspeaks))
+- Bump independent versions \[skip ci\] ([@seanspeaks](https://github.com/seanspeaks))
+
+#### Authors: 1
+
+- Sean Matthews ([@seanspeaks](https://github.com/seanspeaks))
+
+---
+
 # v1.1.3 (Thu Aug 01 2024)
 
 #### 🐛 Bug Fix

@@ -3,7 +3,7 @@
   "label": "Zoom",
   "productUrl": "https://zoom.us",
   "apiDocs": "https://developer.zoom.us",
-  "logoUrl": "https://friggframework.org/assets/img/zoom.jpeg",
+  "logoUrl": "https://friggframework.org/assets/img/zoom-icon.png",
   "categories": [
     "Chat",
     "Team Messaging",

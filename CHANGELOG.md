@@ -1,3 +1,16 @@
+# (Tue Aug 06 2024)
+
+#### 🐛 Bug Fix
+
+- `@friggframework/api-module-42matters@1.1.4`, `@friggframework/api-module-asana@1.1.5`, `@friggframework/api-module-connectwise@1.0.4`, `@friggframework/api-module-contentful@1.1.3`, `@friggframework/api-module-contentstack@1.1.3`, `@friggframework/api-module-deel@1.1.3`, `@friggframework/api-module-google-calendar@1.1.3`, `@friggframework/api-module-google-drive@1.1.3`, `@friggframework/api-module-helpscout@0.1.2`, `@friggframework/api-module-hubspot@1.1.7`, `@friggframework/api-module-linear@1.1.3`, `@friggframework/api-module-microsoft-teams@1.1.5`, `@friggframework/api-module-salesforce@1.0.2`, `@friggframework/api-module-slack@1.1.3`, `@friggframework/api-module-unbabel-projects@1.0.2`, `@friggframework/api-module-unbabel@1.1.5`, `@friggframework/api-module-zoho-crm@1.0.2`
+  - Updated icons for all Frigg API modules [#14](https://github.com/friggframework/api-module-library/pull/14) ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook))
+
+#### Authors: 1
+
+- Fer Riffel ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook))
+
+---
+
 # (Thu Aug 01 2024)
 
 #### 🐛 Bug Fix

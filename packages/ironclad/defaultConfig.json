@@ -1,9 +1,9 @@
 {
-  "name": "ironclad",
-  "label": "ironclad",
-  "productUrl": "",
-  "apiDocs": "",
-  "logoUrl": "https://friggframework.org/assets/img/ironclad-icon.png",
-  "categories": [],
-  "description": "ironclad"
+    "name": "ironclad",
+    "label": "ironclad",
+    "productUrl": "",
+    "apiDocs": "",
+    "logoUrl": "https://friggframework.org/assets/img/ironclad-icon.png",
+    "categories": [],
+    "description": "ironclad"
 }

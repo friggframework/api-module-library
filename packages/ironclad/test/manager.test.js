@@ -1,7 +1,7 @@
 const Manager = require('../manager');
 const mongoose = require('mongoose');
 const config = require('../defaultConfig.json');
-const {expect} = require('chai');
+const { expect } = require('chai');
 require('dotenv').config();
 
 describe(`Should fully test the ${config.label} Manager`, () => {
@@ -47,7 +47,7 @@ describe(`Should fully test the ${config.label} Manager`, () => {
                 expect(entity).exists;
                 // assert that entity.externalId does not equal apiKey
                 expect(entity.externalId).to.not.equal(
-                    process.env.IRONCLAD_API_KEY
+                    process.env.IRONCLAD_API_KEY,
                 );
             });
 

@@ -1,12 +1,18 @@
-const {ModuleManager, ModuleConstants, flushDebugLog, debug, get} = require('@friggframework/core');
+const {
+    ModuleManager,
+    ModuleConstants,
+    flushDebugLog,
+    debug,
+    get,
+} = require('@friggframework/core');
 const _ = require('lodash');
-const {Api} = require('./api');
-const {Entity} = require('./models/entity');
-const {Credential} = require('./models/credential');
-const {IntegrationMapping} = require('./models/integrationMapping');
+const { Api } = require('./api');
+const { Entity } = require('./models/entity');
+const { Credential } = require('./models/credential');
+const { IntegrationMapping } = require('./models/integrationMapping');
 const AuthFields = require('./authFields');
 const Config = require('./defaultConfig.json');
-const {createHash} = require('crypto');
+const { createHash } = require('crypto');
 
 class Manager extends ModuleManager {
     static Entity = Entity;
@@ -24,12 +30,15 @@ class Manager extends ModuleManager {
     static async getInstance(params) {
         const instance = new this(params);
 
-        let managerParams = {delegate: instance, agent: get(params, 'agent', null)};
+        let managerParams = {
+            delegate: instance,
+            agent: get(params, 'agent', null),
+        };
 
         if (params.entityId) {
             instance.entity = await Entity.findById(params.entityId);
             instance.credential = await Credential.findById(
-                instance.entity.credential
+                instance.entity.credential,
             );
             if (instance.credential.subdomain)
                 managerParams.subdomain = instance.credential.subdomain;
@@ -57,7 +66,7 @@ class Manager extends ModuleManager {
         const subType = get(params.data, 'subType', null);
         const agent = get(params.data, 'agent', null);
         this.userId = this.userId || get(params, 'userId');
-        this.api = new Api({apiKey, subdomain, agent});
+        this.api = new Api({ apiKey, subdomain, agent });
         const authRes = await this.testAuth();
         if (!authRes) throw new Error('Auth Error');
 
@@ -108,12 +117,12 @@ class Manager extends ModuleManager {
                 subType,
                 subdomain,
             },
-            {$set: {user: this.userId, apiKey, subType, subdomain}},
+            { $set: { user: this.userId, apiKey, subType, subdomain } },
             {
                 new: true,
                 upsert: true,
                 setDefaultsOnInsert: true,
-            }
+            },
         );
     }
 
@@ -141,7 +150,7 @@ class Manager extends ModuleManager {
                 new: true,
                 upsert: true,
                 setDefaultsOnInsert: true,
-            }
+            },
         );
     }
 
@@ -159,9 +168,9 @@ class Manager extends ModuleManager {
         this.api = new Api();
 
         // delete credentials from the database
-        const entity = await Entity.find({user: this.userId});
+        const entity = await Entity.find({ user: this.userId });
         if (entity.credential) {
-            await Credential.deleteOne({_id: entity.credential});
+            await Credential.deleteOne({ _id: entity.credential });
             entity.credential = undefined;
             await entity.save();
         }

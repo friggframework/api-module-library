@@ -1,8 +1,8 @@
 const chai = require('chai');
 const should = chai.should();
-const {Api} = require('../api');
+const { Api } = require('../api');
 require('dotenv').config();
-const {expect} = require('chai');
+const { expect } = require('chai');
 
 describe('Ironclad API class', () => {
     const api = new Api({
@@ -14,19 +14,19 @@ describe('Ironclad API class', () => {
         it('should allow localhost subdomain', async () => {
             const api = new Api({
                 apiKey: process.env.IRONCLAD_API_KEY,
-                subdomain: 'localhost'
-            })
+                subdomain: 'localhost',
+            });
             expect(api.baseUrl()).to.equal('https://localhost');
         });
 
         it('should have ironcladapp.com to baseUrl for non local envs', async () => {
             const api = new Api({
                 apiKey: process.env.IRONCLAD_API_KEY,
-                subdomain: 'preview'
-            })
+                subdomain: 'preview',
+            });
             expect(api.baseUrl()).to.equal('https://preview.ironcladapp.com');
         });
-    })
+    });
 
     describe('Webhooks', () => {
         let webhookID;
@@ -133,7 +133,7 @@ describe('Ironclad API class', () => {
             };
             const response = await api.retrieveWorkflowSchema(
                 params,
-                workflowSchemaID
+                workflowSchemaID,
             );
             expect(response).to.have.property('id');
             expect(response).to.have.property('name');
@@ -171,13 +171,12 @@ describe('Ironclad API class', () => {
 
         it('should update a workflow approval', async () => {
             workflowID = process.env.WORKFLOW_ID;
-            const workflowApprovals = await api.listAllWorkflowApprovals(
-                workflowID
-            );
+            const workflowApprovals =
+                await api.listAllWorkflowApprovals(workflowID);
             workflowApprovals.approvalGroups.forEach(async (approvalGroup) => {
                 let roleID = approvalGroup.reviewers[0].role;
                 let role = workflowApprovals.roles.find(
-                    (role) => role.id === roleID
+                    (role) => role.id === roleID,
                 );
                 let email = role.assignees[0].email;
 
@@ -192,7 +191,7 @@ describe('Ironclad API class', () => {
                 const response = await api.updateWorkflowApprovals(
                     workflowID,
                     roleID,
-                    body
+                    body,
                 );
                 expect(response).to.equal(true);
             });
@@ -214,7 +213,7 @@ describe('Ironclad API class', () => {
         it('should retrieve a workflow document', async () => {
             const response = await api.retrieveWorkflowDocument(
                 workflowID,
-                documentKey
+                documentKey,
             );
             expect(response).to.exist;
         });
@@ -324,7 +323,7 @@ describe('Ironclad API class', () => {
             expect(response).to.have.property('properties');
             expect(response).to.have.property('lastUpdated');
             expect(response.properties.counterpartyName.value).to.equal(
-                'Jane Doe'
+                'Jane Doe',
             );
         });
 

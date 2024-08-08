@@ -1,4 +1,4 @@
-const {Credential: Parent} = require('@friggframework/core');
+const { Credential: Parent } = require('@friggframework/core');
 const mongoose = require('mongoose');
 
 const schema = new mongoose.Schema({
@@ -16,4 +16,4 @@ const schema = new mongoose.Schema({
 const name = 'IroncladCredential';
 const Credential =
     Parent.discriminators?.[name] || Parent.discriminator(name, schema);
-module.exports = {Credential};
+module.exports = { Credential };

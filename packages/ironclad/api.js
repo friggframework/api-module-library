@@ -1,4 +1,4 @@
-const {get, ApiKeyRequester} = require('@friggframework/core');
+const { get, ApiKeyRequester } = require('@friggframework/core');
 
 class Api extends ApiKeyRequester {
     constructor(params) {
@@ -7,7 +7,8 @@ class Api extends ApiKeyRequester {
         this.API_KEY_NAME = 'Bearer';
         this.API_KEY_VALUE = get(params, 'apiKey', null);
         this.SUBDOMAIN = get(params, 'subdomain', null);
-        this.IS_LOCAL = this.SUBDOMAIN?.toLowerCase() === 'localhost' ? true : false;
+        this.IS_LOCAL =
+            this.SUBDOMAIN?.toLowerCase() === 'localhost' ? true : false;
 
         this.baseUrl = () => {
             if (this.SUBDOMAIN) {
@@ -334,4 +335,4 @@ class Api extends ApiKeyRequester {
     }
 }
 
-module.exports = {Api};
+module.exports = { Api };

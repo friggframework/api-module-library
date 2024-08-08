@@ -12,6 +12,7 @@
     "license": "MIT",
     "devDependencies": {
         "@friggframework/devtools": "^1.2.0",
+        "@friggframework/prettier-config": "^1.2.0",
         "@friggframework/test": "^1.2.0",
         "dotenv": "^16.4.5",
         "eslint": "^9.8.0",

@@ -1,8 +1,8 @@
 {
     "name": "ironclad",
     "label": "ironclad",
-    "productUrl": "",
-    "apiDocs": "",
+    "productUrl": "https://ironcladapp.com",
+    "apiDocs": "https://developer.ironcladapp.com/reference",
     "logoUrl": "https://friggframework.org/assets/img/ironclad-icon.png",
     "categories": [],
     "description": "ironclad"

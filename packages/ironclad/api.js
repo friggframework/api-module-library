@@ -1,26 +1,13 @@
-const { get, ApiKeyRequester } = require('@friggframework/core');
+const { OAuth2Requester, get } = require('@friggframework/core');
 
-class Api extends ApiKeyRequester {
+class Api extends OAuth2Requester {
     constructor(params) {
         super(params);
-
-        this.API_KEY_NAME = 'Bearer';
-        this.API_KEY_VALUE = get(params, 'apiKey', null);
-        this.SUBDOMAIN = get(params, 'subdomain', null);
-        this.IS_LOCAL =
-            this.SUBDOMAIN?.toLowerCase() === 'localhost' ? true : false;
-
-        this.baseUrl = () => {
-            if (this.SUBDOMAIN) {
-                const subdomain = this.SUBDOMAIN.toLowerCase();
-                return `https://${this.IS_LOCAL ? '127.0.0.1' : subdomain}${!this.IS_LOCAL ? '.ironcladapp.com' : ''}`;
-            } else {
-                return 'https://ironcladapp.com';
-            }
-        };
+        // The majority of the properties for OAuth are default loaded by OAuth2Requester.
+        // This includes the `client_id`, `client_secret`, `scopes`, and `redirect_uri`.
 
         this.URLs = {
-            me: '/public/api/v1/me',
+            userInfo: '/oauth/userinfo',
             webhooks: '/public/api/v1/webhooks',
             webhookByID: (webhookId) => `/public/api/v1/webhooks/${webhookId}`,
             workflows: '/public/api/v1/workflows',
@@ -42,26 +29,52 @@ class Api extends ApiKeyRequester {
                 `/public/api/v1/workflows/${workflowId}/participants`,
             userByID: (userId) => `/scim/v2/Users/${userId}`,
         };
+
+        this.subdomain = get(params, 'subdomain', null);
+
+        this.baseUrl = this.getBaseUrl();
+
+        const authUriParams = new URLSearchParams({
+            response_type: 'code',
+            client_id: this.client_id,
+            redirect_uri: this.redirect_uri,
+            state: this.state,
+            scope: this.scope,
+        });
+        this.authorizationUri = `${this.baseUrl}/oauth/authorize?${authUriParams.toString()}`;
+
+        this.tokenUri = `${this.baseUrl}/oauth/token`;
     }
 
-    async addAuthHeaders(headers) {
-        if (this.API_KEY_VALUE) {
-            headers.Authorization = `Bearer ${this.API_KEY_VALUE}`;
+    getBaseUrl() {
+        if (this.subdomain === 'localhost') return 'https://localhost';
+
+        let baseUrl = 'https://';
+        if (this.subdomain) {
+            baseUrl += `${this.subdomain}.`;
         }
-        return headers;
+        baseUrl += 'ironcladapp.com';
+        return baseUrl;
     }
 
-    async getConnectionInformation() {
+    async getTokenFromCode(code) {
+        // The token request will fail if Bearer header is applied
+        // Therefore,  there happens to be an access_token, remove it
+        delete this.access_token;
+        return super.getTokenFromCode(code);
+    }
+
+    async getUserDetails() {
         const options = {
-            url: this.baseUrl() + this.URLs.me,
+            url: this.baseUrl + this.URLs.userInfo,
         };
-        const response = await this._get(options);
-        return response;
+
+        return this._get(options);
     }
 
     async listWebhooks() {
         const options = {
-            url: this.baseUrl() + this.URLs.webhooks,
+            url: this.baseUrl + this.URLs.webhooks,
         };
         const response = await this._get(options);
         return response;
@@ -69,7 +82,7 @@ class Api extends ApiKeyRequester {
 
     async createWebhook(events, targetURL) {
         const options = {
-            url: this.baseUrl() + this.URLs.webhooks,
+            url: this.baseUrl + this.URLs.webhooks,
             headers: {
                 'content-type': 'application/json',
             },
@@ -84,7 +97,7 @@ class Api extends ApiKeyRequester {
 
     async updateWebhook(webhookId, events = null, targetURL = null) {
         const options = {
-            url: this.baseUrl() + this.URLs.webhookByID(webhookId),
+            url: this.baseUrl + this.URLs.webhookByID(webhookId),
             headers: {
                 'content-type': 'application/json',
             },
@@ -105,7 +118,7 @@ class Api extends ApiKeyRequester {
 
     async deleteWebhook(webhookId) {
         const options = {
-            url: this.baseUrl() + this.URLs.webhookByID(webhookId),
+            url: this.baseUrl + this.URLs.webhookByID(webhookId),
         };
         const response = await this._delete(options);
         return response;
@@ -113,7 +126,7 @@ class Api extends ApiKeyRequester {
 
     async listAllWorkflows(params) {
         const options = {
-            url: this.baseUrl() + this.URLs.workflows,
+            url: this.baseUrl + this.URLs.workflows,
             query: params,
         };
         const response = await this._get(options);
@@ -122,7 +135,7 @@ class Api extends ApiKeyRequester {
 
     async retrieveWorkflow(id) {
         const options = {
-            url: this.baseUrl() + this.URLs.workflowsByID(id),
+            url: this.baseUrl + this.URLs.workflowsByID(id),
         };
         const response = await this._get(options);
         return response;
@@ -130,7 +143,7 @@ class Api extends ApiKeyRequester {
 
     async createWorkflow(body) {
         const options = {
-            url: this.baseUrl() + this.URLs.workflows,
+            url: this.baseUrl + this.URLs.workflows,
             headers: {
                 'content-type': 'application/json',
             },
@@ -142,7 +155,7 @@ class Api extends ApiKeyRequester {
 
     async listAllWorkflowSchemas(params, asUserEmail, asUserId) {
         const options = {
-            url: this.baseUrl() + this.URLs.workflowSchemas,
+            url: this.baseUrl + this.URLs.workflowSchemas,
             query: params,
             headers: {},
         };
@@ -158,7 +171,7 @@ class Api extends ApiKeyRequester {
 
     async retrieveWorkflowSchema(params, id) {
         const options = {
-            url: this.baseUrl() + this.URLs.workflowSchemaByID(id),
+            url: this.baseUrl + this.URLs.workflowSchemaByID(id),
             query: params,
         };
         const response = await this._get(options);
@@ -167,7 +180,7 @@ class Api extends ApiKeyRequester {
 
     async listAllWorkflowApprovals(id) {
         const options = {
-            url: this.baseUrl() + this.URLs.workflowsByID(id) + '/approvals',
+            url: this.baseUrl + this.URLs.workflowsByID(id) + '/approvals',
         };
         const response = await this._get(options);
         return response;
@@ -175,7 +188,7 @@ class Api extends ApiKeyRequester {
 
     async listAllWorkflowSignatures(id) {
         const options = {
-            url: this.baseUrl() + this.URLs.workflowsByID(id) + '/signatures',
+            url: this.baseUrl + this.URLs.workflowsByID(id) + '/signatures',
         };
         const response = await this._get(options);
         return response;
@@ -184,7 +197,7 @@ class Api extends ApiKeyRequester {
     async updateWorkflowApprovals(id, roleID, body) {
         const options = {
             url:
-                this.baseUrl() +
+                this.baseUrl +
                 this.URLs.workflowsByID(id) +
                 '/approvals/' +
                 roleID,
@@ -200,7 +213,7 @@ class Api extends ApiKeyRequester {
     async revertWorkflowToReviewStep(id, body) {
         const options = {
             url:
-                this.baseUrl() +
+                this.baseUrl +
                 this.URLs.workflowsByID(id) +
                 '/revert-to-review',
             headers: {
@@ -214,7 +227,7 @@ class Api extends ApiKeyRequester {
 
     async createWorkflowComment(id, body) {
         const options = {
-            url: this.baseUrl() + this.URLs.workflowComment(id),
+            url: this.baseUrl + this.URLs.workflowComment(id),
             headers: {
                 'content-type': 'application/json',
             },
@@ -227,7 +240,7 @@ class Api extends ApiKeyRequester {
     async getWorkflowComment(workflowId, commentId) {
         const options = {
             url:
-                this.baseUrl() +
+                this.baseUrl +
                 this.URLs.workflowCommentByID(workflowId, commentId),
             headers: {
                 'content-type': 'application/json',
@@ -240,7 +253,7 @@ class Api extends ApiKeyRequester {
     async retrieveWorkflowDocument(workflowID, documentKey) {
         const options = {
             url:
-                this.baseUrl() +
+                this.baseUrl +
                 this.URLs.workflowsByID(workflowID) +
                 `/document/${documentKey}/download`,
         };
@@ -250,7 +263,7 @@ class Api extends ApiKeyRequester {
 
     async updateWorkflow(id, body) {
         const options = {
-            url: this.baseUrl() + this.URLs.workflowMetadata(id),
+            url: this.baseUrl + this.URLs.workflowMetadata(id),
             headers: {
                 'content-type': 'application/json',
             },
@@ -262,7 +275,7 @@ class Api extends ApiKeyRequester {
 
     async listAllRecords() {
         const options = {
-            url: this.baseUrl() + this.URLs.records,
+            url: this.baseUrl + this.URLs.records,
         };
         const response = await this._get(options);
         return response;
@@ -270,7 +283,7 @@ class Api extends ApiKeyRequester {
 
     async createRecord(body) {
         const options = {
-            url: this.baseUrl() + this.URLs.records,
+            url: this.baseUrl + this.URLs.records,
             headers: {
                 'content-type': 'application/json',
             },
@@ -282,7 +295,7 @@ class Api extends ApiKeyRequester {
 
     async listAllRecordSchemas() {
         const options = {
-            url: this.baseUrl() + this.URLs.recordSchemas,
+            url: this.baseUrl + this.URLs.recordSchemas,
         };
         const response = await this._get(options);
         return response;
@@ -290,7 +303,7 @@ class Api extends ApiKeyRequester {
 
     async retrieveRecord(recordId) {
         const options = {
-            url: this.baseUrl() + this.URLs.recordByID(recordId),
+            url: this.baseUrl + this.URLs.recordByID(recordId),
         };
         const response = await this._get(options);
         return response;
@@ -298,7 +311,7 @@ class Api extends ApiKeyRequester {
 
     async updateRecord(recordId, body) {
         const options = {
-            url: this.baseUrl() + this.URLs.recordByID(recordId),
+            url: this.baseUrl + this.URLs.recordByID(recordId),
             headers: {
                 'content-type': 'application/json',
             },
@@ -310,7 +323,7 @@ class Api extends ApiKeyRequester {
 
     async deleteRecord(recordId) {
         const options = {
-            url: this.baseUrl() + this.URLs.recordByID(recordId),
+            url: this.baseUrl + this.URLs.recordByID(recordId),
         };
         const response = await this._delete(options);
         return response;
@@ -319,8 +332,7 @@ class Api extends ApiKeyRequester {
     async getWorkflowParticipants(workflowId) {
         // TODO: Handle pagination for this api call
         const options = {
-            url:
-                this.baseUrl() + this.URLs.workflowParticipantsByID(workflowId),
+            url: this.baseUrl + this.URLs.workflowParticipantsByID(workflowId),
         };
         const response = await this._get(options);
         return response;
@@ -328,7 +340,7 @@ class Api extends ApiKeyRequester {
 
     async getUser(userId) {
         const options = {
-            url: this.baseUrl() + this.URLs.userByID(userId),
+            url: this.baseUrl + this.URLs.userByID(userId),
         };
         const response = await this._get(options);
         return response;

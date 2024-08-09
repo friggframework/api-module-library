@@ -1,4 +1,5 @@
 const {OAuth2Requester, get} = require('@friggframework/core');
+const {Paginator} = require('avid-reader');
 
 class Api extends OAuth2Requester {
     constructor(params) {
@@ -71,7 +72,6 @@ class Api extends OAuth2Requester {
             listMembershipsAddRemove: (listId) => `/crm/v3/lists/${listId}/memberships/add-and-remove`,
             associations: (fromObject, toObject) => `/crm/v4/associations/${fromObject}/${toObject}`,
             associationLabels: (fromObject, toObject) => `/crm/v4/associations/${fromObject}/${toObject}/labels`,
-
         };
 
         this.authorizationUri = encodeURI(
@@ -81,6 +81,16 @@ class Api extends OAuth2Requester {
 
         this.access_token = get(params, 'access_token', null);
         this.refresh_token = get(params, 'refresh_token', null);
+        this.paginator = new Paginator(
+            this,
+            {
+                type: 'token',
+                tokenParam: 'after',
+                tokenPath: '/paging/next/after',
+                resultsKey: 'results',
+                args: { limit:100, after: 0 },
+            }
+        );
     }
 
     getAuthUri() {
@@ -217,11 +227,12 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.contacts,
             query: {
                 limit,
-                after,
                 properties,
             }
         };
-
+        if (after) {
+            options.query.after = after;
+        }
         return this._get(options);
     }
 

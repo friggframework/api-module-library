@@ -17,6 +17,11 @@ const Definition = {
         },
 
         getEntityDetails: async function (api, userId) {
+            // TODO: This is a temporary fix to handle the case where the userId is an object
+            // we should handle this in a more robust way, but for now this is working
+            if (typeof userId === 'object' && userId.userId) {
+                userId = userId.userId;
+            }
             const user = await api.getUserDetails();
             return {
                 identifiers: { externalId: user.id, user: userId },
@@ -30,6 +35,11 @@ const Definition = {
         },
 
         getCredentialDetails: async function (api, userId) {
+            // TODO: This is a temporary fix to handle the case where the userId is an object
+            // we should handle this in a more robust way, but for now this is working
+            if (typeof userId === 'object' && userId.userId) {
+                userId = userId.userId;
+            }
             const userDetails = await api.getUserDetails();
             return {
                 identifiers: { externalId: userDetails.portalId, user: userId },

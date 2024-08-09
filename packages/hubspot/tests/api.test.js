@@ -67,24 +67,28 @@ describe(`${config.label} API tests`, () => {
     });
 
     // Skipping tests... inherited with bugs, needs refactor
-    describe.skip('HS Deals', () => {
-        it('should return a deal by id', async () => {
-            const deal_id = '2022088696';
-            const response = await api.getDealById(deal_id);
-            expect(response.id).toBe(deal_id);
-            expect(response.properties.amount).to.eq('100000');
-            expect(response.properties.dealname).to.eq('Test');
-            expect(response.properties.dealstage).to.eq('appointmentscheduled');
-        });
-
-        it('should return all deals of a company', async () => {
+    describe.only('HS Deals', () => {
+        let deal_id;
+        it('should return a page of deals', async () => {
             let response = await api.listDeals();
+            expect(response.results).toHaveProperty('length');
             expect(response.results[0]).toHaveProperty('id');
+            deal_id = response.results[0].id;
             expect(response.results[0]).toHaveProperty('properties');
             expect(response.results[0].properties).toHaveProperty('amount');
             expect(response.results[0].properties).toHaveProperty('dealname');
             expect(response.results[0].properties).toHaveProperty('dealstage');
         });
+        it('should return a deal by id', async () => {
+            const response = await api.getDealById(deal_id);
+            expect(response.id).toBe(deal_id);
+        });
+        it('should return all deals using paginator', async () => {
+            const results = await api.paginator.fetchAllPages(api.listDeals);
+            expect(results).toHaveProperty('length');
+            expect(results.length).toBeGreaterThan(100);
+        })
+
     });
 
     // Some tests skipped ... inherited with bugs, needs refactor
@@ -227,7 +231,7 @@ describe(`${config.label} API tests`, () => {
     });
 
     // Some tests skipped ... inherited with bugs, needs refactor
-    describe('HS Contacts', () => {
+    describe.only('HS Contacts', () => {
         let createResponse;
 
         it('should create a Contact', async () => {
@@ -265,6 +269,12 @@ describe(`${config.label} API tests`, () => {
         it('should delete a contact', async () => {
             let response = await api.archiveContact(createResponse.id);
             expect(response.status).toBe(204);
+        });
+
+        it('should page all contacts using paginator', async () => {
+            const results = await api.paginator.fetchAllPages(api.listContacts);
+            expect(results).toHaveProperty('length');
+            expect(results.length).toBeGreaterThan(100);
         });
     });
 

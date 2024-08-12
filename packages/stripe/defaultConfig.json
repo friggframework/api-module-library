@@ -1,0 +1,9 @@
+{
+  "name": "stripe",
+  "label": "Stripe",
+  "productUrl": "https://stripe.com",
+  "apiDocs": "https://developers.stripe.com",
+  "logoUrl": "https://logo.clearbit.com/stripe.com",
+  "categories": ["Finance"],
+  "description": "Stripe is a suite of payment APIs that powers commerce for businesses of all sizes."
+}

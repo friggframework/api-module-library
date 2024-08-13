@@ -23,7 +23,8 @@
     "prettier": "^3.3.3"
   },
   "dependencies": {
-    "@friggframework/core": "^1.2.2"
+    "@friggframework/core": "^1.2.2",
+    "stripe": "^16.7.0"
   },
   "publishConfig": {
     "access": "public"

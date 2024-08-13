@@ -43,9 +43,8 @@ export const Definition = {
         },
     },
     env: {
-        client_id: process.env.ASANA_CLIENT_ID,
-        client_secret: process.env.ASANA_CLIENT_SECRET,
-        scope: process.env.ASANA_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/asana`,
+        stripeApiSecretKey: process.env.STRIPE_API_SECRET_KEY,
+        stripeClientId: process.env.STRIPE_CLIENT_ID,
+        redirect_uri: `${process.env.REDIRECT_URI}/stripe`,
     },
 };

@@ -1,5 +1,5 @@
 require('dotenv').config();
-import { Api } from './api';
+import { Api } from './api.js';
 import { get } from '@friggframework/core';
 import config from './defaultConfig.json';
 
@@ -9,37 +9,42 @@ export const Definition = {
         return config.name;
     },
     moduleName: config.name,
-    modelName: 'Asana',
+    modelName: 'Stripe',
     requiredAuthMethods: {
-        getToken: async function (api, params) {
+        getToken: async function (
+            api: Api,
+            params: { data: { code: string } },
+        ) {
             const code = get(params.data, 'code');
             return api.getTokenFromCode(code);
         },
-        getEntityDetails: async function (
-            api,
-            callbackParams,
-            tokenResponse,
-            userId,
-        ) {
-            const userDetails = await api.getUserDetails();
+
+        getEntityDetails: async function (api: Api, userId: string) {
+            const accountDetails = await api.getAccountDetails();
             return {
-                identifiers: { externalId: userDetails.sub, user: userId },
-                details: { name: userDetails.name, email: userDetails.email },
+                identifiers: { externalId: accountDetails.id, user: userId },
+                details: {
+                    name: accountDetails.business_profile?.name,
+                    email: accountDetails.email,
+                },
             };
         },
+
         apiPropertiesToPersist: {
             credential: ['access_token', 'refresh_token'],
             entity: [],
         },
-        getCredentialDetails: async function (api, userId) {
-            const userDetails = await api.getUserDetails();
+
+        getCredentialDetails: async function (api: Api, userId: string) {
+            const accountDetails = await api.getAccountDetails();
             return {
-                identifiers: { externalId: userDetails.portalId, user: userId },
+                identifiers: { externalId: accountDetails.id, user: userId },
                 details: {},
             };
         },
-        testAuthRequest: async function (api) {
-            return api.getUserDetails();
+
+        testAuthRequest: function (api: Api) {
+            return api.getAccountDetails();
         },
     },
     env: {

@@ -6,6 +6,7 @@ export class Api extends OAuth2Requester {
     private readonly stripeApiSecretKey: string;
     private readonly stripeClientId: string;
     private stripeUserId: string;
+    readonly redirect_uri: string;
 
     constructor(params = {}) {
         super(params);
@@ -13,6 +14,7 @@ export class Api extends OAuth2Requester {
         this.stripeApiSecretKey = get(params, 'stripeApiSecretKey');
         this.stripeClientId = get(params, 'stripeClientId');
         this.stripeUserId = get(params, 'stripe_user_id');
+        this.redirect_uri = get(params, 'redirect_uri');
 
         this.stripe = new Stripe(this.stripeApiSecretKey);
     }

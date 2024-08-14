@@ -1,4 +1,4 @@
-const {ModuleManager,} = require('core');
+const {ModuleManager, ModuleConstants, get} = require('@friggframework/core');
 const {Api} = require('./api');
 const {Entity} = require('./models/entity');
 const {Credential} = require('./models/credential');

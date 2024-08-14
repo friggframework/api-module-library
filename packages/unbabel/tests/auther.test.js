@@ -40,8 +40,8 @@ describe.skip('Unbabel Module Tests', () => {
     });
 
     afterAll(async () => {
-        await Auther.CredentialModel.deleteMany();
-        await Auther.EntityModel.deleteMany();
+        await module.CredentialModel.deleteMany();
+        await module.EntityModel.deleteMany();
         await disconnectFromDatabase();
     });
 
@@ -60,7 +60,7 @@ describe.skip('Unbabel Module Tests', () => {
     it('getAuthorizationRequirements() should return auth requirements', async () => {
         const requirements = await module.getAuthorizationRequirements();
         expect(requirements).toBeDefined();
-        expect(requirements.type).toEqual('password');
+        expect(requirements.type).toEqual('oauth2');
     });
 
     describe('Test credential retrieval and module instantiation', () => {

@@ -1,3 +1,49 @@
+# v1.1.5 (Tue Aug 06 2024)
+
+:tada: This release contains work from a new contributor! :tada:
+
+Thank you, Fer Riffel ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook)), for all your work!
+
+#### 🐛 Bug Fix
+
+- Updated icons for all Frigg API modules [#14](https://github.com/friggframework/api-module-library/pull/14) ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook))
+- Update icons for all Frigg API modules ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook))
+
+#### Authors: 1
+
+- Fer Riffel ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook))
+
+---
+
+# v1.1.4 (Thu Aug 01 2024)
+
+#### 🐛 Bug Fix
+
+- Merge pull request #13 [#13](https://github.com/friggframework/api-module-library/pull/13) ([@seanspeaks](https://github.com/seanspeaks))
+- Merge branch 'refs/heads/main' into fix/microsoft-teams-export-bug ([@seanspeaks](https://github.com/seanspeaks))
+- Better export update :sweat-smile: ([@seanspeaks](https://github.com/seanspeaks))
+- Exporting a non-existant class [#12](https://github.com/friggframework/api-module-library/pull/12) ([@seanspeaks](https://github.com/seanspeaks))
+- Bump independent versions \[skip ci\] ([@seanspeaks](https://github.com/seanspeaks))
+
+#### Authors: 1
+
+- Sean Matthews ([@seanspeaks](https://github.com/seanspeaks))
+
+---
+
+# v1.1.3 (Thu Aug 01 2024)
+
+#### 🐛 Bug Fix
+
+- Merge pull request #12 [#12](https://github.com/friggframework/api-module-library/pull/12) ([@seanspeaks](https://github.com/seanspeaks))
+- Exporting a non-existant class ([@seanspeaks](https://github.com/seanspeaks))
+
+#### Authors: 1
+
+- Sean Matthews ([@seanspeaks](https://github.com/seanspeaks))
+
+---
+
 # v1.1.0 (Wed Mar 20 2024)
 
 :tada: This release contains work from new contributors! :tada:

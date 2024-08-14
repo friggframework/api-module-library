@@ -1,3 +1,20 @@
+# v1.1.4 (Tue Aug 06 2024)
+
+:tada: This release contains work from a new contributor! :tada:
+
+Thank you, Fer Riffel ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook)), for all your work!
+
+#### 🐛 Bug Fix
+
+- Updated icons for all Frigg API modules [#14](https://github.com/friggframework/api-module-library/pull/14) ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook))
+- Update icons for all Frigg API modules ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook))
+
+#### Authors: 1
+
+- Fer Riffel ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook))
+
+---
+
 # v1.1.3 (Mon May 06 2024)
 
 #### 🐛 Bug Fix

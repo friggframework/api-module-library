@@ -3,7 +3,7 @@
   "label": "Microsoft SharePoint",
   "productUrl": "https://microsoft.com/sharepoint",
   "apiDocs": "https://developer.microsoft.com/en-us/graph/graph-explorer",
-  "logoUrl": "https://friggframework.org/assets/img/microsoft-sharepoint.jpeg",
+  "logoUrl": "https://friggframework.org/assets/img/microsoft-sharepoint-icon.png",
   "categories": [
     "Sharing"
   ],

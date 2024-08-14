@@ -3,7 +3,7 @@
   "label": "Help Scout",
   "productUrl": "",
   "apiDocs": "",
-  "logoUrl": "",
+  "logoUrl": "https://friggframework.org/assets/img/helpscout-icon.png",
   "categories": [],
   "description": "Help Scout Mailbox integration"
 }

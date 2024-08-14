@@ -3,7 +3,7 @@
   "label": "FreshBooks",
   "productUrl": "https://freshbooks.com",
   "apiDocs": "https://www.freshbooks.com/api/start",
-  "logoUrl": "https://logo.clearbit.com/freshbooks.com",
+  "logoUrl": "https://friggframework.org/assets/img/freshbooks-icon.png",
   "categories": [
     "Finance"
   ],

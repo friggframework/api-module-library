@@ -1,9 +1,8 @@
-const {Authenticator} = require('@friggframework/devtools');
+const {Authenticator} = require('@friggframework/test');
+const {mongoose} = require('@friggframework/core');
 require('dotenv').config();
 const Manager = require('../manager');
-const mongoose = require('mongoose');
 const config = require('../defaultConfig.json');
-const {expect} = require('chai');
 
 describe(`Should fully test the ${config.label} Manager`, () => {
     let manager, userManager;
@@ -23,8 +22,8 @@ describe(`Should fully test the ${config.label} Manager`, () => {
 
     it('getAuthorizationRequirements() should return auth requirements', async () => {
         const requirements = await manager.getAuthorizationRequirements();
-        expect(requirements).exists;
-        expect(requirements.type).to.equal('oauth2');
+        expect(requirements).toBeDefined();
+        expect(requirements.type).toBe('oauth2');
         authUrl = requirements.url;
     });
     describe('processAuthorizationCallback()', () => {
@@ -39,16 +38,16 @@ describe(`Should fully test the ${config.label} Manager`, () => {
                     code: response.data.code,
                 },
             });
-            expect(authRes).to.exist;
-            expect(authRes).to.have.property('entity_id');
-            expect(authRes).to.have.property('credential_id');
-            expect(authRes).to.have.property('type');
+            expect(authRes).toBeDefined();
+            expect(authRes).toHaveProperty('entity_id');
+            expect(authRes).toHaveProperty('credential_id');
+            expect(authRes).toHaveProperty('type');
         });
         it('should refresh token', async () => {
             manager.api.conn.accessToken = 'nope';
             await manager.testAuth();
-            expect(manager.api.conn.accessToken).to.not.equal('nope');
-            expect(manager.api.conn.accessToken).to.exist;
+            expect(manager.api.conn.accessToken).not.toBe('nope');
+            expect(manager.api.conn.accessToken).toBeDefined();
         });
         it('should refresh token after a fresh database retrieval', async () => {
             const newManager = await Manager.getInstance({
@@ -57,8 +56,8 @@ describe(`Should fully test the ${config.label} Manager`, () => {
             });
             newManager.api.conn.accessToken = 'nope';
             await newManager.testAuth();
-            expect(newManager.api.conn.accessToken).to.not.equal('nope');
-            expect(newManager.api.conn.accessToken).to.exist;
+            expect(newManager.api.conn.accessToken).not.toBe('nope');
+            expect(newManager.api.conn.accessToken).toBeDefined();
         });
         it('should error if incorrect auth data', async () => {
             try {
@@ -67,9 +66,9 @@ describe(`Should fully test the ${config.label} Manager`, () => {
                         code: 'bad',
                     },
                 });
-                expect(authRes).to.not.exist;
+                expect(authRes).not.toBeDefined()
             } catch (e) {
-                expect(e.message).to.contain('Error Authing with Code');
+                expect(e.message).toContain('Error Authing with Code');
             }
         });
     });

@@ -426,9 +426,7 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.customObjectSchemas,
             body,
         };
-        if (this.api_key) {
-            options.query = {hapikey: this.api_key};
-        }
+
 
         return this._post(options);
     }
@@ -453,17 +451,12 @@ class Api extends OAuth2Requester {
         return this._delete(options);
     }
 
-    async getCustomObjectSchema(objectType) {
+    async getCustomObjectSchema(objectType, query) {
         const options = {
             url:
                 this.baseUrl +
                 this.URLs.customObjectSchemaByObjectType(objectType),
         };
-
-        if (this.api_key) {
-            options.query = {hapikey: this.api_key};
-        }
-
         return this._get(options);
     }
 
@@ -471,11 +464,6 @@ class Api extends OAuth2Requester {
         const options = {
             url: this.baseUrl + this.URLs.customObjectSchemas,
         };
-
-        if (this.api_key) {
-            options.query = {hapikey: this.api_key};
-        }
-
         return this._get(options);
     }
 
@@ -486,11 +474,6 @@ class Api extends OAuth2Requester {
                 this.URLs.customObjectSchemaByObjectType(objectType),
             body,
         };
-
-        if (this.api_key) {
-            options.query = {hapikey: this.api_key};
-        }
-
         return this._patch(options);
     }
 
@@ -501,10 +484,6 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.customObjects(objectType),
             body,
         };
-        if (this.api_key) {
-            options.query = {hapikey: this.api_key};
-        }
-
         return this._post(options);
     }
 
@@ -513,10 +492,6 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.bulkCreateCustomObjects(objectType),
             body,
         };
-        if (this.api_key) {
-            options.query = {hapikey: this.api_key};
-        }
-
         return this._post(options);
     }
 
@@ -525,11 +500,6 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.customObjectById(objectType, objId),
             query: {},
         };
-
-        if (this.api_key) {
-            options.query.hapikey = this.api_key;
-        }
-
         return this._delete(options);
     }
 
@@ -554,11 +524,6 @@ class Api extends OAuth2Requester {
         const options = {
             url: this.baseUrl + this.URLs.customObjectById(objectType, objId),
         };
-
-        if (this.api_key) {
-            options.query = {hapikey: this.api_key};
-        }
-
         return this._get(options);
     }
 
@@ -567,10 +532,6 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.bulkReadCustomObjects(objectType),
             body,
         };
-        if (this.api_key) {
-            options.query = {hapikey: this.api_key};
-        }
-
         return this._post(options);
     }
 
@@ -579,11 +540,6 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.customObjects(objectType),
             query,
         };
-
-        if (this.api_key) {
-            options.query.hapikey = this.api_key;
-        }
-
         return this._get(options);
     }
 
@@ -592,10 +548,6 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.customObjectsSearch(objectType),
             body,
         };
-        if (this.api_key) {
-            options.query = {hapikey: this.api_key};
-        }
-
         return this._post(options);
     }
 
@@ -604,11 +556,6 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.customObjectById(objectType, objId),
             body,
         };
-
-        if (this.api_key) {
-            options.query = {hapikey: this.api_key};
-        }
-
         return this._patch(options);
     }
 
@@ -617,9 +564,6 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.bulkUpdateCustomObjects(objectType),
             body,
         };
-        if (this.api_key) {
-            options.query = {hapikey: this.api_key};
-        }
         return this._post(options);
     }
 

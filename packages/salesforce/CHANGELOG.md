@@ -1,3 +1,37 @@
+# v1.0.2 (Tue Aug 06 2024)
+
+:tada: This release contains work from a new contributor! :tada:
+
+Thank you, Fer Riffel ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook)), for all your work!
+
+#### 🐛 Bug Fix
+
+- Updated icons for all Frigg API modules [#14](https://github.com/friggframework/api-module-library/pull/14) ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook))
+- Update icons for all Frigg API modules ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook))
+
+#### Authors: 1
+
+- Fer Riffel ([@FerRiffel-LeftHook](https://github.com/FerRiffel-LeftHook))
+
+---
+
+# v1.0.1 (Thu Aug 01 2024)
+
+#### 🐛 Bug Fix
+
+- Salesforce V1 and some HubSpot API methods [#11](https://github.com/friggframework/api-module-library/pull/11) ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- delete node_modules and regen lock file ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- salesforce module v1 ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- update module to pass current manager tests ([@MichaelRyanWebber](https://github.com/MichaelRyanWebber))
+- Bump independent versions \[skip ci\] ([@seanspeaks](https://github.com/seanspeaks))
+
+#### Authors: 2
+
+- [@MichaelRyanWebber](https://github.com/MichaelRyanWebber)
+- Sean Matthews ([@seanspeaks](https://github.com/seanspeaks))
+
+---
+
 # v0.10.0 (Wed Mar 20 2024)
 
 :tada: This release contains work from new contributors! :tada:

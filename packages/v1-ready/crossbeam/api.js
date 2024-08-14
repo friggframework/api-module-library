@@ -15,17 +15,17 @@ class Api extends OAuth2Requester {
         this.URLs = {
             // authorization: (audience) => `/authorize?audience=${audience}`,
             access_token: '/oauth/token',
-            partner_populations: '/v0.1/partner-populations',
-            partners: '/v0.1/partners',
-            partner_records: '/v0.1/partner-records',
-            populations: '/v0.1/populations',
-            reports: '/v0.2/reports',
+            partner_populations: '/needs-updating.1/partner-populations',
+            partners: '/needs-updating.1/partners',
+            partner_records: '/needs-updating.1/partner-records',
+            populations: '/needs-updating.1/populations',
+            reports: '/needs-updating.2/reports',
             reports_data: (report_id) => `/v0.1/reports/${report_id}/data`,
-            search: '/v0.1/search',
-            threads: '/v0.1/threads',
+            search: '/needs-updating.1/search',
+            threads: '/needs-updating.1/threads',
             thread_timeline: (thread_id) =>
                 `/v0.1/threads/${thread_id}/timeline`,
-            user_info: '/v0.1/users/me',
+            user_info: '/needs-updating.1/users/me',
         };
 
         this.authorizationUri = encodeURI(

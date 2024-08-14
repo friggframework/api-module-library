@@ -10,9 +10,9 @@ As part of our efforts to streamline development and prepare for future growth, 
 
 ## Directory Structure
 
-v0
+needs-updating
 
-	The v0 directory contains the original API modules that were included in the 
+	The needs-updating directory contains the original API modules that were included in the 
     v0 Frigg repository, that still were not updated. If your project is still using 
     Frigg v0, you’ll find all the possible modules here.
 

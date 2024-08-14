@@ -3,14 +3,13 @@
     "version": "1.0.0",
     "prettier": "@friggframework/prettier-config",
     "description": "Stripe API module that lets the Frigg Framework interact with Stripe",
-    "exports": "./index.js",
+    "main": "index.js",
     "scripts": {
         "lint:fix": "prettier --write --loglevel error . && eslint . --fix",
-        "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
+        "test": "npx jest"
     },
     "author": "",
     "license": "MIT",
-    "type": "module",
     "devDependencies": {
         "@faker-js/faker": "^8.4.1",
         "@friggframework/devtools": "^1.2.2",

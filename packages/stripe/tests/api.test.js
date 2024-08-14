@@ -1,5 +1,4 @@
-import { Api } from '../api.js';
-import { expect, jest, describe, it } from '@jest/globals';
+const { Api } = require('../api');
 
 jest.mock('stripe', () => {
     return jest.fn().mockImplementation(() => ({
@@ -13,6 +12,9 @@ jest.mock('stripe', () => {
         charges: {
             list: jest.fn(),
         },
+        accounts: {
+            retrieve: jest.fn(),
+        },
         webhookEndpoints: {
             create: jest.fn(),
             del: jest.fn(),
@@ -21,8 +23,8 @@ jest.mock('stripe', () => {
 });
 
 describe('Api', () => {
-    let api: Api;
-    let params: any;
+    let api;
+    let params;
 
     beforeEach(() => {
         params = {
@@ -36,23 +38,21 @@ describe('Api', () => {
 
     it('should initialize with the correct parameters', () => {
         expect(api).toBeDefined();
-        expect(api['stripe']).toBeDefined();
-        expect(api['stripeClientId']).toBe(params.stripeClientId);
-        expect(api['stripeUserId']).toBe(params.stripe_user_id);
+        expect(api.stripe).toBeDefined();
+        expect(api.stripeClientId).toBe(params.stripeClientId);
+        expect(api.stripeUserId).toBe(params.stripe_user_id);
         expect(api.redirect_uri).toBe(params.redirect_uri);
     });
 
     it('should set stripeUserId', () => {
         const newUserId = 'acct_456';
         api.setStripeUserId(newUserId);
-        expect(api['stripeUserId']).toBe(newUserId);
+        expect(api.stripeUserId).toBe(newUserId);
     });
 
     it('should return the correct authorization URI', () => {
         const mockAuthUri = 'https://connect.stripe.com/oauth/authorize';
-        (api['stripe'].oauth.authorizeUrl as jest.Mock).mockReturnValue(
-            mockAuthUri,
-        );
+        api.stripe.oauth.authorizeUrl.mockReturnValue(mockAuthUri);
 
         const authUri = api.getAuthUri();
         expect(authUri).toBe(mockAuthUri);
@@ -60,7 +60,7 @@ describe('Api', () => {
 
     it('should get a token from code', async () => {
         const mockToken = { access_token: 'access_token_123' };
-        (api['stripe'].oauth.token as jest.Mock).mockResolvedValue(mockToken);
+        api.stripe.oauth.token.mockResolvedValue(mockToken);
 
         const token = await api.getTokenFromCode('auth_code_123');
         expect(token).toBe(mockToken);
@@ -68,27 +68,34 @@ describe('Api', () => {
 
     it('should refresh access token', async () => {
         const mockToken = { access_token: 'new_access_token_123' };
-        (api['stripe'].oauth.token as jest.Mock).mockResolvedValue(mockToken);
+        api.stripe.oauth.token.mockResolvedValue(mockToken);
 
         const token = await api.refreshAccessToken('refresh_token_123');
         expect(token).toBe(mockToken);
     });
 
     it('should handle errors when refreshing access token', async () => {
-        (api['stripe'].oauth.token as jest.Mock).mockRejectedValue(
-            new Error('Invalid token'),
-        );
+        api.stripe.oauth.token.mockRejectedValue(new Error('Invalid token'));
 
         await expect(
             api.refreshAccessToken('refresh_token_123'),
         ).rejects.toThrow('Invalid token');
     });
 
+    it('should get account details', async () => {
+        const mockAccountDetails = {
+            id: 'acct_123',
+            email: 'user@example.com',
+        };
+        api.stripe.accounts.retrieve.mockResolvedValue(mockAccountDetails);
+
+        const accountDetails = await api.getAccountDetails();
+        expect(accountDetails).toBe(mockAccountDetails);
+    });
+
     it('should get balance transactions', async () => {
         const mockTransactions = { data: [] };
-        (api['stripe'].balanceTransactions.list as jest.Mock).mockResolvedValue(
-            mockTransactions,
-        );
+        api.stripe.balanceTransactions.list.mockResolvedValue(mockTransactions);
 
         const transactions = await api.getBalanceTransactions({});
         expect(transactions).toBe(mockTransactions);
@@ -96,9 +103,7 @@ describe('Api', () => {
 
     it('should list all charges', async () => {
         const mockCharges = { data: [] };
-        (api['stripe'].charges.list as jest.Mock).mockResolvedValue(
-            mockCharges,
-        );
+        api.stripe.charges.list.mockResolvedValue(mockCharges);
 
         const charges = await api.listAllCharges({});
         expect(charges).toBe(mockCharges);
@@ -106,9 +111,7 @@ describe('Api', () => {
 
     it('should create a webhook', async () => {
         const mockWebhook = { id: 'wh_123' };
-        (api['stripe'].webhookEndpoints.create as jest.Mock).mockResolvedValue(
-            mockWebhook,
-        );
+        api.stripe.webhookEndpoints.create.mockResolvedValue(mockWebhook);
 
         const webhook = await api.createWebhook('http://example.com/webhook', [
             'charge.succeeded',
@@ -118,9 +121,7 @@ describe('Api', () => {
 
     it('should delete a webhook', async () => {
         const mockDeletedWebhook = { id: 'wh_123', deleted: true };
-        (api['stripe'].webhookEndpoints.del as jest.Mock).mockResolvedValue(
-            mockDeletedWebhook,
-        );
+        api.stripe.webhookEndpoints.del.mockResolvedValue(mockDeletedWebhook);
 
         const webhook = await api.deleteWebhook('wh_123');
         expect(webhook).toBe(mockDeletedWebhook);

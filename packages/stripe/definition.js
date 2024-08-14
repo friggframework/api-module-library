@@ -1,9 +1,9 @@
 require('dotenv').config();
-import { Api } from './api.js';
-import { get } from '@friggframework/core';
-import config from './defaultConfig.json';
+const { Api } = require('./api.js');
+const { get } = require('@friggframework/core');
+const config = require('./defaultConfig.json');
 
-export const Definition = {
+const Definition = {
     API: Api,
     getName: function () {
         return config.name;
@@ -11,15 +11,12 @@ export const Definition = {
     moduleName: config.name,
     modelName: 'Stripe',
     requiredAuthMethods: {
-        getToken: async function (
-            api: Api,
-            params: { data: { code: string } },
-        ) {
+        getToken: async function (api, params) {
             const code = get(params.data, 'code');
             return api.getTokenFromCode(code);
         },
 
-        getEntityDetails: async function (api: Api, userId: string) {
+        getEntityDetails: async function (api, userId) {
             const accountDetails = await api.getAccountDetails();
             return {
                 identifiers: { externalId: accountDetails.id, user: userId },
@@ -35,7 +32,7 @@ export const Definition = {
             entity: [],
         },
 
-        getCredentialDetails: async function (api: Api, userId: string) {
+        getCredentialDetails: async function (api, userId) {
             const accountDetails = await api.getAccountDetails();
             return {
                 identifiers: { externalId: accountDetails.id, user: userId },
@@ -43,7 +40,7 @@ export const Definition = {
             };
         },
 
-        testAuthRequest: function (api: Api) {
+        testAuthRequest: function (api) {
             return api.getAccountDetails();
         },
     },
@@ -53,3 +50,5 @@ export const Definition = {
         redirect_uri: `${process.env.REDIRECT_URI}/stripe`,
     },
 };
+
+module.exports = { Definition };

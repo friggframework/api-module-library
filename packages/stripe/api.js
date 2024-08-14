@@ -1,13 +1,7 @@
-import { OAuth2Requester, get } from '@friggframework/core';
-import Stripe from 'stripe';
+const { OAuth2Requester, get } = require('@friggframework/core');
+const Stripe = require('stripe');
 
-export class Api extends OAuth2Requester {
-    private readonly stripe: Stripe;
-    private readonly stripeApiSecretKey: string;
-    private readonly stripeClientId: string;
-    private stripeUserId: string;
-    readonly redirect_uri: string;
-
+class Api extends OAuth2Requester {
     constructor(params = {}) {
         super(params);
 
@@ -19,7 +13,7 @@ export class Api extends OAuth2Requester {
         this.stripe = new Stripe(this.stripeApiSecretKey);
     }
 
-    setStripeUserId(stripeUserId: string) {
+    setStripeUserId(stripeUserId) {
         this.stripeUserId = stripeUserId;
     }
 
@@ -33,17 +27,14 @@ export class Api extends OAuth2Requester {
         });
     }
 
-    getTokenFromCode(code: string) {
+    getTokenFromCode(code) {
         return this.stripe.oauth.token({
             grant_type: 'authorization_code',
             code: code,
         });
     }
 
-    async refreshAccessToken(
-        refreshToken: string | { refresh_token: string },
-        retries: number = 0,
-    ): Promise<Stripe.OAuthToken> {
+    async refreshAccessToken(refreshToken, retries = 0) {
         refreshToken =
             typeof refreshToken === 'string'
                 ? refreshToken
@@ -86,9 +77,7 @@ export class Api extends OAuth2Requester {
         }
     }
 
-    async getAccountDetails(
-        params: Stripe.AccountRetrieveParams = {},
-    ): Promise<Stripe.Response<Stripe.Account>> {
+    async getAccountDetails(params = {}) {
         try {
             return await this.stripe.accounts.retrieve(
                 this.stripeUserId,
@@ -101,9 +90,7 @@ export class Api extends OAuth2Requester {
         }
     }
 
-    async getBalanceTransactions(
-        params: Stripe.BalanceTransactionListParams,
-    ): Promise<Stripe.Response<Stripe.ApiList<Stripe.BalanceTransaction>>> {
+    async getBalanceTransactions(params) {
         try {
             return await this.stripe.balanceTransactions.list(params);
         } catch (e) {
@@ -113,9 +100,7 @@ export class Api extends OAuth2Requester {
         }
     }
 
-    async listAllCharges(
-        params: Stripe.ChargeListParams,
-    ): Promise<Stripe.ApiList<Stripe.Charge>> {
+    async listAllCharges(params) {
         try {
             return await this.stripe.charges.list(params);
         } catch (e) {
@@ -125,10 +110,7 @@ export class Api extends OAuth2Requester {
         }
     }
 
-    async createWebhook(
-        url: string,
-        enabledEvents: Stripe.WebhookEndpointCreateParams['enabled_events'],
-    ): Promise<Stripe.Response<Stripe.WebhookEndpoint>> {
+    async createWebhook(url, enabledEvents) {
         try {
             return await this.stripe.webhookEndpoints.create({
                 url: url,
@@ -141,10 +123,7 @@ export class Api extends OAuth2Requester {
         }
     }
 
-    async deleteWebhook(
-        id: string,
-        params?: Stripe.WebhookEndpointDeleteParams,
-    ): Promise<Stripe.Response<Stripe.DeletedWebhookEndpoint>> {
+    async deleteWebhook(id, params) {
         try {
             return await this.stripe.webhookEndpoints.del(id, params);
         } catch (e) {
@@ -154,3 +133,5 @@ export class Api extends OAuth2Requester {
         }
     }
 }
+
+module.exports = { Api };

@@ -1,9 +1,9 @@
 {
-  "name": "stripe",
-  "label": "Stripe",
-  "productUrl": "https://stripe.com",
-  "apiDocs": "https://developers.stripe.com",
-  "logoUrl": "https://logo.clearbit.com/stripe.com",
-  "categories": ["Finance"],
-  "description": "Stripe is a suite of payment APIs that powers commerce for businesses of all sizes."
+    "name": "stripe",
+    "label": "Stripe",
+    "productUrl": "https://stripe.com",
+    "apiDocs": "https://docs.stripe.com",
+    "logoUrl": "https://friggframework.org/assets/img/stripe-icon.png",
+    "categories": ["Finance"],
+    "description": "Stripe is a suite of payment APIs that powers commerce for businesses of all sizes."
 }

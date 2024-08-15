@@ -25,7 +25,7 @@ class Api extends OAuth2Requester {
             client_id: this.stripeClientId,
             redirect_uri: this.redirect_uri,
             scope: 'read_write',
-            state: JSON.stringify({ app: 'stripe' }),
+            state: null,
         });
     }
 

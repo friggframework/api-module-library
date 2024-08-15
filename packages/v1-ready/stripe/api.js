@@ -7,14 +7,16 @@ class Api extends OAuth2Requester {
 
         this.stripeApiSecretKey = get(params, 'stripeApiSecretKey');
         this.stripeClientId = get(params, 'stripeClientId');
-        this.stripeUserId = get(params, 'stripe_user_id');
         this.redirect_uri = get(params, 'redirect_uri');
+        this.stripeAccountId = get(params, 'stripeAccountId', null);
 
         this.stripe = new Stripe(this.stripeApiSecretKey);
+
+        this.authorizationUri = this.getAuthUri();
     }
 
-    setStripeUserId(stripeUserId) {
-        this.stripeUserId = stripeUserId;
+    setStripeAccountId(stripeAccountId) {
+        this.stripeAccountId = stripeAccountId;
     }
 
     getAuthUri() {
@@ -27,11 +29,18 @@ class Api extends OAuth2Requester {
         });
     }
 
-    getTokenFromCode(code) {
-        return this.stripe.oauth.token({
+    async getTokenFromCode(code) {
+        const tokens = await this.stripe.oauth.token({
             grant_type: 'authorization_code',
             code: code,
         });
+
+        await this.setTokens(tokens);
+        if (tokens.stripe_user_id) {
+            this.setStripeAccountId(tokens.stripe_user_id);
+        }
+
+        return tokens;
     }
 
     async refreshAccessToken(refreshToken, retries = 0) {
@@ -77,12 +86,27 @@ class Api extends OAuth2Requester {
         }
     }
 
-    async getAccountDetails(params = {}) {
+    async listAccounts() {
         try {
-            return await this.stripe.accounts.retrieve(
-                this.stripeUserId,
-                params,
-            );
+            return await this.stripe.accounts.list();
+        } catch (e) {
+            const error = e instanceof Error ? e.message : JSON.stringify(e);
+            console.log('List accounts error:', error);
+            throw e;
+        }
+    }
+
+    async getAccountDetails(id, params = {}) {
+        let accountId = id || this.stripeAccountId;
+        if (!accountId) {
+            const accounts = await this.listAccounts();
+            if (accounts.data.length > 0) accountId = accounts.data[0].id;
+        }
+
+        if (!accountId) throw new Error('Unable to get accountId');
+
+        try {
+            return await this.stripe.accounts.retrieve(accountId, params);
         } catch (e) {
             const error = e instanceof Error ? e.message : JSON.stringify(e);
             console.log('Get Account details error:', error);

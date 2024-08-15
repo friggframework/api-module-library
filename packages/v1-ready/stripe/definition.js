@@ -11,13 +11,14 @@ const Definition = {
     moduleName: config.name,
     modelName: 'Stripe',
     requiredAuthMethods: {
-        getToken: async function (api, params) {
+        getToken: function (api, params) {
             const code = get(params.data, 'code');
             return api.getTokenFromCode(code);
         },
 
         getEntityDetails: async function (api, userId) {
             const accountDetails = await api.getAccountDetails();
+            if (userId.userId) userId = userId.userId;
             return {
                 identifiers: { externalId: accountDetails.id, user: userId },
                 details: {
@@ -34,6 +35,7 @@ const Definition = {
 
         getCredentialDetails: async function (api, userId) {
             const accountDetails = await api.getAccountDetails();
+            if (userId.userId) userId = userId.userId;
             return {
                 identifiers: { externalId: accountDetails.id, user: userId },
                 details: {},

@@ -1,17 +1,14 @@
 const {get, OAuth2Requester} = require('@friggframework/core');
-const moment = require('moment');
-const fetch = require('node-fetch');
 const OAuthClient = require('intuit-oauth');
+const QuickBooks = require('node-quickbooks');
+
 
 const oauthClient = new OAuthClient({
-    clientId: process.env.QBO_OAUTH_KEY,
-    clientSecret: process.env.QBO_OAUTH_SECRET,
+    clientId: process.env.QBO_CLIENT_ID,
+    clientSecret: process.env.QBO_CLIENT_SECRET,
     environment: process.env.QBO_OAUTH_ENV, // 'sandbox' || 'production',
-    redirectUri: process.env.QBO_OAUTH_REDIRECT_URI,
+    redirectUri: `${process.env.REDIRECT_URI}/qbo`,
 });
-
-const QuickBooks = require('node-quickbooks');
-const util = require('util');
 
 class QuickBooksPromise {
     constructor(params) {

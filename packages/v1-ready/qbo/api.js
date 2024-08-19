@@ -25,7 +25,7 @@ class QuickBooksPromise {
             this.accessToken,
             false, // no token secret for oAuth 2.0
             this.realmId,
-            this.environment == 'sandbox', // use the sandbox?
+            this.environment === 'sandbox', // use the sandbox?
             true, // enable debugging?
             null, // set minorversion, or null for the latest version
             '2.0', // oAuth version
@@ -69,7 +69,7 @@ class Api extends OAuth2Requester {
         const authorizationUri = oauthClient.authorizeUri({
             scope: [
                 OAuthClient.scopes.Accounting,
-                // OAuthClient.scopes.OpenId,
+                OAuthClient.scopes.OpenId,
                 // OAuthClient.scopes.Email,
                 // OAuthClient.scopes.Payment
             ],
@@ -83,8 +83,11 @@ class Api extends OAuth2Requester {
         params.baseURL = process.env.QBO_BASE_URL;
 
         super(params);
+        this.key = oauthClient.clientId;
+        this.secret = oauthClient.clientSecret;
         this.realmId = get(params, 'realmId', null);
         this.qbo = null;
+        this.tokenUri = OAuthClient.tokenEndpoint;
 
         if (this.isAuthenticated()) {
             oauthClient.setToken({
@@ -104,12 +107,19 @@ class Api extends OAuth2Requester {
         this.qbo = new QuickBooksPromise({
             key: this.key,
             secret: this.secret,
-            accessToken: this.accessToken,
+            accessToken: this.access_token,
             realmId: this.realmId,
             environment: oauthClient.environment,
-            refreshToken: this.refreshToken,
+            refreshToken: this.refresh_token,
             refreshTokenFunction: this.refreshAccessToken.bind(this),
         });
+    }
+
+    async getUserDetails() {
+        const userDetails = await this._get({
+            url: OAuthClient[`userinfo_endpoint_${oauthClient.environment}`],
+        });
+        return userDetails;
     }
 
     async getTokens(redirectUrl) {

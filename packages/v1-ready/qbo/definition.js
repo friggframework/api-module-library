@@ -29,12 +29,10 @@ const Definition = {
             entity: [],
         },
         getCredentialDetails: async function (api, userId) {
-            console.log(">>> Getting user detail...")
             const userDetails = await api.getUserDetails();
-            console.log(">>> user detail: ", userDetails)
 
             return {
-                identifiers: {externalId: userDetails.portalId, user: userId},
+                identifiers: {externalId: userDetails.sub, user: userId},
                 details: {}
             };
         },

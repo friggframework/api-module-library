@@ -33,6 +33,11 @@
   },
   "repository": "friggframework/api-module-library",
   "auto": {
+    "prereleaseBranches": [
+      "next"
+    ],
+    "versionBranches": true,
+    "onlyPublishWithReleaseLabel": true,
     "plugins": [
       "npm",
       "all-contributors",

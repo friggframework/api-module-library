@@ -247,6 +247,25 @@ class Api extends OAuth2Requester {
         return response.data;
     }
 
+    async listBrandAssets({ brandId, limit = 10, searchTerm = 'off' }) {
+        const query = `query BrandLevelSearch {
+            brand(id: "${brandId}") {
+                id
+                name
+                search(page: 1, limit: ${limit}, query: {term: "${searchTerm}"}) {
+                    total
+                    edges {
+                        title
+                    }
+                }
+            }
+        }`;
+
+        const response = await this._post(this.buildRequestOptions(query));
+        this.assertResponse(response);
+        return response.data.brand;
+    }
+
     async listProjects(query) {
         const ql = `query Projects {
                       brand(id: "${query.brandId}") {

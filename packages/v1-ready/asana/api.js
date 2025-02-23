@@ -1,4 +1,5 @@
 const {OAuth2Requester, get} = require('@friggframework/core');
+const FormData = require('form-data');
 
 // core objects
 // - https://developers.asana.com/reference/projects
@@ -37,6 +38,9 @@ class Api extends OAuth2Requester {
             // Workspaces
             workspaces: '/workspaces',
             workspaceById: (workspaceId) => `/workspaces/${workspaceId}`,
+
+            // Attachments
+            attachments: '/attachments',
         };
 
         this.authorizationUri = encodeURI(
@@ -235,6 +239,63 @@ class Api extends OAuth2Requester {
     async getTaskById(id) {
         const options = {
             url: this.baseUrl + this.URLs.taskById(id),
+        };
+        return this._get(options);
+    }
+
+    async attachToTask(taskId, resourceURL) {
+        try {
+        
+            const fileName = resourceURL.split('/').pop();
+        
+            const formData = new FormData();
+            formData.append('parent', taskId);
+            formData.append('url', resourceURL);
+            formData.append('name', fileName);
+            formData.append('connect_to_app', 'true');
+            formData.append('resource_subtype', 'external');
+    
+            const options = {
+                method: 'POST',
+                url: this.baseUrl + this.URLs.attachments,
+                body: formData,
+                headers: {
+                    'Authorization': `Bearer ${this.access_token}`
+                }
+            };
+    
+            let response = await super._post(options, false);
+            
+            if (!response?.data) {
+                throw new Error('Failed to attach file to task: No response data received');
+            }
+
+            response = {
+                ...response.data,
+                resource_name: response.data.name,
+                resource_url: resourceURL,
+            };
+            
+            return response;
+          } catch (err) {
+            console.log(err);
+            throw err;
+          }
+    }
+
+    async listAttachments(taskId) {
+        const options = {
+            url: this.baseUrl + this.URLs.attachments,
+            query: {
+                parent: taskId,
+            },
+        };
+        return this._get(options);
+    }
+
+    async getAttachmentById(id) {
+        const options = {
+            url: `${this.baseUrl}${this.URLs.attachments}/${id}`,
         };
         return this._get(options);
     }

@@ -1,944 +1,377 @@
 const {OAuth2Requester, get} = require('@friggframework/core');
-const fetch = require('node-fetch');
-const querystring = require('querystring');
+const FormData = require('form-data');
+
+// core objects
+// - https://developers.asana.com/reference/projects
+// - https://developers.asana.com/reference/tags
+// - https://developers.asana.com/reference/tasks
+// - https://developers.asana.com/reference/users
+// - https://developers.asana.com/reference/workspaces
 
 class Api extends OAuth2Requester {
     constructor(params) {
         super(params);
-        this.domain = get(params, 'domain', null);
+        // The majority of the properties for OAuth are default loaded by OAuth2Requester.
+        // This includes the `client_id`, `client_secret`, `scopes`, and `redirect_uri`.
+        this.baseUrl = 'https://app.asana.com/api/1.0';
 
-        if (this.domain) {
-            this.baseUrl = `https://${this.domain}/graphql`;
-            this.tokenUri = `https://${this.domain}/api/oauth/accesstoken`;
-            this.tokenRefresh = `https://${this.domain}/api/oauth/refresh`;
-        }
-    }
+        this.URLs = {
+            // User info
+            userInfo: '/openid_connect/userinfo',
 
-    setDomain(domain) {
-        this.domain = domain;
-        this.baseUrl = `https://${this.domain}/graphql`;
-        this.tokenUri = `https://${this.domain}/api/oauth/accesstoken`;
-        this.tokenRefresh = `https://${this.domain}/api/oauth/refresh`;
+            // Projects
+            projects: '/projects',
+            projectById: (projectId) => `/projects/${projectId}`,
+
+            // Tags
+            tags: '/tags',
+            tagById: (tagId) => `/tags/${tagId}`,
+
+            // Tasks
+            tasks: '/tasks',
+            taskById: (taskId) => `/tasks/${taskId}`,
+
+            // Users
+            users: '/users',
+            userById: (userId) => `/users/${userId}`,
+
+            // Workspaces
+            workspaces: '/workspaces',
+            workspaceById: (workspaceId) => `/workspaces/${workspaceId}`,
+
+            // Attachments
+            attachments: '/attachments',
+        };
+
+        this.authorizationUri = encodeURI(
+            `https://app.asana.com/-/oauth_authorize?response_type=code&client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&state=${this.state}&scope=${this.scope}`
+        );
+        this.tokenUri = 'https://app.asana.com/-/oauth_token';
+
+        this.access_token = get(params, 'access_token', null);
+        this.refresh_token = get(params, 'refresh_token', null);
     }
 
     getAuthUri() {
-        const query = {
-            client_id: this.client_id,
-            response_type: 'code',
-            redirect_uri: this.redirect_uri,
-            scope: this.scope,
-            state: this.state,
-        };
-
-        let authorizationUri;
-
-        if (this.domain) {
-            authorizationUri = `https://${this.domain}/api/oauth/authorize`;
-        } else {
-            authorizationUri = 'https://{{domain}}/api/oauth/authorize';
-        }
-
-        return `${authorizationUri}?${querystring.stringify(query)}`;
+        return this.authorizationUri;
     }
 
-    // Used because the Frontify API has a link to the refresh token that is different from the access token.
-    async refreshAccessToken(refreshTokenObject) {
-        this.access_token = undefined;
-        const params = new URLSearchParams();
-        params.append('grant_type', 'refresh_token');
-        params.append('client_id', this.client_id);
-        params.append('client_secret', this.client_secret);
-        params.append('refresh_token', refreshTokenObject.refresh_token);
-        params.append('redirect_uri', this.redirect_uri);
+    async getTokenFromCode(code) {
+        // The token request will fail if Bearer header is applied
+        // Therefore,  there happens to be an access_token, remove it
+        delete this.access_token;
+        return super.getTokenFromCode(code);
+    }
+
+    addJsonHeaders(options) {
+        const jsonHeaders = {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+        };
+        options.headers = {
+            ...jsonHeaders,
+            ...options.headers,
+        }
+    }
+    async _post(options, stringify) {
+        this.addJsonHeaders(options);
+        return super._post(options, stringify);
+    }
+
+    async _patch(options, stringify) {
+        this.addJsonHeaders(options);
+        return super._patch(options, stringify);
+    }
+
+    async _put(options, stringify) {
+        this.addJsonHeaders(options);
+        return super._put(options, stringify);
+    }
+
+    // **************************   User details  **********************************
+
+    async getUserDetails() {
+        const options = {
+            url: this.baseUrl + this.URLs.userInfo,
+        };
+
+        return this._get(options);
+    }
+
+    // **************************   Projects   **********************************
+
+    async createProject(body) {
+      const options = {
+          url: this.baseUrl + this.URLs.projects,
+          body: {
+              data: body,
+          },
+      };
+
+      return this._post(options);
+    }
+
+    async listProjects(params) {
+        const options = {
+            url: this.baseUrl + this.URLs.projects,
+            query: params
+        };
+
+        return this._get(options);
+    }
+
+    async updateProject(id, body) {
+        const options = {
+            url: this.baseUrl + this.URLs.projectById(id),
+            body: {
+                data: body,
+            },
+        };
+        return this._put(options);
+    }
+
+    async deleteProject(id) {
+        const options = {
+            url: this.baseUrl + this.URLs.projectById(id),
+        };
+
+        return this._delete(options);
+    }
+
+    async getProjectById(id) {
+        const options = {
+            url: this.baseUrl + this.URLs.projectById(id),
+        };
+
+        return this._get(options);
+    }
+
+    // **************************   Tags   **********************************
+
+    async createTag(body) {
+        const options = {
+            url: this.baseUrl + this.URLs.tags,
+            body: {
+                data: body,
+            },
+        };
+
+        return this._post(options);
+    }
+
+    async listTags() {
+        const options = {
+            url: this.baseUrl + this.URLs.tags,
+        };
+
+        return this._get(options);
+    }
+
+    async updateTag(id, body) {
+        const options = {
+            url: this.baseUrl + this.URLs.tagById(id),
+            body: {
+                data: body,
+            },
+        };
+        return this._put(options);
+    }
+
+    async deleteTag(id) {
+        const options = {
+            url: this.baseUrl + this.URLs.tagById(id),
+        };
+        return this._delete(options);
+    }
+
+    async getTagById(id) {
+        const options = {
+            url: this.baseUrl + this.URLs.tagById(id),
+        };
+        return this._get(options);
+    }
+
+    // **************************   Tasks   **********************************
+
+    async createTask(body) {
+        const options = {
+            url: this.baseUrl + this.URLs.tasks,
+            body: {
+                data: body,
+            },
+        };
+
+        return this._post(options);
+    }
+
+    async listTasks(params) {
+        const workspaceId = get(params, 'workspaceId');
+        const assigneeId = get(params, 'assigneeId');  
 
         const options = {
-            body: params,
-            url: this.tokenRefresh,
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
+            url: this.baseUrl + this.URLs.tasks,
+            query: {
+              workspace: workspaceId,
+              assignee: assigneeId,
+            }
         };
-        const response = await this._post(options, false);
-        await this.setTokens(response);
-        return response;
+
+        return this._get(options);
     }
 
-    buildRequestOptions(query) {
-        return {
-            url: this.baseUrl,
-            headers: {
-                'Content-Type': 'application/json',
-            },
+    async updateTask(id, body) {
+        const options = {
+            url: this.baseUrl + this.URLs.taskById(id),
             body: {
-                query,
+                data: body,
             },
         };
+        return this._put(options);
     }
 
-    assertResponse(response) {
-        if (response.errors) {
-            const {errors} = response;
-            throw new Error(errors[0].message);
-        }
-    }
-
-    async getUser() {
-        const query = `query CurrentUser {
-                         currentUser {
-                           id
-                           email
-                           name
-                         }
-                       }`;
-
-        const response = await this._post(this.buildRequestOptions(query));
-        this.assertResponse(response);
-        return {
-            user: response.data.currentUser,
+    async deleteTask(id) {
+        const options = {
+            url: this.baseUrl + this.URLs.taskById(id),
         };
+        return this._delete(options);
     }
 
-    async getAsset(query) {
-        const ql = `query Asset {
-                      asset(id: "${query.assetId}") {
-                        id
-                        title
-                        status
-                        __typename
-                        tags {
-                          source
-                          value
-                        }
-                        ${this._filesQuery()}
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-        return response.data.asset;
-    }
-
-    async getAssetPermissions(query) {
-        const ql = `query AssetPermissions {
-                      asset(id: "${query.assetId}") {
-                          currentUserPermissions {
-                            canEdit
-                            canDelete
-                            canComment
-                            canDownload
-                          }
-                        }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-        return {
-            permissions: response.data.asset.currentUserPermissions,
+    async getTaskById(id) {
+        const options = {
+            url: this.baseUrl + this.URLs.taskById(id),
         };
+        return this._get(options);
     }
 
-    async getLibraryPermissions(query) {
-        const ql = `query LibraryPermissions {
-                      library(id: "${query.libraryId}") {
-                          currentUserPermissions {
-                            canCreateAssets
-                            canViewCollaborators
-                            canCreateCollections
-                          }
-                        }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-        return {
-            permissions: response.data.library.currentUserPermissions,
-        };
-    }
-
-    async getProjectPermissions(query) {
-        const ql = `query ProjectPermissions {
-                      workspaceProject(id: "${query.projectId}") {
-                          currentUserPermissions {
-                            canCreateAssets
-                            canViewCollaborators
-                          }
-                        }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-        return {
-            permissions: response.data.workspaceProject.currentUserPermissions,
-        };
-    }
-
-    async listBrandPermissions(query) {
-        const ql = `query Brands {
-                      brand(id: "${query.brandId}") {
-                        libraries {
-                          items {
-                            id
-                            name
-                            currentUserPermissions {
-                              canCreateAssets
-                              canViewCollaborators
-                              canCreateCollections
-                            }
-                          }
-                        }
-                        workspaceProjects{
-                          items{
-                            id
-                            name
-                            currentUserPermissions{
-                              canCreateAssets
-                              canViewCollaborators
-                            }
-                          }
-                        }
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-
-        const {brand} = response.data;
-
-        const libraries = brand.libraries.items.map(item => ({
-            id: item.id,
-            name: item.name,
-            permissions: item.currentUserPermissions
-        }));
-
-        const projects = brand.workspaceProjects.items.map(item => ({
-            id: item.id,
-            name: item.name,
-            permissions: item.currentUserPermissions
-        }));
-
-        return {libraries, projects};
-    }
-
-    async getSearchFilterOptions() {
-        return {
-            status: ['FINISHED', 'PROCESSING', 'PROCESSING_FAILED'],
-            fileTypes: [
-                'Audio',
-                'Document',
-                'File',
-                'Image',
-                'Video',
-                'EmbeddedContent'
-            ]
-        };
-    }
-
-    async listBrands() {
-        const ql = `query Brands {
-                      brands {
-                        id
-                        avatar
-                        name
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-        return response.data;
-    }
-
-    async listBrandAssets({ brandId, limit = 10, searchTerm = 'off' }) {
-        const query = `query BrandLevelSearch {
-            brand(id: "${brandId}") {
-                id
-                name
-                search(page: 1, limit: ${limit}, query: {term: "${searchTerm}"}) {
-                    total
-                    edges {
-                        title
-                    }
-                }
-            }
-        }`;
-
-        const response = await this._post(this.buildRequestOptions(query));
-        this.assertResponse(response);
-        return response.data.brand;
-    }
-
-    async listProjects(query) {
-        const ql = `query Projects {
-                      brand(id: "${query.brandId}") {
-                        workspaceProjects(${this._paginationParamsQuery(query)}) {
-                          items {
-                            id
-                            name
-                            currentUserPermissions {
-                              canCreateAssets
-                              canViewCollaborators
-                            }
-                          }
-                          ${this._paginationPropsQuery()}
-                        }
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-
-        const {
-            items,
-            total,
-            page,
-            hasNextPage
-        } = response.data.brand.workspaceProjects;
-
-        return {
-            items,
-            total,
-            page,
-            hasNextPage
-        };
-    }
-
-    async listLibraries(query) {
-        const ql = `query Libraries {
-                      brand(id: "${query.brandId}") {
-                        libraries(${this._paginationParamsQuery(query)}) {
-                          items {
-                            id
-                            name
-                            currentUserPermissions {
-                              canCreateAssets
-                              canViewCollaborators
-                              canCreateCollections
-                            }
-                          }
-                          ${this._paginationPropsQuery()}
-                        }
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-
-        const {
-            items,
-            total,
-            page,
-            hasNextPage
-        } = response.data.brand.libraries;
-
-        return {
-            items,
-            total,
-            page,
-            hasNextPage
-        };
-    }
-
-    async listCollections(query) {
-        const ql = `query Collections {
-                    library(id: "${query.libraryId}") {
-                      collections {
-                        items {
-                          id
-                          name
-                          __typename
-                        }
-                      }
-                    }
-                  }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-        return response.data.library.collections;
-    }
-
-    async listProjectAssets(query) {
-        const ql = `query ProjectAssets {
-                      workspaceProject(id: "${query.projectId}") {
-                        assets(${this._paginationParamsQuery(query)}) {
-                          items {
-                            id
-                            title
-                            description
-                            tags {
-                              source
-                              value
-                            }
-                            __typename
-                            ${this._filesQuery()}
-                          }
-                          ${this._paginationPropsQuery()}
-                        }
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-
-        const {
-            items,
-            total,
-            page,
-            hasNextPage
-        } = response.data.workspaceProject.assets;
-
-        return {
-            items,
-            total,
-            page,
-            hasNextPage
-        };
-    }
-
-    async listProjectFolders(query) {
-        const ql = `query ProjectFolders {
-                      workspaceProject(id: "${query.projectId}") {
-                        browse {
-                          folders(${this._paginationParamsQuery(query)}) {
-                            items {
-                              id
-                              name
-                              __typename
-                            }
-                            ${this._paginationPropsQuery()}
-                          }
-                        }
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-
-        const {
-            items,
-            total,
-            page,
-            hasNextPage
-        } = response.data.workspaceProject.browse.folders;
-
-        return {
-            items,
-            total,
-            page,
-            hasNextPage
-        };
-    }
-
-    async listLibraryAssets(query) {
-        const ql = `query LibraryAssets {
-                      library(id: "${query.libraryId}") {
-                        assets(${this._paginationParamsQuery(query)}) {
-                          items {
-                            id
-                            title
-                            description
-                            tags {
-                              source
-                              value
-                            }
-                            __typename
-                            ${this._filesQuery()}
-                          }
-                          ${this._paginationPropsQuery()}
-                        }
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-
-        const {
-            items,
-            total,
-            page,
-            hasNextPage
-        } = response.data.library.assets;
-
-        return {
-            items,
-            total,
-            page,
-            hasNextPage
-        };
-    }
-
-    async listCollectionsAssets(query) {
-        const ql = `query ListCollectionsAssetsForLibrary {
-                      library(id: "${query.libraryId}") {
-                        id
-                        name
-                        collections {
-                          items {
-                            id
-                            name
-                            __typename
-                            assets(${this._paginationParamsQuery(query)})	{
-                              items {
-                                id
-                                title
-                                description
-                                tags {
-                                  source
-                                  value
-                                }
-                                __typename
-                                ${this._filesQuery()}
-                              }
-                              ${this._paginationPropsQuery()}
-                            }
-                          }
-                        }
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-
-        const collection = response.data.library.collections.items.find(collection => collection.id === query.collectionId);
-
-        if (collection) {
-            const {
-                items,
-                total,
-                page,
-                hasNextPage
-            } = collection.assets;
-
-            return {
-                items,
-                total,
-                page,
-                hasNextPage
-            };
-        } else {
-            throw new Error('Collection not found');
-        }
-    }
-
-    async listLibraryFolders(query) {
-        const ql = `query LibraryFolders {
-                      library(id: "${query.libraryId}") {
-                        browse {
-                          folders(${this._paginationParamsQuery(query)}) {
-                            items {
-                              id
-                              name
-                              createdAt
-                              modifiedAt
-                              __typename
-                            }
-                            ${this._paginationPropsQuery()}
-                          }
-                        }
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-
-        const {
-            items,
-            total,
-            page,
-            hasNextPage
-        } = response.data.library.browse.folders;
-
-        return {
-            items,
-            total,
-            page,
-            hasNextPage
-        };
-    }
-
-    async listSubFolderAssets(query) {
-        const ql = `query FolderById {
-                      node(id: "${query.subFolderId}") {
-                        ... on Folder {
-                          name
-                          assets(${this._paginationParamsQuery(query)}) {
-                            items {
-                              id
-                              title
-                              tags {
-                                source
-                                value
-                              }
-                              __typename
-                              ${this._filesQuery()}
-                            }
-                            ${this._paginationPropsQuery()}
-                          }
-                        }
-                      }
-                    }`;
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-
-        const {
-            items,
-            total,
-            page,
-            hasNextPage
-        } = response.data.node.assets;
-
-        return {
-            items,
-            total,
-            page,
-            hasNextPage
-        };
-    }
-
-    async listSubFolderFolders(query) {
-        const ql = `query FolderById {
-                      node(id: "${query.subFolderId}") {
-                        ... on Folder {
-                          name
-                          folders(${this._paginationParamsQuery(query)}) {
-                            items {
-                              id
-                              name
-                              __typename
-                            }
-                            ${this._paginationPropsQuery()}
-                          }
-                        }
-                      }
-                    }`;
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-
-        const {
-            items,
-            total,
-            page,
-            hasNextPage
-        } = response.data.node.folders;
-
-        return {
-            items,
-            total,
-            page,
-            hasNextPage
-        };
-    }
-
-    async getResponseUsingQuery(ql) {
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-        return response;
-    }
-
-    async searchInBrand(query) {
-        const ql = `query BrandLevelSearch {
-                      brand(id: "${query.brandId}") {
-                        id
-                        name
-                        search(${this._paginationParamsQuery(query)}, query: {term: "${query.term}"}) {
-                          edges {
-                            title
-                            node {
-                              ... on Asset {
-                                id,
-                              modifiedAt,
-                              description,
-                              createdAt,
-                              tags {
-                                source,
-                                value,
-                              },
-                              metadataValues {
-                                id
-                              },
-                                externalId,
-                                title,
-                                status,
-                                __typename,
-                                creator {
-                                  id,
-                                  name,
-                                  email
-                                }
-
-                              },
-                              ${this._filesQuery()}
-                            }
-                          }
-                          ${this._paginationPropsQuery()}
-                        }
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-
-        const {
-            edges: items,
-            total,
-            page,
-            hasNextPage
-        } = response.data.brand.search;
-
-        return {
-            items,
-            total,
-            page,
-            hasNextPage
-        };
-    }
-
-    async searchLibraryAssets(query) {
-        // Build the query parameters based on the AssetQueryInput structure
-        const assetQueryParams = [];
+    async attachToTask(taskId, resourceURL) {
+        try {
         
-        if (query.search) assetQueryParams.push(`search: "${query.search}"`);
-        if (query.types && Array.isArray(query.types)) assetQueryParams.push(`types: [${query.types.join(', ')}]`);
-        if (query.externalId) assetQueryParams.push(`externalId: "${query.externalId}"`);
-        if (query.sortBy) assetQueryParams.push(`sortBy: ${query.sortBy}`);
+            const fileName = resourceURL.split('/').pop();
         
-        // Handle filter if provided
-        if (query.filter) {
-            const filterParams = [];
-            if (query.filter.status) filterParams.push(`status: ${query.filter.status}`);
-            if (query.filter.createdAt) filterParams.push(`createdAt: "${query.filter.createdAt}"`);
-            if (query.filter.modifiedAt) filterParams.push(`modifiedAt: "${query.filter.modifiedAt}"`);
-            
-            if (filterParams.length > 0) {
-                assetQueryParams.push(`filter: {${filterParams.join(', ')}}`);
-            }
-        }
-        
-        // Handle inFolder if provided
-        if (query.inFolder) {
-            assetQueryParams.push(`inFolder: {id: "${query.inFolder.id}"}`);
-        }
-        
-        const assetQueryString = assetQueryParams.length > 0 ? `query: {${assetQueryParams.join(', ')}}` : '';
-        
-        const ql = `query LibraryAssetSearch {
-                      library(id: "${query.libraryId}") {
-                        assets(${this._paginationParamsQuery(query)}${assetQueryString ? `, ${assetQueryString}` : ''}) {
-                          items {
-                            id
-                            title
-                            description
-                            status
-                            externalId
-                            createdAt
-                            modifiedAt                          
-                            tags {
-                              source
-                              value
-                            }
-                            __typename
-                            ${this._filesQuery()}
-                          }
-                          ${this._paginationPropsQuery()}
-                        }
-                      }
-                    }`;
-        
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-        
-        const {
-            items,
-            total,
-            page,
-            hasNextPage
-        } = response.data.library.assets;
-        
-        return {
-            items,
-            total,
-            page,
-            hasNextPage
-        };
-    }
+            const formData = new FormData();
+            formData.append('parent', taskId);
+            formData.append('url', resourceURL);
+            formData.append('name', fileName);
+            formData.append('connect_to_app', 'true');
+            formData.append('resource_subtype', 'external');
     
-    async searchWorkspaceAssets(query) {
-        // Build the query parameters based on the AssetQueryInput structure
-        const assetQueryParams = [];
-        
-        if (query.search) assetQueryParams.push(`search: "${query.search}"`);
-        if (query.types && Array.isArray(query.types)) assetQueryParams.push(`types: [${query.types.join(', ')}]`);
-        if (query.externalId) assetQueryParams.push(`externalId: "${query.externalId}"`);
-        if (query.sortBy) assetQueryParams.push(`sortBy: ${query.sortBy}`);
-        
-        // Handle filter if provided
-        if (query.filter) {
-            const filterParams = [];
-            if (query.filter.status) filterParams.push(`status: ${query.filter.status}`);
-            if (query.filter.createdAt) filterParams.push(`createdAt: "${query.filter.createdAt}"`);
-            if (query.filter.modifiedAt) filterParams.push(`modifiedAt: "${query.filter.modifiedAt}"`);
+            const options = {
+                method: 'POST',
+                url: this.baseUrl + this.URLs.attachments,
+                body: formData,
+                headers: {
+                    'Authorization': `Bearer ${this.access_token}`
+                }
+            };
+    
+            let response = await super._post(options, false);
             
-            if (filterParams.length > 0) {
-                assetQueryParams.push(`filter: {${filterParams.join(', ')}}`);
+            if (!response?.data) {
+                throw new Error('Failed to attach file to task: No response data received');
             }
-        }
-        
-        // Handle inFolder if provided
-        if (query.inFolder) {
-            assetQueryParams.push(`inFolder: {id: "${query.inFolder.id}"}`);
-        }
-        
-        const assetQueryString = assetQueryParams.length > 0 ? `query: {${assetQueryParams.join(', ')}}` : '';
-        
-        const ql = `query WorkspaceAssetSearch {
-                      workspaceProject(id: "${query.projectId}") {
-                        assets(${this._paginationParamsQuery(query)}${assetQueryString ? `, ${assetQueryString}` : ''}) {
-                          items {
-                            id
-                            title
-                            description
-                            status
-                            externalId
-                            createdAt
-                            modifiedAt                            
-                            tags {
-                              source
-                              value
-                            }
-                            __typename
-                            ${this._filesQuery()}
-                          }
-                          ${this._paginationPropsQuery()}
-                        }
-                      }
-                    }`;
-        
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-        
-        const {
-            items,
-            total,
-            page,
-            hasNextPage
-        } = response.data.workspaceProject.assets;
-        
-        return {
-            items,
-            total,
-            page,
-            hasNextPage
-        };
+
+            response = {
+                ...response.data,
+                resource_name: response.data.name,
+                resource_url: resourceURL,
+            };
+            
+            return response;
+          } catch (err) {
+            console.log(err);
+            throw err;
+          }
     }
 
-    async createAsset(asset) {
-        const ql = `mutation CreateAsset {
-                      createAsset(input: {
-                        fileId: "${asset.id}",
-                        title: "${asset.title}",
-                        parentId: "${asset.projectId}"
-                      }) {
-                        job {
-                          assetId
-                        }
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-        return {
-            id: response.data.createAsset.job.assetId
-        };
-    }
-
-    async createFileId(input) {
-        const ql = `mutation UploadFile {
-                      uploadFile(input: {
-                        filename: "${input.filename}",
-                        size: ${input.size},
-                        chunkSize: ${input.chunkSize}
-                      }) {
-                        id
-                        urls
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-        return response.data.uploadFile;
-    }
-
-    // Total of addresses in urls should match the number of chunks in
-    // stream. The code invoking this method should take care of this
-    // using a correct "highWaterMark".
-    async uploadFile(stream, urls) {
-        const responses = [];
-
-        const url = urls.shift();
-
-        const resp = await fetch(url, {
-            method: 'PUT',
-            headers: {
-                'content-type': 'binary'
+    async listAttachments(taskId) {
+        const options = {
+            url: this.baseUrl + this.URLs.attachments,
+            query: {
+                parent: taskId,
             },
-            body: stream
-        });
-
-        responses.push(resp);
-
-        return responses;
+        };
+        return this._get(options);
     }
 
-    _filesQuery() {
-        const commonProps = [
-            'description',
-            'downloadUrl',
-            'filename',
-            'previewUrl',
-            'size',
-            'extension',
-            'createdAt',
-            'modifiedAt',
-        ];
-
-        const dimensionProps = [
-            'height',
-            'width',
-        ];
-        return `... on Audio {
-                  ${commonProps.join(' ')}
-                }
-                ... on Document {
-                  ${commonProps.join(' ')}
-                  ${dimensionProps.join(' ')}
-                }
-                ... on File {
-                  ${commonProps.join(' ')}
-                }
-                ... on Image {
-                  ${commonProps.join(' ')}
-                  ${dimensionProps.join(' ')}
-                }
-                ... on Video {
-                  ${commonProps.join(' ')}
-                  ${dimensionProps.join(' ')}
-                  duration
-                  bitrate
-                }
-                ... on EmbeddedContent {
-                  description
-                  previewUrl
-                  status
-                }`;
+    async getAttachmentById(id) {
+        const options = {
+            url: `${this.baseUrl}${this.URLs.attachments}/${id}`,
+        };
+        return this._get(options);
     }
 
-    _paginationParamsQuery(query) {
-        return `page: ${query.page || 1}, limit: ${query.limit || 25}`;
+    // **************************   Users   **********************************
+
+    async createUser(body) {
+        const options = {
+            url: this.baseUrl + this.URLs.users,
+            body: {
+                data: body,
+            },
+        };
+
+        return this._post(options);
     }
 
-    _paginationPropsQuery() {
-        return `total
-                page
-                hasNextPage`;
+    async listUsers() {
+        const options = {
+            url: this.baseUrl + this.URLs.users,
+        };
+
+        return this._get(options);
     }
+
+    async updateUser(id, body) {
+        const options = {
+            url: this.baseUrl + this.URLs.userById(id),
+            body: {
+                data: body,
+            },
+        };
+        return this._put(options);
+    }
+
+    async deleteUser(id) {
+        const options = {
+            url: this.baseUrl + this.URLs.userById(id),
+        };
+        return this._delete(options);
+    }
+
+    async getUserById(id) {
+        const options = {
+            url: this.baseUrl + this.URLs.userById(id),
+        };
+        return this._get(options);
+    }
+
+    // **************************   Workspaces   **********************************
+
+    async listWorkspaces() {
+        const options = {
+            url: this.baseUrl + this.URLs.workspaces,
+        };
+
+        return this._get(options);
+    }
+
+    async getWorkspaceById(id) {
+        const options = {
+            url: this.baseUrl + this.URLs.workspaceById(id),
+        };
+        return this._get(options);
+    }
+
+    async updateWorkspace(id, body) {
+        const options = {
+            url: this.baseUrl + this.URLs.workspaceById(id),
+            body: {
+                data: body,
+            },
+        };
+        return this._put(options);
+    }
+
 }
 
 module.exports = {Api};

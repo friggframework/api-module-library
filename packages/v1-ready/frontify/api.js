@@ -691,6 +691,144 @@ class Api extends OAuth2Requester {
         };
     }
 
+    async searchLibraryAssets(query) {
+        // Build the query parameters based on the AssetQueryInput structure
+        const assetQueryParams = [];
+        
+        if (query.search) assetQueryParams.push(`search: "${query.search}"`);
+        if (query.types && Array.isArray(query.types)) assetQueryParams.push(`types: [${query.types.join(', ')}]`);
+        if (query.externalId) assetQueryParams.push(`externalId: "${query.externalId}"`);
+        if (query.sortBy) assetQueryParams.push(`sortBy: ${query.sortBy}`);
+        
+        // Handle filter if provided
+        if (query.filter) {
+            const filterParams = [];
+            if (query.filter.status) filterParams.push(`status: ${query.filter.status}`);
+            if (query.filter.createdAt) filterParams.push(`createdAt: "${query.filter.createdAt}"`);
+            if (query.filter.modifiedAt) filterParams.push(`modifiedAt: "${query.filter.modifiedAt}"`);
+            
+            if (filterParams.length > 0) {
+                assetQueryParams.push(`filter: {${filterParams.join(', ')}}`);
+            }
+        }
+        
+        // Handle inFolder if provided
+        if (query.inFolder) {
+            assetQueryParams.push(`inFolder: {id: "${query.inFolder.id}"}`);
+        }
+        
+        const assetQueryString = assetQueryParams.length > 0 ? `query: {${assetQueryParams.join(', ')}}` : '';
+        
+        const ql = `query LibraryAssetSearch {
+                      library(id: "${query.libraryId}") {
+                        assets(${this._paginationParamsQuery(query)}${assetQueryString ? `, ${assetQueryString}` : ''}) {
+                          items {
+                            id
+                            title
+                            description
+                            status
+                            externalId
+                            createdAt
+                            modifiedAt                          
+                            tags {
+                              source
+                              value
+                            }
+                            __typename
+                            ${this._filesQuery()}
+                          }
+                          ${this._paginationPropsQuery()}
+                        }
+                      }
+                    }`;
+        
+        const response = await this._post(this.buildRequestOptions(ql));
+        this.assertResponse(response);
+        
+        const {
+            items,
+            total,
+            page,
+            hasNextPage
+        } = response.data.library.assets;
+        
+        return {
+            items,
+            total,
+            page,
+            hasNextPage
+        };
+    }
+    
+    async searchWorkspaceAssets(query) {
+        // Build the query parameters based on the AssetQueryInput structure
+        const assetQueryParams = [];
+        
+        if (query.search) assetQueryParams.push(`search: "${query.search}"`);
+        if (query.types && Array.isArray(query.types)) assetQueryParams.push(`types: [${query.types.join(', ')}]`);
+        if (query.externalId) assetQueryParams.push(`externalId: "${query.externalId}"`);
+        if (query.sortBy) assetQueryParams.push(`sortBy: ${query.sortBy}`);
+        
+        // Handle filter if provided
+        if (query.filter) {
+            const filterParams = [];
+            if (query.filter.status) filterParams.push(`status: ${query.filter.status}`);
+            if (query.filter.createdAt) filterParams.push(`createdAt: "${query.filter.createdAt}"`);
+            if (query.filter.modifiedAt) filterParams.push(`modifiedAt: "${query.filter.modifiedAt}"`);
+            
+            if (filterParams.length > 0) {
+                assetQueryParams.push(`filter: {${filterParams.join(', ')}}`);
+            }
+        }
+        
+        // Handle inFolder if provided
+        if (query.inFolder) {
+            assetQueryParams.push(`inFolder: {id: "${query.inFolder.id}"}`);
+        }
+        
+        const assetQueryString = assetQueryParams.length > 0 ? `query: {${assetQueryParams.join(', ')}}` : '';
+        
+        const ql = `query WorkspaceAssetSearch {
+                      workspaceProject(id: "${query.projectId}") {
+                        assets(${this._paginationParamsQuery(query)}${assetQueryString ? `, ${assetQueryString}` : ''}) {
+                          items {
+                            id
+                            title
+                            description
+                            status
+                            externalId
+                            createdAt
+                            modifiedAt                            
+                            tags {
+                              source
+                              value
+                            }
+                            __typename
+                            ${this._filesQuery()}
+                          }
+                          ${this._paginationPropsQuery()}
+                        }
+                      }
+                    }`;
+        
+        const response = await this._post(this.buildRequestOptions(ql));
+        this.assertResponse(response);
+        
+        const {
+            items,
+            total,
+            page,
+            hasNextPage
+        } = response.data.workspaceProject.assets;
+        
+        return {
+            items,
+            total,
+            page,
+            hasNextPage
+        };
+    }
+
     async createAsset(asset) {
         const ql = `mutation CreateAsset {
                       createAsset(input: {

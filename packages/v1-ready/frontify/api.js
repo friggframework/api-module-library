@@ -617,14 +617,110 @@ class Api extends OAuth2Requester {
     }
 
     /**
-     * Lists assets in a subfolder
+     * Lists folders in a project with optional recursive nesting
      * @param {Object} query - Query parameters
-     * @param {string} query.subFolderId - ID of the subfolder
-     * @param {number} [query.page=1] - Page number
-     * @param {number} [query.limit=25] - Items per page
-     * @returns {Promise<Object>} Paginated list of assets
+     * @param {string} query.projectId - ID of the project
+     * @param {number} [query.page=1] - Page number for pagination
+     * @param {number} [query.limit=25] - Number of items per page
+     * @param {number} [query.nested=0] - Depth of nested folders to retrieve (max 10)
+     * @param {number} [query.recursive=0] - Alias for nested
+     * @returns {Promise<Object>} Paginated list of folders with nested structure if requested
      */
-    async listSubFolderAssets(query) {
+    async listProjectFolders(query) {
+        const depth = Math.min(query?.nested || query?.recursive || 0, 10);
+        const ql = `query ProjectFolders {
+                      workspaceProject(id: "${query.projectId}") {
+                        browse {
+                          folders(${this._paginationParamsQuery(query)}) {
+                            items {
+                              id
+                              name
+                              __typename
+                              ${this._nestedFoldersQuery(depth)}
+                            }
+                            ${this._paginationPropsQuery()}
+                          }
+                        }
+                      }
+                    }`;
+
+        const response = await this._post(this.buildRequestOptions(ql));
+        this.assertResponse(response);
+
+        const {
+            items,
+            total,
+            page,
+            hasNextPage
+        } = response.data.workspaceProject.browse.folders;
+
+        return {
+            items,
+            total,
+            page,
+            hasNextPage
+        };
+    }
+
+    /**
+     * Lists folders in a library with optional recursive nesting
+     * @param {Object} query - Query parameters
+     * @param {string} query.libraryId - ID of the library
+     * @param {number} [query.page=1] - Page number for pagination
+     * @param {number} [query.limit=25] - Number of items per page
+     * @param {number} [query.nested=0] - Depth of nested folders to retrieve (max 10)
+     * @param {number} [query.recursive=0] - Alias for nested
+     * @returns {Promise<Object>} Paginated list of folders with nested structure if requested
+     */
+    async listLibraryFolders(query) {
+        const depth = Math.min(query?.nested || query?.recursive || 0, 10);
+        const ql = `query LibraryFolders {
+                      library(id: "${query.libraryId}") {
+                        browse {
+                          folders(${this._paginationParamsQuery(query)}) {
+                            items {
+                              id
+                              name
+                              createdAt
+                              modifiedAt
+                              __typename
+                              ${this._nestedFoldersQuery(depth)}
+                            }
+                            ${this._paginationPropsQuery()}
+                          }
+                        }
+                      }
+                    }`;
+
+        const response = await this._post(this.buildRequestOptions(ql));
+        this.assertResponse(response);
+
+        const {
+            items,
+            total,
+            page,
+            hasNextPage
+        } = response.data.library.browse.folders;
+
+        return {
+            items,
+            total,
+            page,
+            hasNextPage
+        };
+    }
+
+    /**
+     * Lists subfolders within a folder with optional recursive nesting
+     * @param {Object} query - Query parameters
+     * @param {string} query.subFolderId - ID of the parent folder
+     * @param {number} [query.page=1] - Page number for pagination
+     * @param {number} [query.limit=25] - Number of items per page
+     * @param {number} [query.nested=0] - Depth of nested folders to retrieve (max 10)
+     * @param {number} [query.recursive=0] - Alias for nested
+     * @returns {Promise<Object>} Paginated list of subfolders with nested structure if requested
+     */
+    async listSubFolderFolders(query) {
         const depth = Math.min(query?.nested || query?.recursive || 0, 10);
         const ql = `query FolderById {
                       node(id: "${query.subFolderId}") {

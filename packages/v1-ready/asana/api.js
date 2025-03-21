@@ -243,19 +243,30 @@ class Api extends OAuth2Requester {
         return this._get(options);
     }
 
-    async attachToTask(taskId, resourceURL) {
+    async attachToTask(taskId, resource, options = {}) {
         try {
-        
-            const fileName = resourceURL.split('/').pop();
-        
             const formData = new FormData();
             formData.append('parent', taskId);
-            formData.append('url', resourceURL);
-            formData.append('name', fileName);
-            formData.append('connect_to_app', 'true');
-            formData.append('resource_subtype', 'external');
-    
-            const options = {
+
+            if (typeof resource === 'string') {
+                // Handle external URL attachment
+                const fileName = resource.split('/').pop();
+                formData.append('url', resource);
+                formData.append('name', fileName);
+                formData.append('connect_to_app', 'true');
+                formData.append('resource_subtype', 'external');
+            } else if (Buffer.isBuffer(resource) || resource instanceof Uint8Array) {
+                // Handle file upload from buffer
+                const fileName = options.fileName || 'attachment';
+                formData.append('file', resource, {
+                    filename: fileName,
+                    contentType: options.contentType || 'application/octet-stream'
+                });
+            } else {
+                throw new Error('Resource must be either a URL string or a Buffer/Uint8Array');
+            }
+
+            const requestOptions = {
                 method: 'POST',
                 url: this.baseUrl + this.URLs.attachments,
                 body: formData,
@@ -263,8 +274,8 @@ class Api extends OAuth2Requester {
                     'Authorization': `Bearer ${this.access_token}`
                 }
             };
-    
-            let response = await super._post(options, false);
+
+            let response = await super._post(requestOptions, false);
             
             if (!response?.data) {
                 throw new Error('Failed to attach file to task: No response data received');
@@ -273,14 +284,14 @@ class Api extends OAuth2Requester {
             response = {
                 ...response.data,
                 resource_name: response.data.name,
-                resource_url: resourceURL,
+                resource_url: typeof resource === 'string' ? resource : null,
             };
             
             return response;
-          } catch (err) {
+        } catch (err) {
             console.log(err);
             throw err;
-          }
+        }
     }
 
     async listAttachments(taskId) {

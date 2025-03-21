@@ -1,7 +1,6 @@
 const {OAuth2Requester, get} = require('@friggframework/core');
 const fetch = require('node-fetch');
 const querystring = require('node:querystring');
-const FormData = require('node:form-data');
 
 /**
  * Frontify API client

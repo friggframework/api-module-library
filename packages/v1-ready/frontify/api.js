@@ -1,8 +1,18 @@
 const {OAuth2Requester, get} = require('@friggframework/core');
 const fetch = require('node-fetch');
-const querystring = require('querystring');
+const querystring = require('node:querystring');
+const FormData = require('node:form-data');
 
+/**
+ * Frontify API client
+ * @extends OAuth2Requester
+ */
 class Api extends OAuth2Requester {
+    /**
+     * Creates a new Frontify API client
+     * @param {Object} params - Configuration parameters
+     * @param {string} [params.domain] - Frontify domain
+     */
     constructor(params) {
         super(params);
         this.domain = get(params, 'domain', null);
@@ -14,6 +24,10 @@ class Api extends OAuth2Requester {
         }
     }
 
+    /**
+     * Sets the Frontify domain and updates related URLs
+     * @param {string} domain - Frontify domain
+     */
     setDomain(domain) {
         this.domain = domain;
         this.baseUrl = `https://${this.domain}/graphql`;
@@ -21,6 +35,10 @@ class Api extends OAuth2Requester {
         this.tokenRefresh = `https://${this.domain}/api/oauth/refresh`;
     }
 
+    /**
+     * Gets the authorization URI for OAuth2 flow
+     * @returns {string} The authorization URI
+     */
     getAuthUri() {
         const query = {
             client_id: this.client_id,
@@ -41,7 +59,12 @@ class Api extends OAuth2Requester {
         return `${authorizationUri}?${querystring.stringify(query)}`;
     }
 
-    // Used because the Frontify API has a link to the refresh token that is different from the access token.
+    /**
+     * Refreshes the access token using a refresh token
+     * @param {Object} refreshTokenObject - Object containing the refresh token
+     * @param {string} refreshTokenObject.refresh_token - The refresh token
+     * @returns {Promise<Object>} The response containing new tokens
+     */
     async refreshAccessToken(refreshTokenObject) {
         this.access_token = undefined;
         const params = new URLSearchParams();
@@ -63,6 +86,11 @@ class Api extends OAuth2Requester {
         return response;
     }
 
+    /**
+     * Builds GraphQL request options
+     * @param {string} query - GraphQL query
+     * @returns {Object} Request options for GraphQL query
+     */
     buildRequestOptions(query) {
         return {
             url: this.baseUrl,
@@ -75,6 +103,12 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Asserts that a GraphQL response is valid
+     * @private
+     * @param {Object} response - GraphQL response
+     * @throws {Error} If the response contains errors
+     */
     assertResponse(response) {
         if (response.errors) {
             const {errors} = response;
@@ -82,6 +116,10 @@ class Api extends OAuth2Requester {
         }
     }
 
+    /**
+     * Gets the current user's information
+     * @returns {Promise<Object>} User information
+     */
     async getUser() {
         const query = `query CurrentUser {
                          currentUser {
@@ -98,6 +136,12 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Gets an asset by ID
+     * @param {Object} query - Query parameters
+     * @param {string} query.assetId - ID of the asset
+     * @returns {Promise<Object>} Asset details
+     */
     async getAsset(query) {
         const ql = `query Asset {
                       asset(id: "${query.assetId}") {
@@ -118,6 +162,12 @@ class Api extends OAuth2Requester {
         return response.data.asset;
     }
 
+    /**
+     * Gets permissions for an asset
+     * @param {Object} query - Query parameters
+     * @param {string} query.assetId - ID of the asset
+     * @returns {Promise<Object>} Asset permissions
+     */
     async getAssetPermissions(query) {
         const ql = `query AssetPermissions {
                       asset(id: "${query.assetId}") {
@@ -137,6 +187,12 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Gets permissions for a library
+     * @param {Object} query - Query parameters
+     * @param {string} query.libraryId - ID of the library
+     * @returns {Promise<Object>} Library permissions
+     */
     async getLibraryPermissions(query) {
         const ql = `query LibraryPermissions {
                       library(id: "${query.libraryId}") {
@@ -155,6 +211,12 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Gets permissions for a project
+     * @param {Object} query - Query parameters
+     * @param {string} query.projectId - ID of the project
+     * @returns {Promise<Object>} Project permissions
+     */
     async getProjectPermissions(query) {
         const ql = `query ProjectPermissions {
                       workspaceProject(id: "${query.projectId}") {
@@ -172,6 +234,12 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Lists permissions for all libraries and projects in a brand
+     * @param {Object} query - Query parameters
+     * @param {string} query.brandId - ID of the brand
+     * @returns {Promise<Object>} Object containing libraries and projects with their permissions
+     */
     async listBrandPermissions(query) {
         const ql = `query Brands {
                       brand(id: "${query.brandId}") {
@@ -219,6 +287,10 @@ class Api extends OAuth2Requester {
         return {libraries, projects};
     }
 
+    /**
+     * Gets available search filter options
+     * @returns {Promise<Object>} Available filter options
+     */
     async getSearchFilterOptions() {
         return {
             status: ['FINISHED', 'PROCESSING', 'PROCESSING_FAILED'],
@@ -233,6 +305,10 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Lists all brands
+     * @returns {Promise<Object>} List of brands
+     */
     async listBrands() {
         const ql = `query Brands {
                       brands {
@@ -247,6 +323,14 @@ class Api extends OAuth2Requester {
         return response.data;
     }
 
+    /**
+     * Lists assets in a brand
+     * @param {Object} query - Query parameters
+     * @param {string} query.brandId - ID of the brand
+     * @param {number} [query.limit=10] - Number of items per page
+     * @param {string} [query.searchTerm='off'] - Search term
+     * @returns {Promise<Object>} List of brand assets
+     */
     async listBrandAssets({ brandId, limit = 10, searchTerm = 'off' }) {
         const query = `query BrandLevelSearch {
             brand(id: "${brandId}") {
@@ -266,6 +350,14 @@ class Api extends OAuth2Requester {
         return response.data.brand;
     }
 
+    /**
+     * Lists projects in a brand
+     * @param {Object} query - Query parameters
+     * @param {string} query.brandId - ID of the brand
+     * @param {number} [query.page=1] - Page number
+     * @param {number} [query.limit=25] - Items per page
+     * @returns {Promise<Object>} Paginated list of projects
+     */
     async listProjects(query) {
         const ql = `query Projects {
                       brand(id: "${query.brandId}") {
@@ -301,6 +393,14 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Lists libraries in a brand
+     * @param {Object} query - Query parameters
+     * @param {string} query.brandId - ID of the brand
+     * @param {number} [query.page=1] - Page number
+     * @param {number} [query.limit=25] - Items per page
+     * @returns {Promise<Object>} Paginated list of libraries
+     */
     async listLibraries(query) {
         const ql = `query Libraries {
                       brand(id: "${query.brandId}") {
@@ -337,6 +437,12 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Lists collections in a library
+     * @param {Object} query - Query parameters
+     * @param {string} query.libraryId - ID of the library
+     * @returns {Promise<Object>} List of collections
+     */
     async listCollections(query) {
         const ql = `query Collections {
                     library(id: "${query.libraryId}") {
@@ -355,6 +461,14 @@ class Api extends OAuth2Requester {
         return response.data.library.collections;
     }
 
+    /**
+     * Lists assets in a project
+     * @param {Object} query - Query parameters
+     * @param {string} query.projectId - ID of the project
+     * @param {number} [query.page=1] - Page number
+     * @param {number} [query.limit=25] - Items per page
+     * @returns {Promise<Object>} Paginated list of assets
+     */
     async listProjectAssets(query) {
         const ql = `query ProjectAssets {
                       workspaceProject(id: "${query.projectId}") {
@@ -393,40 +507,14 @@ class Api extends OAuth2Requester {
         };
     }
 
-    async listProjectFolders(query) {
-        const ql = `query ProjectFolders {
-                      workspaceProject(id: "${query.projectId}") {
-                        browse {
-                          folders(${this._paginationParamsQuery(query)}) {
-                            items {
-                              id
-                              name
-                              __typename
-                            }
-                            ${this._paginationPropsQuery()}
-                          }
-                        }
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-
-        const {
-            items,
-            total,
-            page,
-            hasNextPage
-        } = response.data.workspaceProject.browse.folders;
-
-        return {
-            items,
-            total,
-            page,
-            hasNextPage
-        };
-    }
-
+    /**
+     * Lists assets in a library
+     * @param {Object} query - Query parameters
+     * @param {string} query.libraryId - ID of the library
+     * @param {number} [query.page=1] - Page number
+     * @param {number} [query.limit=25] - Items per page
+     * @returns {Promise<Object>} Paginated list of assets
+     */
     async listLibraryAssets(query) {
         const ql = `query LibraryAssets {
                       library(id: "${query.libraryId}") {
@@ -465,6 +553,16 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Lists assets in a collection
+     * @param {Object} query - Query parameters
+     * @param {string} query.libraryId - ID of the library
+     * @param {string} query.collectionId - ID of the collection
+     * @param {number} [query.page=1] - Page number
+     * @param {number} [query.limit=25] - Items per page
+     * @returns {Promise<Object>} Paginated list of assets
+     * @throws {Error} If collection is not found
+     */
     async listCollectionsAssets(query) {
         const ql = `query ListCollectionsAssetsForLibrary {
                       library(id: "${query.libraryId}") {
@@ -499,52 +597,16 @@ class Api extends OAuth2Requester {
 
         const collection = response.data.library.collections.items.find(collection => collection.id === query.collectionId);
 
-        if (collection) {
-            const {
-                items,
-                total,
-                page,
-                hasNextPage
-            } = collection.assets;
-
-            return {
-                items,
-                total,
-                page,
-                hasNextPage
-            };
-        } else {
+        if (!collection) {
             throw new Error('Collection not found');
         }
-    }
-
-    async listLibraryFolders(query) {
-        const ql = `query LibraryFolders {
-                      library(id: "${query.libraryId}") {
-                        browse {
-                          folders(${this._paginationParamsQuery(query)}) {
-                            items {
-                              id
-                              name
-                              createdAt
-                              modifiedAt
-                              __typename
-                            }
-                            ${this._paginationPropsQuery()}
-                          }
-                        }
-                      }
-                    }`;
-
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
 
         const {
             items,
             total,
             page,
             hasNextPage
-        } = response.data.library.browse.folders;
+        } = collection.assets;
 
         return {
             items,
@@ -554,46 +616,16 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Lists assets in a subfolder
+     * @param {Object} query - Query parameters
+     * @param {string} query.subFolderId - ID of the subfolder
+     * @param {number} [query.page=1] - Page number
+     * @param {number} [query.limit=25] - Items per page
+     * @returns {Promise<Object>} Paginated list of assets
+     */
     async listSubFolderAssets(query) {
-        const ql = `query FolderById {
-                      node(id: "${query.subFolderId}") {
-                        ... on Folder {
-                          name
-                          assets(${this._paginationParamsQuery(query)}) {
-                            items {
-                              id
-                              title
-                              tags {
-                                source
-                                value
-                              }
-                              __typename
-                              ${this._filesQuery()}
-                            }
-                            ${this._paginationPropsQuery()}
-                          }
-                        }
-                      }
-                    }`;
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-
-        const {
-            items,
-            total,
-            page,
-            hasNextPage
-        } = response.data.node.assets;
-
-        return {
-            items,
-            total,
-            page,
-            hasNextPage
-        };
-    }
-
-    async listSubFolderFolders(query) {
+        const depth = Math.min(query?.nested || query?.recursive || 0, 10);
         const ql = `query FolderById {
                       node(id: "${query.subFolderId}") {
                         ... on Folder {
@@ -603,6 +635,7 @@ class Api extends OAuth2Requester {
                               id
                               name
                               __typename
+                              ${this._nestedFoldersQuery(depth)}
                             }
                             ${this._paginationPropsQuery()}
                           }
@@ -627,12 +660,26 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Executes a custom GraphQL query
+     * @param {string} ql - GraphQL query
+     * @returns {Promise<Object>} Query response
+     */
     async getResponseUsingQuery(ql) {
         const response = await this._post(this.buildRequestOptions(ql));
         this.assertResponse(response);
         return response;
     }
 
+    /**
+     * Searches for assets in a brand
+     * @param {Object} query - Query parameters
+     * @param {string} query.brandId - ID of the brand
+     * @param {string} query.term - Search term
+     * @param {number} [query.page=1] - Page number
+     * @param {number} [query.limit=25] - Items per page
+     * @returns {Promise<Object>} Paginated search results
+     */
     async searchInBrand(query) {
         const ql = `query BrandLevelSearch {
                       brand(id: "${query.brandId}") {
@@ -691,6 +738,20 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Searches for assets in a library
+     * @param {Object} query - Query parameters
+     * @param {string} query.libraryId - ID of the library
+     * @param {string} [query.search] - Search term
+     * @param {string[]} [query.types] - Asset types to filter by
+     * @param {string} [query.externalId] - External ID to filter by
+     * @param {string} [query.sortBy] - Sort field
+     * @param {Object} [query.filter] - Additional filters
+     * @param {Object} [query.inFolder] - Folder to search in
+     * @param {number} [query.page=1] - Page number
+     * @param {number} [query.limit=25] - Items per page
+     * @returns {Promise<Object>} Paginated search results
+     */
     async searchLibraryAssets(query) {
         // Build the query parameters based on the AssetQueryInput structure
         const assetQueryParams = [];
@@ -760,6 +821,20 @@ class Api extends OAuth2Requester {
         };
     }
     
+    /**
+     * Searches for assets in a workspace
+     * @param {Object} query - Query parameters
+     * @param {string} query.projectId - ID of the project
+     * @param {string} [query.search] - Search term
+     * @param {string[]} [query.types] - Asset types to filter by
+     * @param {string} [query.externalId] - External ID to filter by
+     * @param {string} [query.sortBy] - Sort field
+     * @param {Object} [query.filter] - Additional filters
+     * @param {Object} [query.inFolder] - Folder to search in
+     * @param {number} [query.page=1] - Page number
+     * @param {number} [query.limit=25] - Items per page
+     * @returns {Promise<Object>} Paginated search results
+     */
     async searchWorkspaceAssets(query) {
         // Build the query parameters based on the AssetQueryInput structure
         const assetQueryParams = [];
@@ -829,6 +904,14 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Creates a new asset
+     * @param {Object} asset - Asset details
+     * @param {string} asset.id - File ID
+     * @param {string} asset.title - Asset title
+     * @param {string} asset.projectId - ID of the parent project
+     * @returns {Promise<Object>} Created asset ID
+     */
     async createAsset(asset) {
         const ql = `mutation CreateAsset {
                       createAsset(input: {
@@ -849,6 +932,14 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /**
+     * Creates a file ID for upload
+     * @param {Object} input - Upload details
+     * @param {string} input.filename - Name of the file
+     * @param {number} input.size - Size of the file in bytes
+     * @param {number} input.chunkSize - Size of each chunk in bytes
+     * @returns {Promise<Object>} Upload ID and URLs
+     */
     async createFileId(input) {
         const ql = `mutation UploadFile {
                       uploadFile(input: {
@@ -866,9 +957,12 @@ class Api extends OAuth2Requester {
         return response.data.uploadFile;
     }
 
-    // Total of addresses in urls should match the number of chunks in
-    // stream. The code invoking this method should take care of this
-    // using a correct "highWaterMark".
+    /**
+     * Uploads a file using provided URLs
+     * @param {ReadableStream} stream - File stream
+     * @param {string[]} urls - Upload URLs
+     * @returns {Promise<Object[]>} Upload responses
+     */
     async uploadFile(stream, urls) {
         const responses = [];
 
@@ -887,6 +981,60 @@ class Api extends OAuth2Requester {
         return responses;
     }
 
+    /**
+     * Generates a nested folders query structure for GraphQL
+     * @private
+     * @param {number} [depth=0] - Depth of nesting (max 10)
+     * @returns {string} GraphQL query fragment for nested folders
+     */
+    _nestedFoldersQuery(depth = 0) {
+        const maxDepth = 10;
+        if (depth <= 0) return '';
+        const safeDepth = depth > maxDepth ? maxDepth : depth;
+        
+        return `
+          folders {
+            items {
+              id
+              name
+              createdAt
+              modifiedAt
+              __typename
+              ${this._nestedFoldersQuery(safeDepth - 1)}
+            }
+            ${this._paginationPropsQuery()}
+          }
+        `;
+    }
+
+    /**
+     * Generates pagination parameters for GraphQL queries
+     * @private
+     * @param {Object} query - Query parameters
+     * @param {number} [query.page=1] - Page number
+     * @param {number} [query.limit=25] - Items per page
+     * @returns {string} GraphQL pagination parameters
+     */
+    _paginationParamsQuery(query) {
+        return `page: ${query.page || 1}, limit: ${query.limit || 25}`;
+    }
+
+    /**
+     * Generates pagination properties for GraphQL queries
+     * @private
+     * @returns {string} GraphQL pagination properties
+     */
+    _paginationPropsQuery() {
+        return `total
+                page
+                hasNextPage`;
+    }
+
+    /**
+     * Generates file type specific fields for GraphQL queries
+     * @private
+     * @returns {string} GraphQL file type fields
+     */
     _filesQuery() {
         const commonProps = [
             'description',
@@ -928,16 +1076,6 @@ class Api extends OAuth2Requester {
                   previewUrl
                   status
                 }`;
-    }
-
-    _paginationParamsQuery(query) {
-        return `page: ${query.page || 1}, limit: ${query.limit || 25}`;
-    }
-
-    _paginationPropsQuery() {
-        return `total
-                page
-                hasNextPage`;
     }
 }
 

@@ -1079,13 +1079,16 @@ class Api extends OAuth2Requester {
     /**
      * Generates a nested folders query structure for GraphQL
      * @private
-     * @param {number} [depth=0] - Depth of nesting (max 10)
+     * @param {number} [depth=0] - Depth of nesting (max 5 recommended)
      * @returns {string} GraphQL query fragment for nested folders
      */
     _nestedFoldersQuery(depth = 0) {
-        const maxDepth = 10;
+        // Frontify has a max query depth of 20
+        // Given the base query structure, we should limit folder nesting to 5 levels
+        // to stay well within the limit while accounting for other fields
+        const maxDepth = 5;
         if (depth <= 0) return '';
-        const safeDepth = depth > maxDepth ? maxDepth : depth;
+        const safeDepth = Math.min(depth, maxDepth);
         
         return `
           folders {
@@ -1097,7 +1100,9 @@ class Api extends OAuth2Requester {
               __typename
               ${this._nestedFoldersQuery(safeDepth - 1)}
             }
-            ${this._paginationPropsQuery()}
+            total
+            page
+            hasNextPage
           }
         `;
     }

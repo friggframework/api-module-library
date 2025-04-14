@@ -1,0 +1,13 @@
+{
+  "name": "docusign",
+  "label": "DocuSign",
+  "productUrl": "https://www.docusign.com/",
+  "apiDocs": "https://developers.docusign.com/docs/esign-rest-api/",
+  "logoUrl": "https://friggframework.org/assets/img/docusign.png",
+  "categories": [
+    "eSignature",
+    "Document Management",
+    "Workflow Automation"
+  ],
+  "description": "DocuSign helps organizations connect and automate how they prepare, sign, act on, and manage agreements."
+} 

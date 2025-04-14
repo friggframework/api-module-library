@@ -1,0 +1,35 @@
+{
+  // "extends": "../../tsconfig.base.json", // Removed as base file doesn't exist
+  "compilerOptions": {
+    // Base options commonly found in tsconfig.base.json
+    "target": "ES2016", // Or a newer target like ES2020, ES2022
+    "module": "CommonJS", // Standard for Node.js libraries
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "lib": ["ESNext"],
+
+    // Module-specific options
+    "outDir": "./dist",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*"]
+    },
+    "composite": false, // Set to false as it's not extending/being referenced by other projects in the same way
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  },
+  "include": [
+    "./**/*.ts",
+    "./*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tests"
+  ]
+} 

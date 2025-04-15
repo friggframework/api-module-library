@@ -9,6 +9,8 @@ Currently implemented:
 *   Get Envelope Details
 *   Create Envelope
 *   Void Envelope
+*   List Templates
+*   Get Template Details
 *   Retrieve User Info (for account discovery)
 
 ## Setup

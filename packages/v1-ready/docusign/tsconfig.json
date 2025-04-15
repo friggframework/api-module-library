@@ -17,8 +17,9 @@
   "include": [
     "./*.ts",
     "./**/*.ts",
-    "./tests/**/*.ts"
-, "tests/auth.test.js"  ],
+    "./tests/**/*.ts", 
+    "tests/auth.test.js"  
+  ],
   "exclude": [
     "node_modules",
     "dist"

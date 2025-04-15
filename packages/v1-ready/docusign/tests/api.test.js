@@ -37,7 +37,7 @@ describe('DocuSign API tests', () => {
         expect(primaryAccount.base_uri).toBeDefined();
 
         api.setAccountId(primaryAccount.account_id);
-    }, 120000); // Increase timeout for manual auth step
+    }, 120000);
 
     describe('User Info', () => {
         it('should return user details', async () => {
@@ -115,19 +115,16 @@ describe('DocuSign API tests', () => {
 
         // Cleanup: Attempt to void the envelope if created (best effort)
         // This runs even if void test is skipped. Only runs if create test passed.
-            afterAll(async () => {
-                 if (testEnvelopeId) {
-                     console.log(`Attempting cleanup: Voiding envelope ${testEnvelopeId}`);
-                     try {
-                         // Voiding requires status 'sent' or 'delivered'. If it was only 'created',
-                         // voiding will fail. This is just best-effort cleanup.
-                         await api.voidEnvelope(testEnvelopeId, 'Frigg API Test Cleanup');
-                         console.log(`Voided envelope ${testEnvelopeId}`);
-                     } catch (error) {
-                         console.warn(`Could not void envelope ${testEnvelopeId} during cleanup (may have been only 'created'):`, error.message || error);
-                         // Optionally try deleting if voiding fails and if a delete method exists
-                     }
-                 }
-            }, 30000);
+        afterAll(async () => {
+            if (testEnvelopeId) {
+                console.log(`Attempting cleanup: Voiding envelope ${testEnvelopeId}`);
+                try {
+                    await api.voidEnvelope(testEnvelopeId, 'Frigg API Test Cleanup');
+                    console.log(`Voided envelope ${testEnvelopeId}`);
+                } catch (error) {
+                    console.warn(`Could not void envelope ${testEnvelopeId} during cleanup (may have been only 'created'):`, error.message || error);
+                }
+            }
+        }, 30000);
     });
 });

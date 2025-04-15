@@ -1,4 +1,3 @@
-import { get } from '@friggframework/core';
 import { OAuth2Requester } from '@friggframework/core';
 
 interface DocuSignConstructorParams {
@@ -179,6 +178,8 @@ export class Api extends OAuth2Requester {
                 );
             }
 
+            this.setTokens(data);
+
             return data as TokenResponse;
         } catch (error: any) {
             console.error('Error during token exchange:', error);
@@ -248,13 +249,10 @@ export class Api extends OAuth2Requester {
         return this._put(options);
     }
 
-    // Helper to get user info (often needed to find the default accountId)
     async getUserInfo() {
-        // User info endpoint uses the environment-aware authHost
         const options = {
             url: `${this.authHost}/oauth/userinfo`,
         };
-        // User info uses the Authorization header with the Bearer token, handled by Requester
         this.addJsonHeaders(options);
         return super._get(options);
     }

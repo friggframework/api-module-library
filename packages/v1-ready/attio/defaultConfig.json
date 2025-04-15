@@ -1,0 +1,14 @@
+{
+    "name": "attio",
+    "config": {
+        "oauth": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        },
+        "tokenHost": "https://app.attio.com",
+        "tokenPath": "/oauth/token",
+        "authorizeHost": "https://app.attio.com",
+        "authorizePath": "/oauth/authorize"
+    }
+} 

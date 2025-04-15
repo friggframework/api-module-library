@@ -127,4 +127,33 @@ describe('DocuSign API tests', () => {
             }
         }, 30000);
     });
+
+    describe('Templates', () => {
+        let testTemplateId = null;
+
+        it('should list templates', async () => {
+            const response = await api.listTemplates();
+            expect(response).toBeDefined();
+            // Check if envelopeTemplates is an array, even if empty
+            expect(Array.isArray(response.envelopeTemplates)).toBe(true);
+
+            // If templates exist, store one for the get test
+            if (response.envelopeTemplates.length > 0) {
+                testTemplateId = response.envelopeTemplates[0].templateId;
+                console.log(`Using template ID for get test: ${testTemplateId}`);
+            } else {
+                console.log('No templates found in account, skipping getTemplate test.');
+            }
+        });
+
+        it('should get template details if a template exists', async () => {
+            if (!testTemplateId) {
+                throw new Error('Skipping get template details test as no template ID was found.');
+            }
+            const response = await api.getTemplate(testTemplateId, { include: 'tabs' });
+            expect(response).toBeDefined();
+            expect(response.templateId).toEqual(testTemplateId);
+            expect(response.name).toBeDefined();
+        });
+    });
 });

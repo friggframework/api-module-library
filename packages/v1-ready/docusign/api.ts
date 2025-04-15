@@ -35,6 +35,26 @@ interface TokenResponse {
     [key: string]: any;
 }
 
+interface ListTemplatesQueryParams {
+    count?: number;
+    start_position?: number;
+    from_date?: string; // ISO 8601 format
+    to_date?: string; // ISO 8601 format
+    search_text?: string;
+    order?: 'asc' | 'desc';
+    order_by?: 'name' | 'modified' | 'used';
+    folder_ids?: string; // Comma-separated list of folder IDs
+    include?: string; // Comma-separated list (e.g., 'documents,recipients,tabs')
+    user_filter?: 'all' | 'owned_by_me' | 'shared_with_me';
+    shared_by_me?: string; // 'true' or 'false'
+    used_from_date?: string; // ISO 8601 format
+    used_to_date?: string; // ISO 8601 format
+}
+
+interface GetTemplateQueryParams {
+    include?: string; // Comma-separated list (e.g., 'documents,recipients,tabs')
+}
+
 export class Api extends OAuth2Requester {
     protected accountId?: string;
     protected baseUriHost: string; // Renamed from baseUrl - stores the host part
@@ -247,6 +267,35 @@ export class Api extends OAuth2Requester {
             body: body,
         };
         return this._put(options);
+    }
+
+    /**
+     * Retrieves the list of templates for the account.
+     * DocuSign API: GET /templates
+     * @param query Optional query parameters
+     */
+    async listTemplates(query?: ListTemplatesQueryParams) {
+        const baseUrl = this._getAccountApiBaseUrl();
+        const options = {
+            url: `${baseUrl}/templates`, // Append specific endpoint
+            query: query || {},
+        };
+        return this._get(options);
+    }
+
+    /**
+     * Retrieves the details of a specific template.
+     * DocuSign API: GET /templates/{templateId}
+     * @param templateId The ID of the template to retrieve.
+     * @param query Optional query parameters
+     */
+    async getTemplate(templateId: string, query?: GetTemplateQueryParams) {
+        const baseUrl = this._getAccountApiBaseUrl();
+        const options = {
+            url: `${baseUrl}/templates/${templateId}`, // Append specific endpoint
+            query: query || {},
+        };
+        return this._get(options);
     }
 
     async getUserInfo() {

@@ -44,6 +44,7 @@ declare module '@friggframework/core' {
         public getAuthUri(): string;
         public getToken(callbackParams: any, code: string): Promise<any>;
         public refreshAccessToken(params?: any): Promise<any>;
+        public setTokens(params: any): void;
     }
 
     // Define the utility 'get' function

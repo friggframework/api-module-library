@@ -110,7 +110,7 @@ export const Definition = {
         client_id: process.env.DOCUSIGN_CLIENT_ID,
         client_secret: process.env.DOCUSIGN_CLIENT_SECRET,
         scope: process.env.DOCUSIGN_SCOPE,
-        redirect_uri: process.env.REDIRECT_URI,
+        redirect_uri: process.env.REDIRECT_URI + '/docusign',
         environment: process.env.DOCUSIGN_ENVIRONMENT || 'dev',
         account_id: process.env.DOCUSIGN_ACCOUNT_ID,
     },

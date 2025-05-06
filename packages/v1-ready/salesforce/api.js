@@ -1,12 +1,12 @@
-const {flushDebugLog, get, OAuth2Requester} = require('@friggframework/core');
+const { flushDebugLog, get, OAuth2Requester } = require('@friggframework/core');
 const jsforce = require('jsforce');
 
 class Api extends OAuth2Requester {
     constructor(params) {
         super(params);
         this.jsforce = jsforce;
-        this.key = get(params, 'client_id');
-        this.secret = get(params, 'client_secret');
+        this.key = get(params, 'client_id', null);
+        this.secret = get(params, 'client_secret', null);
         this.instanceUrl = get(params, 'instanceUrl', null);
         this.isSandbox = get(params, 'isSandbox', false);
         if (this.isSandbox) {
@@ -113,7 +113,7 @@ class Api extends OAuth2Requester {
     async find(
         object,
         findFilter = {},
-        returnFields = {'*': 1},
+        returnFields = { '*': 1 },
         options = {}
     ) {
         const response = await this.conn
@@ -151,4 +151,4 @@ class Api extends OAuth2Requester {
     }
 }
 
-module.exports = {Api};
+module.exports = { Api };

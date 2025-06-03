@@ -1,0 +1,27 @@
+{
+  "name": "@friggframework/api-module-openphone",
+  "version": "1.0.0",
+  "description": "OpenPhone API module for Frigg Framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --passWithNoTests"
+  },
+  "keywords": [
+    "frigg",
+    "api",
+    "openphone",
+    "voip",
+    "phone",
+    "communication"
+  ],
+  "author": "Frigg Framework Team",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^2.0.0-next.24",
+    "@friggframework/devtools": "^2.0.0-next.24",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}

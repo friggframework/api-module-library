@@ -1,43 +1,44 @@
 require('dotenv').config();
-const {Api} = require('./api');
-const {get} = require('@friggframework/core');
+const { Api } = require('./api');
+const { get } = require('@friggframework/core');
 const config = require('./defaultConfig.json')
 
 const Definition = {
     API: Api,
-    getName: function() {
+    getName: function () {
         return config.name
     },
     moduleName: config.name,
+    modelName: 'ZohoCRM',
     requiredAuthMethods: {
-        getToken: async function(api, params) {
-            const code = get(params.data, 'code'); 
-            await api.getTokenFromCode(code);
+        getToken: async function (api, params) {
+            const code = get(params.data, 'code');
+            return await api.getTokenFromCode(code);
         },
-	    apiPropertiesToPersist: {
+        apiPropertiesToPersist: {
             credential: ['access_token', 'refresh_token'],
             entity: [],
         },
         getCredentialDetails: async function (api, userId) {
-            const response = await api.listUsers({type: 'CurrentUser'});
+            const response = await api.listUsers({ type: 'CurrentUser' });
             const currentUser = response.users[0];
             return {
-                identifiers: {externalId: currentUser.id, user: userId},
+                identifiers: { externalId: currentUser.id, user: userId },
                 details: {},
             };
         },
         getEntityDetails: async function (api, callbackParams, tokenResponse, userId) {
-            const response = await api.listUsers({type: 'CurrentUser'});
+            const response = await api.listUsers({ type: 'CurrentUser' });
             const currentUser = response.users[0];
             return {
-                identifiers: {externalId: currentUser.id, user: userId},
+                identifiers: { externalId: currentUser.id, user: userId },
                 details: {
                     name: currentUser.email
                 },
             }
         },
-        testAuthRequest: async function(api) {
-            return  await api.listUsers();
+        testAuthRequest: async function (api) {
+            return await api.listUsers();
         },
     },
     env: {
@@ -48,4 +49,4 @@ const Definition = {
     }
 };
 
-module.exports = {Definition};
+module.exports = { Definition };

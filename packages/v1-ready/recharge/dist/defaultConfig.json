@@ -1,0 +1,14 @@
+{
+    "name": "recharge",
+    "label": "Recharge",
+    "productUrl": "https://rechargepayments.com",
+    "apiDocs": "https://developer.rechargepayments.com",
+    "logoUrl": "https://friggframework.org/assets/img/recharge-icon.png",
+    "categories": [
+        "E-commerce",
+        "Subscription Management",
+        "Recurring Billing",
+        "Payment Processing"
+    ],
+    "description": "Recharge is the leading subscription payments platform powering subscriptions for over 15,000 merchants"
+}

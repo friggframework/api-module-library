@@ -24,3 +24,13 @@ yarn-error.log*
 .env
 .npmrc
 /.nx/
+
+# Claude Code and SPARC files
+CLAUDE.md
+.claude/
+.roo/
+.roomodes
+claude-flow
+coordination.md
+memory-bank.md
+memory/

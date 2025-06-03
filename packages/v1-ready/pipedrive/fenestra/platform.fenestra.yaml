@@ -1,0 +1,420 @@
+# Pipedrive Platform - Fenestra Specification
+fenestra: "1.0.0"
+platform:
+  name: Pipedrive
+  description: All varieties of available Pipedrive UI extensibility, from Custom Fields and Apps to Workflow Automation, Reporting extensions, and Marketplace integrations
+  version: "v1"
+  baseUrl: "https://api.pipedrive.com/v1"
+  documentation: "https://developers.pipedrive.com"
+  marketplace: "https://marketplace.pipedrive.com"
+  support: "https://support.pipedrive.com/en/developers"
+
+extensionTypes:
+  custom-app:
+    name: Custom Apps
+    description: Third-party applications integrated into Pipedrive interface
+    contexts:
+      - deal-detail
+      - person-detail
+      - organization-detail
+      - app-panel
+      - sidebar
+    rendering:
+      - iframe-embed
+      - web-component
+      - modal-dialog
+    communication:
+      - rest-api
+      - webhook-events
+      - oauth-authentication
+    capabilities:
+      - data-access
+      - ui-customization
+      - workflow-integration
+      - real-time-sync
+    triggers:
+      - record-view
+      - data-change
+      - user-action
+      - scheduled-task
+    examples:
+      - name: Email Marketing Integration
+        description: Sync contacts and track email campaigns
+        placement: "person-detail"
+
+  custom-field:
+    name: Custom Fields
+    description: Extended data fields for deals, people, organizations, and activities
+    contexts:
+      - deal-properties
+      - person-properties
+      - organization-properties
+      - activity-properties
+      - product-properties
+    rendering:
+      - input-field
+      - dropdown-select
+      - checkbox
+      - date-picker
+      - file-upload
+    communication:
+      - field-api
+      - validation-rules
+      - dependent-fields
+    capabilities:
+      - data-validation
+      - conditional-logic
+      - bulk-editing
+      - reporting-integration
+    triggers:
+      - field-creation
+      - value-change
+      - validation-trigger
+    examples:
+      - name: Lead Source Tracking
+        description: Track where leads originated
+        fieldType: "enum"
+        options: ["website", "referral", "cold-call", "trade-show"]
+
+  workflow-automation:
+    name: Workflow Automation
+    description: Automated actions based on triggers and conditions
+    contexts:
+      - deal-pipeline
+      - activity-automation
+      - contact-management
+      - follow-up-sequences
+    rendering:
+      - automation-builder
+      - trigger-configuration
+      - action-definition
+    communication:
+      - automation-engine
+      - webhook-actions
+      - email-integration
+      - third-party-apis
+    capabilities:
+      - conditional-logic
+      - multi-step-workflows
+      - external-integration
+      - scheduled-actions
+    triggers:
+      - deal-stage-change
+      - activity-completion
+      - field-update
+      - time-based
+    examples:
+      - name: Lead Nurturing Sequence
+        description: Automated follow-up based on lead behavior
+        triggers: ["deal-created", "no-activity-7days"]
+
+  reporting-extension:
+    name: Reporting Extensions
+    description: Custom reports and analytics dashboards
+    contexts:
+      - insights-dashboard
+      - reports-section
+      - pipeline-analytics
+      - team-performance
+    rendering:
+      - chart-widgets
+      - data-tables
+      - metric-cards
+      - export-tools
+    communication:
+      - reporting-api
+      - data-aggregation
+      - real-time-updates
+    capabilities:
+      - custom-metrics
+      - data-visualization
+      - scheduled-reports
+      - export-functionality
+    triggers:
+      - report-generation
+      - data-refresh
+      - scheduled-delivery
+    examples:
+      - name: Sales Forecast Dashboard
+        description: Predictive analytics for pipeline forecasting
+        metrics: ["conversion-rates", "deal-velocity", "forecast-accuracy"]
+
+  email-integration:
+    name: Email Integration
+    description: Email tracking, templates, and automation within Pipedrive
+    contexts:
+      - email-sidebar
+      - deal-communication
+      - contact-history
+      - template-library
+    rendering:
+      - email-composer
+      - template-editor
+      - tracking-indicators
+      - engagement-metrics
+    communication:
+      - email-api
+      - smtp-integration
+      - tracking-webhooks
+    capabilities:
+      - email-tracking
+      - template-management
+      - automated-sequences
+      - engagement-analytics
+    triggers:
+      - email-send
+      - email-open
+      - link-click
+      - reply-received
+    examples:
+      - name: Gmail Integration
+        description: Two-way sync with Gmail including tracking
+        features: ["sync", "tracking", "templates", "scheduling"]
+
+  mobile-extension:
+    name: Mobile Extensions
+    description: Custom functionality for Pipedrive mobile apps
+    contexts:
+      - mobile-deal-view
+      - mobile-contact-view
+      - mobile-activities
+      - mobile-dashboard
+    rendering:
+      - native-components
+      - webview-embed
+      - custom-screens
+    communication:
+      - mobile-api
+      - push-notifications
+      - offline-sync
+    capabilities:
+      - offline-functionality
+      - push-notifications
+      - location-services
+      - camera-integration
+    triggers:
+      - app-launch
+      - location-change
+      - push-notification
+      - offline-sync
+    examples:
+      - name: Field Sales App
+        description: Location-based customer management
+        features: ["check-in", "route-planning", "offline-notes"]
+
+  marketplace-integration:
+    name: Marketplace Integrations
+    description: Pre-built integrations available in Pipedrive Marketplace
+    contexts:
+      - app-marketplace
+      - integration-center
+      - settings-panel
+    rendering:
+      - app-listing
+      - configuration-panel
+      - integration-status
+    communication:
+      - marketplace-api
+      - app-installation
+      - configuration-api
+    capabilities:
+      - one-click-install
+      - configuration-management
+      - usage-tracking
+      - billing-integration
+    triggers:
+      - app-install
+      - configuration-change
+      - usage-event
+    examples:
+      - name: DocuSign Integration
+        description: Electronic signature workflow integration
+        workflow: ["send-contract", "track-signature", "update-deal"]
+
+  telephony-integration:
+    name: Telephony Integration
+    description: Phone system integrations for call logging and management
+    contexts:
+      - call-interface
+      - contact-details
+      - activity-timeline
+      - call-analytics
+    rendering:
+      - dialer-widget
+      - call-log-display
+      - recording-player
+      - analytics-dashboard
+    communication:
+      - telephony-api
+      - call-webhooks
+      - recording-storage
+    capabilities:
+      - click-to-call
+      - call-logging
+      - recording-management
+      - call-analytics
+    triggers:
+      - call-initiation
+      - call-completion
+      - recording-available
+    examples:
+      - name: VoIP Integration
+        description: Integrated calling with automatic logging
+        providers: ["twilio", "ringcentral", "aircall"]
+
+communication:
+  rest-api:
+    description: RESTful API for data access and manipulation
+    baseUrl: "https://api.pipedrive.com/v1"
+    authentication:
+      - api-token
+      - oauth2
+    rateLimit: "10,000 requests per day"
+    features:
+      - crud-operations
+      - bulk-operations
+      - search-functionality
+      - file-handling
+
+  webhooks:
+    description: Real-time notifications for data changes
+    events:
+      - deal-added
+      - deal-updated
+      - deal-deleted
+      - person-added
+      - person-updated
+      - activity-added
+      - activity-updated
+    delivery: "https"
+    verification: "signature-validation"
+
+  oauth2:
+    description: OAuth 2.0 authentication for secure access
+    authorizationUrl: "https://oauth.pipedrive.com/oauth/authorize"
+    tokenUrl: "https://oauth.pipedrive.com/oauth/token"
+    scopes:
+      - base: "Basic read and write access"
+      - deals: "Full access to deals"
+      - contacts: "Full access to persons and organizations"
+      - activities: "Full access to activities"
+      - admin: "Administrative access"
+
+authentication:
+  api-token:
+    description: "Personal API tokens for individual users"
+    location: "query"
+    parameter: "api_token"
+    usage: "individual-access"
+
+  oauth2:
+    authorizationUrl: "https://oauth.pipedrive.com/oauth/authorize"
+    tokenUrl: "https://oauth.pipedrive.com/oauth/token"
+    scopes:
+      base: "Basic read and write access"
+      deals: "Full access to deals"
+      contacts: "Full access to persons and organizations"
+      activities: "Full access to activities"
+      admin: "Administrative access"
+    flow: "authorization_code"
+
+deployment:
+  marketplace:
+    name: "Pipedrive Marketplace"
+    url: "https://marketplace.pipedrive.com"
+    categories:
+      - email-marketing
+      - accounting
+      - telephony
+      - productivity
+      - analytics
+      - e-commerce
+    reviewProcess: true
+
+  custom-integration:
+    name: "Custom Integration"
+    deployment: "self-hosted"
+    authentication: "oauth2"
+    hosting: "third-party"
+
+  webhook-service:
+    name: "Webhook Service"
+    deployment: "event-driven"
+    hosting: "external-endpoint"
+    verification: "signature-based"
+
+sdks:
+  php-sdk:
+    name: "Pipedrive PHP SDK"
+    url: "https://github.com/pipedrive/client-php"
+    features:
+      - api-client
+      - model-classes
+      - authentication-helpers
+
+  python-sdk:
+    name: "Pipedrive Python SDK"
+    url: "https://github.com/pipedrive/client-python"
+    features:
+      - api-client
+      - async-support
+      - data-models
+
+  javascript-sdk:
+    name: "Pipedrive JavaScript SDK"
+    url: "https://github.com/pipedrive/client-nodejs"
+    platforms:
+      - nodejs
+      - browser
+    features:
+      - promise-based
+      - typescript-support
+
+examples:
+  sales-acceleration:
+    name: "Sales Acceleration Suite"
+    description: "Automated lead scoring and follow-up workflows"
+    types:
+      - workflow-automation
+      - custom-field
+      - reporting-extension
+    features:
+      - lead-scoring
+      - automated-follow-up
+      - performance-analytics
+
+  customer-lifecycle:
+    name: "Customer Lifecycle Management"
+    description: "End-to-end customer journey tracking and automation"
+    types:
+      - custom-app
+      - workflow-automation
+      - email-integration
+    features:
+      - journey-mapping
+      - touchpoint-tracking
+      - automated-nurturing
+
+  mobile-sales:
+    name: "Mobile Sales Toolkit"
+    description: "Field sales optimization with mobile-first features"
+    types:
+      - mobile-extension
+      - telephony-integration
+      - custom-field
+    features:
+      - location-tracking
+      - offline-capability
+      - route-optimization
+
+tags:
+  - crm
+  - sales-pipeline
+  - lead-management
+  - workflow-automation
+  - sales-analytics
+  - mobile-sales
+
+x-pipedrive-api-version: "v1"
+x-pipedrive-webhook-version: "1.0"
+x-pipedrive-oauth-version: "2.0"

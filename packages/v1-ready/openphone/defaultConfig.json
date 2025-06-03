@@ -1,0 +1,14 @@
+{
+  "name": "openphone",
+  "label": "OpenPhone",
+  "productUrl": "https://openphone.com",
+  "apiDocs": "https://docs.openphone.com/api",
+  "logoUrl": "https://friggframework.org/assets/img/openphone-icon.png",
+  "categories": [
+    "Communication",
+    "Phone",
+    "VoIP",
+    "Business Phone"
+  ],
+  "description": "OpenPhone is a modern business phone system built for startups and growing businesses"
+} 

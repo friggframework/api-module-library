@@ -1,0 +1,524 @@
+# Microsoft Teams Platform - Fenestra Specification
+fenestra: "1.0.0"
+platform:
+  name: Microsoft Teams
+  description: All varieties of available Microsoft Teams UI extensibility, from Bot interactions to Adaptive Cards, Tabs, Meeting apps, Message extensions, and Activity feed integrations
+  version: "1.16"
+  baseUrl: "https://graph.microsoft.com"
+  documentation: "https://docs.microsoft.com/en-us/microsoftteams/platform/"
+  marketplace: "https://appsource.microsoft.com/marketplace/apps?product=office%3Bteams"
+  support: "https://docs.microsoft.com/en-us/microsoftteams/platform/support"
+
+extensionTypes:
+  conversational-bot:
+    name: Conversational Bots
+    description: AI-powered bots for interactive conversations in Teams
+    contexts:
+      - personal-chat
+      - team-chat
+      - channel-conversation
+      - meeting-chat
+      - group-chat
+    rendering:
+      - text-message
+      - adaptive-card
+      - rich-media
+      - hero-card
+      - thumbnail-card
+    communication:
+      - bot-framework
+      - graph-api
+      - activity-handler
+      - proactive-messaging
+    capabilities:
+      - conversation-handling
+      - file-interaction
+      - authentication
+      - user-profiling
+      - meeting-integration
+    triggers:
+      - mention
+      - direct-message
+      - keyword-detection
+      - meeting-events
+      - proactive-activation
+    examples:
+      - name: HR Assistant Bot
+        description: Helps employees with HR queries and processes
+        features: ["faq-handling", "leave-requests", "policy-lookup"]
+
+  adaptive-card-ui:
+    name: Adaptive Cards
+    description: Platform-agnostic UI framework for rich, interactive content
+    contexts:
+      - chat-message
+      - task-module
+      - notification
+      - meeting-stage
+      - activity-feed
+    rendering:
+      - adaptive-card-schema
+      - interactive-elements
+      - media-content
+      - form-inputs
+    communication:
+      - card-actions
+      - submit-action
+      - invoke-action
+      - universal-actions
+    capabilities:
+      - form-collection
+      - data-visualization
+      - user-interaction
+      - conditional-rendering
+      - templating
+    triggers:
+      - card-load
+      - user-interaction
+      - data-update
+      - scheduled-refresh
+    examples:
+      - name: Expense Report Card
+        description: Interactive expense submission and approval
+        actions: ["submit", "approve", "reject", "request-info"]
+
+  tab-application:
+    name: Tab Applications
+    description: Full web applications embedded as tabs in Teams
+    contexts:
+      - channel-tab
+      - personal-tab
+      - group-tab
+      - meeting-tab
+      - configurable-tab
+    rendering:
+      - iframe-embed
+      - single-page-app
+      - responsive-design
+      - deep-linking
+    communication:
+      - teams-sdk
+      - graph-api
+      - sso-authentication
+      - context-api
+    capabilities:
+      - full-app-experience
+      - data-persistence
+      - real-time-collaboration
+      - file-integration
+      - calendar-access
+    triggers:
+      - tab-load
+      - navigation-change
+      - context-switch
+      - data-refresh
+    examples:
+      - name: Project Dashboard
+        description: Real-time project tracking and collaboration
+        features: ["task-management", "timeline-view", "team-chat"]
+
+  message-extension:
+    name: Message Extensions
+    description: Search and action-based extensions for messaging
+    contexts:
+      - compose-box
+      - message-action
+      - command-box
+      - search-interface
+    rendering:
+      - search-results
+      - action-card
+      - preview-card
+      - unfurling-preview
+    communication:
+      - bot-framework
+      - search-queries
+      - action-commands
+      - link-unfurling
+    capabilities:
+      - external-search
+      - content-insertion
+      - message-processing
+      - link-preview
+      - quick-actions
+    triggers:
+      - search-query
+      - action-invocation
+      - link-sharing
+      - command-execution
+    examples:
+      - name: CRM Search Extension
+        description: Search and insert customer information
+        searchTypes: ["contacts", "deals", "companies"]
+
+  task-module:
+    name: Task Modules
+    description: Modal popup experiences for complex interactions
+    contexts:
+      - adaptive-card-action
+      - tab-action
+      - bot-action
+      - message-extension
+    rendering:
+      - iframe-modal
+      - adaptive-card-modal
+      - video-modal
+      - form-interface
+    communication:
+      - task-module-callback
+      - submit-handler
+      - close-handler
+      - resize-handler
+    capabilities:
+      - form-collection
+      - workflow-execution
+      - data-entry
+      - media-playback
+      - external-auth
+    triggers:
+      - button-click
+      - action-invocation
+      - deep-link
+      - api-call
+    examples:
+      - name: Document Approval Modal
+        description: Review and approve documents within Teams
+        workflow: ["review", "comment", "approve", "reject"]
+
+  meeting-extension:
+    name: Meeting Extensions
+    description: Apps that enhance meeting experiences
+    contexts:
+      - pre-meeting
+      - in-meeting
+      - post-meeting
+      - meeting-stage
+      - side-panel
+    rendering:
+      - meeting-tab
+      - side-panel
+      - stage-view
+      - shared-content
+    communication:
+      - meeting-events
+      - real-time-media
+      - participant-api
+      - recording-api
+    capabilities:
+      - meeting-control
+      - content-sharing
+      - participant-interaction
+      - recording-access
+      - breakout-rooms
+    triggers:
+      - meeting-start
+      - participant-join
+      - content-share
+      - meeting-end
+    examples:
+      - name: Whiteboard Collaboration
+        description: Real-time collaborative whiteboarding
+        features: ["drawing-tools", "sticky-notes", "voting"]
+
+  activity-feed:
+    name: Activity Feed Cards
+    description: Notifications and updates in Teams activity feed
+    contexts:
+      - activity-feed
+      - notification-center
+      - team-updates
+      - personal-notifications
+    rendering:
+      - activity-card-template
+      - hero-content
+      - fact-sets
+      - action-buttons
+    communication:
+      - graph-api
+      - activity-notification
+      - webhook-delivery
+      - batch-notifications
+    capabilities:
+      - user-notification
+      - action-buttons
+      - deep-linking
+      - rich-content
+      - localization
+    triggers:
+      - external-event
+      - scheduled-task
+      - workflow-completion
+      - data-change
+    examples:
+      - name: Sales Pipeline Updates
+        description: Notify team of important sales milestones
+        triggers: ["deal-won", "opportunity-created", "quota-achieved"]
+
+  connector-webhook:
+    name: Connectors and Webhooks
+    description: External service integrations via webhooks
+    contexts:
+      - channel-notifications
+      - team-updates
+      - automated-alerts
+      - data-synchronization
+    rendering:
+      - connector-card
+      - message-card
+      - hero-card
+      - carousel-card
+    communication:
+      - incoming-webhook
+      - office-connector-card
+      - actionable-message
+      - card-refresh
+    capabilities:
+      - external-integration
+      - automated-posting
+      - rich-formatting
+      - interactive-actions
+      - card-updates
+    triggers:
+      - webhook-call
+      - external-event
+      - scheduled-posting
+      - api-integration
+    examples:
+      - name: Build Pipeline Notifications
+        description: Automated notifications from CI/CD pipeline
+        events: ["build-started", "tests-failed", "deployment-complete"]
+
+communication:
+  bot-framework:
+    description: Microsoft Bot Framework for conversational AI
+    features:
+      - conversation-handling
+      - state-management
+      - middleware-pipeline
+      - adaptive-cards
+    authentication:
+      - app-id-password
+      - managed-identity
+    protocols:
+      - directline
+      - webchat
+      - teams-channel
+
+  graph-api:
+    description: Microsoft Graph API for Teams data and operations
+    baseUrl: "https://graph.microsoft.com/v1.0"
+    authentication:
+      - azure-ad-oauth
+      - application-permissions
+      - delegated-permissions
+    capabilities:
+      - user-data
+      - team-management
+      - calendar-access
+      - file-operations
+      - chat-messages
+
+  teams-sdk:
+    description: Teams JavaScript SDK for client-side applications
+    features:
+      - context-access
+      - authentication
+      - deep-linking
+      - theme-detection
+      - navigation
+    platforms:
+      - web
+      - desktop
+      - mobile
+    versions:
+      - v1: "legacy-support"
+      - v2: "current-recommended"
+
+  real-time-media:
+    description: Real-time media APIs for calling and meetings
+    features:
+      - audio-processing
+      - video-processing
+      - screen-sharing
+      - recording-access
+    requirements:
+      - app-hosted-service
+      - azure-cloud-service
+      - compliance-recording
+
+authentication:
+  azure-ad-oauth:
+    authorizationUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize"
+    tokenUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+    scopes:
+      User.Read: "Read user profile"
+      Chat.ReadWrite: "Read and write chat messages"
+      Team.ReadBasic.All: "Read team information"
+      TeamsActivity.Send: "Send activity feed notifications"
+      Calendars.ReadWrite: "Read and write calendar events"
+      Files.ReadWrite.All: "Read and write files"
+    flow: "authorization_code"
+
+  application-permissions:
+    description: "App-only permissions for service scenarios"
+    grantType: "client_credentials"
+    scopes:
+      Chat.Read.All: "Read all chat messages"
+      Team.ReadBasic.All: "Read all team information"
+      User.Read.All: "Read all user profiles"
+
+  managed-identity:
+    description: "Azure managed identity for secure authentication"
+    types:
+      - system-assigned
+      - user-assigned
+    benefits:
+      - no-credential-management
+      - automatic-rotation
+      - azure-native
+
+deployment:
+  app-store:
+    name: "Microsoft Teams App Store"
+    url: "https://appsource.microsoft.com"
+    categories:
+      - productivity-apps
+      - project-management
+      - crm-sales
+      - developer-tools
+      - education
+      - hr-benefits
+    reviewProcess:
+      - functionality-testing
+      - security-validation
+      - compliance-check
+      - user-experience-review
+    distribution: "global"
+
+  sideloading:
+    name: "Sideloading"
+    scopes:
+      - personal-apps
+      - team-apps
+      - organization-apps
+    requirements:
+      - developer-preview
+      - admin-policy
+      - app-package
+    testing: true
+
+  admin-center:
+    name: "Teams Admin Center"
+    management:
+      - app-policies
+      - permission-policies
+      - setup-policies
+      - update-policies
+    deployment: "organization-wide"
+    governance: "centralized"
+
+sdks:
+  teams-toolkit:
+    name: "Teams Toolkit"
+    platforms:
+      - visual-studio-code
+      - visual-studio
+      - command-line
+    features:
+      - project-scaffolding
+      - local-debugging
+      - cloud-deployment
+      - app-studio-integration
+    url: "https://github.com/OfficeDev/TeamsFx"
+
+  teams-js-sdk:
+    name: "Teams JavaScript SDK"
+    version: "2.0"
+    features:
+      - context-api
+      - authentication
+      - task-modules
+      - deep-linking
+    url: "https://docs.microsoft.com/en-us/microsoftteams/platform/tabs/how-to/using-teams-client-sdk"
+
+  bot-framework-sdk:
+    name: "Bot Framework SDK"
+    languages:
+      - csharp
+      - javascript
+      - python
+      - java
+    features:
+      - conversation-handling
+      - adaptive-cards
+      - authentication
+      - state-management
+    url: "https://github.com/Microsoft/botframework-sdk"
+
+  adaptive-cards:
+    name: "Adaptive Cards SDK"
+    platforms:
+      - javascript
+      - .net
+      - uwp
+      - android
+      - ios
+    features:
+      - card-rendering
+      - templating
+      - data-binding
+    url: "https://adaptivecards.io"
+
+examples:
+  employee-onboarding:
+    name: "Employee Onboarding Suite"
+    description: "Complete onboarding experience with bot, tabs, and notifications"
+    types:
+      - conversational-bot
+      - tab-application
+      - activity-feed
+    features:
+      - welcome-bot
+      - onboarding-checklist
+      - team-introductions
+      - progress-tracking
+
+  project-collaboration:
+    name: "Project Collaboration Hub"
+    description: "Integrated project management with real-time collaboration"
+    types:
+      - tab-application
+      - message-extension
+      - meeting-extension
+    features:
+      - task-management
+      - file-collaboration
+      - meeting-integration
+      - progress-reporting
+
+  customer-support:
+    name: "Customer Support Integration"
+    description: "Seamless customer support workflow within Teams"
+    types:
+      - conversational-bot
+      - adaptive-card-ui
+      - connector-webhook
+    features:
+      - ticket-management
+      - customer-context
+      - escalation-workflow
+      - reporting-dashboard
+
+tags:
+  - collaboration
+  - communication
+  - productivity
+  - enterprise
+  - microsoft-365
+  - chat
+  - meetings
+  - workflow
+
+x-teams-manifest-version: "1.16"
+x-teams-app-studio: "https://dev.teams.microsoft.com/apps"
+x-teams-developer-portal: "https://dev.teams.microsoft.com"

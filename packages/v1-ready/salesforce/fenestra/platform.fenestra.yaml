@@ -1,0 +1,475 @@
+# Salesforce Platform - Fenestra Specification
+fenestra: "1.0.0"
+platform:
+  name: Salesforce
+  description: All varieties of available Salesforce UI extensibility, from Lightning Web Components to Visualforce, Canvas Apps, Flow elements, and AppExchange integrations
+  version: "57.0"
+  baseUrl: "https://developer.salesforce.com"
+  documentation: "https://developer.salesforce.com/docs"
+  marketplace: "https://appexchange.salesforce.com"
+  support: "https://developer.salesforce.com/support"
+
+extensionTypes:
+  lightning-web-component:
+    name: Lightning Web Components (LWC)
+    description: Modern JavaScript framework for building Lightning components using web standards
+    contexts:
+      - record-page
+      - app-page
+      - home-page
+      - lightning-tabs
+      - utility-bar
+      - flow-screen
+    rendering:
+      - native-component
+      - shadow-dom
+      - lwc-framework
+    communication:
+      - apex-methods
+      - platform-events
+      - lightning-message-service
+      - navigation-service
+    capabilities:
+      - record-access
+      - user-interface
+      - data-binding
+      - event-handling
+      - navigation
+    triggers:
+      - component-load
+      - user-interaction
+      - data-change
+      - platform-event
+    examples:
+      - name: Account Summary Dashboard
+        description: Interactive dashboard showing account metrics and related records
+        framework: "lwc"
+        
+  aura-component:
+    name: Aura Components
+    description: Legacy Lightning framework components (being phased out)
+    contexts:
+      - lightning-pages
+      - communities
+      - mobile-app
+    rendering:
+      - aura-framework
+      - component-markup
+    communication:
+      - apex-controllers
+      - application-events
+      - component-events
+    capabilities:
+      - legacy-lightning-support
+      - community-integration
+      - mobile-compatibility
+    triggers:
+      - component-initialization
+      - event-handling
+    examples:
+      - name: Legacy Dashboard Component
+        description: Aura-based dashboard for community pages
+        
+  visualforce-page:
+    name: Visualforce Pages
+    description: Server-side rendered pages using MVC architecture
+    contexts:
+      - standalone-pages
+      - tabs
+      - home-page-components
+      - mobile-cards
+    rendering:
+      - server-side-mvc
+      - apex-controllers
+      - visualforce-markup
+    communication:
+      - apex-controllers
+      - action-methods
+      - remoting
+      - javascript-integration
+    capabilities:
+      - full-page-control
+      - custom-ui
+      - legacy-integration
+      - pdf-generation
+    triggers:
+      - page-load
+      - user-action
+      - controller-methods
+    examples:
+      - name: Custom Invoice Generator
+        description: Visualforce page for generating and managing invoices
+        
+  canvas-app:
+    name: Canvas Apps
+    description: External web applications embedded within Salesforce using signed requests
+    contexts:
+      - canvas-tabs
+      - record-detail
+      - home-page
+      - mobile-cards
+    rendering:
+      - external-iframe
+      - signed-request
+      - responsive-design
+    communication:
+      - canvas-sdk
+      - signed-request
+      - cross-frame-messaging
+      - rest-api
+    capabilities:
+      - external-hosting
+      - salesforce-integration
+      - mobile-support
+      - real-time-data
+    triggers:
+      - canvas-load
+      - context-change
+      - user-interaction
+    examples:
+      - name: External CRM Integration
+        description: Third-party CRM embedded as Canvas app
+        
+  flow-screen-component:
+    name: Flow Screen Components
+    description: Custom components that can be used in Salesforce Flows
+    contexts:
+      - flow-screens
+      - screen-flows
+      - auto-launched-flows
+    rendering:
+      - lwc-in-flow
+      - flow-framework
+    communication:
+      - flow-variables
+      - flow-data
+      - apex-actions
+    capabilities:
+      - flow-integration
+      - input-validation
+      - dynamic-ui
+      - data-transformation
+    triggers:
+      - flow-execution
+      - screen-navigation
+      - user-input
+    examples:
+      - name: Dynamic Form Builder
+        description: Component for building dynamic forms within flows
+        
+  apex-action:
+    name: Apex Actions
+    description: Custom Apex methods that can be called from Flows, Process Builder, or other automation
+    contexts:
+      - flows
+      - process-builder
+      - workflow-rules
+      - api-calls
+    rendering:
+      - server-side-logic
+      - apex-methods
+    communication:
+      - flow-variables
+      - process-variables
+      - api-integration
+    capabilities:
+      - business-logic
+      - data-manipulation
+      - external-integration
+      - bulk-processing
+    triggers:
+      - flow-execution
+      - process-trigger
+      - api-call
+    examples:
+      - name: Territory Assignment Logic
+        description: Custom apex action for complex territory assignments
+        
+  lightning-app:
+    name: Lightning Applications
+    description: Standalone applications within the Lightning Platform
+    contexts:
+      - app-launcher
+      - navigation-menu
+      - utility-bar
+    rendering:
+      - lightning-framework
+      - app-container
+      - navigation-items
+    communication:
+      - component-communication
+      - navigation-service
+      - utility-api
+    capabilities:
+      - app-branding
+      - navigation-control
+      - utility-integration
+      - workspace-management
+    triggers:
+      - app-launch
+      - navigation-change
+      - utility-action
+    examples:
+      - name: Project Management App
+        description: Complete project management application
+        
+  custom-metadata:
+    name: Custom Metadata Types
+    description: Application metadata that can be deployed and is accessible via Apex and APIs
+    contexts:
+      - configuration-management
+      - feature-flags
+      - business-rules
+      - integration-settings
+    rendering:
+      - metadata-records
+      - configuration-ui
+    communication:
+      - apex-queries
+      - rest-api
+      - metadata-api
+    capabilities:
+      - deployable-configuration
+      - version-control
+      - packaging-support
+      - runtime-access
+    triggers:
+      - configuration-access
+      - deployment
+      - apex-queries
+    examples:
+      - name: Integration Endpoints
+        description: Configurable API endpoints and settings
+        
+  platform-event:
+    name: Platform Events
+    description: Custom events for real-time streaming and integration
+    contexts:
+      - real-time-integration
+      - event-driven-architecture
+      - external-systems
+      - automation-triggers
+    rendering:
+      - event-schema
+      - streaming-api
+    communication:
+      - event-bus
+      - streaming-api
+      - cometd
+      - pub-sub
+    capabilities:
+      - real-time-streaming
+      - event-sourcing
+      - external-publishing
+      - automation-triggers
+    triggers:
+      - event-publication
+      - event-subscription
+      - automation-rules
+    examples:
+      - name: Order Status Updates
+        description: Real-time order status events for external systems
+
+communication:
+  apex-integration:
+    description: Server-side Apex code for business logic and data access
+    features:
+      - database-access
+      - business-logic
+      - web-services
+      - batch-processing
+    authentication:
+      - session-based
+      - oauth2
+    
+  lightning-message-service:
+    description: Message-based communication between Lightning components
+    features:
+      - component-communication
+      - cross-namespace
+      - publish-subscribe
+    scope:
+      - application
+      - record
+      - tab
+    
+  platform-events:
+    description: Real-time event-driven communication
+    features:
+      - real-time-streaming
+      - pub-sub-messaging
+      - external-integration
+    delivery:
+      - streaming-api
+      - cometd
+    
+  rest-api:
+    description: RESTful API for external integration
+    baseUrl: "https://instance.salesforce.com/services/data/v57.0"
+    authentication:
+      - oauth2
+      - session-id
+    capabilities:
+      - sobject-access
+      - query-execution
+      - bulk-operations
+    
+  metadata-api:
+    description: API for deploying and managing customizations
+    features:
+      - metadata-deployment
+      - org-configuration
+      - package-management
+    authentication:
+      - session-based
+      - oauth2
+
+authentication:
+  oauth2:
+    authorizationUrl: "https://login.salesforce.com/services/oauth2/authorize"
+    tokenUrl: "https://login.salesforce.com/services/oauth2/token"
+    scopes:
+      - api: "Access and manage your data"
+      - refresh_token: "Perform requests on your behalf at any time"
+      - full: "Access and manage your data and configuration"
+      - web: "Access the identity URL service"
+    flow: "authorization_code"
+    
+  session-based:
+    description: "Traditional session-based authentication"
+    loginUrl: "https://login.salesforce.com"
+    sessionHeader: "Authorization: Bearer {sessionId}"
+    
+  jwt-bearer:
+    description: "Server-to-server authentication using JWT"
+    tokenUrl: "https://login.salesforce.com/services/oauth2/token"
+    grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer"
+
+deployment:
+  appexchange:
+    name: "Salesforce AppExchange"
+    url: "https://appexchange.salesforce.com"
+    reviewProcess: true
+    categories:
+      - sales-cloud
+      - service-cloud
+      - marketing-cloud
+      - commerce-cloud
+      - analytics
+      - productivity
+    pricing:
+      - free
+      - paid
+      - freemium
+    
+  unmanaged-package:
+    name: "Unmanaged Packages"
+    deployment: "metadata-based"
+    updateability: "customizable"
+    versioning: false
+    
+  managed-package:
+    name: "Managed Packages"
+    deployment: "packaged-solution"
+    updateability: "controlled"
+    versioning: true
+    protection: "intellectual-property"
+    
+  unlocked-package:
+    name: "Unlocked Packages"
+    deployment: "modern-packaging"
+    updateability: "flexible"
+    versioning: true
+    sourceControl: "git-based"
+
+sdks:
+  sfdx-cli:
+    name: "Salesforce CLI"
+    url: "https://developer.salesforce.com/tools/sfdxcli"
+    features:
+      - project-creation
+      - metadata-deployment
+      - scratch-orgs
+      - package-development
+    
+  lwc-dev-server:
+    name: "LWC Dev Server"
+    url: "https://github.com/salesforce/lwc-dev-server"
+    features:
+      - local-development
+      - hot-reloading
+      - component-testing
+    
+  apex-library:
+    name: "Apex Developer Guide"
+    url: "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta"
+    features:
+      - language-reference
+      - best-practices
+      - code-examples
+    
+  lightning-design-system:
+    name: "Salesforce Lightning Design System"
+    url: "https://www.lightningdesignsystem.com"
+    features:
+      - ui-components
+      - design-tokens
+      - accessibility
+      - responsive-design
+    
+  canvas-sdk:
+    name: "Canvas App SDK"
+    url: "https://github.com/forcedotcom/SalesforceCanvasFrameworkSDK"
+    features:
+      - signed-request-handling
+      - context-access
+      - resize-management
+
+examples:
+  crm-analytics-dashboard:
+    name: "CRM Analytics Dashboard"
+    description: "Interactive analytics dashboard using LWC and CRM Analytics"
+    types:
+      - lightning-web-component
+      - platform-event
+    features:
+      - real-time-data
+      - interactive-charts
+      - drill-down-analysis
+    
+  custom-approval-process:
+    name: "Custom Approval Process"
+    description: "Complex approval workflow using Flow and Apex"
+    types:
+      - flow-screen-component
+      - apex-action
+      - platform-event
+    features:
+      - multi-step-approval
+      - dynamic-routing
+      - notification-system
+    
+  external-integration-app:
+    name: "External System Integration"
+    description: "Canvas app integrating with external ERP system"
+    types:
+      - canvas-app
+      - platform-event
+      - custom-metadata
+    features:
+      - real-time-sync
+      - configuration-management
+      - error-handling
+
+tags:
+  - enterprise-platform
+  - crm
+  - cloud-computing
+  - declarative-development
+  - programmatic-development
+  - integration
+  - automation
+
+x-salesforce-api-version: "57.0"
+x-salesforce-release: "Summer '23"
+x-salesforce-environment: "production"

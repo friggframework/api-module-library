@@ -1,0 +1,9 @@
+{
+  "name": "@api-modules/figma",
+  "version": "1.0.0",
+  "description": "Figma API module with Fenestra specifications",
+  "main": "index.js",
+  "keywords": ["Figma", "api", "fenestra", "ui-extensions"],
+  "author": "API Module Library",
+  "license": "MIT"
+}

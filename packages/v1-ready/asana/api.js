@@ -1,4 +1,4 @@
-const {OAuth2Requester, get} = require('@friggframework/core');
+const { OAuth2Requester, get } = require('@friggframework/core');
 const FormData = require('form-data');
 
 // core objects
@@ -63,23 +63,28 @@ class Api extends OAuth2Requester {
         return super.getTokenFromCode(code);
     }
 
-
     async setTokens(params) {
         this.access_token = get(params, 'access_token');
-        // this.refresh_token = get(params, 'refresh_token', null); // Removing because it sets to `null` but the request
-        // just doesn't return a refresh_token... long lived.
-        const accessExpiresIn = get(params, 'expires_in', null);
-        const refreshExpiresIn = get(
-            params,
-            'x_refresh_token_expires_in',
-            null
-        );
+        const newRefreshToken = get(params, 'refresh_token', null);
 
-        this.accessTokenExpire = new Date(Date.now() + accessExpiresIn * 1000);
-        this.refreshTokenExpire = new Date(Date.now() + refreshExpiresIn * 1000);
+        // Asana provides only one long lived refresh token, so we don't need to replace it.
+        if (newRefreshToken) {
+            this.refresh_token = newRefreshToken;
+        }
+
+        const accessExpiresIn = get(params, 'expires_in', null);
+        const refreshExpiresIn = get(params, 'x_refresh_token_expires_in', null);
+
+        if (accessExpiresIn) {
+            this.accessTokenExpire = new Date(Date.now() + accessExpiresIn * 1000);
+        }
+        if (refreshExpiresIn) {
+            this.refreshTokenExpire = new Date(Date.now() + refreshExpiresIn * 1000);
+        }
 
         await this.notify(this.DLGT_TOKEN_UPDATE);
     }
+
 
     addJsonHeaders(options) {
         const jsonHeaders = {
@@ -119,14 +124,14 @@ class Api extends OAuth2Requester {
     // **************************   Projects   **********************************
 
     async createProject(body) {
-      const options = {
-          url: this.baseUrl + this.URLs.projects,
-          body: {
-              data: body,
-          },
-      };
+        const options = {
+            url: this.baseUrl + this.URLs.projects,
+            body: {
+                data: body,
+            },
+        };
 
-      return this._post(options);
+        return this._post(options);
     }
 
     async listProjects(params) {
@@ -224,13 +229,13 @@ class Api extends OAuth2Requester {
 
     async listTasks(params) {
         const workspaceId = get(params, 'workspaceId');
-        const assigneeId = get(params, 'assigneeId');  
+        const assigneeId = get(params, 'assigneeId');
 
         const options = {
             url: this.baseUrl + this.URLs.tasks,
             query: {
-              workspace: workspaceId,
-              assignee: assigneeId,
+                workspace: workspaceId,
+                assignee: assigneeId,
             }
         };
 
@@ -294,7 +299,7 @@ class Api extends OAuth2Requester {
             };
 
             let response = await super._post(requestOptions, false);
-            
+
             if (!response?.data) {
                 throw new Error('Failed to attach file to task: No response data received');
             }
@@ -304,7 +309,7 @@ class Api extends OAuth2Requester {
                 resource_name: response.data.name,
                 resource_url: typeof resource === 'string' ? resource : null,
             };
-            
+
             return response;
         } catch (err) {
             console.log(err);
@@ -403,4 +408,4 @@ class Api extends OAuth2Requester {
 
 }
 
-module.exports = {Api};
+module.exports = { Api };

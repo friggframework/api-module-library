@@ -12,7 +12,7 @@ const Definition = {
     modelName: 'ZohoCRM',
     requiredAuthMethods: {
         getToken: async function (api, params) {
-            const code = get(params.data, 'code');
+            const code = get(params, 'code');
             return await api.getTokenFromCode(code);
         },
         apiPropertiesToPersist: {

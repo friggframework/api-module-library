@@ -1,0 +1,14 @@
+{
+  "name": "applicantstack",
+  "label": "ApplicantStack",
+  "productUrl": "https://applicantstack.com/",
+  "apiDocs": "https://developers.applicantstack.com/",
+  "logoUrl": "https://friggframework.org/assets/img/applicantstack-icon.png",
+  "categories": [
+    "HR"
+  ],
+  "subCategories": [
+    "HR Talent & Recruitment"
+  ],
+  "description": "ApplicantStack is an applicant tracking system for small to medium-sized businesses."
+}

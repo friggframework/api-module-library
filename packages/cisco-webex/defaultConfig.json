@@ -1,0 +1,14 @@
+{
+  "name": "cisco-webex",
+  "label": "Cisco Webex",
+  "productUrl": "https://ciscowebex.com/",
+  "apiDocs": "https://developers.ciscowebex.com/",
+  "logoUrl": "https://friggframework.org/assets/img/cisco-webex-icon.png",
+  "categories": [
+    "Communication"
+  ],
+  "subCategories": [
+    "Video Conferencing"
+  ],
+  "description": "Cisco Webex provides video conferencing, online meetings, and team collaboration tools."
+}

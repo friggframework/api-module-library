@@ -1,0 +1,14 @@
+{
+  "name": "huggingface",
+  "label": "Hugging Face",
+  "productUrl": "https://huggingface.co",
+  "apiDocs": "https://huggingface.co/docs/api-inference/index",
+  "logoUrl": "https://friggframework.org/assets/img/huggingface-icon.png",
+  "categories": [
+    "AI/ML",
+    "Model Hub",
+    "Machine Learning",
+    "Open Source AI"
+  ],
+  "description": "Hugging Face is the AI community platform providing access to thousands of pre-trained models, datasets, and spaces for machine learning applications."
+}

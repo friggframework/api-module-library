@@ -1,0 +1,9 @@
+{
+    "name": "telegram",
+    "label": "Telegram",
+    "productUrl": "https://telegram.org",
+    "apiDocs": "https://core.telegram.org/bots/api",
+    "logoUrl": "https://friggframework.org/assets/img/telegram-icon.png",
+    "categories": ["Communication", "Messaging"],
+    "description": "Telegram Bot API for messaging, notifications, and bot development."
+}

@@ -1,0 +1,14 @@
+{
+  "name": "APE Mobile (now Damstra Samm)",
+  "moduleName": "ape-mobile-now-damstra-samm",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "APE Mobile (now Damstra Samm) API Integration Module",
+    "category": "Productivity",
+    "apiDocUrl": "https://api.damstratechnology.com",
+    "icon": ""
+  }
+}

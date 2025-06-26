@@ -1,0 +1,21 @@
+{
+  "name": "freshdesk",
+  "displayName": "Freshdesk",
+  "description": "Help desk and customer support software",
+  "version": "1.0.0",
+  "categories": ["customer-support", "helpdesk", "ticketing"],
+  "scopes": [
+    "read_tickets",
+    "write_tickets",
+    "read_contacts",
+    "write_contacts",
+    "read_agents",
+    "write_agents",
+    "read_companies",
+    "write_companies",
+    "read_solutions",
+    "write_solutions",
+    "read_forums",
+    "write_forums"
+  ]
+}

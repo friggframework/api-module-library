@@ -1,0 +1,14 @@
+{
+  "name": "Arthur Online",
+  "moduleName": "arthur-online",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Arthur Online API Integration Module",
+    "category": "CRM",
+    "apiDocUrl": "https://api.arthuronline.co.uk/docs",
+    "icon": ""
+  }
+}

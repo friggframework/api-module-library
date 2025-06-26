@@ -1,0 +1,241 @@
+arazzo: 1.0.0
+info:
+  title: Salesforce Lead to Opportunity Workflow
+  version: 1.0.0
+  description: |
+    This Arazzo specification defines the workflow for converting a lead to an opportunity in Salesforce,
+    including lead scoring, qualification, and conversion steps.
+    
+sourceDescriptions:
+  - name: salesforceApi
+    type: openapi
+    url: https://developer.salesforce.com/docs/apis
+    x-serverUrl: https://{instance}.my.salesforce.com
+    
+workflows:
+  - workflowId: leadToOpportunity
+    summary: Convert qualified lead to opportunity
+    description: |
+      This workflow automates the process of converting a qualified lead into an opportunity,
+      including lead scoring, qualification checks, and data transformation.
+      
+    inputs:
+      type: object
+      required:
+        - leadId
+        - instanceUrl
+        - accessToken
+      properties:
+        leadId:
+          type: string
+          description: The Salesforce Lead ID
+        instanceUrl:
+          type: string
+          description: Your Salesforce instance URL
+        accessToken:
+          type: string
+          description: OAuth access token
+          
+    steps:
+      - stepId: retrieveLead
+        operationId: getLead
+        description: Retrieve lead details
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.leadId
+          - name: Authorization
+            in: header
+            value: Bearer $inputs.accessToken
+        successCriteria:
+          - condition: $statusCode == 200
+          - condition: $response.body.Status != 'Converted'
+        outputs:
+          leadData: $response.body
+          
+      - stepId: calculateLeadScore
+        operationId: calculateScore
+        description: Calculate lead score based on lead data
+        dependsOn: retrieveLead
+        parameters:
+          - name: body
+            in: body
+            value:
+              email: $steps.retrieveLead.outputs.leadData.Email
+              company: $steps.retrieveLead.outputs.leadData.Company
+              title: $steps.retrieveLead.outputs.leadData.Title
+              annualRevenue: $steps.retrieveLead.outputs.leadData.AnnualRevenue
+        outputs:
+          leadScore: $response.body.score
+          
+      - stepId: checkQualification
+        operationId: evaluateLeadQualification
+        description: Check if lead meets qualification criteria
+        dependsOn: calculateLeadScore
+        parameters:
+          - name: score
+            in: query
+            value: $steps.calculateLeadScore.outputs.leadScore
+        successCriteria:
+          - condition: $response.body.qualified == true
+        outputs:
+          qualified: $response.body.qualified
+          
+      - stepId: createAccount
+        operationId: createAccount
+        description: Create account from lead company data
+        dependsOn: checkQualification
+        condition: $steps.checkQualification.outputs.qualified == true
+        parameters:
+          - name: body
+            in: body
+            value:
+              Name: $steps.retrieveLead.outputs.leadData.Company
+              Phone: $steps.retrieveLead.outputs.leadData.Phone
+              Website: $steps.retrieveLead.outputs.leadData.Website
+              Industry: $steps.retrieveLead.outputs.leadData.Industry
+        outputs:
+          accountId: $response.body.id
+          
+      - stepId: createContact
+        operationId: createContact
+        description: Create contact from lead personal data
+        dependsOn: createAccount
+        parameters:
+          - name: body
+            in: body
+            value:
+              FirstName: $steps.retrieveLead.outputs.leadData.FirstName
+              LastName: $steps.retrieveLead.outputs.leadData.LastName
+              Email: $steps.retrieveLead.outputs.leadData.Email
+              Phone: $steps.retrieveLead.outputs.leadData.Phone
+              AccountId: $steps.createAccount.outputs.accountId
+        outputs:
+          contactId: $response.body.id
+          
+      - stepId: createOpportunity
+        operationId: createOpportunity
+        description: Create opportunity with converted data
+        dependsOn: 
+          - createAccount
+          - createContact
+        parameters:
+          - name: body
+            in: body
+            value:
+              Name: $steps.retrieveLead.outputs.leadData.Company + " - New Opportunity"
+              AccountId: $steps.createAccount.outputs.accountId
+              ContactId: $steps.createContact.outputs.contactId
+              StageName: "Qualification"
+              CloseDate: $workflow.functions.addDays(30)
+              Amount: $steps.retrieveLead.outputs.leadData.EstimatedValue
+              LeadSource: $steps.retrieveLead.outputs.leadData.LeadSource
+        outputs:
+          opportunityId: $response.body.id
+          
+      - stepId: convertLead
+        operationId: convertLead
+        description: Mark lead as converted
+        dependsOn: createOpportunity
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.leadId
+          - name: body
+            in: body
+            value:
+              leadId: $inputs.leadId
+              convertedStatus: "Qualified"
+              accountId: $steps.createAccount.outputs.accountId
+              contactId: $steps.createContact.outputs.contactId
+              opportunityId: $steps.createOpportunity.outputs.opportunityId
+              doNotCreateOpportunity: false
+        successCriteria:
+          - condition: $statusCode == 200
+          
+      - stepId: notifyTeam
+        operationId: sendNotification
+        description: Notify sales team of new opportunity
+        dependsOn: convertLead
+        parameters:
+          - name: body
+            in: body
+            value:
+              recipientType: "team"
+              teamId: "sales_team"
+              message: "New opportunity created from lead conversion"
+              opportunityId: $steps.createOpportunity.outputs.opportunityId
+              accountName: $steps.retrieveLead.outputs.leadData.Company
+              
+    outputs:
+      type: object
+      properties:
+        accountId:
+          type: string
+          value: $steps.createAccount.outputs.accountId
+        contactId:
+          type: string
+          value: $steps.createContact.outputs.contactId
+        opportunityId:
+          type: string
+          value: $steps.createOpportunity.outputs.opportunityId
+        conversionStatus:
+          type: string
+          value: "success"
+          
+    successActions:
+      - name: logSuccess
+        type: webhook
+        url: https://analytics.company.com/conversions
+        body:
+          leadId: $inputs.leadId
+          opportunityId: $outputs.opportunityId
+          timestamp: $workflow.functions.now()
+          
+    failureActions:
+      - name: logFailure
+        type: webhook
+        url: https://errors.company.com/workflow-failures
+        body:
+          workflowId: $workflow.workflowId
+          leadId: $inputs.leadId
+          error: $workflow.lastError
+          timestamp: $workflow.functions.now()
+          
+components:
+  parameters:
+    leadIdParam:
+      name: leadId
+      in: path
+      required: true
+      schema:
+        type: string
+        
+  schemas:
+    LeadData:
+      type: object
+      properties:
+        Id:
+          type: string
+        FirstName:
+          type: string
+        LastName:
+          type: string
+        Email:
+          type: string
+        Company:
+          type: string
+        Status:
+          type: string
+          
+x-functions:
+  addDays:
+    description: Add days to current date
+    parameters:
+      - name: days
+        type: integer
+    returns: string
+    
+  now:
+    description: Get current timestamp
+    returns: string

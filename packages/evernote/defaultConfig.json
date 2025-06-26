@@ -1,0 +1,13 @@
+{
+  "name": "evernote",
+  "label": "Evernote",
+  "productUrl": "https://evernote.com",
+  "apiDocs": "https://dev.evernote.com/",
+  "logoUrl": "https://friggframework.org/assets/img/evernote-icon.png",
+  "categories": [
+    "Productivity",
+    "Note Taking",
+    "Document Management"
+  ],
+  "description": "Evernote is a note-taking and organization application that helps users capture, organize, and share notes across devices and platforms."
+}

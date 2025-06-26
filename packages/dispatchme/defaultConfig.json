@@ -1,0 +1,14 @@
+{
+  "name": "Dispatch.me",
+  "moduleName": "dispatchme",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Dispatch.me API Integration Module",
+    "category": "Productivity",
+    "apiDocUrl": "https://api.dispatch.me/docs",
+    "icon": ""
+  }
+}

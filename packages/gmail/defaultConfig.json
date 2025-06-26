@@ -1,0 +1,11 @@
+{
+  "name": "gmail",
+  "label": "Gmail",
+  "productUrl": "https://gmail.com",
+  "apiDocs": "https://developers.google.com/gmail/api",
+  "logoUrl": "https://friggframework.org/assets/img/gmail-icon.png",
+  "categories": [
+    "Email"
+  ],
+  "description": "Gmail is a free email service developed by Google. Users can access Gmail on the web and using third-party programs that synchronize email content through POP or IMAP protocols."
+}

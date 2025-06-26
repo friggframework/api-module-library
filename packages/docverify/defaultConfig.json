@@ -1,0 +1,14 @@
+{
+  "name": "docverify",
+  "label": "DocVerify",
+  "productUrl": "https://docverify.com/",
+  "apiDocs": "https://developers.docverify.com/",
+  "logoUrl": "https://friggframework.org/assets/img/docverify-icon.png",
+  "categories": [
+    "Productivity"
+  ],
+  "subCategories": [
+    "Signatures"
+  ],
+  "description": "DocVerify provides digital signature and document verification services."
+}

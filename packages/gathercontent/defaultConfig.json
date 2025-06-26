@@ -1,0 +1,14 @@
+{
+  "name": "GatherContent",
+  "moduleName": "gathercontent",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "GatherContent API Integration Module",
+    "category": "Productivity",
+    "apiDocUrl": "https://api.gathercontent.com/docs",
+    "icon": ""
+  }
+}

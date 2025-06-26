@@ -1,0 +1,14 @@
+{
+  "name": "Formsite",
+  "moduleName": "formsite",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Formsite API Integration Module",
+    "category": "Productivity",
+    "apiDocUrl": "https://docs.formsite.com/api",
+    "icon": ""
+  }
+}

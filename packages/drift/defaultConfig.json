@@ -1,0 +1,14 @@
+{
+  "name": "drift",
+  "label": "Drift",
+  "productUrl": "https://drift.com/",
+  "apiDocs": "https://developers.drift.com/",
+  "logoUrl": "https://friggframework.org/assets/img/drift-icon.png",
+  "categories": [
+    "CRM"
+  ],
+  "subCategories": [
+    "Customer Support"
+  ],
+  "description": "Drift is a conversational marketing and sales platform that connects businesses with customers."
+}

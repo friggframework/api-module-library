@@ -1,0 +1,12 @@
+{
+  "name": "eventbrite",
+  "label": "EventBrite",
+  "productUrl": "https://www.eventbrite.com",
+  "apiDocs": "https://www.eventbrite.com/platform/",
+  "logoUrl": "https://friggframework.org/assets/img/eventbrite-icon.png",
+  "categories": [
+    "Marketing",
+    "Event Management"
+  ],
+  "description": "Eventbrite is a global self-service ticketing platform for live experiences that allows anyone to create, share, find and attend events that fuel their passions and enrich their lives."
+}

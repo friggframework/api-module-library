@@ -1,0 +1,14 @@
+{
+  "name": "gitlab",
+  "label": "GitLab",
+  "productUrl": "https://gitlab.com",
+  "apiDocs": "https://docs.gitlab.com/ee/api/",
+  "logoUrl": "https://about.gitlab.com/images/press/logo/svg/gitlab-logo-gray-rgb.svg",
+  "categories": [
+    "Version Control",
+    "DevOps",
+    "CI/CD",
+    "Project Management"
+  ],
+  "description": "GitLab is a complete DevOps platform that enables teams to collaborate on code, manage projects, and automate CI/CD pipelines."
+}

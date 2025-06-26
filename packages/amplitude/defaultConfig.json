@@ -1,0 +1,113 @@
+{
+    "name": "Amplitude",
+    "version": "1.0.0",
+    "category": "Analytics",
+    "type": "amplitude",
+    "description": "Product analytics platform for understanding user behavior",
+    "documentation": "https://amplitude.com/docs",
+    "apiDocs": "https://www.docs.developers.amplitude.com/analytics/apis/",
+    "authentication": {
+        "type": "apiKey",
+        "description": "API Key for ingestion, Secret Key for export",
+        "fields": [
+            {
+                "name": "apiKey",
+                "description": "Public API key for event tracking"
+            },
+            {
+                "name": "secretKey",
+                "description": "Secret key for data export and management"
+            }
+        ]
+    },
+    "endpoints": {
+        "ingestion": "https://api2.amplitude.com",
+        "management": "https://amplitude.com/api",
+        "export": "https://amplitude.com/api/2/export",
+        "euIngestion": "https://api.eu.amplitude.com"
+    },
+    "features": [
+        "Event tracking",
+        "User identification",
+        "Group analytics",
+        "Revenue tracking",
+        "Funnel analysis",
+        "Retention analysis",
+        "User segmentation",
+        "Cohort analysis",
+        "Data export",
+        "Real-time analytics",
+        "Custom charts",
+        "Annotations",
+        "A/B testing support",
+        "Machine learning predictions"
+    ],
+    "limitations": [
+        "1000 events per second per device",
+        "1000 events per batch maximum",
+        "Event properties limited to 1000 keys",
+        "Property values limited to 1024 characters",
+        "4 concurrent export requests"
+    ],
+    "pricing": "Free tier up to 10M events/month, paid plans for higher volume",
+    "rateLimits": {
+        "ingestion": "1000 events/second per device",
+        "batchSize": "1000 events",
+        "export": "4 concurrent requests",
+        "dashboard": "360 requests/hour",
+        "userActivity": "360 requests/hour"
+    },
+    "supportedRegions": [
+        "US",
+        "EU"
+    ],
+    "dataRetention": {
+        "free": "Last 3 months",
+        "growth": "All historical data",
+        "enterprise": "Custom retention"
+    },
+    "webhooks": false,
+    "integrations": [
+        "Segment",
+        "Braze",
+        "Salesforce",
+        "Slack",
+        "Zendesk",
+        "HubSpot",
+        "Intercom",
+        "AWS S3",
+        "Google Cloud Storage",
+        "Snowflake",
+        "BigQuery",
+        "Redshift"
+    ],
+    "sdks": [
+        "JavaScript",
+        "iOS",
+        "Android",
+        "React Native",
+        "Python",
+        "Node.js",
+        "Java",
+        "Go",
+        "Ruby",
+        "PHP",
+        "Unity",
+        "Unreal",
+        "Flutter"
+    ],
+    "compliance": [
+        "GDPR",
+        "CCPA",
+        "SOC 2 Type II",
+        "ISO 27001",
+        "HIPAA (Enterprise)"
+    ],
+    "eventLimits": {
+        "maxEventTypes": "2000 per project",
+        "maxEventProperties": "1000 per event",
+        "maxPropertyKeyLength": "40 characters",
+        "maxPropertyValueLength": "1024 characters",
+        "maxUserPropertyUpdates": "unlimited"
+    }
+}

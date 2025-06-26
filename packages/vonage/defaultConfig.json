@@ -1,0 +1,9 @@
+{
+    "name": "vonage",
+    "label": "Vonage",
+    "productUrl": "https://vonage.com",
+    "apiDocs": "https://developer.vonage.com",
+    "logoUrl": "https://friggframework.org/assets/img/vonage-icon.png",
+    "categories": ["Communication", "Voice", "SMS", "Messaging"],
+    "description": "Vonage API platform for voice calls, SMS, messaging, and number management."
+}

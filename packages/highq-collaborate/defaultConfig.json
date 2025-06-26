@@ -1,0 +1,14 @@
+{
+  "name": "HighQ Collaborate",
+  "moduleName": "highq-collaborate",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "HighQ Collaborate API Integration Module",
+    "category": "Productivity",
+    "apiDocUrl": "https://api.highqsolutions.com/docs",
+    "icon": ""
+  }
+}

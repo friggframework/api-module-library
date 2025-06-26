@@ -1,0 +1,15 @@
+{
+  "name": "twilio",
+  "label": "Twilio",
+  "productUrl": "https://twilio.com",
+  "apiDocs": "https://www.twilio.com/docs/api",
+  "logoUrl": "https://www.twilio.com/content/dam/twilio-com/global/en/logos/red/twilio-logo-red.svg",
+  "categories": [
+    "Communications",
+    "SMS",
+    "Voice",
+    "Video",
+    "Messaging"
+  ],
+  "description": "Twilio is a cloud communications platform that allows software developers to programmatically make and receive phone calls, send and receive text messages, and perform other communication functions"
+}

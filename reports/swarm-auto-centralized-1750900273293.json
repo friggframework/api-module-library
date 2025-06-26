@@ -1,0 +1,13 @@
+{
+  "objective": "Please make sure we're referencing SAFLA for any stored best practices and then updating as we go. Also be sure to check the updated refactor work that Daniel is doing in https://github.com/friggframework/frigg/pull/397 to inform an updates we might want to make for the following ask... your goal: update all packages so that they're 1- Clean and only have the files that are needed for the newest frigg versions, 2- are all 'v1 ready' which really just means using frigg core and hte new definition approach, 3- have a local copy of any open API spec we can find, 4- have any other spec that seems relevant... fenestra spec, arazzo spec, async api spec, 5- have some beginnings of documentation, 6- have links to their developer docs, portal, partnership stuff, etc., 7- note any other oddities about developing against their api, 8- reflect whether they're a part of a larger ecosystem of packages that are related to one another. Maybe other things to include? But either way, at the end, the library should be cleaner, all of the packages should be ready to run, and the navigation in the repo should be clean and easy.",
+  "strategy": "auto",
+  "mode": "centralized",
+  "maxAgents": 5,
+  "timeout": 60,
+  "parallel": false,
+  "monitor": false,
+  "output": "json",
+  "outputDir": "./reports",
+  "timestamp": "2025-06-26T01:11:13.289Z",
+  "id": "swarm-auto-centralized-1750900273293"
+}

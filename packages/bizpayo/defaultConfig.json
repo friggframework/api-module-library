@@ -1,0 +1,14 @@
+{
+  "name": "BizPayo",
+  "moduleName": "bizpayo",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "BizPayo API Integration Module",
+    "category": "Finance",
+    "apiDocUrl": "https://docs.bizpayo.com/api",
+    "icon": ""
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "campaign-monitor",
+  "label": "Campaign Monitor",
+  "productUrl": "https://www.campaignmonitor.com",
+  "apiDocs": "https://www.campaignmonitor.com/api/",
+  "logoUrl": "https://friggframework.org/assets/img/campaign-monitor-icon.png",
+  "categories": [
+    "Email Marketing",
+    "Marketing Automation",
+    "Communication"
+  ],
+  "description": "Campaign Monitor is an email marketing platform that helps businesses create, send, and optimize their email campaigns."
+}

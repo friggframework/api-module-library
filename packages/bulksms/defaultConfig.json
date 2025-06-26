@@ -1,0 +1,14 @@
+{
+  "name": "BulkSMS",
+  "moduleName": "bulksms",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "BulkSMS API Integration Module",
+    "category": "Communication",
+    "apiDocUrl": "https://api.bulksms.com/v1",
+    "icon": ""
+  }
+}

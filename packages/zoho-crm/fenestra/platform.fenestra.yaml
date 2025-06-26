@@ -1,0 +1,7 @@
+# Zoho CRM Platform - Fenestra Specification
+# TODO: Complete this specification based on platform research
+fenestra: "1.0.0"
+platform:
+  name: Zoho CRM
+  description: "UI extensibility specification for Zoho CRM"
+  # TODO: Add complete platform specification

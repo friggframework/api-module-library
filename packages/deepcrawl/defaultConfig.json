@@ -1,0 +1,12 @@
+{
+  "name": "deepcrawl",
+  "label": "DeepCrawl",
+  "productUrl": "https://www.deepcrawl.com",
+  "apiDocs": "https://api.deepcrawl.com/",
+  "logoUrl": "https://friggframework.org/assets/img/deepcrawl-icon.png",
+  "categories": [
+    "Developer",
+    "Website Builders"
+  ],
+  "description": "DeepCrawl is a cloud-based website crawler that helps businesses monitor and improve their website's technical SEO performance."
+}

@@ -1,0 +1,91 @@
+{
+    "name": "Mixpanel",
+    "version": "1.0.0",
+    "category": "Analytics",
+    "type": "mixpanel",
+    "description": "Product analytics platform for tracking user interactions and behavior",
+    "documentation": "https://mixpanel.com/docs",
+    "apiDocs": "https://developer.mixpanel.com/reference",
+    "authentication": {
+        "types": [
+            {
+                "type": "serviceAccount",
+                "name": "Service Account",
+                "description": "Recommended for server-side API operations",
+                "fields": [
+                    "serviceAccountUsername",
+                    "serviceAccountSecret"
+                ]
+            },
+            {
+                "type": "projectToken",
+                "name": "Project Token",
+                "description": "For event tracking and client-side operations",
+                "fields": [
+                    "projectToken"
+                ]
+            }
+        ]
+    },
+    "endpoints": {
+        "api": "https://api.mixpanel.com",
+        "ingestion": "https://api.mixpanel.com",
+        "euApi": "https://eu.mixpanel.com",
+        "euIngestion": "https://eu.mixpanel.com"
+    },
+    "features": [
+        "Event tracking",
+        "User profiles",
+        "Group analytics",
+        "Funnel analysis",
+        "Retention analysis",
+        "JQL queries",
+        "Cohort management",
+        "Data export",
+        "Real-time analytics",
+        "Custom properties",
+        "Annotations",
+        "Lookup tables"
+    ],
+    "limitations": [
+        "Data retention based on plan",
+        "API rate limits",
+        "Maximum event size 1MB",
+        "Property name limitations"
+    ],
+    "pricing": "Free tier up to 20M events/month, paid plans for higher volume",
+    "rateLimits": {
+        "ingestion": "2000 requests/minute per project",
+        "export": "60 requests/hour",
+        "query": "5 concurrent queries"
+    },
+    "supportedRegions": [
+        "US",
+        "EU"
+    ],
+    "dataRetention": {
+        "free": "90 days",
+        "growth": "1 year",
+        "enterprise": "Unlimited"
+    },
+    "webhooks": true,
+    "sdks": [
+        "JavaScript",
+        "iOS",
+        "Android",
+        "React Native",
+        "Python",
+        "Ruby",
+        "PHP",
+        "Java",
+        "Node.js",
+        "Unity",
+        "Flutter"
+    ],
+    "compliance": [
+        "GDPR",
+        "CCPA",
+        "SOC 2",
+        "EU-US Privacy Shield"
+    ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "convertkit",
+  "label": "ConvertKit",
+  "productUrl": "https://convertkit.com",
+  "apiDocs": "https://developers.convertkit.com",
+  "logoUrl": "https://friggframework.org/assets/img/convertkit-icon.png",
+  "categories": [
+    "Email Marketing",
+    "Creator Economy",
+    "Marketing Automation"
+  ],
+  "description": "ConvertKit is an email marketing platform built for creators to help them grow their audience and earn a living online."
+}

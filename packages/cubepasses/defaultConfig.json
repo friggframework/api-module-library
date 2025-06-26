@@ -1,0 +1,14 @@
+{
+  "name": "CubePasses",
+  "moduleName": "cubepasses",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "CubePasses API Integration Module",
+    "category": "Marketing",
+    "apiDocUrl": "https://docs.cubepasses.com/api",
+    "icon": ""
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Sentry",
+  "moduleName": "sentry",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "apiKey"
+  ],
+  "docs": {
+    "description": "Error tracking and performance monitoring",
+    "category": "Monitoring",
+    "apiDocUrl": "https://docs.sentry.com/api",
+    "icon": ""
+  }
+}

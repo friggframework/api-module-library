@@ -1,0 +1,14 @@
+{
+  "name": "Airstory",
+  "moduleName": "airstory",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Airstory API Integration Module",
+    "category": "Productivity",
+    "apiDocUrl": "https://docs.airstory.com/api",
+    "icon": ""
+  }
+}

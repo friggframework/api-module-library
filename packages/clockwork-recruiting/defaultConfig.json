@@ -1,0 +1,14 @@
+{
+  "name": "Clockwork Recruiting",
+  "moduleName": "clockwork-recruiting",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Clockwork Recruiting API Integration Module",
+    "category": "CRM",
+    "apiDocUrl": "https://docs.clockwork-recruiting.com/api",
+    "icon": ""
+  }
+}

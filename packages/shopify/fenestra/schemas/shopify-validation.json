@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Shopify Fenestra Validation Schema",
+  "description": "Updated validation schema for Shopify Fenestra specifications",
+  "type": "object",
+  "properties": {
+    "fenestra": {
+      "type": "string",
+      "pattern": "^1\.0\.0$"
+    },
+    "platform": {
+      "type": "object",
+      "required": ["name", "description"],
+      "properties": {
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "version": {"type": "string"},
+        "baseUrl": {"type": "string"},
+        "documentation": {"type": "string"},
+        "marketplace": {"type": "string"}
+      }
+    },
+    "extensionTypes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["name", "description", "contexts"],
+        "properties": {
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "contexts": {"type": "array"},
+          "rendering": {"type": "array"},
+          "communication": {"type": "array"},
+          "capabilities": {"type": "array"},
+          "triggers": {"type": "array"},
+          "examples": {"type": "array"}
+        }
+      }
+    }
+  },
+  "required": ["fenestra", "platform", "extensionTypes"]
+}

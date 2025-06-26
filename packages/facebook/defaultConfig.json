@@ -1,0 +1,14 @@
+{
+  "name": "Facebook",
+  "moduleName": "facebook",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Facebook API Integration Module",
+    "category": "Social",
+    "apiDocUrl": "https://graph.facebook.com",
+    "icon": ""
+  }
+}

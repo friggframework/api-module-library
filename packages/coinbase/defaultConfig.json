@@ -1,0 +1,32 @@
+{
+  "name": "coinbase",
+  "displayName": "Coinbase",
+  "description": "Cryptocurrency trading and wallet platform",
+  "version": "1.0.0",
+  "categories": ["finance", "cryptocurrency", "trading"],
+  "scopes": [
+    "wallet:accounts:read",
+    "wallet:accounts:update",
+    "wallet:addresses:read",
+    "wallet:addresses:create",
+    "wallet:buys:read",
+    "wallet:buys:create",
+    "wallet:deposits:read",
+    "wallet:deposits:create",
+    "wallet:notifications:read",
+    "wallet:orders:read",
+    "wallet:orders:create",
+    "wallet:payment-methods:read",
+    "wallet:payment-methods:delete",
+    "wallet:payment-methods:limits",
+    "wallet:sells:read",
+    "wallet:sells:create",
+    "wallet:transactions:read",
+    "wallet:transactions:send",
+    "wallet:transactions:transfer",
+    "wallet:user:read",
+    "wallet:user:update",
+    "wallet:withdrawals:read",
+    "wallet:withdrawals:create"
+  ]
+}

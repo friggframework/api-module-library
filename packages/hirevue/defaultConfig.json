@@ -1,0 +1,14 @@
+{
+  "name": "HireVue",
+  "moduleName": "hirevue",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "HireVue API Integration Module",
+    "category": "HR",
+    "apiDocUrl": "https://docs.hirevue.com/api",
+    "icon": ""
+  }
+}

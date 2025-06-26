@@ -1,0 +1,14 @@
+{
+  "name": "authentise",
+  "label": "Authentise",
+  "productUrl": "https://authentise.com/",
+  "apiDocs": "https://developers.authentise.com/",
+  "logoUrl": "https://friggframework.org/assets/img/authentise-icon.png",
+  "categories": [
+    "CRM"
+  ],
+  "subCategories": [
+    "CRM (Customer Relationship Management)"
+  ],
+  "description": "Authentise provides 3D printing workflow and manufacturing execution system solutions."
+}

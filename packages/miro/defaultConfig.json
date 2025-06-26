@@ -1,0 +1,13 @@
+{
+  "name": "miro",
+  "label": "Miro",
+  "productUrl": "https://miro.com",
+  "apiDocs": "https://developers.miro.com/",
+  "logoUrl": "https://friggframework.org/assets/img/miro-icon.png",
+  "categories": [
+    "Productivity",
+    "Collaboration",
+    "Visual Design"
+  ],
+  "description": "Miro is a collaborative online whiteboard platform that enables teams to work together visually through brainstorming, planning, and design thinking."
+}

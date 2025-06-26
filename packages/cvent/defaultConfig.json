@@ -1,0 +1,14 @@
+{
+  "name": "Cvent",
+  "moduleName": "cvent",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Cvent API Integration Module",
+    "category": "Marketing",
+    "apiDocUrl": "https://api.cvent.com/ea",
+    "icon": ""
+  }
+}

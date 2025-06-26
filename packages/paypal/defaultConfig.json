@@ -1,0 +1,14 @@
+{
+  "name": "paypal",
+  "label": "PayPal",
+  "productUrl": "https://paypal.com",
+  "apiDocs": "https://developer.paypal.com/docs/api/overview/",
+  "logoUrl": "https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg",
+  "categories": [
+    "Payments",
+    "E-commerce",
+    "Financial Services",
+    "Money Transfer"
+  ],
+  "description": "PayPal is a digital payment platform that allows users to make payments and money transfers online"
+}

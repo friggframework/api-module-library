@@ -1,0 +1,14 @@
+{
+  "name": "BaseCRM",
+  "moduleName": "basecrm",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "BaseCRM API Integration Module",
+    "category": "CRM",
+    "apiDocUrl": "https://api.getbase.com/v2",
+    "icon": ""
+  }
+}

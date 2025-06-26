@@ -1,0 +1,30 @@
+{
+  "name": "@friggframework/boomset",
+  "version": "0.0.1",
+  "description": "Boomset API Module for Frigg",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "keywords": [
+    "frigg",
+    "boomset",
+    "api",
+    "integration"
+  ],
+  "author": "Frigg",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^1.0.0"
+  },
+  "devDependencies": {
+    "@friggframework/test": "^1.0.0",
+    "jest": "^27.0.0",
+    "eslint": "^8.0.0",
+    "dotenv": "^16.0.0"
+  }
+}

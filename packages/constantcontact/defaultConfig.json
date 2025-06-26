@@ -1,0 +1,13 @@
+{
+  "name": "constantcontact",
+  "label": "Constant Contact",
+  "productUrl": "https://www.constantcontact.com",
+  "apiDocs": "https://developer.constantcontact.com",
+  "logoUrl": "https://friggframework.org/assets/img/constantcontact-icon.png",
+  "categories": [
+    "Email Marketing",
+    "Marketing Automation",
+    "Communication"
+  ],
+  "description": "Constant Contact is an email marketing and digital marketing platform that helps small businesses grow their customer relationships."
+}

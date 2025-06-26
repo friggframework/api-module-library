@@ -1,0 +1,14 @@
+{
+  "name": "dropbox",
+  "label": "Dropbox",
+  "productUrl": "https://dropbox.com",
+  "apiDocs": "https://www.dropbox.com/developers/documentation",
+  "logoUrl": "https://cfl.dropboxstatic.com/static/images/logo_catalog/dropbox_logo_glyph_blue_m1@2x.png",
+  "categories": [
+    "Cloud Storage",
+    "File Management",
+    "File Synchronization",
+    "Collaboration"
+  ],
+  "description": "Dropbox is a cloud storage service that allows users to store, sync, and share files across devices and with others."
+}

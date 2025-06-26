@@ -1,0 +1,14 @@
+{
+  "name": "openai",
+  "label": "OpenAI",
+  "productUrl": "https://openai.com",
+  "apiDocs": "https://platform.openai.com/docs/api-reference",
+  "logoUrl": "https://friggframework.org/assets/img/openai-icon.png",
+  "categories": [
+    "AI/ML",
+    "Large Language Models",
+    "Text Generation",
+    "Image Generation"
+  ],
+  "description": "OpenAI provides API access to powerful AI models including GPT-4 for text generation, DALL-E for image generation, and Whisper for speech recognition."
+}

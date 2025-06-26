@@ -1,0 +1,14 @@
+{
+  "name": "reddit",
+  "label": "Reddit",
+  "productUrl": "https://reddit.com",
+  "apiDocs": "https://www.reddit.com/dev/api/",
+  "logoUrl": "https://logoeps.com/wp-content/uploads/2013/03/reddit-vector-logo.png",
+  "categories": [
+    "Social News",
+    "Community Platform",
+    "Content Aggregation",
+    "Discussion Forums"
+  ],
+  "description": "Reddit is a social news aggregation and discussion platform where users submit content and vote on submissions."
+}

@@ -1,0 +1,26 @@
+{
+  "name": "@friggframework/freshdesk",
+  "version": "1.0.0",
+  "description": "Freshdesk help desk software API module for Frigg Framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "@friggframework/core": "^1.0.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "keywords": [
+    "freshdesk",
+    "customer-support",
+    "helpdesk",
+    "tickets",
+    "api",
+    "frigg"
+  ],
+  "author": "Frigg Framework",
+  "license": "MIT"
+}

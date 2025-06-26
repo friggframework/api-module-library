@@ -1,0 +1,14 @@
+{
+  "name": "Enreach (formerly Herobase)",
+  "moduleName": "enreach-formerly-herobase",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Enreach (formerly Herobase) API Integration Module",
+    "category": "CRM",
+    "apiDocUrl": "https://docs.enreach-formerly-herobase.com/api",
+    "icon": ""
+  }
+}

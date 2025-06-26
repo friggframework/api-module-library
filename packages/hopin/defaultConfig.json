@@ -1,0 +1,14 @@
+{
+  "name": "Hopin",
+  "moduleName": "hopin",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Hopin API Integration Module",
+    "category": "Marketing",
+    "apiDocUrl": "https://api.hopin.com/docs",
+    "icon": ""
+  }
+}

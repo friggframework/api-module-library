@@ -1,0 +1,9 @@
+{
+    "name": "onesignal",
+    "label": "OneSignal",
+    "productUrl": "https://onesignal.com",
+    "apiDocs": "https://documentation.onesignal.com/reference",
+    "logoUrl": "https://friggframework.org/assets/img/onesignal-icon.png",
+    "categories": ["Communication", "Push Notifications", "Marketing"],
+    "description": "OneSignal push notification platform for mobile, web, and email messaging."
+}

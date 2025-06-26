@@ -1,0 +1,30 @@
+{
+  "name": "@friggframework/api-module-vonage",
+  "version": "1.0.0",
+  "description": "Vonage API module for the Frigg framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "keywords": [
+    "frigg",
+    "vonage",
+    "nexmo",
+    "voice",
+    "sms",
+    "api"
+  ],
+  "author": "Frigg Framework",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^1.0.0",
+    "jsonwebtoken": "^9.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}

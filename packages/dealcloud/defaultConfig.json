@@ -1,0 +1,13 @@
+{
+  "name": "dealcloud",
+  "label": "DealCloud",
+  "productUrl": "https://www.dealcloud.com",
+  "apiDocs": "https://developer.dealcloud.com",
+  "logoUrl": "https://friggframework.org/assets/img/dealcloud-icon.png",
+  "categories": [
+    "CRM",
+    "Deal Management",
+    "Investment Banking"
+  ],
+  "description": "DealCloud is a leading CRM and deal management platform for investment banking and capital markets."
+}

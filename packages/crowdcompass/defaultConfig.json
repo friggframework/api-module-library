@@ -1,0 +1,14 @@
+{
+  "name": "crowdcompass",
+  "label": "CrowdCompass",
+  "productUrl": "https://crowdcompass.com/",
+  "apiDocs": "https://developers.crowdcompass.com/",
+  "logoUrl": "https://friggframework.org/assets/img/crowdcompass-icon.png",
+  "categories": [
+    "Marketing"
+  ],
+  "subCategories": [
+    "Event Management"
+  ],
+  "description": "CrowdCompass provides event management and mobile app solutions for conferences and events."
+}

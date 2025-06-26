@@ -1,0 +1,13 @@
+{
+  "name": "jira",
+  "label": "Jira",
+  "productUrl": "https://www.atlassian.com/software/jira",
+  "apiDocs": "https://developer.atlassian.com/cloud/jira/platform/rest/v3/",
+  "logoUrl": "https://friggframework.org/assets/img/jira-icon.png",
+  "categories": [
+    "Project Management",
+    "Issue Tracking",
+    "Agile Development"
+  ],
+  "description": "Jira is a project management and issue tracking tool designed for software development teams to plan, track, and manage their work and agile workflows."
+}

@@ -1,0 +1,102 @@
+{
+    "name": "Segment",
+    "version": "1.0.0",
+    "category": "Analytics",
+    "type": "segment",
+    "description": "Customer data platform for collecting, cleaning, and routing analytics data",
+    "documentation": "https://segment.com/docs/",
+    "apiDocs": "https://segment.com/docs/connections/sources/catalog/libraries/server/http-api/",
+    "authentication": {
+        "types": [
+            {
+                "type": "writeKey",
+                "name": "Write Key",
+                "description": "For server-side event tracking",
+                "fields": ["writeKey"]
+            },
+            {
+                "type": "bearerToken",
+                "name": "Workspace Token",
+                "description": "For workspace management APIs",
+                "fields": ["workspaceToken"]
+            }
+        ]
+    },
+    "endpoints": {
+        "tracking": "https://api.segment.io/v1",
+        "public": "https://api.segmentapis.com/v1beta",
+        "eu": "https://events.eu1.segmentapis.com/v1"
+    },
+    "features": [
+        "Event tracking",
+        "User identification",
+        "Page and screen tracking",
+        "Group analytics",
+        "User aliasing",
+        "Batch operations",
+        "Historical data import",
+        "GDPR compliance",
+        "Real-time data routing",
+        "Over 300 integrations",
+        "Data warehouses support",
+        "Tracking plans"
+    ],
+    "limitations": [
+        "500 messages per batch",
+        "32KB per message",
+        "500KB per request",
+        "No hard rate limits on tracking API"
+    ],
+    "pricing": "Usage-based pricing starting with free tier",
+    "rateLimits": {
+        "tracking": "No hard limits, reasonable usage expected",
+        "batch": "500 messages per batch",
+        "messageSize": "32KB",
+        "requestSize": "500KB"
+    },
+    "supportedRegions": [
+        "US",
+        "EU"
+    ],
+    "dataRetention": "Based on plan, typically 1 year for free tier",
+    "webhooks": false,
+    "directIntegrations": [
+        "Google Analytics",
+        "Mixpanel",
+        "Amplitude",
+        "Braze",
+        "Salesforce",
+        "HubSpot",
+        "Intercom",
+        "Facebook Pixel",
+        "Google Ads",
+        "Slack",
+        "Webhooks",
+        "Data Warehouses"
+    ],
+    "sdks": [
+        "JavaScript",
+        "Node.js",
+        "Python",
+        "Ruby",
+        "PHP",
+        "Java",
+        "Go",
+        ".NET",
+        "iOS",
+        "Android",
+        "React Native"
+    ],
+    "compliance": [
+        "GDPR",
+        "CCPA",
+        "SOC 2 Type II",
+        "ISO 27001",
+        "HIPAA eligible"
+    ],
+    "protocols": {
+        "spec": "https://segment.com/docs/connections/spec/",
+        "ecommerce": "https://segment.com/docs/connections/spec/ecommerce/v2/",
+        "b2b": "https://segment.com/docs/connections/spec/b2b-saas/"
+    }
+}

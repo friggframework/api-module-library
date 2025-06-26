@@ -1,0 +1,14 @@
+{
+  "name": "box",
+  "label": "Box",
+  "productUrl": "https://box.com",
+  "apiDocs": "https://developer.box.com/",
+  "logoUrl": "https://images.ctfassets.net/w6r2i5d8q73s/5yoH9Ey6EE8I2q40mSEi8G/cb4a2b9e6d4f4ff85af42ed7f7a4e2ab/box-logo-blue.svg",
+  "categories": [
+    "Enterprise File Storage",
+    "Content Management",
+    "Collaboration",
+    "Security"
+  ],
+  "description": "Box is an enterprise cloud content management platform that enables secure file storage, sharing, and collaboration."
+}

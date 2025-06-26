@@ -1,0 +1,14 @@
+{
+  "name": "Google Chat",
+  "moduleName": "google-chat",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Google Chat API Integration Module",
+    "category": "Communication",
+    "apiDocUrl": "https://docs.google-chat.com/api",
+    "icon": ""
+  }
+}

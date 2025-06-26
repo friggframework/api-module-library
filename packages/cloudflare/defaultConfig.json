@@ -1,0 +1,14 @@
+{
+  "name": "Cloudflare",
+  "moduleName": "cloudflare",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "apiKey"
+  ],
+  "docs": {
+    "description": "Web performance and security",
+    "category": "Infrastructure",
+    "apiDocUrl": "https://docs.cloudflare.com/api",
+    "icon": ""
+  }
+}

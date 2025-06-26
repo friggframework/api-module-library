@@ -1,0 +1,14 @@
+{
+  "name": "Amazon API Gateway",
+  "moduleName": "amazon-api-gateway",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Amazon API Gateway API Integration Module",
+    "category": "Developer",
+    "apiDocUrl": "https://docs.amazon-api-gateway.com/api",
+    "icon": ""
+  }
+}

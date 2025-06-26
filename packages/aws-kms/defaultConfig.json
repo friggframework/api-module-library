@@ -1,0 +1,12 @@
+{
+  "name": "aws-kms",
+  "label": "AWS KMS",
+  "productUrl": "https://aws.amazon.com/kms/",
+  "apiDocs": "https://docs.aws.amazon.com/kms/",
+  "logoUrl": "https://friggframework.org/assets/img/aws-kms-icon.png",
+  "categories": [
+    "Developer",
+    "Amazon"
+  ],
+  "description": "AWS Key Management Service (KMS) makes it easy for you to create and manage cryptographic keys and control their use across a wide range of AWS services and in your applications."
+}

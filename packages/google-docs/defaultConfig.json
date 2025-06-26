@@ -1,0 +1,14 @@
+{
+  "name": "google-docs",
+  "label": "Google Docs",
+  "productUrl": "https://docs.google.com/",
+  "apiDocs": "https://developers.google.com/docs/",
+  "logoUrl": "https://friggframework.org/assets/img/google-docs-icon.png",
+  "categories": [
+    "Productivity"
+  ],
+  "subCategories": [
+    "File Management and Storage"
+  ],
+  "description": "Google Docs is a web-based word processor that allows real-time collaboration and document editing."
+}

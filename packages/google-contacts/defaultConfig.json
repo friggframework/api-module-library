@@ -1,0 +1,14 @@
+{
+  "name": "Google Contacts",
+  "moduleName": "google-contacts",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Google Contacts API Integration Module",
+    "category": "CRM",
+    "apiDocUrl": "https://people.googleapis.com/docs",
+    "icon": ""
+  }
+}

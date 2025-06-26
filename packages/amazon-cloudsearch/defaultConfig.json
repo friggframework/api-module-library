@@ -1,0 +1,14 @@
+{
+  "name": "Amazon Cloudsearch",
+  "moduleName": "amazon-cloudsearch",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Amazon Cloudsearch API Integration Module",
+    "category": "Developer",
+    "apiDocUrl": "https://cloudsearch.us-east-1.amazonaws.com",
+    "icon": ""
+  }
+}

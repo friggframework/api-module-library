@@ -1,0 +1,14 @@
+{
+  "name": "AWS Cloudwatch",
+  "moduleName": "aws-cloudwatch",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "AWS Cloudwatch API Integration Module",
+    "category": "Developer",
+    "apiDocUrl": "https://docs.aws-cloudwatch.com/api",
+    "icon": ""
+  }
+}

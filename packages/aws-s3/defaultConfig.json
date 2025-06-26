@@ -1,0 +1,14 @@
+{
+  "name": "aws-s3",
+  "label": "AWS S3",
+  "productUrl": "https://aws.amazon.com/s3/",
+  "apiDocs": "https://docs.aws.amazon.com/s3/",
+  "logoUrl": "https://friggframework.org/assets/img/aws-s3-icon.png",
+  "categories": [
+    "Developer"
+  ],
+  "subCategories": [
+    "Amazon"
+  ],
+  "description": "Amazon S3 is a cloud storage service that offers industry-leading scalability, data availability, security, and performance."
+}

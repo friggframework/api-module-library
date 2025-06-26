@@ -1,0 +1,7 @@
+# Google Calendar Platform - Fenestra Specification
+# TODO: Complete this specification based on platform research
+fenestra: "1.0.0"
+platform:
+  name: Google Calendar
+  description: "UI extensibility specification for Google Calendar"
+  # TODO: Add complete platform specification

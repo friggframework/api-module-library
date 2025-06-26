@@ -1,0 +1,14 @@
+{
+  "name": "aws-account-management",
+  "label": "AWS Account Management",
+  "productUrl": "https://aws.amazon.com/account/",
+  "apiDocs": "https://docs.aws.amazon.com/account/",
+  "logoUrl": "https://friggframework.org/assets/img/aws-icon.png",
+  "categories": [
+    "Developer"
+  ],
+  "subCategories": [
+    "Amazon"
+  ],
+  "description": "AWS Account Management provides tools to manage AWS account settings, billing, and administrative functions."
+}

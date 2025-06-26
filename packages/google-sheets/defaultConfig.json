@@ -1,0 +1,14 @@
+{
+  "name": "Google Sheets",
+  "moduleName": "google-sheets",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Google Sheets API Integration Module",
+    "category": "Product Management",
+    "apiDocUrl": "https://docs.google-sheets.com/api",
+    "icon": ""
+  }
+}

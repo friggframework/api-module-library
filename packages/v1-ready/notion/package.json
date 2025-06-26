@@ -1,9 +1,0 @@
-{
-  "name": "@api-modules/notion",
-  "version": "1.0.0",
-  "description": "Notion API module with Fenestra specifications",
-  "main": "index.js",
-  "keywords": ["Notion", "api", "fenestra", "ui-extensions"],
-  "author": "API Module Library",
-  "license": "MIT"
-}

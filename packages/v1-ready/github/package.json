@@ -1,9 +1,0 @@
-{
-  "name": "@api-modules/github",
-  "version": "1.0.0",
-  "description": "GitHub API module with Fenestra specifications",
-  "main": "index.js",
-  "keywords": ["GitHub", "api", "fenestra", "ui-extensions"],
-  "author": "API Module Library",
-  "license": "MIT"
-}

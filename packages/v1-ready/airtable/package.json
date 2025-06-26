@@ -1,9 +1,0 @@
-{
-  "name": "@api-modules/airtable",
-  "version": "1.0.0",
-  "description": "Airtable API module with Fenestra specifications",
-  "main": "index.js",
-  "keywords": ["Airtable", "api", "fenestra", "ui-extensions"],
-  "author": "API Module Library",
-  "license": "MIT"
-}

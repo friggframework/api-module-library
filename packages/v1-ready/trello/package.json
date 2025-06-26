@@ -1,9 +1,0 @@
-{
-  "name": "@api-modules/trello",
-  "version": "1.0.0",
-  "description": "Trello API module with Fenestra specifications",
-  "main": "index.js",
-  "keywords": ["Trello", "api", "fenestra", "ui-extensions"],
-  "author": "API Module Library",
-  "license": "MIT"
-}

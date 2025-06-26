@@ -1,9 +1,0 @@
-{
-  "name": "@api-modules/google-workspace",
-  "version": "1.0.0",
-  "description": "Google Workspace API module with Fenestra specifications",
-  "main": "index.js",
-  "keywords": ["Google Workspace", "api", "fenestra", "ui-extensions"],
-  "author": "API Module Library",
-  "license": "MIT"
-}

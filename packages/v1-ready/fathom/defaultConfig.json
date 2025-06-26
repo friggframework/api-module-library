@@ -1,9 +1,0 @@
-{
-  "name": "fathom",
-  "label": "Fathom",
-  "productUrl": "https://fathom.video",
-  "apiDocs": "https://docs.fathom.ai/api-reference",
-  "logoUrl": "https://assets-global.website-files.com/6123a1d125034c5d3ee5fc7f/632a973b1c3c733a6c5b69e8_fathom-logo.svg",
-  "categories": ["video", "meetings", "productivity", "ai", "transcription"],
-  "description": "Fathom is an AI meeting assistant that records, transcribes, highlights, and summarizes your meetings."
-}

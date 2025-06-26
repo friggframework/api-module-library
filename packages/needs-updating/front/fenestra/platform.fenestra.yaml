@@ -1,7 +1,0 @@
-# Front Platform - Fenestra Specification
-# TODO: Complete this specification based on platform research
-fenestra: "1.0.0"
-platform:
-  name: Front
-  description: "UI extensibility specification for Front"
-  # TODO: Add complete platform specification

@@ -1,9 +1,0 @@
-{
-  "name": "@api-modules/shopify",
-  "version": "1.0.0",
-  "description": "Shopify API module with Fenestra specifications",
-  "main": "index.js",
-  "keywords": ["Shopify", "api", "fenestra", "ui-extensions"],
-  "author": "API Module Library",
-  "license": "MIT"
-}

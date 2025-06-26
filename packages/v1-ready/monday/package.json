@@ -1,9 +1,0 @@
-{
-  "name": "@api-modules/monday",
-  "version": "1.0.0",
-  "description": "Monday.com API module with Fenestra specifications",
-  "main": "index.js",
-  "keywords": ["Monday.com", "api", "fenestra", "ui-extensions"],
-  "author": "API Module Library",
-  "license": "MIT"
-}

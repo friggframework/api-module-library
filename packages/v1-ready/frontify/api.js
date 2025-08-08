@@ -756,6 +756,54 @@ class Api extends OAuth2Requester {
     }
 
     /**
+     * Gets metadata field definitions for a library or project
+     * @param {Object} query - Query parameters
+     * @param {string} [query.libraryId] - ID of the library
+     * @param {string} [query.projectId] - ID of the project  
+     * @returns {Promise<Object>} Metadata field definitions
+     */
+    async getMetadataFields(query) {
+        let containerFragment = '';
+        let containerId = '';
+        
+        if (query.libraryId) {
+            containerFragment = 'library';
+            containerId = query.libraryId;
+        } else if (query.projectId) {
+            containerFragment = 'workspaceProject';
+            containerId = query.projectId;
+        } else {
+            throw new Error('Either libraryId or projectId must be provided');
+        }
+
+        const ql = `query MetadataFields {
+                      ${containerFragment}(id: "${containerId}") {
+                        metadataSchema {
+                          sections {
+                            id
+                            name
+                            fields {
+                              id
+                              name
+                              type
+                              isRequired
+                              settings
+                            }
+                          }
+                        }
+                      }
+                    }`;
+
+        const response = await this._post(this.buildRequestOptions(ql));
+        this.assertResponse(response);
+        
+        const container = response.data[containerFragment];
+        return {
+            metadataFields: container?.metadataSchema?.sections || []
+        };
+    }
+
+    /**
      * Executes a custom GraphQL query
      * @param {string} ql - GraphQL query
      * @returns {Promise<Object>} Query response

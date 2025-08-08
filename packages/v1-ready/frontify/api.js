@@ -763,45 +763,136 @@ class Api extends OAuth2Requester {
      * @returns {Promise<Object>} Metadata field definitions
      */
     async getMetadataFields(query) {
-        let containerFragment = '';
-        let containerId = '';
-        
-        if (query.libraryId) {
-            containerFragment = 'library';
-            containerId = query.libraryId;
-        } else if (query.projectId) {
-            containerFragment = 'workspaceProject';
-            containerId = query.projectId;
-        } else {
-            throw new Error('Either libraryId or projectId must be provided');
-        }
+      let containerFragment = '';
+      let containerId = '';
+      
+      if (query.libraryId) {
+          containerFragment = 'library';
+          containerId = query.libraryId;
+      } else if (query.projectId) {
+          containerFragment = 'workspaceProject';
+          containerId = query.projectId;
+      } else {
+          throw new Error('Either libraryId or projectId must be provided');
+      }
 
-        const ql = `query MetadataFields {
-                      ${containerFragment}(id: "${containerId}") {
-                        metadataSchema {
-                          sections {
-                            id
-                            name
-                            fields {
-                              id
-                              name
-                              type
-                              isRequired
-                              settings
-                            }
+      const ql = `query MetadataFields {
+                    ${containerFragment}(id: "${containerId}") {
+                      customMetadataProperties {
+                        id
+                        name
+                        isRequired
+                        defaultValue
+                        helpText
+                        type {
+                          __typename
+                          ... on CustomMetadataPropertyTypeSelect {
+                            options { id value isDefault }
+                          }
+                          ... on CustomMetadataPropertyTypeMultiSelect {
+                            options { id value isDefault }
                           }
                         }
                       }
-                    }`;
+                    }
+                  }`;
 
-        const response = await this._post(this.buildRequestOptions(ql));
-        this.assertResponse(response);
-        
-        const container = response.data[containerFragment];
-        return {
-            metadataFields: container?.metadataSchema?.sections || []
-        };
+      const response = await this._post(this.buildRequestOptions(ql));
+      this.assertResponse(response);
+      
+      const container = response.data[containerFragment];
+      const properties = container?.customMetadataProperties || [];
+
+      const mapType = (typename) => {
+          switch (typename) {
+              case 'CustomMetadataPropertyTypeText':
+                  return 'text';
+              case 'CustomMetadataPropertyTypeLongText':
+                  return 'multiline';
+              case 'CustomMetadataPropertyTypeNumber':
+                  return 'number';
+              case 'CustomMetadataPropertyTypeDate':
+                  return 'date';
+              case 'CustomMetadataPropertyTypeSelect':
+              case 'CustomMetadataPropertyTypeMultiSelect':
+                  return 'select';
+              case 'CustomMetadataPropertyTypeUrl':
+                  return 'string';
+              default:
+                  return 'string';
+          }
+      };
+
+      const fields = properties.map((prop) => ({
+          id: prop.id,
+          name: prop.name,
+          type: mapType(prop.type?.__typename),
+          isRequired: !!prop.isRequired,
+          settings: prop.type?.options
+              ? {
+                  options: prop.type.options.map((opt) => ({
+                      id: opt.id,
+                      value: opt.value,
+                      label: opt.value,
+                  })),
+                }
+              : undefined,
+      }));
+
+      return {
+          metadataFields: [
+              {
+                  id: 'custom-metadata',
+                  name: 'Custom metadata',
+                  fields,
+              },
+          ],
+      };
     }
+
+    /**
+     * Sets or updates custom metadata values on an asset
+     * @param {string} assetId - The asset ID
+     * @param {Array<{propertyId: string, value: string|number}>} entries - Metadata entries
+     * @returns {Promise<Object>} Updated asset minimal payload
+     */
+        async setAssetCustomMetadata(assetId, entries = []) {
+          const normalizeValue = (val) => {
+              if (val === null || val === undefined || val === '') return null;
+              if (typeof val === 'number') return String(val);
+              if (typeof val === 'string') {
+                  const trimmed = val.trim();
+                  if (/^-?\d+$/.test(trimmed)) return trimmed;
+                  return JSON.stringify(trimmed);
+              }
+              return JSON.stringify(val);
+          };
+  
+          const metadataItems = entries
+              .filter((e) => e && e.propertyId && e.value !== undefined && e.value !== null && e.value !== '')
+              .map((e) => {
+                  if (Array.isArray(e.value)) {
+                      const values = e.value
+                          .map((v) => normalizeValue(v))
+                          .filter((v) => v !== null)
+                          .join(', ');
+                      return `{ propertyId: "${e.propertyId}", values: [ ${values} ] }`;
+                  }
+                  const coerced = normalizeValue(e.value);
+                  return `{ propertyId: "${e.propertyId}", value: ${coerced} }`;
+              })
+              .join(', ');
+  
+          const ql = `mutation AddAssetCustomMetadata {\n` +
+              `  addCustomMetadata(input: { parentIds: ["${assetId}"], customMetadata: [ ${metadataItems} ] }) {\n` +
+              `    __typename\n` +
+              `  }\n` +
+              `}`;
+  
+          const response = await this._post(this.buildRequestOptions(ql));
+          this.assertResponse(response);
+          return response.data.addCustomMetadata;
+      }
 
     /**
      * Executes a custom GraphQL query

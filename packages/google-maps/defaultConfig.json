@@ -1,0 +1,14 @@
+{
+  "name": "Google Maps",
+  "moduleName": "google-maps",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Google Maps API Integration Module",
+    "category": "Productivity",
+    "apiDocUrl": "https://docs.google-maps.com/api",
+    "icon": ""
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Clubworx",
+  "moduleName": "clubworx",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Clubworx API Integration Module",
+    "category": "CRM",
+    "apiDocUrl": "https://api.clubworx.com",
+    "icon": ""
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Autotask",
+  "moduleName": "autotask",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Autotask API Integration Module",
+    "category": "CRM",
+    "apiDocUrl": "https://docs.autotask.com/api",
+    "icon": ""
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "AWS S3 Elasticache",
+  "moduleName": "aws-s3-elasticache",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "AWS S3 Elasticache API Integration Module",
+    "category": "Developer",
+    "apiDocUrl": "https://docs.aws-s3-elasticache.com/api",
+    "icon": ""
+  }
+}

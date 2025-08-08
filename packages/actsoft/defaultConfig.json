@@ -1,0 +1,14 @@
+{
+  "name": "actsoft",
+  "label": "ActSoft",
+  "productUrl": "https://actsoft.com/",
+  "apiDocs": "https://developers.actsoft.com/",
+  "logoUrl": "https://friggframework.org/assets/img/actsoft-icon.png",
+  "categories": [
+    "Productivity"
+  ],
+  "subCategories": [
+    "Task Management"
+  ],
+  "description": "ActSoft provides workforce automation and task management solutions for mobile workers."
+}

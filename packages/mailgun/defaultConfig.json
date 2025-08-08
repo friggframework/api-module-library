@@ -1,0 +1,14 @@
+{
+  "name": "Mailgun",
+  "moduleName": "mailgun",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "apiKey"
+  ],
+  "docs": {
+    "description": "Email automation service",
+    "category": "Email",
+    "apiDocUrl": "https://docs.mailgun.com/api",
+    "icon": ""
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Bingmail",
+  "moduleName": "bingmail",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Bingmail API Integration Module",
+    "category": "Communication",
+    "apiDocUrl": "https://docs.bingmail.com/api",
+    "icon": ""
+  }
+}

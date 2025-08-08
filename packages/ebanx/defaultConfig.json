@@ -1,0 +1,14 @@
+{
+  "name": "Ebanx",
+  "moduleName": "ebanx",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Ebanx API Integration Module",
+    "category": "Unnamed record",
+    "apiDocUrl": "https://api.ebanx.com",
+    "icon": ""
+  }
+}

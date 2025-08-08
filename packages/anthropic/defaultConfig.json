@@ -1,0 +1,14 @@
+{
+  "name": "anthropic",
+  "label": "Anthropic",
+  "productUrl": "https://anthropic.com",
+  "apiDocs": "https://docs.anthropic.com/claude/reference",
+  "logoUrl": "https://friggframework.org/assets/img/anthropic-icon.png",
+  "categories": [
+    "AI/ML",
+    "Large Language Models",
+    "Text Generation",
+    "AI Safety"
+  ],
+  "description": "Anthropic provides access to Claude, a next-generation AI assistant focused on being helpful, harmless, and honest."
+}

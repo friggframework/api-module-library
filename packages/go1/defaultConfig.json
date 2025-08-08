@@ -1,0 +1,14 @@
+{
+  "name": "GO1",
+  "moduleName": "go1",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "GO1 API Integration Module",
+    "category": "Education",
+    "apiDocUrl": "https://api.go1.com/docs",
+    "icon": ""
+  }
+}

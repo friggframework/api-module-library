@@ -1,0 +1,14 @@
+{
+  "name": "Cannabiz",
+  "moduleName": "cannabiz",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Cannabiz API Integration Module",
+    "category": "E-commerce",
+    "apiDocUrl": "https://api.cannabiz.com",
+    "icon": ""
+  }
+}

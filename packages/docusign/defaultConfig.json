@@ -1,0 +1,14 @@
+{
+  "name": "docusign",
+  "label": "Docusign",
+  "productUrl": "https://docusign.com",
+  "apiDocs": "https://developers.docusign.com/",
+  "logoUrl": "https://www.docusign.com/sites/default/files/ds-logo.svg",
+  "categories": [
+    "Electronic Signatures",
+    "Document Management",
+    "Legal Tech",
+    "Business Process"
+  ],
+  "description": "Docusign is a digital transaction platform that enables electronic signatures and digital document management"
+}

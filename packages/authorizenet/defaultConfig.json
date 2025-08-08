@@ -1,0 +1,14 @@
+{
+  "name": "Authorize.Net",
+  "moduleName": "authorizenet",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Authorize.Net API Integration Module",
+    "category": "Payment",
+    "apiDocUrl": "https://api.authorize.net/docs",
+    "icon": ""
+  }
+}

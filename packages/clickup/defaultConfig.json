@@ -1,0 +1,14 @@
+{
+  "name": "clickup",
+  "label": "ClickUp",
+  "productUrl": "https://clickup.com",
+  "apiDocs": "https://clickup.com/api",
+  "logoUrl": "https://clickup.com/landing/images/brand/clickup-symbol_color.svg",
+  "categories": [
+    "Project Management",
+    "Productivity",
+    "Task Management",
+    "Team Collaboration"
+  ],
+  "description": "ClickUp is an all-in-one productivity platform that provides teams with project management, task tracking, and collaboration tools."
+}

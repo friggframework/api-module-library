@@ -1,0 +1,14 @@
+{
+  "name": "benchmark-email",
+  "label": "Benchmark Email",
+  "productUrl": "https://benchmarkemail.com/",
+  "apiDocs": "https://developers.benchmarkemail.com/",
+  "logoUrl": "https://friggframework.org/assets/img/benchmark-email-icon.png",
+  "categories": [
+    "Communication"
+  ],
+  "subCategories": [
+    "Email Newsletters"
+  ],
+  "description": "Benchmark Email provides email marketing automation and newsletter services."
+}

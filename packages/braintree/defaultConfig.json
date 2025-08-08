@@ -1,0 +1,13 @@
+{
+  "name": "braintree",
+  "label": "Braintree",
+  "productUrl": "https://www.braintreepayments.com",
+  "apiDocs": "https://developer.paypal.com/braintree/docs",
+  "logoUrl": "https://friggframework.org/assets/img/braintree-icon.png",
+  "categories": [
+    "Payment Processing",
+    "E-commerce",
+    "Finance"
+  ],
+  "description": "Braintree is a full-stack payment platform that enables businesses to accept, process, and split payments."
+}

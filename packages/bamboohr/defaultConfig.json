@@ -1,0 +1,13 @@
+{
+  "name": "bamboohr",
+  "label": "BambooHR",
+  "productUrl": "https://www.bamboohr.com",
+  "apiDocs": "https://documentation.bamboohr.com/docs",
+  "logoUrl": "https://friggframework.org/assets/img/bamboohr-icon.png",
+  "categories": [
+    "HR",
+    "Human Resources",
+    "Employee Management"
+  ],
+  "description": "BambooHR is an HR software platform designed to help growing companies manage employee information, hiring, onboarding, and culture."
+}

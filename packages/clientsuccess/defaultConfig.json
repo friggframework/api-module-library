@@ -1,0 +1,14 @@
+{
+  "name": "clientsuccess",
+  "label": "ClientSuccess",
+  "productUrl": "https://clientsuccess.com/",
+  "apiDocs": "https://developers.clientsuccess.com/",
+  "logoUrl": "https://friggframework.org/assets/img/clientsuccess-icon.png",
+  "categories": [
+    "CRM"
+  ],
+  "subCategories": [
+    "CRM (Customer Relationship Management)"
+  ],
+  "description": "ClientSuccess is a customer success platform that helps businesses reduce churn and increase expansion."
+}

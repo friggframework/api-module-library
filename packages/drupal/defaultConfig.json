@@ -1,0 +1,14 @@
+{
+  "name": "Drupal",
+  "moduleName": "drupal",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Drupal API Integration Module",
+    "category": "Developer",
+    "apiDocUrl": "https://api.drupal.org/docs",
+    "icon": ""
+  }
+}

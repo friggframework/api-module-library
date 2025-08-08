@@ -1,0 +1,13 @@
+{
+  "name": "chargebee",
+  "label": "Chargebee",
+  "productUrl": "https://www.chargebee.com",
+  "apiDocs": "https://apidocs.chargebee.com",
+  "logoUrl": "https://friggframework.org/assets/img/chargebee-icon.png",
+  "categories": [
+    "Billing",
+    "Subscription Management",
+    "Finance"
+  ],
+  "description": "Chargebee is a subscription billing and revenue management platform for SaaS and subscription businesses."
+}

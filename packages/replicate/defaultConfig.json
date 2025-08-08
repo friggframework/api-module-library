@@ -1,0 +1,14 @@
+{
+  "name": "replicate",
+  "label": "Replicate",
+  "productUrl": "https://replicate.com",
+  "apiDocs": "https://replicate.com/docs/reference/http",
+  "logoUrl": "https://friggframework.org/assets/img/replicate-icon.png",
+  "categories": [
+    "AI/ML",
+    "Model Hosting",
+    "Machine Learning",
+    "Cloud ML"
+  ],
+  "description": "Replicate lets you run machine learning models in the cloud with a simple API, supporting thousands of open-source models."
+}

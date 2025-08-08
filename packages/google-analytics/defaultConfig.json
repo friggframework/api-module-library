@@ -1,0 +1,14 @@
+{
+  "name": "google-analytics",
+  "label": "Google Analytics",
+  "productUrl": "https://analytics.google.com/",
+  "apiDocs": "https://developers.google.com/analytics/",
+  "logoUrl": "https://friggframework.org/assets/img/google-analytics-icon.png",
+  "categories": [
+    "Analytics"
+  ],
+  "subCategories": [
+    "Analytics"
+  ],
+  "description": "Google Analytics provides detailed statistics and analytics for websites and mobile applications."
+}

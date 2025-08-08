@@ -1,0 +1,9 @@
+{
+    "name": "whatsapp-business",
+    "label": "WhatsApp Business",
+    "productUrl": "https://business.whatsapp.com",
+    "apiDocs": "https://developers.facebook.com/docs/whatsapp",
+    "logoUrl": "https://friggframework.org/assets/img/whatsapp-icon.png",
+    "categories": ["Communication", "Messaging", "Business"],
+    "description": "WhatsApp Business API for messaging, templates, media, and customer communication."
+}

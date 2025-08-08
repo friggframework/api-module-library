@@ -1,0 +1,11 @@
+{
+  "name": "woocommerce",
+  "label": "WooCommerce",
+  "productUrl": "https://woocommerce.com",
+  "apiDocs": "https://woocommerce.github.io/woocommerce-rest-api-docs/",
+  "logoUrl": "https://friggframework.org/assets/img/woocommerce-icon.png",
+  "categories": [
+    "E-commerce"
+  ],
+  "description": "WooCommerce is a customizable, open-source eCommerce platform built on WordPress that powers millions of online stores worldwide."
+}

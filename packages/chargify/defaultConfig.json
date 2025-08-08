@@ -1,0 +1,14 @@
+{
+  "name": "chargify",
+  "label": "Chargify",
+  "productUrl": "https://chargify.com/",
+  "apiDocs": "https://developers.chargify.com/",
+  "logoUrl": "https://friggframework.org/assets/img/chargify-icon.png",
+  "categories": [
+    "Finance"
+  ],
+  "subCategories": [
+    "Billing and Invoicing"
+  ],
+  "description": "Chargify provides subscription billing and revenue management solutions."
+}

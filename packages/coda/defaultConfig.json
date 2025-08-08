@@ -1,0 +1,14 @@
+{
+  "name": "coda",
+  "label": "Coda",
+  "productUrl": "https://coda.com/",
+  "apiDocs": "https://developers.coda.com/",
+  "logoUrl": "https://friggframework.org/assets/img/coda-icon.png",
+  "categories": [
+    "Product Management"
+  ],
+  "subCategories": [
+    "Product Management"
+  ],
+  "description": "Coda is a collaborative workspace that brings documents, spreadsheets, and apps together."
+}

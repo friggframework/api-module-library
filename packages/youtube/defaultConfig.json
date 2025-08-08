@@ -1,0 +1,14 @@
+{
+  "name": "youtube",
+  "label": "YouTube",
+  "productUrl": "https://youtube.com",
+  "apiDocs": "https://developers.google.com/youtube/v3",
+  "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg",
+  "categories": [
+    "Video Platform",
+    "Content Management",
+    "Social Media",
+    "Google Services"
+  ],
+  "description": "YouTube is Google's video sharing platform that allows users to upload, view, and share videos worldwide."
+}

@@ -1,0 +1,19 @@
+{
+  "name": "zendesk",
+  "displayName": "Zendesk",
+  "description": "Customer service and support ticketing platform",
+  "version": "1.0.0",
+  "categories": ["customer-support", "helpdesk", "crm"],
+  "scopes": [
+    "read",
+    "write",
+    "tickets:read",
+    "tickets:write",
+    "users:read",
+    "users:write",
+    "organizations:read",
+    "organizations:write",
+    "hc:read",
+    "hc:write"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "AWS Lambda",
+  "moduleName": "aws-lambda",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "AWS Lambda API Integration Module",
+    "category": "Developer",
+    "apiDocUrl": "https://lambda.amazonaws.com/docs",
+    "icon": ""
+  }
+}

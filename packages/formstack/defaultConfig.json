@@ -1,0 +1,14 @@
+{
+  "name": "Formstack",
+  "moduleName": "formstack",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Formstack API Integration Module",
+    "category": "Productivity",
+    "apiDocUrl": "https://www.formstack.com/api/v2",
+    "icon": ""
+  }
+}

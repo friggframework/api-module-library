@@ -1,0 +1,14 @@
+{
+  "name": "GoToMeeting",
+  "moduleName": "gotomeeting",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "GoToMeeting API Integration Module",
+    "category": "Communication",
+    "apiDocUrl": "https://api.getgo.com/G2M/rest",
+    "icon": ""
+  }
+}

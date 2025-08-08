@@ -1,0 +1,13 @@
+{
+  "name": "algolia",
+  "label": "Algolia",
+  "productUrl": "https://www.algolia.com",
+  "apiDocs": "https://www.algolia.com/doc/rest-api/",
+  "logoUrl": "https://friggframework.org/assets/img/algolia-icon.png",
+  "categories": [
+    "Search",
+    "Analytics",
+    "AI/ML"
+  ],
+  "description": "Algolia is a powerful search-as-a-service solution that helps developers build fast, relevant search experiences."
+}

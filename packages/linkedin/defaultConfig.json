@@ -1,0 +1,14 @@
+{
+  "name": "linkedin",
+  "label": "LinkedIn",
+  "productUrl": "https://linkedin.com",
+  "apiDocs": "https://docs.microsoft.com/en-us/linkedin/",
+  "logoUrl": "https://content.linkedin.com/content/dam/me/business/en-us/amp/brand-site/v2/bg/LI-Bug.svg.original.svg",
+  "categories": [
+    "Professional Networking",
+    "Social Media",
+    "Recruitment",
+    "Business Intelligence"
+  ],
+  "description": "LinkedIn is the world's largest professional networking platform for career development and business connections."
+}

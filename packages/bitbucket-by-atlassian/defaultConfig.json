@@ -1,0 +1,14 @@
+{
+  "name": "BitBucket by Atlassian",
+  "moduleName": "bitbucket-by-atlassian",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "BitBucket by Atlassian API Integration Module",
+    "category": "Developer",
+    "apiDocUrl": "https://api.bitbucket.org/2.0",
+    "icon": ""
+  }
+}

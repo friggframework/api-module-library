@@ -1,0 +1,12 @@
+{
+  "name": "amazon-sns",
+  "label": "Amazon SNS",
+  "productUrl": "https://aws.amazon.com/sns/",
+  "apiDocs": "https://docs.aws.amazon.com/sns/",
+  "logoUrl": "https://friggframework.org/assets/img/amazon-sns-icon.png",
+  "categories": [
+    "Developer",
+    "Amazon"
+  ],
+  "description": "Amazon Simple Notification Service (SNS) is a fully managed messaging service for both application-to-application (A2A) and application-to-person (A2P) communication."
+}

@@ -1,0 +1,14 @@
+{
+  "name": "sendgrid",
+  "label": "SendGrid",
+  "productUrl": "https://sendgrid.com",
+  "apiDocs": "https://docs.sendgrid.com/api-reference",
+  "logoUrl": "https://sendgrid.com/wp-content/themes/sgdotcom/pages/resource/brand/2016/SendGrid-Logomark.png",
+  "categories": [
+    "Email",
+    "Marketing",
+    "Transactional Email",
+    "Email Delivery"
+  ],
+  "description": "SendGrid is a cloud-based SMTP provider that allows you to send email without having to maintain email servers"
+}

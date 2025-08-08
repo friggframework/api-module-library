@@ -1,0 +1,26 @@
+{
+  "name": "@friggframework/google-maps",
+  "version": "0.0.1",
+  "description": "Google Maps API Integration Module",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "@friggframework/core": "^1.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "dotenv": "^16.0.0"
+  },
+  "keywords": [
+    "frigg",
+    "api",
+    "integration",
+    "google-maps"
+  ],
+  "author": "Frigg",
+  "license": "MIT"
+}

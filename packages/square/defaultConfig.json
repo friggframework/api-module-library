@@ -1,0 +1,14 @@
+{
+  "name": "square",
+  "label": "Square",
+  "productUrl": "https://squareup.com",
+  "apiDocs": "https://developer.squareup.com/docs",
+  "logoUrl": "https://images.squareup.com/favicon.ico",
+  "categories": [
+    "Payments",
+    "Point of Sale",
+    "E-commerce",
+    "Business Management"
+  ],
+  "description": "Square is a financial services platform that provides payment processing, point-of-sale solutions, and business management tools"
+}

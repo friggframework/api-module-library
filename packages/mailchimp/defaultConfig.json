@@ -1,0 +1,14 @@
+{
+  "name": "mailchimp",
+  "label": "Mailchimp",
+  "productUrl": "https://mailchimp.com",
+  "apiDocs": "https://mailchimp.com/developer/marketing/",
+  "logoUrl": "https://eep.io/images/yzco4xsimv0y/6bhC0L6tMhsVlBgOGSRH9P/a32a3a7f7a724e86d3f98dc90f5e1c56/freddie-email.png",
+  "categories": [
+    "Email Marketing",
+    "Marketing Automation",
+    "CRM",
+    "Analytics"
+  ],
+  "description": "Mailchimp is an all-in-one marketing platform that helps you manage and talk to your clients, customers, and other interested parties"
+}

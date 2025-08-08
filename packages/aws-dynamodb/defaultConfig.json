@@ -1,0 +1,14 @@
+{
+  "name": "AWS DynamoDB",
+  "moduleName": "aws-dynamodb",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "AWS DynamoDB API Integration Module",
+    "category": "Developer",
+    "apiDocUrl": "https://dynamodb.us-east-1.amazonaws.com",
+    "icon": ""
+  }
+}

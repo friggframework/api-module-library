@@ -1,0 +1,11 @@
+{
+  "name": "bigcommerce",
+  "label": "BigCommerce",
+  "productUrl": "https://www.bigcommerce.com",
+  "apiDocs": "https://developer.bigcommerce.com/",
+  "logoUrl": "https://friggframework.org/assets/img/bigcommerce-icon.png",
+  "categories": [
+    "E-commerce"
+  ],
+  "description": "BigCommerce is a leading cloud e-commerce platform that enables businesses of all sizes to build, customize, and scale their online stores."
+}

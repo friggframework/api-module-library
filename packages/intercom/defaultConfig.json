@@ -1,0 +1,14 @@
+{
+  "name": "intercom",
+  "label": "Intercom",
+  "productUrl": "https://intercom.com",
+  "apiDocs": "https://developers.intercom.com/",
+  "logoUrl": "https://static.intercomassets.com/assets/favicon.ico",
+  "categories": [
+    "Customer Support",
+    "Live Chat",
+    "Customer Engagement",
+    "Help Desk"
+  ],
+  "description": "Intercom is a customer messaging platform that helps businesses build better customer relationships through personalized communication"
+}

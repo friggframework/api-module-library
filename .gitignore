@@ -34,3 +34,40 @@ claude-flow
 coordination.md
 memory-bank.md
 memory/
+
+# Claude Code and SAFLA files
+.claude/logs/
+.claude/sessions/
+.claude/cache/
+.claude/temp/
+
+# SAFLA memory and data files
+safla.db
+*.safla
+memory/
+safla_memory/
+pattern_snapshots/
+
+# Claude-flow files
+.roomodes
+.roo/
+claude-flow-data.json
+memory-store*.json
+coordination/
+swarm-*.log
+
+# SAFLA MCP and temporary files
+safla_mcp_*.py
+mcp_*.log
+*.mcp.json
+
+# Node modules and build files (if using claude-flow locally)
+node_modules/
+dist/
+build/
+.env.local
+
+# System files
+.DS_Store
+Thumbs.db
+

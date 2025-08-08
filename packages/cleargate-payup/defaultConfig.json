@@ -1,0 +1,14 @@
+{
+  "name": "Cleargate PayUp",
+  "moduleName": "cleargate-payup",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Cleargate PayUp API Integration Module",
+    "category": "Unnamed record",
+    "apiDocUrl": "https://docs.cleargate-payup.com/api",
+    "icon": ""
+  }
+}

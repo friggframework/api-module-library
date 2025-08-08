@@ -1,0 +1,14 @@
+{
+  "name": "FastSpring Interactive Quotes",
+  "moduleName": "fastspring-interactive-quotes",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "FastSpring Interactive Quotes API Integration Module",
+    "category": "CRM",
+    "apiDocUrl": "https://api.fastspring.com",
+    "icon": ""
+  }
+}

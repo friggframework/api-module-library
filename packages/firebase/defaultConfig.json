@@ -1,0 +1,14 @@
+{
+  "name": "Firebase",
+  "moduleName": "firebase",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "apiKey"
+  ],
+  "docs": {
+    "description": "Google mobile and web application platform",
+    "category": "Backend Services",
+    "apiDocUrl": "https://docs.firebase.com/api",
+    "icon": ""
+  }
+}

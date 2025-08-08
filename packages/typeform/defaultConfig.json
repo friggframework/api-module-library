@@ -1,0 +1,14 @@
+{
+  "name": "typeform",
+  "label": "Typeform",
+  "productUrl": "https://typeform.com",
+  "apiDocs": "https://developer.typeform.com/",
+  "logoUrl": "https://images.typeform.com/images/2dpnUBBkzaVz",
+  "categories": [
+    "Forms",
+    "Surveys",
+    "Data Collection",
+    "Customer Feedback"
+  ],
+  "description": "Typeform is a platform for creating interactive forms, surveys, quizzes, and landing pages"
+}

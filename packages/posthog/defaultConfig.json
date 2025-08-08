@@ -1,0 +1,129 @@
+{
+    "name": "PostHog",
+    "version": "1.0.0",
+    "category": "Analytics",
+    "type": "posthog",
+    "description": "Open source product analytics platform with feature flags and session recording",
+    "documentation": "https://posthog.com/docs",
+    "apiDocs": "https://posthog.com/docs/api",
+    "authentication": {
+        "types": [
+            {
+                "type": "personalApiKey",
+                "name": "Personal API Key",
+                "description": "Full API access with customizable scopes",
+                "fields": ["personalApiKey"]
+            },
+            {
+                "type": "projectApiKey",
+                "name": "Project API Key",
+                "description": "Write-only key for event tracking",
+                "fields": ["projectApiKey"]
+            }
+        ]
+    },
+    "endpoints": {
+        "cloud": "https://app.posthog.com",
+        "euCloud": "https://eu.posthog.com",
+        "selfHosted": "Variable based on deployment"
+    },
+    "features": [
+        "Event tracking",
+        "User identification",
+        "Feature flags",
+        "Session recordings",
+        "Insights and analytics",
+        "Cohort analysis",
+        "A/B testing experiments",
+        "Actions and annotations",
+        "Dashboards",
+        "Data export",
+        "Autocapture (JS SDK)",
+        "Heatmaps",
+        "Paths analysis",
+        "Retention analysis",
+        "Funnel analysis",
+        "Group analytics",
+        "SQL insights"
+    ],
+    "limitations": [
+        "1MB maximum event size",
+        "1000 events per batch",
+        "90 days data retention on free plan",
+        "Session recording limits based on plan"
+    ],
+    "pricing": "Free tier with 1M events/month, paid plans for higher volume",
+    "rateLimits": {
+        "personalApiKey": "600 requests/minute",
+        "eventIngestion": "No hard limits",
+        "batchSize": "1000 events",
+        "eventSize": "1MB"
+    },
+    "supportedRegions": [
+        "US",
+        "EU",
+        "Self-hosted anywhere"
+    ],
+    "dataRetention": {
+        "free": "90 days",
+        "paid": "1 year standard, custom available",
+        "selfHosted": "Unlimited"
+    },
+    "webhooks": true,
+    "integrations": [
+        "Slack",
+        "Microsoft Teams",
+        "Discord",
+        "Zapier",
+        "Segment",
+        "Sentry",
+        "Datadog",
+        "Customer.io",
+        "Intercom",
+        "HubSpot",
+        "Salesforce"
+    ],
+    "sdks": [
+        "JavaScript",
+        "React",
+        "React Native",
+        "Node.js",
+        "Python",
+        "Ruby",
+        "PHP",
+        "Go",
+        "Java",
+        "iOS",
+        "Android",
+        "Flutter",
+        "Elixir"
+    ],
+    "openSource": {
+        "repository": "https://github.com/PostHog/posthog",
+        "license": "MIT",
+        "selfHostingOptions": [
+            "Docker",
+            "Kubernetes",
+            "AWS",
+            "Google Cloud",
+            "Azure",
+            "DigitalOcean"
+        ]
+    },
+    "compliance": [
+        "GDPR",
+        "CCPA",
+        "SOC 2 Type II",
+        "HIPAA (self-hosted)",
+        "Privacy Shield"
+    ],
+    "standardEvents": [
+        "$pageview",
+        "$pageleave",
+        "$autocapture",
+        "$identify",
+        "$create_alias",
+        "$feature_flag_called",
+        "$groupidentify"
+    ]
+}

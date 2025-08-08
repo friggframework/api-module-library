@@ -1,0 +1,14 @@
+{
+  "name": "xero",
+  "label": "Xero",
+  "productUrl": "https://xero.com",
+  "apiDocs": "https://developer.xero.com/documentation/",
+  "logoUrl": "https://www.xero.com/content/dam/xero/images/logos/xero-logo-blue.svg",
+  "categories": [
+    "Accounting Software",
+    "Financial Management",
+    "Invoicing",
+    "Business Intelligence"
+  ],
+  "description": "Xero is cloud-based accounting software designed for small and medium-sized businesses to manage finances and operations."
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Cisco Meraki",
+  "moduleName": "cisco-meraki",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Cisco Meraki API Integration Module",
+    "category": "Security",
+    "apiDocUrl": "https://api.meraki.com/docs",
+    "icon": ""
+  }
+}

@@ -1,0 +1,9 @@
+{
+    "name": "pusher",
+    "label": "Pusher",
+    "productUrl": "https://pusher.com",
+    "apiDocs": "https://pusher.com/docs",
+    "logoUrl": "https://friggframework.org/assets/img/pusher-icon.png",
+    "categories": ["Communication", "Real-time", "Notifications"],
+    "description": "Pusher real-time channels for live notifications, messaging, and presence features."
+}

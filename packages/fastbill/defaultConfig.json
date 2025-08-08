@@ -1,0 +1,14 @@
+{
+  "name": "FastBill",
+  "moduleName": "fastbill",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "FastBill API Integration Module",
+    "category": "Finance",
+    "apiDocUrl": "https://my.fastbill.com/api/1.0",
+    "icon": ""
+  }
+}

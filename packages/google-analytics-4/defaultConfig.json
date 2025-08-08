@@ -1,0 +1,62 @@
+{
+    "name": "Google Analytics 4",
+    "version": "1.0.0",
+    "category": "Analytics",
+    "type": "google-analytics-4",
+    "description": "Modern web and app analytics platform with advanced tracking capabilities",
+    "documentation": "https://developers.google.com/analytics",
+    "apiDocs": "https://developers.google.com/analytics/devguides/reporting/data/v1",
+    "authentication": {
+        "type": "oauth2",
+        "provider": "google",
+        "authorizationUrl": "https://accounts.google.com/o/oauth2/v2/auth",
+        "tokenUrl": "https://oauth2.googleapis.com/token",
+        "scopes": [
+            "https://www.googleapis.com/auth/analytics",
+            "https://www.googleapis.com/auth/analytics.readonly"
+        ]
+    },
+    "endpoints": {
+        "reporting": "https://analyticsdata.googleapis.com/v1beta",
+        "admin": "https://analyticsadmin.googleapis.com/v1alpha",
+        "measurementProtocol": "https://www.google-analytics.com/mp/collect"
+    },
+    "features": [
+        "Real-time analytics",
+        "Custom reports",
+        "Audience management",
+        "Conversion tracking",
+        "Custom dimensions and metrics",
+        "Measurement Protocol",
+        "Data export",
+        "Multi-property access"
+    ],
+    "limitations": [
+        "API quotas per property",
+        "Data sampling on large datasets",
+        "Limited real-time dimensions/metrics",
+        "7-day data freshness for some reports"
+    ],
+    "pricing": "Free tier with quotas, paid tiers available through Google Cloud",
+    "rateLimits": {
+        "requests": "25,000 per project per day",
+        "tokensPerProjectPerProperty": "1,250 per hour",
+        "concurrentRequests": "10 per project"
+    },
+    "supportedRegions": ["global"],
+    "dataRetention": {
+        "standard": "14 months",
+        "extended": "Up to 50 months with configuration"
+    },
+    "webhooks": false,
+    "sdks": [
+        "JavaScript",
+        "Python",
+        "Java",
+        "PHP",
+        "Node.js",
+        ".NET",
+        "Go",
+        "Ruby"
+    ]
+}

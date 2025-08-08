@@ -1,0 +1,26 @@
+{
+  "name": "@friggframework/twilio",
+  "version": "0.0.1",
+  "description": "Twilio API Module for Frigg",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "keywords": [
+    "frigg",
+    "twilio",
+    "api",
+    "integration"
+  ],
+  "author": "Frigg",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^1.0.0"
+  },
+  "devDependencies": {
+    "@friggframework/test": "^1.0.0",
+    "jest": "^27.0.0"
+  }
+}

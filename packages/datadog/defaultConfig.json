@@ -1,0 +1,14 @@
+{
+  "name": "Datadog",
+  "moduleName": "datadog",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "apiKey"
+  ],
+  "docs": {
+    "description": "Datadog API Integration Module",
+    "category": "Monitoring",
+    "apiDocUrl": "https://docs.datadoghq.com/api/",
+    "icon": ""
+  }
+}

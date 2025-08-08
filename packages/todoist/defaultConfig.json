@@ -1,0 +1,12 @@
+{
+  "name": "todoist",
+  "label": "Todoist",
+  "productUrl": "https://todoist.com",
+  "apiDocs": "https://developer.todoist.com/",
+  "logoUrl": "https://friggframework.org/assets/img/todoist-icon.png",
+  "categories": [
+    "Productivity",
+    "Task Management"
+  ],
+  "description": "Todoist is a task management application that helps individuals and teams organize their tasks and projects with powerful features for collaboration and productivity."
+}

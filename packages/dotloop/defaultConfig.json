@@ -1,0 +1,14 @@
+{
+  "name": "Dotloop",
+  "moduleName": "dotloop",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Dotloop API Integration Module",
+    "category": "CRM",
+    "apiDocUrl": "https://api.dotloop.com/docs",
+    "icon": ""
+  }
+}

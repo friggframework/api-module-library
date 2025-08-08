@@ -1,0 +1,12 @@
+{
+  "name": "etsy",
+  "label": "Etsy",
+  "productUrl": "https://www.etsy.com",
+  "apiDocs": "https://developers.etsy.com/",
+  "logoUrl": "https://friggframework.org/assets/img/etsy-icon.png",
+  "categories": [
+    "E-commerce",
+    "Marketplace"
+  ],
+  "description": "Etsy is a global marketplace for unique and creative goods, connecting millions of buyers and sellers around the world."
+}

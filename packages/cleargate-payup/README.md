@@ -1,0 +1,55 @@
+# Cleargate PayUp API Module
+
+Cleargate PayUp API Integration Module for the Frigg Framework.
+
+## Installation
+
+```bash
+npm install @friggframework/cleargate-payup
+```
+
+## Usage
+
+```javascript
+const { Api, Definition } = require('@friggframework/cleargate-payup');
+
+// Initialize API
+const api = new Api({
+    client_id: 'your_client_id',
+    client_secret: 'your_client_secret',
+    redirect_uri: 'your_redirect_uri'
+});
+
+// Get current user
+const user = await api.getCurrentUser();
+console.log(user);
+```
+
+## Environment Variables
+
+Create a `.env` file with the following variables:
+
+```
+CLEARGATE_PAYUP_CLIENT_ID=your_client_id
+CLEARGATE_PAYUP_CLIENT_SECRET=your_client_secret  
+CLEARGATE_PAYUP_SCOPE=your_scope
+CLEARGATE_PAYUP_AUTH_URI=authorization_endpoint
+CLEARGATE_PAYUP_TOKEN_URI=token_endpoint
+REDIRECT_URI=your_base_redirect_uri
+```
+
+## Development
+
+```bash
+npm test
+npm run test:watch
+npm run test:coverage
+```
+
+## Category
+
+Unnamed record
+
+## License
+
+MIT

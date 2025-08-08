@@ -1,0 +1,14 @@
+{
+  "name": "Cirrus Shield",
+  "moduleName": "cirrus-shield",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Cirrus Shield API Integration Module",
+    "category": "CRM",
+    "apiDocUrl": "https://api.cirrusshield.com/docs",
+    "icon": ""
+  }
+}

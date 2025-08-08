@@ -1,0 +1,14 @@
+{
+  "name": "Boomset",
+  "moduleName": "boomset",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Boomset API Integration Module",
+    "category": "Marketing",
+    "apiDocUrl": "https://api.boomset.com/docs",
+    "icon": ""
+  }
+}

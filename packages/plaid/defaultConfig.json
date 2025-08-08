@@ -1,0 +1,15 @@
+{
+  "name": "plaid",
+  "displayName": "Plaid",
+  "description": "Financial data aggregation platform",
+  "version": "1.0.0",
+  "categories": ["finance", "banking", "data-aggregation"],
+  "scopes": [
+    "accounts",
+    "transactions",
+    "balances",
+    "identity",
+    "investments",
+    "liabilities"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "calendly",
+  "label": "Calendly",
+  "productUrl": "https://calendly.com",
+  "apiDocs": "https://developer.calendly.com/",
+  "logoUrl": "https://assets.calendly.com/assets/frontend/media/logo-square-cd364a3ffebbce72fd57.png",
+  "categories": [
+    "Scheduling",
+    "Calendar",
+    "Appointments",
+    "Productivity"
+  ],
+  "description": "Calendly is a scheduling platform that eliminates the back-and-forth emails to find the perfect time"
+}

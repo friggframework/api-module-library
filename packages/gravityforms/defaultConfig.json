@@ -1,0 +1,14 @@
+{
+  "name": "GravityForms",
+  "moduleName": "gravityforms",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "GravityForms API Integration Module",
+    "category": "Productivity",
+    "apiDocUrl": "https://api.gravityforms.com",
+    "icon": ""
+  }
+}

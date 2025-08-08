@@ -1,0 +1,14 @@
+{
+  "name": "Amazon SQS",
+  "moduleName": "amazon-sqs",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Amazon SQS API Integration Module",
+    "category": "Developer",
+    "apiDocUrl": "https://sqs.amazonaws.com/docs",
+    "icon": ""
+  }
+}

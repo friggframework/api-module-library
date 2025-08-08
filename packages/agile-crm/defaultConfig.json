@@ -1,0 +1,12 @@
+{
+  "name": "agile-crm",
+  "label": "Agile CRM",
+  "productUrl": "https://www.agilecrm.com",
+  "apiDocs": "https://github.com/agilecrm/rest-api",
+  "logoUrl": "https://friggframework.org/assets/img/agile-crm-icon.png",
+  "categories": [
+    "CRM",
+    "Sales"
+  ],
+  "description": "Agile CRM is an all-in-one CRM software with sales, marketing and service automation."
+}

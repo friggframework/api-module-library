@@ -1,0 +1,14 @@
+{
+  "name": "cohere",
+  "label": "Cohere",
+  "productUrl": "https://cohere.com",
+  "apiDocs": "https://docs.cohere.com/reference/about",
+  "logoUrl": "https://friggframework.org/assets/img/cohere-icon.png",
+  "categories": [
+    "AI/ML",
+    "Large Language Models",
+    "NLP",
+    "Text Analytics"
+  ],
+  "description": "Cohere provides powerful large language models for natural language understanding and generation, including text generation, embeddings, classification, and reranking."
+}

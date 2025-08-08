@@ -1,0 +1,14 @@
+{
+  "name": "Auth0",
+  "moduleName": "auth0",
+  "version": "0.0.1",
+  "supportedAuthTypes": [
+    "oauth2"
+  ],
+  "docs": {
+    "description": "Auth0 API Integration Module",
+    "category": "Authentication",
+    "apiDocUrl": "https://auth0.com/docs/api",
+    "icon": ""
+  }
+}

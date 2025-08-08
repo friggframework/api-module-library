@@ -267,3 +267,14 @@ When running `npm run test`, a browser tab will open to ask you for authorizatio
 ![alt text](images/image-10.jpg)
 
 **Note:** There is a 30-second timeout for the authorization request. You may need to try again if your browser does not open fast enough.
+
+## Fenestra UI Extensions
+
+This module includes Fenestra specifications for Zoho CRM UI extensibility.
+
+### Available Extension Types
+See `fenestra/platform.fenestra.yaml` for complete specification.
+
+### Examples
+Check `fenestra/examples/` directory for implementation examples.
+

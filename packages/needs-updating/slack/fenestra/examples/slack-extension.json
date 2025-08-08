@@ -1,0 +1,388 @@
+{
+  "$schema": "https://frigg.cloud/schemas/fenestra/v1/manifest.json",
+  "fenestra": {
+    "version": "1.0",
+    "id": "660e8400-e29b-41d4-a716-446655440001",
+    "name": "Team Collaboration Hub",
+    "description": "Enhanced team collaboration features with CRM integration for Slack",
+    "author": {
+      "name": "Frigg Cloud Team",
+      "email": "extensions@frigg.cloud",
+      "url": "https://frigg.cloud"
+    },
+    "version": "1.5.0",
+    "icon": "https://frigg.cloud/assets/icons/collab-hub.png",
+    "permissions": [
+      "data:read",
+      "data:write",
+      "ui:modal",
+      "ui:notification",
+      "api:external",
+      "storage:cloud"
+    ],
+    "platforms": {
+      "slack": {
+        "appId": "${SLACK_APP_ID}",
+        "signingSecret": "${SLACK_SIGNING_SECRET}",
+        "scopes": {
+          "bot": [
+            "channels:history",
+            "channels:read",
+            "chat:write",
+            "commands",
+            "users:read",
+            "users:read.email"
+          ],
+          "user": [
+            "channels:history",
+            "channels:read"
+          ]
+        }
+      }
+    },
+    "extensions": [
+      {
+        "id": "crm-lookup-command",
+        "type": "action",
+        "name": "CRM Lookup",
+        "description": "Quick CRM record lookup from Slack",
+        "locations": ["slash-command"],
+        "actionType": "slash-command",
+        "label": "/crm",
+        "handler": {
+          "type": "api",
+          "config": {
+            "endpoint": "https://api.frigg.cloud/slack/commands/crm",
+            "method": "POST",
+            "responseType": "ephemeral"
+          }
+        },
+        "triggers": {
+          "events": ["slash_command"]
+        },
+        "data": {
+          "requirements": [
+            {
+              "entity": "slack_user",
+              "fields": ["id", "email", "name"]
+            }
+          ]
+        }
+      },
+      {
+        "id": "customer-context-action",
+        "type": "action",
+        "name": "View Customer Context",
+        "description": "View CRM data for customers mentioned in messages",
+        "locations": ["message.action"],
+        "actionType": "message-action",
+        "label": "View in CRM",
+        "icon": "user-circle",
+        "handler": {
+          "type": "modal",
+          "config": {
+            "callback_id": "customer_context_modal",
+            "title": "Customer Context",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "Loading customer information..."
+                }
+              }
+            ]
+          }
+        },
+        "permissions": ["data:read"]
+      },
+      {
+        "id": "deal-notification-bot",
+        "type": "widget",
+        "name": "Deal Notifications",
+        "description": "Real-time deal updates in Slack channels",
+        "locations": ["channel.tab"],
+        "widgetType": "custom",
+        "interactive": true,
+        "component": {
+          "type": "native",
+          "source": "slack-blocks",
+          "config": {
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Deal Activity Feed"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Recent Deal Updates*"
+                }
+              },
+              {
+                "type": "divider"
+              }
+            ],
+            "home_tab": true,
+            "messages_tab": false
+          }
+        },
+        "dataSource": {
+          "type": "webhook",
+          "endpoint": "https://api.frigg.cloud/slack/webhooks/deals",
+          "events": ["deal.created", "deal.updated", "deal.closed"]
+        },
+        "updateStrategy": "realtime",
+        "data": {
+          "subscriptions": [
+            {
+              "entity": "deal",
+              "events": ["create", "update"],
+              "filters": [
+                {
+                  "field": "stage",
+                  "operator": "in",
+                  "value": ["closedwon", "closedlost"]
+                }
+              ],
+              "webhook": "https://api.frigg.cloud/slack/webhooks/deal-updates"
+            }
+          ]
+        }
+      },
+      {
+        "id": "team-dashboard-home",
+        "type": "panel",
+        "name": "Team Dashboard",
+        "description": "Comprehensive team performance dashboard",
+        "locations": ["app-home.tab"],
+        "position": "tab",
+        "component": {
+          "type": "native",
+          "source": "slack-home",
+          "config": {
+            "view": {
+              "type": "home",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Team Performance Dashboard"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Weekly Summary*\n• Deals Closed: 12 ($245,000)\n• New Leads: 45\n• Activities: 234"
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View Details"
+                    },
+                    "action_id": "view_details"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "Create Deal"
+                      },
+                      "style": "primary",
+                      "action_id": "create_deal"
+                    },
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Pipeline"
+                      },
+                      "action_id": "view_pipeline"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "refreshInterval": 300
+      },
+      {
+        "id": "smart-notifications",
+        "type": "widget",
+        "name": "Smart Notifications",
+        "description": "AI-powered notification filtering and routing",
+        "locations": ["global.shortcut"],
+        "widgetType": "custom",
+        "interactive": false,
+        "component": {
+          "type": "native",
+          "source": "notification-engine",
+          "config": {
+            "rules": [
+              {
+                "name": "High-value deals",
+                "condition": "deal.amount > 50000",
+                "channel": "#sales-wins",
+                "template": ":moneybag: New high-value deal: {deal.name} - ${deal.amount}"
+              },
+              {
+                "name": "Customer escalations",
+                "condition": "ticket.priority = 'high' AND ticket.source = 'customer'",
+                "channel": "#customer-success",
+                "template": ":warning: Customer escalation: {ticket.subject}"
+              }
+            ]
+          }
+        },
+        "dataSource": {
+          "type": "api",
+          "endpoint": "/api/notifications/smart",
+          "params": {
+            "ai_filtering": true,
+            "priority_threshold": "medium"
+          }
+        },
+        "updateStrategy": "realtime"
+      },
+      {
+        "id": "workflow-automation",
+        "type": "action",
+        "name": "Workflow Builder",
+        "description": "Create automated workflows between Slack and CRM",
+        "locations": ["global.shortcut"],
+        "actionType": "global-shortcut",
+        "label": "Create Workflow",
+        "shortcut": "Cmd+Shift+W",
+        "handler": {
+          "type": "modal",
+          "config": {
+            "callback_id": "workflow_builder",
+            "title": "Workflow Builder",
+            "submit": {
+              "type": "plain_text",
+              "text": "Create Workflow"
+            },
+            "blocks": [
+              {
+                "type": "input",
+                "label": {
+                  "type": "plain_text",
+                  "text": "Workflow Name"
+                },
+                "element": {
+                  "type": "plain_text_input",
+                  "action_id": "workflow_name"
+                }
+              },
+              {
+                "type": "input",
+                "label": {
+                  "type": "plain_text",
+                  "text": "Trigger"
+                },
+                "element": {
+                  "type": "static_select",
+                  "action_id": "workflow_trigger",
+                  "options": [
+                    {
+                      "text": {
+                        "type": "plain_text",
+                        "text": "New message in channel"
+                      },
+                      "value": "message"
+                    },
+                    {
+                      "text": {
+                        "type": "plain_text",
+                        "text": "Reaction added"
+                      },
+                      "value": "reaction"
+                    },
+                    {
+                      "text": {
+                        "type": "plain_text",
+                        "text": "Scheduled time"
+                      },
+                      "value": "schedule"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "settings": {
+      "configurable": true,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "defaultChannel": {
+            "type": "string",
+            "title": "Default Notification Channel",
+            "description": "Default Slack channel for CRM notifications",
+            "default": "#general",
+            "pattern": "^#[a-z0-9-]+$"
+          },
+          "notificationLevel": {
+            "type": "string",
+            "title": "Notification Level",
+            "description": "Control notification frequency",
+            "default": "important",
+            "enum": ["all", "important", "critical"],
+            "ui": {
+              "widget": "select",
+              "help": "All: Every update, Important: Significant changes, Critical: Urgent only"
+            }
+          },
+          "enableAI": {
+            "type": "boolean",
+            "title": "Enable AI Features",
+            "description": "Use AI for smart notifications and suggestions",
+            "default": true
+          },
+          "workingHours": {
+            "type": "object",
+            "title": "Working Hours",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "default": true
+              },
+              "timezone": {
+                "type": "string",
+                "default": "America/New_York"
+              },
+              "start": {
+                "type": "string",
+                "default": "09:00"
+              },
+              "end": {
+                "type": "string",
+                "default": "17:00"
+              }
+            }
+          }
+        }
+      }
+    },
+    "lifecycle": {
+      "install": "https://api.frigg.cloud/webhooks/slack/install",
+      "uninstall": "https://api.frigg.cloud/webhooks/slack/uninstall",
+      "update": "https://api.frigg.cloud/webhooks/slack/update"
+    }
+  }
+}

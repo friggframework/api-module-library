@@ -22,3 +22,61 @@ The [needs-updating directory](https://github.com/friggframework/api-module-libr
 Thank you for your interest in the Frigg project! We’re excited to see how the community will continue to grow and improve these API modules. If you have any questions or need assistance, feel free to [contact us](https://docs.friggframework.org/support/support).
 
 **~ The Frigg Maintainers** (Should we start a band?)
+
+## Fenestra UI Extension Specifications
+
+This library now includes Fenestra specifications for platform UI extensibility.
+Fenestra provides a universal standard for describing UI extensions across platforms.
+
+### Documentation
+- [Fenestra Platform Specification](docs/fenestra/fenestra-platform-spec-v1.0.md)
+- [Implementation Guide](docs/fenestra/IMPLEMENTATION_GUIDE.md)
+
+### Supported Platforms
+Each API module includes Fenestra specifications in the `fenestra/` directory:
+- HubSpot (CRM cards, workflow actions, UI extensions)
+- Slack (bots, Block Kit, slash commands, workflows)
+- Microsoft Teams (adaptive cards, tabs, message extensions)
+- Salesforce (Lightning components, Visualforce, Canvas)
+- And more...
+
+
+### Recently Added Platforms
+The following platforms have been added with comprehensive Fenestra specifications:
+
+#### Communication & Collaboration
+- **Microsoft Teams** (v1-ready) - Bots, adaptive cards, tabs, meeting apps
+- **Slack** (needs-updating) - Block Kit, workflows, slash commands, home tabs
+
+#### CRM & Sales  
+- **HubSpot** (v1-ready) - CRM cards, workflows, UI extensions, marketplace
+- **Salesforce** (v1-ready) - Lightning, Visualforce, Canvas, AppExchange
+- **Pipedrive** (v1-ready) - Custom apps, automation, reporting extensions
+
+#### Project Management
+- **Asana** (v1-ready) - App components, custom fields, rules, forms
+- **Monday.com** (v1-ready) - Board views, automation, dashboard widgets
+- **Notion** (v1-ready) - Database integrations, block embeds, workspace extensions
+- **Trello** (v1-ready) - Power-ups, board widgets, automation
+
+#### Development & Design
+- **GitHub** (v1-ready) - Apps, actions, webhooks, marketplace
+- **Figma** (v1-ready) - Design plugins, widgets, automation
+- **Airtable** (v1-ready) - Custom apps, automation scripts, interface designer
+
+#### E-commerce & Business
+- **Shopify** (v1-ready) - Apps, checkout extensions, theme extensions
+- **Canva** (v1-ready) - Design apps, brand management, marketplace widgets
+
+#### Enterprise Platforms
+- **Google Workspace** (v1-ready) - Add-ons, Apps Script, card service
+- **Zendesk** (needs-updating) - Support apps, automation triggers, marketplace
+
+Each platform includes:
+- Complete Fenestra platform specifications
+- 6-8 different extension types
+- Multiple communication channels and APIs
+- Authentication methods and security
+- Deployment models and marketplace information
+- Development SDKs and tools
+- Real-world examples and use cases

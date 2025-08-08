@@ -1,0 +1,275 @@
+{
+  "$schema": "https://frigg.cloud/schemas/fenestra/v1/manifest.json",
+  "fenestra": {
+    "version": "1.0",
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Customer Insights Dashboard",
+    "description": "Advanced customer analytics and engagement tracking for HubSpot CRM",
+    "author": {
+      "name": "Frigg Cloud Team",
+      "email": "extensions@frigg.cloud",
+      "url": "https://frigg.cloud"
+    },
+    "version": "2.1.0",
+    "icon": "https://frigg.cloud/assets/icons/insights-dashboard.svg",
+    "permissions": [
+      "data:read",
+      "ui:modal",
+      "api:external",
+      "storage:local"
+    ],
+    "platforms": {
+      "hubspot": {
+        "minVersion": "3.0",
+        "scopes": [
+          "contacts",
+          "companies", 
+          "deals",
+          "analytics.read"
+        ],
+        "portalId": "${HUBSPOT_PORTAL_ID}"
+      }
+    },
+    "extensions": [
+      {
+        "id": "customer-insights-panel",
+        "type": "panel",
+        "name": "Customer Insights",
+        "description": "Real-time customer engagement metrics and predictive analytics",
+        "locations": ["crm.contact.sidebar", "crm.company.sidebar"],
+        "component": {
+          "type": "iframe",
+          "source": "https://app.frigg.cloud/extensions/insights/panel",
+          "props": {
+            "height": "600px",
+            "scrolling": "auto"
+          },
+          "config": {
+            "sandbox": "allow-scripts allow-same-origin",
+            "loading": "lazy"
+          }
+        },
+        "triggers": {
+          "conditions": [
+            {
+              "property": "lifecyclestage",
+              "operator": "in",
+              "value": ["customer", "opportunity", "lead"]
+            }
+          ],
+          "events": ["platform:record-changed"]
+        },
+        "permissions": ["data:read", "api:external"],
+        "data": {
+          "requirements": [
+            {
+              "entity": "contact",
+              "fields": [
+                "firstname",
+                "lastname",
+                "email",
+                "lifecyclestage",
+                "hubspot_owner_id",
+                "hs_lead_status",
+                "hs_analytics_source"
+              ],
+              "includes": ["deals", "companies", "engagements"]
+            }
+          ],
+          "subscriptions": [
+            {
+              "entity": "contact",
+              "events": ["update"],
+              "filters": [
+                {
+                  "field": "lifecyclestage",
+                  "operator": "eq",
+                  "value": "customer"
+                }
+              ],
+              "handler": "handleContactUpdate"
+            }
+          ]
+        }
+      },
+      {
+        "id": "engagement-score-card",
+        "type": "card",
+        "name": "Engagement Score",
+        "description": "AI-powered engagement scoring and recommendations",
+        "locations": ["crm.contact.tab", "crm.company.tab"],
+        "component": {
+          "type": "react",
+          "source": "@frigg/hubspot-components/EngagementScoreCard",
+          "props": {
+            "theme": "auto",
+            "refreshInterval": 300
+          }
+        },
+        "layout": "horizontal",
+        "size": "medium",
+        "priority": 1,
+        "refreshInterval": 300,
+        "actions": [
+          {
+            "id": "refresh-score",
+            "label": "Refresh Score",
+            "icon": "refresh",
+            "handler": {
+              "type": "api",
+              "config": {
+                "endpoint": "/api/engagement/refresh",
+                "method": "POST"
+              }
+            }
+          },
+          {
+            "id": "view-details",
+            "label": "View Details",
+            "icon": "chart",
+            "handler": {
+              "type": "modal",
+              "config": {
+                "component": "EngagementDetailsModal",
+                "size": "large"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "bulk-enrich-action",
+        "type": "action",
+        "name": "Bulk Enrich Contacts",
+        "description": "Enrich multiple contacts with third-party data",
+        "locations": ["crm.contacts.bulk-action", "crm.contacts.toolbar"],
+        "actionType": "button",
+        "label": "Enrich Contacts",
+        "icon": "database",
+        "tooltip": "Enrich selected contacts with additional data",
+        "handler": {
+          "type": "modal",
+          "config": {
+            "title": "Bulk Contact Enrichment",
+            "component": "BulkEnrichmentModal",
+            "size": "medium",
+            "props": {
+              "maxContacts": 100,
+              "providers": ["clearbit", "apollo", "zoominfo"]
+            }
+          }
+        },
+        "permissions": ["data:write", "data:bulk"]
+      },
+      {
+        "id": "lead-score-field",
+        "type": "field",
+        "name": "AI Lead Score",
+        "description": "Machine learning-based lead scoring",
+        "locations": ["crm.contact.properties", "crm.company.properties"],
+        "fieldType": "custom",
+        "component": {
+          "type": "webcomponent",
+          "source": "frigg-lead-score-field",
+          "props": {
+            "readonly": false,
+            "showTrend": true,
+            "showFactors": true
+          }
+        },
+        "validation": [
+          {
+            "type": "min",
+            "value": 0,
+            "message": "Score must be positive"
+          },
+          {
+            "type": "max",
+            "value": 100,
+            "message": "Score cannot exceed 100"
+          }
+        ],
+        "defaultValue": 50,
+        "helpText": "AI-calculated score based on engagement, firmographics, and behavior"
+      },
+      {
+        "id": "activity-timeline-widget",
+        "type": "widget",
+        "name": "Cross-Platform Activity",
+        "description": "Unified activity timeline across all integrated platforms",
+        "locations": ["crm.contact.activity-timeline"],
+        "widgetType": "custom",
+        "interactive": true,
+        "component": {
+          "type": "iframe",
+          "source": "https://app.frigg.cloud/extensions/timeline/widget",
+          "config": {
+            "height": "400px",
+            "seamless": true
+          }
+        },
+        "dataSource": {
+          "type": "api",
+          "endpoint": "/api/activities/unified",
+          "params": {
+            "platforms": ["hubspot", "slack", "salesforce", "gmail"],
+            "limit": 50,
+            "includeInternal": true
+          }
+        },
+        "updateStrategy": "realtime"
+      }
+    ],
+    "settings": {
+      "configurable": true,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "enrichmentProviders": {
+            "type": "array",
+            "title": "Data Enrichment Providers",
+            "description": "Select which providers to use for contact enrichment",
+            "default": ["clearbit"],
+            "enum": ["clearbit", "apollo", "zoominfo", "lusha"],
+            "ui": {
+              "widget": "multiselect"
+            }
+          },
+          "scoringModel": {
+            "type": "string",
+            "title": "Lead Scoring Model",
+            "description": "Choose the AI model for lead scoring",
+            "default": "balanced",
+            "enum": ["conservative", "balanced", "aggressive"],
+            "ui": {
+              "widget": "radio"
+            }
+          },
+          "refreshInterval": {
+            "type": "number",
+            "title": "Data Refresh Interval",
+            "description": "How often to refresh data (in seconds)",
+            "default": 300,
+            "minimum": 60,
+            "maximum": 3600,
+            "ui": {
+              "widget": "slider",
+              "help": "Lower values may impact performance"
+            }
+          },
+          "enableNotifications": {
+            "type": "boolean",
+            "title": "Enable Notifications",
+            "description": "Show notifications for important events",
+            "default": true
+          }
+        }
+      }
+    },
+    "lifecycle": {
+      "install": "https://api.frigg.cloud/webhooks/extensions/install",
+      "uninstall": "https://api.frigg.cloud/webhooks/extensions/uninstall",
+      "update": "https://api.frigg.cloud/webhooks/extensions/update"
+    }
+  }
+}

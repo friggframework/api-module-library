@@ -22,3 +22,14 @@ https://github.com/Azure-Samples/ms-identity-node
 
 The router.sample.js shows how the bot can be invoked standalone (use ngrok to handle the incoming requests). With the
 server running, interactivity can be tested locally. 
+
+## Fenestra UI Extensions
+
+This module includes Fenestra specifications for Microsoft Teams UI extensibility.
+
+### Available Extension Types
+See `fenestra/platform.fenestra.yaml` for complete specification.
+
+### Examples
+Check `fenestra/examples/` directory for implementation examples.
+

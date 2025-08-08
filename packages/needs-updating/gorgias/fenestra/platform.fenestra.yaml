@@ -1,0 +1,7 @@
+# Gorgias Platform - Fenestra Specification
+# TODO: Complete this specification based on platform research
+fenestra: "1.0.0"
+platform:
+  name: Gorgias
+  description: "UI extensibility specification for Gorgias"
+  # TODO: Add complete platform specification

@@ -1,0 +1,13 @@
+{
+  "name": "payjunction",
+  "label": "PayJunction",
+  "productUrl": "https://www.payjunction.com",
+  "apiDocs": "https://developer.payjunction.com/hc/en-us",
+  "logoUrl": "https://www.payjunction.com/favicon.ico",
+  "categories": [
+    "Payments",
+    "Credit Card",
+    "Processing"
+  ],
+  "description": "PayJunction provides payment processing solutions for businesses, including credit card, ACH, and recurring billing capabilities."
+} 

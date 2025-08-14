@@ -210,6 +210,62 @@ class Api extends OAuth2Requester {
         };
     }
 
+  /**
+   * Gets a library by ID
+   * @param {Object} query - Query parameters
+   * @param {string} query.libraryId - ID of the library
+   * @returns {Promise<Object|null>} Library details or null if not found
+   */
+  async getLibraryById(query) {
+    const ql = `query LibraryById {
+      library: node(id: "${query.libraryId}") {
+        type: __typename
+        ... on Library {
+          id
+          name
+        }
+      }
+    }`;
+
+    const response = await this._post(this.buildRequestOptions(ql));
+    this.assertResponse(response);
+
+    const { library } = response.data;
+    if (!library) return null;
+    if (!/Library$/i.test(library.type)) {
+      throw new Error('Node is not a Library');
+    }
+    return { id: library.id, name: library.name, type: library.type };
+  }
+
+  /**
+   * Gets a workspace (project) by ID
+   * @param {Object} query - Query parameters
+   * @param {string} query.workspaceId - ID of the workspace / project (base64 encoded node id)
+   * @returns {Promise<Object|null>} Workspace details or null if not found
+   */
+  async getWorkspaceById(query) {
+    const ql = `query WorkspaceProjectById {
+      workspaceProject: node(id: "${query.workspaceId}") {
+        type: __typename
+        ... on Workspace {
+          id
+          name
+        }
+      }
+    }`;
+
+    const response = await this._post(this.buildRequestOptions(ql));
+    this.assertResponse(response);
+
+    const { workspaceProject } = response.data;
+    if (!workspaceProject) return null;
+    if (!/Workspace$/i.test(workspaceProject.type)) {
+      throw new Error('Node is not a Workspace');
+    }
+    return { id: workspaceProject.id, name: workspaceProject.name, type: workspaceProject.type };
+  }
+
     /**
      * Gets permissions for a project
      * @param {Object} query - Query parameters
@@ -859,10 +915,10 @@ class Api extends OAuth2Requester {
         async setAssetCustomMetadata(assetId, entries = []) {
           const normalizeValue = (val) => {
               if (val === null || val === undefined || val === '') return null;
-              if (typeof val === 'number') return String(val);
+              if (typeof val === 'number') return val; // Return raw number for select fields
               if (typeof val === 'string') {
                   const trimmed = val.trim();
-                  if (/^-?\d+$/.test(trimmed)) return trimmed;
+                  // Always return JSON.stringify for strings to ensure proper GraphQL string format
                   return JSON.stringify(trimmed);
               }
               return JSON.stringify(val);

@@ -1,0 +1,13 @@
+{
+  "name": "docusign",
+  "label": "DocuSign",
+  "productUrl": "https://www.docusign.com/",
+  "apiDocs": "https://developers.docusign.com/docs/esign-rest-api/",
+  "logoUrl": "https://static.wikia.nocookie.net/logopedia/images/a/ac/DocuSign_2024_S.svg/revision/latest/scale-to-width-down/250?cb=20240417143304",
+  "categories": [
+    "eSignature",
+    "Document Management",
+    "Workflow Automation"
+  ],
+  "description": "DocuSign helps organizations connect and automate how they prepare, sign, act on, and manage agreements."
+} 

@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "lib": ["ESNext"],
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*"]
+    },
+    "sourceMap": true
+  },
+  "include": [
+    "./*.ts",
+    "./**/*.ts",
+    "./tests/**/*.ts", 
+    "tests/auth.test.js"  
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+} 

@@ -1,13 +1,16 @@
 import { createServer, IncomingMessage, ServerResponse } from "http";
 import { AddressInfo } from "net";
 import { handler } from "services/frigg-scale-test-lambda/src/handler";
-import { FriggScaleTestAPI } from "../src/api";
+import FriggScaleTestAPI from "../src/api";
 import { APIGatewayProxyEventV2 } from "aws-lambda";
 
 let server: ReturnType<typeof createServer>;
 let baseUrl: string;
 
-function buildEvent(req: IncomingMessage, body: string): APIGatewayProxyEventV2 {
+function buildEvent(
+  req: IncomingMessage,
+  body: string
+): APIGatewayProxyEventV2 {
   const url = new URL(req.url || "/", "http://localhost");
   const headers: Record<string, string> = {};
   for (const [key, value] of Object.entries(req.headers)) {
@@ -40,15 +43,15 @@ function buildEvent(req: IncomingMessage, body: string): APIGatewayProxyEventV2 
         path: url.pathname,
         protocol: "HTTP/1.1",
         sourceIp: "127.0.0.1",
-        userAgent: "jest"
-      }
+        userAgent: "jest",
+      },
     },
     isBase64Encoded: false,
     body: body || undefined,
     pathParameters: null,
     stageVariables: null,
     cookies: [],
-    multiValueQueryStringParameters: null
+    multiValueQueryStringParameters: null,
   } as unknown as APIGatewayProxyEventV2;
 }
 
@@ -109,9 +112,18 @@ describe("Frigg Scale Test Mock CRM", () => {
   });
 
   it("activities list and create", async () => {
-    const list = await api.listActivities({ accountId: "demo", limit: 5, type: "email" });
+    const list = await api.listActivities({
+      accountId: "demo",
+      limit: 5,
+      type: "email",
+    });
     expect(Array.isArray(list.items)).toBe(true);
-    const created = await api.createActivity({ accountId: "demo", type: "sms", contactId: "contact-1", subject: "Ping" });
+    const created = await api.createActivity({
+      accountId: "demo",
+      type: "sms",
+      contactId: "contact-1",
+      subject: "Ping",
+    });
     expect(created.id).toBeTruthy();
   });
 });

@@ -10,7 +10,7 @@ export type ListActivitiesParams = ListParams & {
   contactId?: string;
 };
 
-export class FriggScaleTestAPI {
+export default class FriggScaleTestAPI {
   constructor(readonly opts: { baseUrl?: string; apiKey?: string } = {}) {}
 
   private get base(): string {
@@ -33,9 +33,12 @@ export class FriggScaleTestAPI {
   }
 
   async getConfig(accountId: string) {
-    const r = await fetch(new URL(`/config/${encodeURIComponent(accountId)}`, this.base), {
-      headers: this.headers()
-    });
+    const r = await fetch(
+      new URL(`/config/${encodeURIComponent(accountId)}`, this.base),
+      {
+        headers: this.headers(),
+      }
+    );
     if (!r.ok) throw new Error(`getConfig ${r.status}`);
     return r.json();
   }
@@ -43,13 +46,16 @@ export class FriggScaleTestAPI {
   async putConfig(accountId: string, cfg: any) {
     const headers: Record<string, string> = {
       "content-type": "application/json",
-      ...this.headers()
+      ...this.headers(),
     };
-    const r = await fetch(new URL(`/config/${encodeURIComponent(accountId)}`, this.base), {
-      method: "PUT",
-      headers,
-      body: JSON.stringify(cfg)
-    });
+    const r = await fetch(
+      new URL(`/config/${encodeURIComponent(accountId)}`, this.base),
+      {
+        method: "PUT",
+        headers,
+        body: JSON.stringify(cfg),
+      }
+    );
     if (!r.ok) throw new Error(`putConfig ${r.status}`);
     return r.json();
   }
@@ -59,7 +65,8 @@ export class FriggScaleTestAPI {
     url.searchParams.set("accountId", params.accountId);
     if (params.limit) url.searchParams.set("limit", String(params.limit));
     if (params.cursor) url.searchParams.set("cursor", params.cursor);
-    if (params.updatedSince) url.searchParams.set("updatedSince", params.updatedSince);
+    if (params.updatedSince)
+      url.searchParams.set("updatedSince", params.updatedSince);
     const r = await fetch(url, { headers: this.headers() });
     if (!r.ok) throw new Error(`listContacts ${r.status}`);
     return r.json();
@@ -70,7 +77,8 @@ export class FriggScaleTestAPI {
     url.searchParams.set("accountId", params.accountId);
     if (params.limit) url.searchParams.set("limit", String(params.limit));
     if (params.cursor) url.searchParams.set("cursor", params.cursor);
-    if (params.updatedSince) url.searchParams.set("updatedSince", params.updatedSince);
+    if (params.updatedSince)
+      url.searchParams.set("updatedSince", params.updatedSince);
     if (params.type) url.searchParams.set("type", params.type);
     if (params.contactId) url.searchParams.set("contactId", params.contactId);
     const r = await fetch(url, { headers: this.headers() });
@@ -81,12 +89,12 @@ export class FriggScaleTestAPI {
   async createActivity(body: any) {
     const headers: Record<string, string> = {
       "content-type": "application/json",
-      ...this.headers()
+      ...this.headers(),
     };
     const r = await fetch(new URL(`/activities`, this.base), {
       method: "POST",
       headers,
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
     if (!r.ok) throw new Error(`createActivity ${r.status}`);
     return r.json();
@@ -99,14 +107,15 @@ export class FriggScaleTestAPI {
   }) {
     const headers: Record<string, string> = {
       "content-type": "application/json",
-      ...this.headers()
+      ...this.headers(),
     };
     const r = await fetch(new URL(`/bulk/exports/contacts`, this.base), {
       method: "POST",
       headers,
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
-    if (r.status !== 202 && r.status !== 200) throw new Error(`requestContactsExport ${r.status}`);
+    if (r.status !== 202 && r.status !== 200)
+      throw new Error(`requestContactsExport ${r.status}`);
     return r.json();
   }
 
@@ -117,21 +126,25 @@ export class FriggScaleTestAPI {
   }) {
     const headers: Record<string, string> = {
       "content-type": "application/json",
-      ...this.headers()
+      ...this.headers(),
     };
     const r = await fetch(new URL(`/bulk/exports/activities`, this.base), {
       method: "POST",
       headers,
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
-    if (r.status !== 202 && r.status !== 200) throw new Error(`requestActivitiesExport ${r.status}`);
+    if (r.status !== 202 && r.status !== 200)
+      throw new Error(`requestActivitiesExport ${r.status}`);
     return r.json();
   }
 
   async getExportJob(jobId: string) {
-    const r = await fetch(new URL(`/bulk/exports/${encodeURIComponent(jobId)}`, this.base), {
-      headers: this.headers()
-    });
+    const r = await fetch(
+      new URL(`/bulk/exports/${encodeURIComponent(jobId)}`, this.base),
+      {
+        headers: this.headers(),
+      }
+    );
     if (!r.ok) throw new Error(`getExportJob ${r.status}`);
     return r.json();
   }

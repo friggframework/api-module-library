@@ -1,0 +1,27 @@
+{
+  "name": "frigg-scale-test-lambda",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/handler.js",
+  "types": "dist/handler.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "jest --runInBand",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.556.0",
+    "@aws-sdk/client-s3": "^3.556.0",
+    "@aws-sdk/lib-dynamodb": "^3.556.0",
+    "@aws-sdk/s3-request-presigner": "^3.556.0",
+    "@smithy/util-utf8": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.126",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.8.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.4.0"
+  }
+}

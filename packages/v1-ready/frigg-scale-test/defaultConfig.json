@@ -1,0 +1,6 @@
+{
+  "name": "frigg-scale-test",
+  "label": "Frigg Scale Test",
+  "description": "Mock CRM for scale testing with deterministic synthetic data"
+}
+

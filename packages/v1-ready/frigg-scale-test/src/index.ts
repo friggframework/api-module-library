@@ -1,4 +1,5 @@
-import FriggScaleTestAPI from "./api";
-import Definition from "./defintion";
+import Api from "./api";
+import Definition from "./definition";
+const Config = require("../defaultConfig.json");
 
-export { FriggScaleTestAPI, Definition };
+export { Api, Definition, Config };

@@ -1,0 +1,109 @@
+openapi: 3.0.3
+info:
+  title: Frigg Scale Test Mock CRM
+  version: 0.1.0
+  description: Synthetic data generator for Frigg scale testing with deterministic contact generation (up to 3M records)
+servers:
+  - url: https://mock.local
+tags:
+  - name: Health
+  - name: Contacts
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+  /contacts:
+    get:
+      tags: [Contacts]
+      summary: List contacts (cursor pagination, deterministically generated)
+      parameters:
+        - in: query
+          name: accountId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - in: query
+          name: cursor
+          schema:
+            type: string
+          description: Offset cursor for pagination
+        - in: query
+          name: updatedSince
+          schema:
+            type: string
+            format: date-time
+          description: Filter contacts updated after this timestamp
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactPage"
+components:
+  schemas:
+    Health:
+      type: object
+      properties:
+        ok:
+          type: boolean
+    Contact:
+      type: object
+      required: [id, email, updatedAt]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        company:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        region:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: true
+    ContactPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Contact"
+        nextCursor:
+          type: string
+          nullable: true
+

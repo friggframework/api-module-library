@@ -11,7 +11,11 @@ export type ListActivitiesParams = ListParams & {
 };
 
 export default class FriggScaleTestAPI {
-  constructor(readonly opts: { baseUrl?: string; apiKey?: string } = {}) {}
+  access_token?: string;
+
+  constructor(readonly opts: { baseUrl?: string; apiKey?: string } = {}) {
+    this.access_token = opts.apiKey;
+  }
 
   private get base(): string {
     return (

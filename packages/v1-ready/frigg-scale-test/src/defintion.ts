@@ -14,6 +14,21 @@ const definition: FriggModuleAuthDefinition = {
       const apiKey = params.data?.apiKey || params.data?.access_token;
       return { access_token: apiKey };
     },
+    setAuthParams: async (
+      api: FriggScaleTestAPI,
+      params: { apiKey?: string; access_token?: string }
+    ) => {
+      // For API key authentication, set the key on the API instance
+      // params IS the data object, so access apiKey directly
+      const apiKey = params.apiKey || params.access_token;
+      if (!apiKey) {
+        throw new Error("API key is required for Scale Test authentication");
+      }
+      // Set the apiKey on the API instance (assuming it has an opts property)
+      (api as any).opts = { ...(api as any).opts, apiKey };
+      (api as any).access_token = apiKey;
+      return { access_token: apiKey };
+    },
     getEntityDetails: async (
       api: FriggScaleTestAPI,
       callbackParams: any,

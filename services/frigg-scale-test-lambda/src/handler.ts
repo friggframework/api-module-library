@@ -106,12 +106,14 @@ async function handleListContacts(state: StateAdapter, event: APIGatewayProxyEve
   if (!accountId) {
     return response(400, { error: "missing_account", message: "accountId is required" });
   }
+  console.log(`[scale-test-api] handleListContacts: accountId=${accountId}, limit=${limit}, cursor=${query.cursor ? 'present' : 'none'}`);
   const result = await listContacts(state, {
     accountId,
     limit,
     cursor: query.cursor || undefined,
     updatedSince: query.updatedSince || undefined
   });
+  console.log(`[scale-test-api] handleListContacts: returning ${result.items.length} items, first 3 IDs:`, result.items.slice(0, 3).map(c => c.id));
   const knobs = evaluateKnobs(result.config);
   await applyLatency(knobs.delay);
   if (knobs.error) {

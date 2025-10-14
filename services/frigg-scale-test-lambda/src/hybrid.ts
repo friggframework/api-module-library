@@ -67,6 +67,15 @@ function seededPick<T>(arr: T[], seed: string): T {
   return arr[index % arr.length];
 }
 
+function generateDeterministicUUID(accountId: string, entity: string, index: number): string {
+  const hash = createHash('sha256').update(`${accountId}:${entity}:${index}`).digest();
+  const hex = hash.toString('hex');
+
+  // Format as UUID v4 (xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx)
+  // Set version bits (4xxx) and variant bits (yxxx where y is 8, 9, a, or b)
+  return `${hex.slice(0,8)}-${hex.slice(8,12)}-4${hex.slice(13,16)}-${((parseInt(hex.slice(16,18), 16) & 0x3f) | 0x80).toString(16)}${hex.slice(18,20)}-${hex.slice(20,32)}`;
+}
+
 function cursorSignature(data: { offset: number; limit: number; cfgVersion: number; exp: number }): string {
   const { offset, limit, cfgVersion, exp } = data;
   const hmac = createHmac("sha256", CURSOR_SECRET);
@@ -96,7 +105,7 @@ function decodeCursor(cursor: string, expectedVersion?: number): CursorData | nu
 }
 
 export function generateContact(accountId: string, index: number) {
-  const id = `contact-${index + 1}`;
+  const id = generateDeterministicUUID(accountId, 'contact', index);
   const firstName = seededPick(FIRST_NAMES, `${accountId}:fn:${index}`);
   const lastName = seededPick(LAST_NAMES, `${accountId}:ln:${index}`);
   const company = seededPick(COMPANIES, `${accountId}:co:${index}`);
@@ -126,22 +135,22 @@ export function generateContact(accountId: string, index: number) {
 export function generateActivity(accountId: string, contactIndex: number, sequence: number) {
   const type = ACTIVITY_TYPES[sequence % ACTIVITY_TYPES.length];
   const direction = ACTIVITY_DIRECTIONS[(contactIndex + sequence) % ACTIVITY_DIRECTIONS.length];
-  const id = `activity-${contactIndex + 1}-${sequence + 1}`;
+  const id = generateDeterministicUUID(accountId, `activity-${contactIndex}`, sequence);
   const rng = mulberry32(hashToNumber(`${accountId}:activity:${contactIndex}:${sequence}`));
   const subject = `${type.replace("_", " ")}: ${contactIndex + 1}-${sequence + 1}`;
   const updatedAt = new Date(
     ACTIVITY_BASE_TIME + (contactIndex % 180) * 43_200_000 + sequence * 9_000_000 + Math.floor(rng() * 3_600_000)
   ).toISOString();
-  const contactId = `contact-${contactIndex + 1}`;
+  const contactId = generateDeterministicUUID(accountId, 'contact', contactIndex);
   return {
     id,
     type,
     contactId,
     direction,
     subject,
-    body: `Automated ${type} for ${contactId}`,
+    body: `Automated ${type} for contact ${contactIndex}`,
     from: `${type}@${accountId}.mockcrm.test`,
-    to: `${contactId}@mockcrm.test`,
+    to: `contact-${contactIndex}@mockcrm.test`,
     status: ACTIVITY_STATUS[(contactIndex + sequence) % ACTIVITY_STATUS.length],
     durationSec: type === "phone_call" ? Math.floor(rng() * 300) : undefined,
     sentAt: type === "phone_call" ? undefined : updatedAt,
@@ -190,13 +199,16 @@ function parseUpdatedSince(value?: string) {
   return ts;
 }
 
-function parseContactIndex(contactId?: string): number | undefined {
-  if (!contactId) return undefined;
-  const match = /contact-(\d+)/.exec(contactId);
-  if (!match) return undefined;
-  const num = Number(match[1]);
-  if (!Number.isFinite(num) || num < 1) return undefined;
-  return num - 1;
+function findContactIndexByUUID(accountId: string, targetUUID: string): number | undefined {
+  // For UUID-based IDs, we need to search through indices to find a match
+  // This is acceptable for scale test purposes with 10k contacts
+  for (let i = 0; i < CONTACT_SEED_COUNT; i++) {
+    const uuid = generateDeterministicUUID(accountId, 'contact', i);
+    if (uuid === targetUUID) {
+      return i;
+    }
+  }
+  return undefined;
 }
 
 export async function listContacts(state: StateAdapter, params: ListContactsParams): Promise<ListResponse<any>> {
@@ -250,7 +262,7 @@ export async function listActivities(state: StateAdapter, params: ListActivities
   const limit = computeLimit(cursorData?.limit ?? params.limit, config);
   let offset = cursorData?.offset ?? 0;
   const since = parseUpdatedSince(params.updatedSince);
-  const contactIndexFilter = parseContactIndex(params.contactId);
+  const contactIndexFilter = params.contactId ? findContactIndexByUUID(params.accountId, params.contactId) : undefined;
   const typeFilter = params.type;
   const totalBase = contactIndexFilter !== undefined ? ACTIVITIES_PER_CONTACT : CONTACT_SEED_COUNT * ACTIVITIES_PER_CONTACT;
   const mutations = await state.getLatestMutations(params.accountId, "activity");
@@ -262,7 +274,8 @@ export async function listActivities(state: StateAdapter, params: ListActivities
       const overlay = overlayRecord<any>(undefined, mutation);
       if (overlay && !overlay.deleted) {
         if (contactIndexFilter !== undefined) {
-          if (parseContactIndex(overlay.record.contactId) !== contactIndexFilter) continue;
+          // For UUID-based filtering, compare directly
+          if (overlay.record.contactId !== params.contactId) continue;
         }
         if (typeFilter && overlay.record.type !== typeFilter) continue;
         if (!since || Date.parse(overlay.record.updatedAt) > since) {

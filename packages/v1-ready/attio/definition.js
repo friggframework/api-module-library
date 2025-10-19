@@ -10,7 +10,7 @@ const Definition = {
     modelName: 'Attio',
     requiredAuthMethods: {
         getToken: async (api, params) => {
-            const code = get(params.data, 'code');
+            const code = get(params, 'code');
             return api.getTokenFromCode(code);
         },
         getEntityDetails: async (api, callbackParams, tokenResponse, userId) => {

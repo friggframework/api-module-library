@@ -16,9 +16,6 @@ class Api extends OAuth2Requester {
             query: (objectId) => `/objects/${objectId}/records/query`,
             attributes: (objectId) => `/objects/${objectId}/attributes`,
             attributeById: (objectId, attributeId) => `/objects/${objectId}/attributes/${attributeId}`,
-            // Note: /workspaces and /workspaces/{id} endpoints don't exist in Attio API
-            // Workspaces are referenced via workspace_id in other objects
-            // Use /workspace_members endpoint instead if needed
             lists: '/lists',
             listById: (listId) => `/lists/${listId}`,
             listEntries: (listId) => `/lists/${listId}/entries`,
@@ -47,8 +44,6 @@ class Api extends OAuth2Requester {
     }
 
     async listRecords(objectId, params = {}) {
-        // Attio uses POST /v2/objects/{object}/records/query, not GET /records
-        // Convert params to query body format
         const query = {};
 
         if (params.limit) {
@@ -128,11 +123,6 @@ class Api extends OAuth2Requester {
         return this.get(options);
     }
 
-    // Note: listWorkspaces() and getWorkspace() methods removed
-    // These endpoints don't exist in the Attio API
-    // Workspaces are referenced via workspace_id in other API responses
-    // Use workspace_members endpoint if you need to work with workspace data
-
     async listLists() {
         const options = {
             url: this.baseUrl + this.URLs.lists,
@@ -154,10 +144,6 @@ class Api extends OAuth2Requester {
         };
         return this.get(options);
     }
-
-    // ============================================================================
-    // Notes API
-    // ============================================================================
 
     async listNotes(params = {}) {
         const options = {
@@ -192,10 +178,6 @@ class Api extends OAuth2Requester {
         return this.delete(options);
     }
 
-    // ============================================================================
-    // Webhooks API
-    // ============================================================================
-
     async listWebhooks(params = {}) {
         const options = {
             url: this.baseUrl + '/webhooks',
@@ -228,10 +210,6 @@ class Api extends OAuth2Requester {
         };
         return this.delete(options);
     }
-
-    // ============================================================================
-    // Search API
-    // ============================================================================
 
     async searchRecords(searchParams) {
         const options = {

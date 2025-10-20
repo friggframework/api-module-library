@@ -8,19 +8,17 @@ class Api extends OAuth2Requester {
         this.URLs = {
             authorization: '/oauth/authorize',
             access_token: '/oauth/token',
-            userDetails: '/auth/me',
+            userDetails: '/self',
             objects: '/objects',
             objectById: (objectId) => `/objects/${objectId}`,
             records: (objectId) => `/objects/${objectId}/records`,
             recordById: (objectId, recordId) => `/objects/${objectId}/records/${recordId}`,
-            search: (objectId) => `/objects/${objectId}/records/search`,
+            query: (objectId) => `/objects/${objectId}/records/query`,
             attributes: (objectId) => `/objects/${objectId}/attributes`,
             attributeById: (objectId, attributeId) => `/objects/${objectId}/attributes/${attributeId}`,
-            workspaces: '/workspaces',
-            workspaceById: (workspaceId) => `/workspaces/${workspaceId}`,
             lists: '/lists',
             listById: (listId) => `/lists/${listId}`,
-            listRecords: (listId) => `/lists/${listId}/records`,
+            listEntries: (listId) => `/lists/${listId}/entries`,
         };
     }
 
@@ -46,11 +44,22 @@ class Api extends OAuth2Requester {
     }
 
     async listRecords(objectId, params = {}) {
-        const options = {
-            url: this.baseUrl + this.URLs.records(objectId),
-            params,
-        };
-        return this.get(options);
+        const query = {};
+
+        if (params.limit) {
+            query.limit = params.limit;
+        }
+        if (params.offset !== undefined) {
+            query.offset = params.offset;
+        }
+        if (params.sorts) {
+            query.sorts = params.sorts;
+        }
+        if (params.filter) {
+            query.filter = params.filter;
+        }
+
+        return this.queryRecords(objectId, query);
     }
 
     async getRecord(objectId, recordId) {
@@ -89,9 +98,9 @@ class Api extends OAuth2Requester {
         return this.delete(options);
     }
 
-    async searchRecords(objectId, query) {
+    async queryRecords(objectId, query) {
         const options = {
-            url: this.baseUrl + this.URLs.search(objectId),
+            url: this.baseUrl + this.URLs.query(objectId),
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -114,20 +123,6 @@ class Api extends OAuth2Requester {
         return this.get(options);
     }
 
-    async listWorkspaces() {
-        const options = {
-            url: this.baseUrl + this.URLs.workspaces,
-        };
-        return this.get(options);
-    }
-
-    async getWorkspace(workspaceId) {
-        const options = {
-            url: this.baseUrl + this.URLs.workspaceById(workspaceId),
-        };
-        return this.get(options);
-    }
-
     async listLists() {
         const options = {
             url: this.baseUrl + this.URLs.lists,
@@ -142,12 +137,89 @@ class Api extends OAuth2Requester {
         return this.get(options);
     }
 
-    async getListRecords(listId, params = {}) {
+    async getListEntries(listId, params = {}) {
         const options = {
-            url: this.baseUrl + this.URLs.listRecords(listId),
+            url: this.baseUrl + this.URLs.listEntries(listId),
             params,
         };
         return this.get(options);
+    }
+
+    async listNotes(params = {}) {
+        const options = {
+            url: this.baseUrl + '/notes',
+            params,
+        };
+        return this.get(options);
+    }
+
+    async getNote(noteId) {
+        const options = {
+            url: this.baseUrl + `/notes/${noteId}`,
+        };
+        return this.get(options);
+    }
+
+    async createNote(data) {
+        const options = {
+            url: this.baseUrl + '/notes',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: { data },
+        };
+        return this.post(options);
+    }
+
+    async deleteNote(noteId) {
+        const options = {
+            url: this.baseUrl + `/notes/${noteId}`,
+        };
+        return this.delete(options);
+    }
+
+    async listWebhooks(params = {}) {
+        const options = {
+            url: this.baseUrl + '/webhooks',
+            params,
+        };
+        return this.get(options);
+    }
+
+    async getWebhook(webhookId) {
+        const options = {
+            url: this.baseUrl + `/webhooks/${webhookId}`,
+        };
+        return this.get(options);
+    }
+
+    async createWebhook(data) {
+        const options = {
+            url: this.baseUrl + '/webhooks',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: { data },
+        };
+        return this.post(options);
+    }
+
+    async deleteWebhook(webhookId) {
+        const options = {
+            url: this.baseUrl + `/webhooks/${webhookId}`,
+        };
+        return this.delete(options);
+    }
+
+    async searchRecords(searchParams) {
+        const options = {
+            url: this.baseUrl + '/objects/records/search',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: searchParams,
+        };
+        return this.post(options);
     }
 }
 

@@ -10,14 +10,22 @@ const Definition = {
     modelName: 'Attio',
     requiredAuthMethods: {
         getToken: async (api, params) => {
-            const code = get(params.data, 'code');
+            const code = get(params, 'code');
             return api.getTokenFromCode(code);
         },
         getEntityDetails: async (api, callbackParams, tokenResponse, userId) => {
-            const userDetails = await api.getUserDetails();
+            const tokenInfo = await api.getUserDetails(); // Returns /v2/self response with workspace info
+
+            if (!tokenInfo || !tokenInfo.workspace_id) {
+                throw new Error(
+                    'Attio /v2/self failed to return valid workspace info. ' +
+                    'Response: ' + JSON.stringify(tokenInfo)
+                );
+            }
+
             return {
-                identifiers: {externalId: userDetails.id, user: userId},
-                details: {name: userDetails.email},
+                identifiers: {externalId: tokenInfo.workspace_id, user: userId},
+                details: {name: tokenInfo.workspace_name || tokenInfo.workspace_slug},
             }
         },
         apiPropertiesToPersist: {
@@ -27,9 +35,17 @@ const Definition = {
             entity: [],
         },
         getCredentialDetails: async (api, userId) => {
-            const userDetails = await api.getUserDetails();
+            const tokenInfo = await api.getUserDetails(); // Returns /v2/self response with workspace info
+
+            if (!tokenInfo || !tokenInfo.workspace_id) {
+                throw new Error(
+                    'Attio /v2/self failed to return valid workspace info. ' +
+                    'Response: ' + JSON.stringify(tokenInfo)
+                );
+            }
+
             return {
-                identifiers: {externalId: userDetails.id, user: userId},
+                identifiers: {externalId: tokenInfo.workspace_id, user: userId},
                 details: {}
             };
         },

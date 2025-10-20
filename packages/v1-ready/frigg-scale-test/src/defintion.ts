@@ -3,9 +3,34 @@ import FriggScaleTestAPI from "./api";
 
 const definition: FriggModuleAuthDefinition = {
   API: FriggScaleTestAPI,
-  getName: () => "Frgg Scale Test API",
+  getName: () => "scale-test",
   moduleName: "scale-test",
   requiredAuthMethods: {
+    getAuthorizationRequirements: (api: FriggScaleTestAPI) => {
+      return {
+        type: "apiKey",
+        data: {
+          jsonSchema: {
+            title: "Scale Test API Authorization",
+            type: "object",
+            required: ["apiKey"],
+            properties: {
+              apiKey: {
+                type: "string",
+                title: "API Key",
+              },
+            },
+          },
+          uiSchema: {
+            apiKey: {
+              "ui:widget": "password",
+              "ui:help": "Your Scale Test API key",
+              "ui:placeholder": "Enter your API key...",
+            },
+          },
+        },
+      };
+    },
     getToken: async (
       api: FriggScaleTestAPI,
       params: { data: { apiKey?: string; access_token?: string } }

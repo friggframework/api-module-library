@@ -4,10 +4,14 @@ class Api extends OAuth2Requester {
     constructor(params) {
         super(params);
         this.baseUrl = 'https://api.attio.com/v2';
-        
+
+        // OAuth2 endpoints with required query parameters
+        this.authorizationUri = encodeURI(
+            `https://app.attio.com/authorize?client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&response_type=code&scope=${this.scope}&state=${this.state}`
+        );
+        this.tokenUri = 'https://app.attio.com/oauth/token';
+
         this.URLs = {
-            authorization: '/oauth/authorize',
-            access_token: '/oauth/token',
             userDetails: '/self',
             objects: '/objects',
             objectById: (objectId) => `/objects/${objectId}`,
@@ -26,21 +30,21 @@ class Api extends OAuth2Requester {
         const options = {
             url: this.baseUrl + this.URLs.userDetails,
         };
-        return this.get(options);
+        return this._get(options);
     }
 
     async listObjects() {
         const options = {
             url: this.baseUrl + this.URLs.objects,
         };
-        return this.get(options);
+        return this._get(options);
     }
 
     async getObject(objectId) {
         const options = {
             url: this.baseUrl + this.URLs.objectById(objectId),
         };
-        return this.get(options);
+        return this._get(options);
     }
 
     async listRecords(objectId, params = {}) {
@@ -66,7 +70,7 @@ class Api extends OAuth2Requester {
         const options = {
             url: this.baseUrl + this.URLs.recordById(objectId, recordId),
         };
-        return this.get(options);
+        return this._get(options);
     }
 
     async createRecord(objectId, data) {
@@ -77,7 +81,7 @@ class Api extends OAuth2Requester {
             },
             body: data,
         };
-        return this.post(options);
+        return this._post(options);
     }
 
     async updateRecord(objectId, recordId, data) {
@@ -95,7 +99,7 @@ class Api extends OAuth2Requester {
         const options = {
             url: this.baseUrl + this.URLs.recordById(objectId, recordId),
         };
-        return this.delete(options);
+        return this._delete(options);
     }
 
     async queryRecords(objectId, query) {
@@ -106,35 +110,35 @@ class Api extends OAuth2Requester {
             },
             body: query,
         };
-        return this.post(options);
+        return this._post(options);
     }
 
     async listAttributes(objectId) {
         const options = {
             url: this.baseUrl + this.URLs.attributes(objectId),
         };
-        return this.get(options);
+        return this._get(options);
     }
 
     async getAttribute(objectId, attributeId) {
         const options = {
             url: this.baseUrl + this.URLs.attributeById(objectId, attributeId),
         };
-        return this.get(options);
+        return this._get(options);
     }
 
     async listLists() {
         const options = {
             url: this.baseUrl + this.URLs.lists,
         };
-        return this.get(options);
+        return this._get(options);
     }
 
     async getList(listId) {
         const options = {
             url: this.baseUrl + this.URLs.listById(listId),
         };
-        return this.get(options);
+        return this._get(options);
     }
 
     async getListEntries(listId, params = {}) {
@@ -142,7 +146,7 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.listEntries(listId),
             params,
         };
-        return this.get(options);
+        return this._get(options);
     }
 
     async listNotes(params = {}) {
@@ -150,14 +154,14 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + '/notes',
             params,
         };
-        return this.get(options);
+        return this._get(options);
     }
 
     async getNote(noteId) {
         const options = {
             url: this.baseUrl + `/notes/${noteId}`,
         };
-        return this.get(options);
+        return this._get(options);
     }
 
     async createNote(data) {
@@ -168,14 +172,14 @@ class Api extends OAuth2Requester {
             },
             body: { data },
         };
-        return this.post(options);
+        return this._post(options);
     }
 
     async deleteNote(noteId) {
         const options = {
             url: this.baseUrl + `/notes/${noteId}`,
         };
-        return this.delete(options);
+        return this._delete(options);
     }
 
     async listWebhooks(params = {}) {
@@ -183,14 +187,14 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + '/webhooks',
             params,
         };
-        return this.get(options);
+        return this._get(options);
     }
 
     async getWebhook(webhookId) {
         const options = {
             url: this.baseUrl + `/webhooks/${webhookId}`,
         };
-        return this.get(options);
+        return this._get(options);
     }
 
     async createWebhook(data) {
@@ -201,14 +205,14 @@ class Api extends OAuth2Requester {
             },
             body: { data },
         };
-        return this.post(options);
+        return this._post(options);
     }
 
     async deleteWebhook(webhookId) {
         const options = {
             url: this.baseUrl + `/webhooks/${webhookId}`,
         };
-        return this.delete(options);
+        return this._delete(options);
     }
 
     async searchRecords(searchParams) {
@@ -219,7 +223,7 @@ class Api extends OAuth2Requester {
             },
             body: searchParams,
         };
-        return this.post(options);
+        return this._post(options);
     }
 }
 

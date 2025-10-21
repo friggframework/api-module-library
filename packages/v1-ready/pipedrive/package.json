@@ -22,6 +22,7 @@
     "dotenv": "^16.0.0"
   },
   "devDependencies": {
+    "@friggframework/test": "^1.1.2",
     "@types/node": "^20.8.0",
     "typescript": "^5.4.0",
     "vitest": "^1.0.0"

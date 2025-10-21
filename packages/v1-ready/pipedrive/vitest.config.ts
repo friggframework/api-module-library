@@ -14,7 +14,7 @@ export default defineConfig({
         lines: 13,
       },
     },
-    globalSetup: './jest-setup.js',
-    globalTeardown: './jest-teardown.js',
+    globalSetup: './vitest-setup.js',
+    globalTeardown: './vitest-teardown.js',
   },
 });

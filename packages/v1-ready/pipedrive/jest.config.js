@@ -3,7 +3,10 @@
  * https://jestjs.io/docs/configuration
  */
 module.exports = {
-    // preset: '@friggframework/test-environment',
+    preset: 'ts-jest',
+    testEnvironment: 'node',
+    roots: ['<rootDir>/test', '<rootDir>/src'],
+    moduleFileExtensions: ['ts', 'js', 'json'],
     coverageThreshold: {
         global: {
             statements: 13,

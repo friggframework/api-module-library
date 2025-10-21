@@ -1,3 +1,55 @@
+# v1.2.0 (Mon Oct 21 2024)
+
+:sparkles: **TypeScript Migration & Complete Type Definitions** :sparkles:
+
+This release converts the entire module to TypeScript with comprehensive, documentation-aligned type definitions for all Pipedrive API v2 endpoints.
+
+#### 💥 Breaking Changes
+
+- **TypeScript Migration**: Module fully converted to TypeScript
+  - All files now use `.ts` extension
+  - Type definitions exported from `types.d.ts`
+  - Consumers using JavaScript can continue without changes (types are optional)
+- **ActivityParams Field Naming**: Fixed incorrect camelCase field
+  - `dealId` → `deal_id` (aligns with Pipedrive API snake_case convention)
+  - Breaking only if you were using `dealId` in activity creation/updates
+
+#### 🚀 Enhancement
+
+- **Complete Type Definitions**: Added 100% type coverage for all API entities
+  - `Activity` interface (30+ fields) - complete activity object structure
+  - `Deal` interface (35+ fields) - complete deal object structure
+  - `Person` interface (17+ fields) - complete person object structure
+- **Enhanced Request Parameter Types**: All list method params now fully typed
+  - `ListActivitiesParams`: Added 10 missing parameters (`deal_id`, `lead_id`, `person_id`, `org_id`, `ids`, `updated_since`, `updated_until`, `sort_by`, `sort_direction`, `include_fields`)
+  - `ListDealsParams`: Added 8 missing parameters (`ids`, `pipeline_id`, `updated_since`, `updated_until`, `sort_by`, `sort_direction`, `include_fields`, `custom_fields`)
+  - `ActivityParams`: Complete rewrite with 13+ additional fields (proper snake_case naming, conference fields, location, participants, attendees)
+- **Nested Object Types**: 8 new helper types for complex structures
+  - `EmailEntry`, `PhoneEntry`, `PostalAddress`, `InstantMessageEntry`
+  - `LocationObject`, `ParticipantObject`, `AttendeeObject`, `UserAccessObject`
+- **Enhanced User Types**: `PipedriveUser` now includes 15+ missing fields
+  - Added: `default_currency`, `locale`, `lang`, `activated`, `last_login`, `created`, `modified`, `has_created_company`, `access`, `active_flag`, `timezone_name`, `timezone_offset`, `role_id`, `icon_url`, `is_you`, `is_deleted`
+  - Removed: Overly permissive `[key: string]: any` catch-all
+- **Type Safety**: All API methods now have proper TypeScript signatures with generic return types
+
+#### 📝 Documentation
+
+- **JSDoc Comments**: Added detailed documentation for all entity interfaces
+- **Inline Type Comments**: Parameter limits, formats, and defaults documented inline
+- **API Alignment**: All types verified against official Pipedrive API v2 documentation
+
+#### 🏗️ Refactoring
+
+- **Created**: `types.d.ts` - Comprehensive TypeScript type definitions (350+ lines)
+- **Converted**: All `.js` files to `.ts` with full type annotations
+- **Organized**: Type definitions grouped by category (Base, Nested Objects, Request Params, Responses, Entities)
+
+#### Authors: 1
+
+- Daniel Klotz ([@d-klotz](https://github.com/d-klotz))
+
+---
+
 # v1.1.0 (Mon Oct 21 2024)
 
 :rocket: **API v2 Migration & Persons API Support** :rocket:

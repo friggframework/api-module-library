@@ -1,24 +1,25 @@
-require('dotenv').config();
-const {Api} = require('./api');
-const {get} = require('@friggframework/core');
-const config = require('./defaultConfig.json')
+import dotenv = require('dotenv');
+dotenv.config();
+import {Api} from './api';
+import {get} from '@friggframework/core';
+import config = require('../defaultConfig.json');
 
-const Definition = {
+export const Definition = {
     API: Api,
     getName: function() {
         return config.name
     },
     moduleName: config.name,
     requiredAuthMethods: {
-        getToken: async function(api, params) {
-            const code = get(params.data, 'code'); 
+        getToken: async function(api: any, params: any) {
+            const code = get(params.data, 'code');
             await api.getTokenFromCode(code);
         },
 	    apiPropertiesToPersist: {
             credential: ['access_token', 'refresh_token'],
             entity: [],
         },
-        getCredentialDetails: async function (api, userId) {
+        getCredentialDetails: async function (api: any, userId: string) {
             const response = await api.listUsers({type: 'CurrentUser'});
             const currentUser = response.users[0];
             return {
@@ -26,7 +27,7 @@ const Definition = {
                 details: {},
             };
         },
-        getEntityDetails: async function (api, callbackParams, tokenResponse, userId) {
+        getEntityDetails: async function (api: any, callbackParams: any, tokenResponse: any, userId: string) {
             const response = await api.listUsers({type: 'CurrentUser'});
             const currentUser = response.users[0];
             return {
@@ -36,7 +37,7 @@ const Definition = {
                 },
             }
         },
-        testAuthRequest: async function(api) {
+        testAuthRequest: async function(api: any) {
             return  await api.listUsers();
         },
     },
@@ -47,5 +48,3 @@ const Definition = {
         redirect_uri: `${process.env.REDIRECT_URI}/zoho-crm`,
     }
 };
-
-module.exports = {Definition};

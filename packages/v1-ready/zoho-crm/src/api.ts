@@ -1,12 +1,10 @@
-const FormData = require('form-data');
-const {OAuth2Requester, get} = require('@friggframework/core');
+import FormData = require('form-data');
+import {OAuth2Requester, get} from '@friggframework/core';
 
-class Api extends OAuth2Requester {
-    constructor(params) {
+export class Api extends OAuth2Requester {
+    constructor(params: any) {
         super(params);
-        // The majority of the properties for OAuth are default loaded by OAuth2Requester.
-        // This includes the `client_id`, `client_secret`, `scopes`, and `redirect_uri`.
-        this.baseUrl = 'https://www.zohoapis.com/crm/v6';
+        this.baseUrl = 'https://www.zohoapis.com/crm/v8';
         this.authorizationUri = encodeURI(
             `https://accounts.zoho.com/oauth/v2/auth?scope=${this.scope}&client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&response_type=code&access_type=offline`
         );
@@ -17,24 +15,27 @@ class Api extends OAuth2Requester {
         this.URLs = {
             // Users
             users: '/users',
-            user: (userId) => `/users/${userId}`,
+            user: (userId: string) => `/users/${userId}`,
 
             // Roles
             roles: '/settings/roles',
-            role: (roleId) => `/settings/roles/${roleId}`,
+            role: (roleId: string) => `/settings/roles/${roleId}`,
 
             // Profiles
             profiles: '/settings/profiles',
+
+            // Contacts
+            contacts: '/Contacts',
+            contact: (contactId: string) => `/Contacts/${contactId}`,
+            contactSearch: '/Contacts/search',
         };
     }
 
-    getAuthUri() {
+    getAuthUri(): string {
         return this.authorizationUri;
     }
 
-    async getTokenFromCode(code) {
-        // I had to override OAuth2Requester.getTokenFromCode method so I could send a form-data,
-        // as described in the docs: https://www.zoho.com/crm/developer/docs/api/v6/access-refresh.html
+    async getTokenFromCode(code: string): Promise<any> {
         const formData = new FormData();
         formData.append('grant_type', 'authorization_code');
         formData.append('client_id', this.client_id);
@@ -44,7 +45,7 @@ class Api extends OAuth2Requester {
         formData.append('code', code);
         const options = {
             body: formData,
-            headers: formData.getHeaders(),
+            headers: (formData as any).getHeaders(),
             url: this.tokenUri,
         };
         const response = await this._post(options, false);
@@ -52,7 +53,7 @@ class Api extends OAuth2Requester {
         return response;
     }
 
-    addJsonHeaders(options) {
+    addJsonHeaders(options: any): void {
         const jsonHeaders = {
             'content-type': 'application/json',
             Accept: 'application/json',
@@ -63,93 +64,93 @@ class Api extends OAuth2Requester {
         }
     }
 
-    async _get(options, stringify) {
+    async _get(options: any, stringify?: boolean): Promise<any> {
         this.addJsonHeaders(options);
         return super._get(options, stringify);
     }
 
-    async _post(options, stringify) {
+    async _post(options: any, stringify?: boolean): Promise<any> {
         this.addJsonHeaders(options);
         return super._post(options, stringify);
     }
 
-    async _put(options, stringify) {
+    async _put(options: any, stringify?: boolean): Promise<any> {
         this.addJsonHeaders(options);
         return super._put(options, stringify);
     }
 
-    async _delete(options) {
+    async _delete(options: any): Promise<any> {
         this.addJsonHeaders(options);
         const response = await super._delete(options);
         return await this.parsedBody(response);
     }
 
     // **************************   Users   **********************************
-    // https://www.zoho.com/crm/developer/docs/api/v6/get-users.html
+    // https://www.zoho.com/crm/developer/docs/api/v8/get-users.html
 
-    async listUsers(queryParams = {}) {
+    async listUsers(queryParams: any = {}): Promise<any> {
         return this._get({
             url: this.baseUrl + this.URLs.users,
             query: {...queryParams},
         });
     }
 
-    async getUser(userId) {
+    async getUser(userId: string): Promise<any> {
         return this._get({
             url: this.baseUrl + this.URLs.user(userId),
         });
     }
 
-    async createUser(body = {}) {
+    async createUser(body: any = {}): Promise<any> {
         return this._post({
             url: this.baseUrl + this.URLs.users,
             body: body
         });
     }
 
-    async updateUser(userId, body = {}) {
+    async updateUser(userId: string, body: any = {}): Promise<any> {
         return this._put({
             url: this.baseUrl + this.URLs.user(userId),
             body: body,
         });
     }
 
-    async deleteUser(userId) {
+    async deleteUser(userId: string): Promise<any> {
         return this._delete({
             url: this.baseUrl + this.URLs.user(userId),
         });
     }
 
     // **************************   Roles   **********************************
-    // https://www.zoho.com/crm/developer/docs/api/v6/get-roles.html
-    
-    async listRoles() {
+    // https://www.zoho.com/crm/developer/docs/api/v8/get-roles.html
+
+    async listRoles(): Promise<any> {
         return this._get({
             url: this.baseUrl + this.URLs.roles
         });
     }
 
-    async getRole(roleId) {
+    async getRole(roleId: string): Promise<any> {
         return this._get({
             url: this.baseUrl + this.URLs.role(roleId)
         });
     }
 
-    async createRole(body = {}) {
+    async createRole(body: any = {}): Promise<any> {
         return this._post({
             url: this.baseUrl + this.URLs.roles,
             body: body
         });
     }
 
-    async updateRole(roleId, body = {}) {
+    async updateRole(roleId: string, body: any = {}): Promise<any> {
         return this._put({
             url: this.baseUrl + this.URLs.role(roleId),
             body: body,
         });
     }
 
-    async deleteRole(roleId, queryParams = {}) {
+    async deleteRole(roleId: string, queryParams: any = {}): Promise<any> {
         return this._delete({
             url: this.baseUrl + this.URLs.role(roleId),
             query: {...queryParams},
@@ -157,13 +158,34 @@ class Api extends OAuth2Requester {
     }
 
     // **************************   Profiles   **********************************
-    // https://www.zoho.com/crm/developer/docs/api/v6/get-profiles.html
+    // https://www.zoho.com/crm/developer/docs/api/v8/get-profiles.html
 
-    async listProfiles() {
+    async listProfiles(): Promise<any> {
         return this._get({
             url: this.baseUrl + this.URLs.profiles
         });
     }
-}
 
-module.exports = {Api};
+    // **************************   Contacts   **********************************
+    // https://www.zoho.com/crm/developer/docs/api/v8/get-records.html
+
+    async listContacts(queryParams: any = {}): Promise<any> {
+        return this._get({
+            url: this.baseUrl + this.URLs.contacts,
+            query: {...queryParams},
+        });
+    }
+
+    async getContact(contactId: string): Promise<any> {
+        return this._get({
+            url: this.baseUrl + this.URLs.contact(contactId),
+        });
+    }
+
+    async searchContacts(searchParams: any = {}): Promise<any> {
+        return this._get({
+            url: this.baseUrl + this.URLs.contactSearch,
+            query: {...searchParams},
+        });
+    }
+}

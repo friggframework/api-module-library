@@ -12,6 +12,6 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*", "frigg-core.d.ts"],
-  "exclude": ["dist", "test", "node_modules", "mocks"]
+  "include": ["src/**/*", "src/frigg-core.d.ts"],
+  "exclude": ["dist", "src/test", "node_modules", "mocks"]
 }

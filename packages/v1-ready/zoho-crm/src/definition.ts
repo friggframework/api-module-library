@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 import {Api} from './api';
 import {get} from '@friggframework/core';
-import * as config from '../defaultConfig.json';
+import * as config from './defaultConfig.json';
 
 export const Definition = {
     API: Api,
@@ -12,7 +12,7 @@ export const Definition = {
     moduleName: config.name,
     requiredAuthMethods: {
         getToken: async function(api: Api, params: any): Promise<void> {
-            const code = get(params.data, 'code');
+            const code = get(params, 'code');
             await api.getTokenFromCode(code);
         },
         apiPropertiesToPersist: {
@@ -45,6 +45,6 @@ export const Definition = {
         client_id: process.env.ZOHO_CRM_CLIENT_ID,
         client_secret: process.env.ZOHO_CRM_CLIENT_SECRET,
         scope: process.env.ZOHO_CRM_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/zoho-crm`,
+        redirect_uri: `${process.env.REDIRECT_URI}/zohoCrm`,
     }
 };

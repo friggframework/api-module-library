@@ -5,7 +5,7 @@ This is the TypeScript API Module for Zoho CRM that allows [Frigg](https://frigg
 **Features:**
 - TypeScript with full type definitions
 - OAuth 2.0 authentication
-- Support for Users, Roles, Profiles, and Contacts resources
+- Support for Users, Roles, Profiles, Contacts, Leads, and Accounts resources
 - Comprehensive error handling
 - Vitest test suite
 
@@ -52,7 +52,7 @@ If you've already done this, skip to the next section.
     ```shell
     ZOHO_CRM_CLIENT_ID=your_client_id
     ZOHO_CRM_CLIENT_SECRET=your_client_secret
-    ZOHO_CRM_SCOPE=ZohoCRM.users.ALL,ZohoCRM.org.ALL,ZohoCRM.settings.roles.ALL,ZohoCRM.settings.profiles.ALL,ZohoCRM.modules.contacts.ALL
+    ZOHO_CRM_SCOPE=ZohoCRM.users.ALL,ZohoCRM.org.ALL,ZohoCRM.settings.roles.ALL,ZohoCRM.settings.profiles.ALL,ZohoCRM.modules.contacts.ALL,ZohoCRM.modules.leads.ALL,ZohoCRM.modules.accounts.ALL
     REDIRECT_URI=http://localhost:3000/redirect
     ```
 
@@ -79,6 +79,16 @@ If you've already done this, skip to the next section.
 - `listContacts(queryParams)` - List contacts with optional filters (fields, per_page, page, sort_by, sort_order)
 - `getContact(contactId)` - Get a specific contact by ID
 - `searchContacts(searchParams)` - Search contacts by email, phone, criteria, or word
+
+### Leads
+- `listLeads(queryParams)` - List leads with optional filters (fields, per_page, page, sort_by, sort_order)
+- `getLead(leadId)` - Get a specific lead by ID
+- `searchLeads(searchParams)` - Search leads by email, phone, criteria, or word
+
+### Accounts
+- `listAccounts(queryParams)` - List accounts with optional filters (fields, per_page, page, sort_by, sort_order)
+- `getAccount(accountId)` - Get a specific account by ID
+- `searchAccounts(searchParams)` - Search accounts by phone, criteria, or word
 
 ## Using the API Module from the Terminal
 
@@ -161,7 +171,7 @@ With your `.env` in place, you can test the API from a Node terminal.
 
     class ZohoCRMIntegration extends IntegrationBase {
         static Definition = {
-            name: 'zoho-crm',
+            name: 'zohoCrm',
             version: '1.0.0',
             display: {
                 name: 'Zoho CRM',
@@ -169,7 +179,7 @@ With your `.env` in place, you can test the API from a Node terminal.
                 category: 'CRM',
             },
             modules: {
-                'zoho-crm': ZohoCRMModule
+                'zohoCrm': ZohoCRMModule
             }
         };
 

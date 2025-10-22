@@ -1,6 +1,6 @@
 import { describe, it, beforeAll, expect } from 'vitest';
 import {Authenticator} from '@friggframework/test';
-import {Api} from '../src/api';
+import {Api} from '../api';
 import {FetchError} from '@friggframework/core';
 import * as config from '../defaultConfig.json';
 
@@ -8,7 +8,7 @@ const api = new Api({
     client_id: process.env.ZOHO_CRM_CLIENT_ID,
     client_secret: process.env.ZOHO_CRM_CLIENT_SECRET,
     scope: process.env.ZOHO_CRM_SCOPE,
-    redirect_uri: `${process.env.REDIRECT_URI}/zoho-crm`,
+    redirect_uri: `${process.env.REDIRECT_URI}/zohoCrm`,
 });
 
 beforeAll(async () => {

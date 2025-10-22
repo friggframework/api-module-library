@@ -9,11 +9,19 @@ import {
     ProfilesResponse,
     ContactsResponse,
     ContactResponse,
+    LeadsResponse,
+    LeadResponse,
+    AccountsResponse,
+    AccountResponse,
     TokenResponse,
 } from './types';
 
 export class Api extends OAuth2Requester {
     public URLs: Record<string, string | ((id: string) => string)>;
+
+    private static readonly CONTACTS_DEFAULT_FIELDS = 'id,First_Name,Last_Name,Email,Phone,Mobile,Account_Name,Company,Owner,Lead_Source,Created_Time,Modified_Time';
+    private static readonly LEADS_DEFAULT_FIELDS = 'id,First_Name,Last_Name,Email,Phone,Mobile,Company,Industry,Lead_Source,Lead_Status,Owner,Created_Time,Modified_Time,Converted__s,Converted_Date_Time';
+    private static readonly ACCOUNTS_DEFAULT_FIELDS = 'id,Account_Name,Account_Number,Account_Type,Industry,Annual_Revenue,Rating,Phone,Fax,Website,Parent_Account,Owner,Billing_City,Billing_State,Billing_Country,Shipping_City,Shipping_State,Shipping_Country,Created_Time,Modified_Time';
 
     constructor(params: ZohoConfig) {
         super(params);
@@ -34,6 +42,12 @@ export class Api extends OAuth2Requester {
             contacts: '/Contacts',
             contact: (contactId: string) => `/Contacts/${contactId}`,
             contactSearch: '/Contacts/search',
+            leads: '/Leads',
+            lead: (leadId: string) => `/Leads/${leadId}`,
+            leadSearch: '/Leads/search',
+            accounts: '/Accounts',
+            account: (accountId: string) => `/Accounts/${accountId}`,
+            accountSearch: '/Accounts/search',
         };
     }
 
@@ -59,34 +73,7 @@ export class Api extends OAuth2Requester {
         return response;
     }
 
-    private addJsonHeaders(options: any): void {
-        const jsonHeaders = {
-            'content-type': 'application/json',
-            Accept: 'application/json',
-        };
-        options.headers = {
-            ...jsonHeaders,
-            ...options.headers,
-        };
-    }
-
-    async _get(options: any, stringify?: boolean): Promise<any> {
-        this.addJsonHeaders(options);
-        return super._get(options, stringify);
-    }
-
-    async _post(options: any, stringify?: boolean): Promise<any> {
-        this.addJsonHeaders(options);
-        return super._post(options, stringify);
-    }
-
-    async _put(options: any, stringify?: boolean): Promise<any> {
-        this.addJsonHeaders(options);
-        return super._put(options, stringify);
-    }
-
     async _delete(options: any): Promise<any> {
-        this.addJsonHeaders(options);
         const response = await super._delete(options);
         return await this.parsedBody(response);
     }
@@ -194,13 +181,18 @@ export class Api extends OAuth2Requester {
     }
 
     async listContacts(queryParams: QueryParams = {}): Promise<ContactsResponse> {
+        const params = {
+            fields: Api.CONTACTS_DEFAULT_FIELDS,
+            ...queryParams,
+        };
+
         try {
             return await this._get({
                 url: this.baseUrl + this.URLs.contacts,
-                query: {...queryParams},
+                query: params,
             });
-        } catch (error: any) {
-            throw new Error(`Failed to list contacts: ${error.message}`);
+        } catch (error) {
+            throw error;
         }
     }
 
@@ -212,8 +204,8 @@ export class Api extends OAuth2Requester {
             return await this._get({
                 url: this.baseUrl + (this.URLs.contact as (id: string) => string)(contactId),
             });
-        } catch (error: any) {
-            throw new Error(`Failed to get contact ${contactId}: ${error.message}`);
+        } catch (error) {
+            throw error;
         }
     }
 
@@ -221,13 +213,117 @@ export class Api extends OAuth2Requester {
         if (!searchParams || Object.keys(searchParams).length === 0) {
             throw new Error('At least one search parameter is required (email, phone, criteria, or word)');
         }
+
+        const params = {
+            fields: Api.CONTACTS_DEFAULT_FIELDS,
+            ...searchParams,
+        };
+
         try {
             return await this._get({
                 url: this.baseUrl + this.URLs.contactSearch,
-                query: {...searchParams},
+                query: params,
             });
-        } catch (error: any) {
-            throw new Error(`Failed to search contacts: ${error.message}`);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async listLeads(queryParams: QueryParams = {}): Promise<LeadsResponse> {
+        const params = {
+            fields: Api.LEADS_DEFAULT_FIELDS,
+            ...queryParams,
+        };
+
+        try {
+            return await this._get({
+                url: this.baseUrl + this.URLs.leads,
+                query: params,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getLead(leadId: string): Promise<LeadResponse> {
+        if (!leadId) {
+            throw new Error('leadId is required');
+        }
+        try {
+            return await this._get({
+                url: this.baseUrl + (this.URLs.lead as (id: string) => string)(leadId),
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async searchLeads(searchParams: SearchParams = {}): Promise<LeadsResponse> {
+        if (!searchParams || Object.keys(searchParams).length === 0) {
+            throw new Error('At least one search parameter is required (email, phone, criteria, or word)');
+        }
+
+        const params = {
+            fields: Api.LEADS_DEFAULT_FIELDS,
+            ...searchParams,
+        };
+
+        try {
+            return await this._get({
+                url: this.baseUrl + this.URLs.leadSearch,
+                query: params,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async listAccounts(queryParams: QueryParams = {}): Promise<AccountsResponse> {
+        const params = {
+            fields: Api.ACCOUNTS_DEFAULT_FIELDS,
+            ...queryParams,
+        };
+
+        try {
+            return await this._get({
+                url: this.baseUrl + this.URLs.accounts,
+                query: params,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getAccount(accountId: string): Promise<AccountResponse> {
+        if (!accountId) {
+            throw new Error('accountId is required');
+        }
+        try {
+            return await this._get({
+                url: this.baseUrl + (this.URLs.account as (id: string) => string)(accountId),
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async searchAccounts(searchParams: SearchParams = {}): Promise<AccountsResponse> {
+        if (!searchParams || Object.keys(searchParams).length === 0) {
+            throw new Error('At least one search parameter is required (email, phone, criteria, or word)');
+        }
+
+        const params = {
+            fields: Api.ACCOUNTS_DEFAULT_FIELDS,
+            ...searchParams,
+        };
+
+        try {
+            return await this._get({
+                url: this.baseUrl + this.URLs.accountSearch,
+                query: params,
+            });
+        } catch (error) {
+            throw error;
         }
     }
 }

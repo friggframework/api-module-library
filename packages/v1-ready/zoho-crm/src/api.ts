@@ -1,8 +1,21 @@
 import FormData = require('form-data');
 import {OAuth2Requester, get} from '@friggframework/core';
+import {
+    ZohoConfig,
+    QueryParams,
+    SearchParams,
+    UsersResponse,
+    RolesResponse,
+    ProfilesResponse,
+    ContactsResponse,
+    ContactResponse,
+    TokenResponse,
+} from './types';
 
 export class Api extends OAuth2Requester {
-    constructor(params: any) {
+    public URLs: Record<string, string | ((id: string) => string)>;
+
+    constructor(params: ZohoConfig) {
         super(params);
         this.baseUrl = 'https://www.zohoapis.com/crm/v8';
         this.authorizationUri = encodeURI(
@@ -13,18 +26,11 @@ export class Api extends OAuth2Requester {
         this.refresh_token = get(params, 'refresh_token', null);
 
         this.URLs = {
-            // Users
             users: '/users',
             user: (userId: string) => `/users/${userId}`,
-
-            // Roles
             roles: '/settings/roles',
             role: (roleId: string) => `/settings/roles/${roleId}`,
-
-            // Profiles
             profiles: '/settings/profiles',
-
-            // Contacts
             contacts: '/Contacts',
             contact: (contactId: string) => `/Contacts/${contactId}`,
             contactSearch: '/Contacts/search',
@@ -35,7 +41,7 @@ export class Api extends OAuth2Requester {
         return this.authorizationUri;
     }
 
-    async getTokenFromCode(code: string): Promise<any> {
+    async getTokenFromCode(code: string): Promise<TokenResponse> {
         const formData = new FormData();
         formData.append('grant_type', 'authorization_code');
         formData.append('client_id', this.client_id);
@@ -53,7 +59,7 @@ export class Api extends OAuth2Requester {
         return response;
     }
 
-    addJsonHeaders(options: any): void {
+    private addJsonHeaders(options: any): void {
         const jsonHeaders = {
             'content-type': 'application/json',
             Accept: 'application/json',
@@ -61,7 +67,7 @@ export class Api extends OAuth2Requester {
         options.headers = {
             ...jsonHeaders,
             ...options.headers,
-        }
+        };
     }
 
     async _get(options: any, stringify?: boolean): Promise<any> {
@@ -85,23 +91,26 @@ export class Api extends OAuth2Requester {
         return await this.parsedBody(response);
     }
 
-    // **************************   Users   **********************************
-    // https://www.zoho.com/crm/developer/docs/api/v8/get-users.html
-
-    async listUsers(queryParams: any = {}): Promise<any> {
+    async listUsers(queryParams: QueryParams = {}): Promise<UsersResponse> {
         return this._get({
             url: this.baseUrl + this.URLs.users,
             query: {...queryParams},
         });
     }
 
-    async getUser(userId: string): Promise<any> {
+    async getUser(userId: string): Promise<UsersResponse> {
+        if (!userId) {
+            throw new Error('userId is required');
+        }
         return this._get({
-            url: this.baseUrl + this.URLs.user(userId),
+            url: this.baseUrl + (this.URLs.user as (id: string) => string)(userId),
         });
     }
 
     async createUser(body: any = {}): Promise<any> {
+        if (!body || Object.keys(body).length === 0) {
+            throw new Error('Request body is required');
+        }
         return this._post({
             url: this.baseUrl + this.URLs.users,
             body: body
@@ -109,34 +118,46 @@ export class Api extends OAuth2Requester {
     }
 
     async updateUser(userId: string, body: any = {}): Promise<any> {
+        if (!userId) {
+            throw new Error('userId is required');
+        }
+        if (!body || Object.keys(body).length === 0) {
+            throw new Error('Request body is required');
+        }
         return this._put({
-            url: this.baseUrl + this.URLs.user(userId),
+            url: this.baseUrl + (this.URLs.user as (id: string) => string)(userId),
             body: body,
         });
     }
 
     async deleteUser(userId: string): Promise<any> {
+        if (!userId) {
+            throw new Error('userId is required');
+        }
         return this._delete({
-            url: this.baseUrl + this.URLs.user(userId),
+            url: this.baseUrl + (this.URLs.user as (id: string) => string)(userId),
         });
     }
 
-    // **************************   Roles   **********************************
-    // https://www.zoho.com/crm/developer/docs/api/v8/get-roles.html
-
-    async listRoles(): Promise<any> {
+    async listRoles(): Promise<RolesResponse> {
         return this._get({
             url: this.baseUrl + this.URLs.roles
         });
     }
 
-    async getRole(roleId: string): Promise<any> {
+    async getRole(roleId: string): Promise<RolesResponse> {
+        if (!roleId) {
+            throw new Error('roleId is required');
+        }
         return this._get({
-            url: this.baseUrl + this.URLs.role(roleId)
+            url: this.baseUrl + (this.URLs.role as (id: string) => string)(roleId)
         });
     }
 
     async createRole(body: any = {}): Promise<any> {
+        if (!body || Object.keys(body).length === 0) {
+            throw new Error('Request body is required');
+        }
         return this._post({
             url: this.baseUrl + this.URLs.roles,
             body: body
@@ -144,48 +165,69 @@ export class Api extends OAuth2Requester {
     }
 
     async updateRole(roleId: string, body: any = {}): Promise<any> {
+        if (!roleId) {
+            throw new Error('roleId is required');
+        }
+        if (!body || Object.keys(body).length === 0) {
+            throw new Error('Request body is required');
+        }
         return this._put({
-            url: this.baseUrl + this.URLs.role(roleId),
+            url: this.baseUrl + (this.URLs.role as (id: string) => string)(roleId),
             body: body,
         });
     }
 
     async deleteRole(roleId: string, queryParams: any = {}): Promise<any> {
+        if (!roleId) {
+            throw new Error('roleId is required');
+        }
         return this._delete({
-            url: this.baseUrl + this.URLs.role(roleId),
+            url: this.baseUrl + (this.URLs.role as (id: string) => string)(roleId),
             query: {...queryParams},
         });
     }
 
-    // **************************   Profiles   **********************************
-    // https://www.zoho.com/crm/developer/docs/api/v8/get-profiles.html
-
-    async listProfiles(): Promise<any> {
+    async listProfiles(): Promise<ProfilesResponse> {
         return this._get({
             url: this.baseUrl + this.URLs.profiles
         });
     }
 
-    // **************************   Contacts   **********************************
-    // https://www.zoho.com/crm/developer/docs/api/v8/get-records.html
-
-    async listContacts(queryParams: any = {}): Promise<any> {
-        return this._get({
-            url: this.baseUrl + this.URLs.contacts,
-            query: {...queryParams},
-        });
+    async listContacts(queryParams: QueryParams = {}): Promise<ContactsResponse> {
+        try {
+            return await this._get({
+                url: this.baseUrl + this.URLs.contacts,
+                query: {...queryParams},
+            });
+        } catch (error: any) {
+            throw new Error(`Failed to list contacts: ${error.message}`);
+        }
     }
 
-    async getContact(contactId: string): Promise<any> {
-        return this._get({
-            url: this.baseUrl + this.URLs.contact(contactId),
-        });
+    async getContact(contactId: string): Promise<ContactResponse> {
+        if (!contactId) {
+            throw new Error('contactId is required');
+        }
+        try {
+            return await this._get({
+                url: this.baseUrl + (this.URLs.contact as (id: string) => string)(contactId),
+            });
+        } catch (error: any) {
+            throw new Error(`Failed to get contact ${contactId}: ${error.message}`);
+        }
     }
 
-    async searchContacts(searchParams: any = {}): Promise<any> {
-        return this._get({
-            url: this.baseUrl + this.URLs.contactSearch,
-            query: {...searchParams},
-        });
+    async searchContacts(searchParams: SearchParams = {}): Promise<ContactsResponse> {
+        if (!searchParams || Object.keys(searchParams).length === 0) {
+            throw new Error('At least one search parameter is required (email, phone, criteria, or word)');
+        }
+        try {
+            return await this._get({
+                url: this.baseUrl + this.URLs.contactSearch,
+                query: {...searchParams},
+            });
+        } catch (error: any) {
+            throw new Error(`Failed to search contacts: ${error.message}`);
+        }
     }
 }

@@ -1,5 +1,5 @@
 import {Api} from './api';
-import Config = require('../defaultConfig.json');
+import * as Config from '../defaultConfig.json';
 import {Definition} from './definition';
 
 export {

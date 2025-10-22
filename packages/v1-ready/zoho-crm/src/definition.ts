@@ -1,25 +1,25 @@
-import dotenv = require('dotenv');
+import * as dotenv from 'dotenv';
 dotenv.config();
 import {Api} from './api';
 import {get} from '@friggframework/core';
-import config = require('../defaultConfig.json');
+import * as config from '../defaultConfig.json';
 
 export const Definition = {
     API: Api,
     getName: function() {
-        return config.name
+        return config.name;
     },
     moduleName: config.name,
     requiredAuthMethods: {
-        getToken: async function(api: any, params: any) {
+        getToken: async function(api: Api, params: any): Promise<void> {
             const code = get(params.data, 'code');
             await api.getTokenFromCode(code);
         },
-	    apiPropertiesToPersist: {
+        apiPropertiesToPersist: {
             credential: ['access_token', 'refresh_token'],
             entity: [],
         },
-        getCredentialDetails: async function (api: any, userId: string) {
+        getCredentialDetails: async function (api: Api, userId: string): Promise<any> {
             const response = await api.listUsers({type: 'CurrentUser'});
             const currentUser = response.users[0];
             return {
@@ -27,7 +27,7 @@ export const Definition = {
                 details: {},
             };
         },
-        getEntityDetails: async function (api: any, callbackParams: any, tokenResponse: any, userId: string) {
+        getEntityDetails: async function (api: Api, callbackParams: any, tokenResponse: any, userId: string): Promise<any> {
             const response = await api.listUsers({type: 'CurrentUser'});
             const currentUser = response.users[0];
             return {
@@ -35,10 +35,10 @@ export const Definition = {
                 details: {
                     name: currentUser.email
                 },
-            }
+            };
         },
-        testAuthRequest: async function(api: any) {
-            return  await api.listUsers();
+        testAuthRequest: async function(api: Api): Promise<any> {
+            return await api.listUsers();
         },
     },
     env: {

@@ -1,9 +1,8 @@
 import { describe, it, beforeAll, expect } from 'vitest';
-
-const {Authenticator} = require('@friggframework/test');
-const {Api} = require('../dist/api');
-const config = require('../defaultConfig.json');
-const { FetchError } = require('@friggframework/core');
+import {Authenticator} from '@friggframework/test';
+import {Api} from '../src/api';
+import {FetchError} from '@friggframework/core';
+import * as config from '../defaultConfig.json';
 
 const api = new Api({
     client_id: process.env.ZOHO_CRM_CLIENT_ID,
@@ -82,8 +81,8 @@ describe(`${config.label} API tests`, () => {
             expect(response.roles[0].message).toBe('Role Deleted');
         });
 
-        it('should throw FetchError when trying to create with empty params', () => {
-            expect(async () => await api.createRole()).rejects.toThrow(FetchError)
+        it('should throw error when trying to create with empty params', async () => {
+            await expect(api.createRole()).rejects.toThrow('Request body is required');
         });
     });
 
@@ -151,8 +150,8 @@ describe(`${config.label} API tests`, () => {
             expect(response.users[0].message).toBe('User deleted');
         });
 
-        it('should throw FetchError when trying to create with empty params', () => {
-            expect(async () => await api.createUser()).rejects.toThrow(FetchError)
+        it('should throw error when trying to create with empty params', async () => {
+            await expect(api.createUser()).rejects.toThrow('Request body is required');
         });
     });
 
@@ -183,7 +182,7 @@ describe(`${config.label} API tests`, () => {
             // TODO
         });
 
-        it.skip('should throw FetchError when trying to create with empty params', () => {
+        it.skip('should throw error when trying to create with empty params', () => {
             // TODO
         });
     });
@@ -248,6 +247,14 @@ describe(`${config.label} API tests`, () => {
             if (response.data && response.data.length > 0) {
                 expect(response.data[0]).toHaveProperty('Last_Name');
             }
+        });
+
+        it('should throw error when contactId is missing', async () => {
+            await expect(api.getContact('')).rejects.toThrow('contactId is required');
+        });
+
+        it('should throw error when search params are missing', async () => {
+            await expect(api.searchContacts({})).rejects.toThrow('At least one search parameter is required');
         });
     });
 

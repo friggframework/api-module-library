@@ -169,6 +169,46 @@ export interface GetPersonParams {
   custom_fields?: string;
 }
 
+export interface ListOrganizationsParams {
+  /** For pagination, cursor marker for next page */
+  cursor?: string;
+
+  /** For pagination, limit of entries (default 100, max 500) */
+  limit?: number;
+
+  /** If supplied, only organizations matching the specified filter are returned */
+  filter_id?: number;
+
+  /** Optional comma separated string array of up to 100 entity ids to fetch */
+  ids?: string;
+
+  /** If supplied, only organizations owned by the specified user are returned */
+  owner_id?: number;
+
+  /** If set, only organizations with update_time >= this time (RFC3339 format) */
+  updated_since?: string;
+
+  /** If set, only organizations with update_time < this time (RFC3339 format) */
+  updated_until?: string;
+
+  /** The field to sort by. Default: 'id' */
+  sort_by?: 'id' | 'update_time' | 'add_time';
+
+  /** The sorting direction. Default: 'asc' */
+  sort_direction?: 'asc' | 'desc';
+
+  /** Optional comma separated string array of additional fields to include */
+  include_fields?: string;
+
+  /** Optional comma separated string array of custom field keys (max 15) */
+  custom_fields?: string;
+}
+
+export interface GetOrganizationParams {
+  include_fields?: string;
+  custom_fields?: string;
+}
+
 export interface PipedriveUser {
   data: {
     // Core
@@ -355,4 +395,41 @@ export interface Person {
   birthday?: string;
   job_title?: string;
   custom_fields?: Record<string, any>;
+}
+
+/**
+ * Organization entity returned from Pipedrive API
+ */
+export interface Organization {
+  id: number;
+  name: string;
+  owner_id: number;
+  org_id: number;
+  add_time: string; // ISO 8601 format
+  update_time: string; // ISO 8601 format
+  address?: PostalAddress;
+  is_deleted: boolean;
+  visible_to: number;
+  label_ids: number[];
+  custom_fields?: Record<string, any>;
+
+  // Optional included fields
+  next_activity_id?: number;
+  last_activity_id?: number;
+  open_deals_count?: number;
+  related_open_deals_count?: number;
+  closed_deals_count?: number;
+  related_closed_deals_count?: number;
+  email_messages_count?: number;
+  people_count?: number;
+  activities_count?: number;
+  done_activities_count?: number;
+  undone_activities_count?: number;
+  files_count?: number;
+  notes_count?: number;
+  followers_count?: number;
+  won_deals_count?: number;
+  related_won_deals_count?: number;
+  lost_deals_count?: number;
+  related_lost_deals_count?: number;
 }

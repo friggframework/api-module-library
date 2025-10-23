@@ -6,6 +6,8 @@ import {
   ListDealsParams,
   ListPersonsParams,
   GetPersonParams,
+  ListOrganizationsParams,
+  GetOrganizationParams,
   PipedriveResponse,
   PipedriveUser,
   PipedriveTokenResponse,
@@ -22,6 +24,8 @@ export class Api extends OAuth2Requester {
     deals: string;
     persons: string;
     personById: (personId: string | number) => string;
+    organizations: string;
+    organizationById: (orgId: string | number) => string;
   };
 
   constructor(params: OAuth2RequesterOptions) {
@@ -41,6 +45,8 @@ export class Api extends OAuth2Requester {
       deals: "/v2/deals",
       persons: "/v2/persons",
       personById: (personId: string | number) => `/v2/persons/${personId}`,
+      organizations: "/v2/organizations",
+      organizationById: (orgId: string | number) => `/v2/organizations/${orgId}`,
     };
 
     this.authorizationUri = encodeURI(
@@ -202,6 +208,43 @@ export class Api extends OAuth2Requester {
   ): Promise<PipedriveResponse> {
     const options: RequestOptions = {
       url: this.baseUrl + this.URLs.personById(personId),
+    };
+    if (params && Object.keys(params).length > 0) {
+      options.query = params;
+    }
+    return this._get(options);
+  }
+
+  // **************************   Organizations   **********************************
+  /**
+   * List organizations with v2 API support
+   * @param params - Query parameters for filtering and pagination
+   * @returns Response with organization data array and pagination cursor
+   */
+  async listOrganizations(
+    params?: ListOrganizationsParams
+  ): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.organizations,
+    };
+    if (params && Object.keys(params).length > 0) {
+      options.query = params;
+    }
+    return this._get(options);
+  }
+
+  /**
+   * Get a single organization by ID
+   * @param orgId - The ID of the organization to retrieve
+   * @param params - Query parameters for additional fields
+   * @returns Response with organization data
+   */
+  async getOrganization(
+    orgId: string | number,
+    params?: GetOrganizationParams
+  ): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.organizationById(orgId),
     };
     if (params && Object.keys(params).length > 0) {
       options.query = params;

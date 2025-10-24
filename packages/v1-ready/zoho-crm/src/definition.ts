@@ -1,24 +1,25 @@
-require('dotenv').config();
-const {Api} = require('./api');
-const {get} = require('@friggframework/core');
-const config = require('./defaultConfig.json')
+import * as dotenv from 'dotenv';
+dotenv.config();
+import {Api} from './api';
+import {get} from '@friggframework/core';
+import * as config from './defaultConfig.json';
 
-const Definition = {
+export const Definition = {
     API: Api,
     getName: function() {
-        return config.name
+        return config.name;
     },
     moduleName: config.name,
     requiredAuthMethods: {
-        getToken: async function(api, params) {
-            const code = get(params.data, 'code'); 
+        getToken: async function(api: Api, params: any): Promise<void> {
+            const code = get(params, 'code');
             await api.getTokenFromCode(code);
         },
-	    apiPropertiesToPersist: {
+        apiPropertiesToPersist: {
             credential: ['access_token', 'refresh_token'],
             entity: [],
         },
-        getCredentialDetails: async function (api, userId) {
+        getCredentialDetails: async function (api: Api, userId: string): Promise<any> {
             const response = await api.listUsers({type: 'CurrentUser'});
             const currentUser = response.users[0];
             return {
@@ -26,7 +27,7 @@ const Definition = {
                 details: {},
             };
         },
-        getEntityDetails: async function (api, callbackParams, tokenResponse, userId) {
+        getEntityDetails: async function (api: Api, callbackParams: any, tokenResponse: any, userId: string): Promise<any> {
             const response = await api.listUsers({type: 'CurrentUser'});
             const currentUser = response.users[0];
             return {
@@ -34,18 +35,16 @@ const Definition = {
                 details: {
                     name: currentUser.email
                 },
-            }
+            };
         },
-        testAuthRequest: async function(api) {
-            return  await api.listUsers();
+        testAuthRequest: async function(api: Api): Promise<any> {
+            return await api.listUsers();
         },
     },
     env: {
         client_id: process.env.ZOHO_CRM_CLIENT_ID,
         client_secret: process.env.ZOHO_CRM_CLIENT_SECRET,
         scope: process.env.ZOHO_CRM_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/zoho-crm`,
+        redirect_uri: `${process.env.REDIRECT_URI}/zohoCrm`,
     }
 };
-
-module.exports = {Definition};

@@ -433,3 +433,32 @@ export interface Organization {
   lost_deals_count?: number;
   related_lost_deals_count?: number;
 }
+
+// ==================== Webhook Types ====================
+
+export interface CreateWebhookParams {
+  subscription_url: string;
+  event_action: "added" | "updated" | "deleted" | "merged" | "*";
+  event_object: "person" | "organization" | "deal" | "activity" | "product" | "pipeline" | "stage" | "user" | "*";
+  name: string;
+  user_id?: number;
+  http_auth_user?: string;
+  http_auth_password?: string;
+  version?: "1.0" | "2.0";
+}
+
+export interface WebhookData {
+  id: number;
+  company_id: number;
+  subscription_url: string;
+  event_action: string;
+  event_object: string;
+  name: string;
+  user_id: number;
+  http_auth_user?: string;
+  version: string;
+  add_time: string;
+  remove_time?: string;
+  active_flag: boolean;
+  last_delivery_time?: string;
+}

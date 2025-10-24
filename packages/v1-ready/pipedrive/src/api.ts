@@ -11,6 +11,7 @@ import {
   PipedriveResponse,
   PipedriveUser,
   PipedriveTokenResponse,
+  CreateWebhookParams,
 } from "./types";
 
 export class Api extends OAuth2Requester {
@@ -26,6 +27,8 @@ export class Api extends OAuth2Requester {
     personById: (personId: string | number) => string;
     organizations: string;
     organizationById: (orgId: string | number) => string;
+    webhooks: string;
+    webhookById: (webhookId: string | number) => string;
   };
 
   constructor(params: OAuth2RequesterOptions) {
@@ -47,6 +50,8 @@ export class Api extends OAuth2Requester {
       personById: (personId: string | number) => `/v2/persons/${personId}`,
       organizations: "/v2/organizations",
       organizationById: (orgId: string | number) => `/v2/organizations/${orgId}`,
+      webhooks: "/v1/webhooks",
+      webhookById: (webhookId: string | number) => `/v1/webhooks/${webhookId}`,
     };
 
     this.authorizationUri = encodeURI(
@@ -250,5 +255,55 @@ export class Api extends OAuth2Requester {
       options.query = params;
     }
     return this._get(options);
+  }
+
+  // **************************   Webhooks   **********************************
+  /**
+   * List all webhooks for the company
+   * @returns Response with array of webhook configurations
+   */
+  async listWebhooks(): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.webhooks,
+    };
+    return this._get(options);
+  }
+
+  /**
+   * Create a new webhook subscription
+   * @param params - Webhook configuration
+   * @param params.subscription_url - Public HTTPS URL to receive webhooks
+   * @param params.event_action - Event action: added, updated, deleted, merged, *
+   * @param params.event_object - Event object: person, organization, deal, activity, product, *
+   * @param params.name - Human-readable name for the webhook
+   * @param params.user_id - Optional: User ID to authorize webhook with
+   * @param params.http_auth_user - Optional: HTTP basic auth username
+   * @param params.http_auth_password - Optional: HTTP basic auth password
+   * @param params.version - Optional: Webhook version (1.0 or 2.0, default: 2.0)
+   * @returns Response with created webhook data
+   */
+  async createWebhook(params: CreateWebhookParams): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.webhooks,
+      body: params,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    return this._post(options);
+  }
+
+  /**
+   * Delete a webhook by ID
+   * @param webhookId - The ID of the webhook to delete
+   * @returns Response confirming deletion
+   */
+  async deleteWebhook(
+    webhookId: string | number
+  ): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.webhookById(webhookId),
+    };
+    return this._delete(options);
   }
 }

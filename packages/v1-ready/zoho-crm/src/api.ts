@@ -14,6 +14,8 @@ import {
     AccountsResponse,
     AccountResponse,
     TokenResponse,
+    WebhookConfig,
+    WebhookResponse,
 } from './types';
 
 export class Api extends OAuth2Requester {
@@ -48,6 +50,8 @@ export class Api extends OAuth2Requester {
             accounts: '/Accounts',
             account: (accountId: string) => `/Accounts/${accountId}`,
             accountSearch: '/Accounts/search',
+            webhooks: '/settings/automation/webhooks',
+            webhook: (webhookId: string) => `/settings/automation/webhooks/${webhookId}`,
         };
     }
 
@@ -321,6 +325,108 @@ export class Api extends OAuth2Requester {
             return await this._get({
                 url: this.baseUrl + this.URLs.accountSearch,
                 query: params,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * List all webhooks
+     * @param queryParams - Optional query parameters
+     * @returns Promise<any> Webhooks response
+     */
+    async listWebhooks(queryParams: QueryParams = {}): Promise<any> {
+        try {
+            return await this._get({
+                url: this.baseUrl + this.URLs.webhooks,
+                query: queryParams,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Get specific webhook by ID
+     * @param webhookId - Webhook ID
+     * @returns Promise<any> Webhook details
+     */
+    async getWebhook(webhookId: string): Promise<any> {
+        if (!webhookId) {
+            throw new Error('webhookId is required');
+        }
+        try {
+            return await this._get({
+                url: this.baseUrl + (this.URLs.webhook as (id: string) => string)(webhookId),
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Create new webhook
+     * @param body - Webhook configuration
+     * @returns Promise<any> Created webhook response
+     */
+    async createWebhook(body: any = {}): Promise<any> {
+        if (!body || Object.keys(body).length === 0) {
+            throw new Error('Request body is required');
+        }
+        if (!body.webhooks || !Array.isArray(body.webhooks)) {
+            throw new Error('Body must contain webhooks array');
+        }
+
+        try {
+            return await this._post({
+                url: this.baseUrl + this.URLs.webhooks,
+                body: body,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Update existing webhook
+     * @param webhookId - Webhook ID to update
+     * @param body - Updated webhook configuration
+     * @returns Promise<any> Updated webhook response
+     */
+    async updateWebhook(webhookId: string, body: any = {}): Promise<any> {
+        if (!webhookId) {
+            throw new Error('webhookId is required');
+        }
+        if (!body || Object.keys(body).length === 0) {
+            throw new Error('Request body is required');
+        }
+        if (!body.webhooks || !Array.isArray(body.webhooks)) {
+            throw new Error('Body must contain webhooks array');
+        }
+
+        try {
+            return await this._put({
+                url: this.baseUrl + (this.URLs.webhook as (id: string) => string)(webhookId),
+                body: body,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Delete webhook
+     * @param webhookId - Webhook ID to delete
+     * @returns Promise<any> Deletion response
+     */
+    async deleteWebhook(webhookId: string): Promise<any> {
+        if (!webhookId) {
+            throw new Error('webhookId is required');
+        }
+        try {
+            return await this._delete({
+                url: this.baseUrl + (this.URLs.webhook as (id: string) => string)(webhookId),
             });
         } catch (error) {
             throw error;

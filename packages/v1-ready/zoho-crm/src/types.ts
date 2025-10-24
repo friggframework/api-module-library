@@ -242,3 +242,35 @@ export interface TokenResponse {
     token_type: string;
     expires_in: number;
 }
+
+export interface WebhookConfig {
+    module: string;
+    name: string;
+    url: string;
+    http_method: 'POST' | 'GET';
+    description?: string;
+    authentication?: {
+        type: 'general';
+        authorization_type: 'bearer' | 'basic';
+        authorization_key: string;
+    };
+    module_params?: Array<{
+        name: string;
+        value: string;
+    }>;
+    custom_params?: Array<{
+        name: string;
+        value: string;
+    }>;
+}
+
+export interface WebhookResponse {
+    webhooks: Array<{
+        code: string;
+        details: {
+            id: string;
+        };
+        message: string;
+        status: string;
+    }>;
+}

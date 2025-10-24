@@ -23,6 +23,7 @@ class Api extends OAuth2Requester {
             lists: '/lists',
             listById: (listId) => `/lists/${listId}`,
             listEntries: (listId) => `/lists/${listId}/entries`,
+            webhookById: (webhookId) => `/webhooks/${webhookId}`,
         };
     }
 
@@ -213,6 +214,17 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + `/webhooks/${webhookId}`,
         };
         return this._delete(options);
+    }
+
+    async updateWebhook(webhookId, data) {
+        const options = {
+            url: this.baseUrl + this.URLs.webhookById(webhookId),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: { data },
+        };
+        return this.patch(options);
     }
 
     async searchRecords(searchParams) {

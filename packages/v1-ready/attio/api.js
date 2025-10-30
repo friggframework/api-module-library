@@ -224,7 +224,7 @@ class Api extends OAuth2Requester {
             },
             body: { data },
         };
-        return this.patch(options);
+        return this._patch(options);
     }
 
     async searchRecords(searchParams) {

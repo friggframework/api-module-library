@@ -169,6 +169,55 @@ export interface GetPersonParams {
   custom_fields?: string;
 }
 
+export interface SearchPersonsParams {
+  term: string;
+  fields?: string;
+  exact_match?: boolean;
+  organization_id?: number;
+  include_fields?: string;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface CreateDealParams {
+  title: string;
+  value?: number;
+  currency?: string;
+  person_id?: number;
+  org_id?: number;
+  pipeline_id?: number;
+  stage_id?: number;
+  status?: 'open' | 'won' | 'lost';
+  probability?: number;
+  expected_close_date?: string;
+  visible_to?: number;
+}
+
+export interface SearchParams {
+  term: string;
+  item_types?: string;
+  exact_match?: boolean;
+  fields?: string;
+  limit?: number;
+  start?: number;
+}
+
+export interface CreateNoteParams {
+  content: string;
+  lead_id?: string;
+  deal_id?: number;
+  person_id?: number;
+  org_id?: number;
+  project_id?: number;
+  user_id?: number;
+  add_time?: string;
+  pinned_to_lead_flag?: 0 | 1;
+  pinned_to_deal_flag?: 0 | 1;
+  pinned_to_organization_flag?: 0 | 1;
+  pinned_to_person_flag?: 0 | 1;
+  pinned_to_project_flag?: 0 | 1;
+}
+
 export interface ListOrganizationsParams {
   /** For pagination, cursor marker for next page */
   cursor?: string;
@@ -395,6 +444,29 @@ export interface Person {
   birthday?: string;
   job_title?: string;
   custom_fields?: Record<string, any>;
+}
+
+/**
+ * Search result item from persons search endpoint
+ */
+export interface SearchPersonItem {
+  result_score: number;
+  item: {
+    id: number;
+    type: string;
+    name: string;
+    phones?: string[];
+    emails?: string[];
+    visible_to?: number;
+    owner?: { id: number };
+    organization?: {
+      id: number;
+      name: string;
+      address: string | null;
+    };
+    custom_fields?: any[];
+    notes?: any[];
+  };
 }
 
 /**

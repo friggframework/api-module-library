@@ -4,13 +4,18 @@ import {
   ActivityParams,
   ListActivitiesParams,
   ListDealsParams,
+  CreateDealParams,
   ListPersonsParams,
   GetPersonParams,
+  SearchPersonsParams,
+  SearchParams,
+  CreateNoteParams,
   ListOrganizationsParams,
   GetOrganizationParams,
   PipedriveResponse,
   PipedriveUser,
   PipedriveTokenResponse,
+  CreateWebhookParams,
 } from "./types";
 
 export class Api extends OAuth2Requester {
@@ -24,8 +29,13 @@ export class Api extends OAuth2Requester {
     deals: string;
     persons: string;
     personById: (personId: string | number) => string;
+    personsSearch: string;
     organizations: string;
     organizationById: (orgId: string | number) => string;
+    notes: string;
+    webhooks: string;
+    webhookById: (webhookId: string | number) => string;
+    search: string;
   };
 
   constructor(params: OAuth2RequesterOptions) {
@@ -45,8 +55,13 @@ export class Api extends OAuth2Requester {
       deals: "/v2/deals",
       persons: "/v2/persons",
       personById: (personId: string | number) => `/v2/persons/${personId}`,
+      personsSearch: "/v2/persons/search",
       organizations: "/v2/organizations",
       organizationById: (orgId: string | number) => `/v2/organizations/${orgId}`,
+      notes: "/v1/notes",
+      webhooks: "/v1/webhooks",
+      webhookById: (webhookId: string | number) => `/v1/webhooks/${webhookId}`,
+      search: "/v1/search",
     };
 
     this.authorizationUri = encodeURI(
@@ -104,6 +119,29 @@ export class Api extends OAuth2Requester {
       options.query = params;
     }
     return this._get(options);
+  }
+
+  /**
+   * Create a new deal
+   * @param params - Deal data
+   * @param params.title - Deal title (required)
+   * @param params.value - Deal value
+   * @param params.currency - Currency code
+   * @param params.person_id - Associated person ID
+   * @param params.org_id - Associated organization ID
+   * @param params.pipeline_id - Pipeline ID
+   * @param params.stage_id - Stage ID
+   * @returns Response with created deal data
+   */
+  async createDeal(params: CreateDealParams): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.deals,
+      body: params,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    return this._post(options);
   }
 
   // **************************   Activities   **********************************
@@ -215,6 +253,70 @@ export class Api extends OAuth2Requester {
     return this._get(options);
   }
 
+  /**
+   * Search for persons
+   * @param params - Search parameters
+   * @param params.term - The search term (minimum 2 characters, or 1 if using exact_match)
+   * @param params.fields - Comma-separated fields to search in
+   * @param params.exact_match - When enabled, only full exact matches are returned
+   * @param params.organization_id - Filter persons by organization ID
+   * @param params.include_fields - Optional fields to include (e.g., "person.picture")
+   * @param params.limit - Number of entries to return (default 100, max 500)
+   * @param params.cursor - Pagination cursor
+   * @returns Response with search results including items with result_score and person data
+   */
+  async searchPersons(params: SearchPersonsParams): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.personsSearch,
+      query: params,
+    };
+    return this._get(options);
+  }
+
+  /**
+   * Search across all items (persons, organizations, deals, etc.)
+   * @param params - Search parameters
+   * @param params.term - The search term (minimum 2 characters)
+   * @param params.item_types - Comma-separated item types to search (e.g., 'person,organization,deal')
+   * @param params.exact_match - When enabled, only full exact matches are returned
+   * @param params.fields - Comma-separated fields to search in
+   * @param params.limit - Number of entries to return (default 10, max 100)
+   * @param params.start - Pagination start
+   * @returns Response with search results across multiple item types
+   */
+  async search(params: SearchParams): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.search,
+      query: params,
+    };
+    return this._get(options);
+  }
+
+  // **************************   Notes   **********************************
+  /**
+   * Create a new note
+   * @param params - Note data
+   * @param params.content - The content of the note in HTML format (required)
+   * @param params.lead_id - The ID of the lead (UUID format)
+   * @param params.deal_id - The ID of the deal
+   * @param params.person_id - The ID of the person
+   * @param params.org_id - The ID of the organization
+   * @param params.project_id - The ID of the project
+   * @param params.user_id - The ID of the user (author)
+   * @param params.add_time - Creation date & time in UTC (Format: YYYY-MM-DD HH:MM:SS)
+   * @returns Response with created note data
+   */
+  async createNote(params: CreateNoteParams): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.notes,
+      body: params,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    return this._post(options);
+  }
+
   // **************************   Organizations   **********************************
   /**
    * List organizations with v2 API support
@@ -250,5 +352,55 @@ export class Api extends OAuth2Requester {
       options.query = params;
     }
     return this._get(options);
+  }
+
+  // **************************   Webhooks   **********************************
+  /**
+   * List all webhooks for the company
+   * @returns Response with array of webhook configurations
+   */
+  async listWebhooks(): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.webhooks,
+    };
+    return this._get(options);
+  }
+
+  /**
+   * Create a new webhook subscription
+   * @param params - Webhook configuration
+   * @param params.subscription_url - Public HTTPS URL to receive webhooks
+   * @param params.event_action - Event action: added, updated, deleted, merged, *
+   * @param params.event_object - Event object: person, organization, deal, activity, product, *
+   * @param params.name - Human-readable name for the webhook
+   * @param params.user_id - Optional: User ID to authorize webhook with
+   * @param params.http_auth_user - Optional: HTTP basic auth username
+   * @param params.http_auth_password - Optional: HTTP basic auth password
+   * @param params.version - Optional: Webhook version (1.0 or 2.0, default: 2.0)
+   * @returns Response with created webhook data
+   */
+  async createWebhook(params: CreateWebhookParams): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.webhooks,
+      body: params,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    return this._post(options);
+  }
+
+  /**
+   * Delete a webhook by ID
+   * @param webhookId - The ID of the webhook to delete
+   * @returns Response confirming deletion
+   */
+  async deleteWebhook(
+    webhookId: string | number
+  ): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.webhookById(webhookId),
+    };
+    return this._delete(options);
   }
 }

@@ -215,6 +215,65 @@ export interface DeleteResponse {
     status: string;
 }
 
+export interface ZohoNote {
+    id: string;
+    Note_Title?: string;
+    Note_Content: string;
+    Parent_Id?: {
+        module: {
+            api_name: string;
+            id: string;
+        };
+        id: string;
+    };
+    Owner?: {
+        name: string;
+        id: string;
+    };
+    Created_Time?: string;
+    Modified_Time?: string;
+    Created_By?: {
+        name: string;
+        id: string;
+    };
+    Modified_By?: {
+        name: string;
+        id: string;
+    };
+    [key: string]: any;
+}
+
+export interface CreateNoteData {
+    Note_Content: string;
+    Note_Title?: string;
+}
+
+export interface NotesResponse {
+    data: Array<{
+        code: string;
+        details: {
+            id: string;
+            Created_Time: string;
+            Modified_Time: string;
+            Created_By?: {
+                name: string;
+                id: string;
+            };
+            Modified_By?: {
+                name: string;
+                id: string;
+            };
+        };
+        message: string;
+        status: string;
+    }>;
+}
+
+export interface NoteListResponse {
+    data: ZohoNote[];
+    info?: PaginationInfo;
+}
+
 export interface QueryParams {
     fields?: string;
     per_page?: number;
@@ -241,4 +300,88 @@ export interface TokenResponse {
     api_domain: string;
     token_type: string;
     expires_in: number;
+}
+
+/**
+ * Configuration for a single notification watch item
+ */
+export interface NotificationWatchItem {
+    /** Unique channel ID (use timestamp or UUID) */
+    channel_id: number | string;
+    /** Events to watch in format: "Module.operation" (e.g., "Contacts.all", "Contacts.create", "Accounts.edit") */
+    events: string[];
+    /** Callback URL to receive notifications */
+    notify_url: string;
+    /** Optional verification token (max 50 characters) */
+    token?: string;
+    /** Channel expiry time (ISO 8601 format, max 1 week from now) */
+    channel_expiry?: string;
+    /** Include field changes in callback payload */
+    return_affected_field_values?: boolean;
+    /** Trigger notifications on related record actions */
+    notify_on_related_action?: boolean;
+}
+
+/**
+ * Request body for enabling notifications
+ */
+export interface NotificationWatchConfig {
+    watch: NotificationWatchItem[];
+}
+
+/**
+ * Response from notification API operations
+ */
+export interface NotificationResponse {
+    watch: Array<{
+        code: string;
+        details: {
+            channel_id: number | string;
+            events: string[];
+            channel_expiry: string;
+            resource_uri: string;
+            resource_id: string;
+            resource_name: string;
+        };
+        message: string;
+        status: string;
+    }>;
+}
+
+/**
+ * Response from getting notification details
+ */
+export interface NotificationDetailsResponse {
+    watch: Array<{
+        channel_id: number | string;
+        events: string[];
+        channel_expiry: string;
+        notify_url: string;
+        resource_uri: string;
+        resource_id: string;
+        resource_name: string;
+        token?: string;
+    }>;
+}
+
+/**
+ * Payload received in notification callback
+ */
+export interface NotificationCallbackPayload {
+    /** Server timestamp */
+    server_time: number;
+    /** Module name (e.g., "Contacts", "Accounts") */
+    module: string;
+    /** Resource URI */
+    resource_uri: string;
+    /** Array of affected record IDs */
+    ids: string[];
+    /** Fields that were affected (if return_affected_field_values enabled) */
+    affected_fields?: string[];
+    /** Operation type: "insert", "update", or "delete" */
+    operation: 'insert' | 'update' | 'delete';
+    /** Channel ID that triggered this notification */
+    channel_id: number | string;
+    /** Verification token (if provided during setup) */
+    token?: string;
 }

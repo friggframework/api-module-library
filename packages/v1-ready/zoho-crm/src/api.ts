@@ -14,6 +14,13 @@ import {
     AccountsResponse,
     AccountResponse,
     TokenResponse,
+    ZohoNote,
+    CreateNoteData,
+    NotesResponse,
+    NoteListResponse,
+    NotificationWatchConfig,
+    NotificationResponse,
+    NotificationDetailsResponse,
 } from './types';
 
 export class Api extends OAuth2Requester {
@@ -48,6 +55,7 @@ export class Api extends OAuth2Requester {
             accounts: '/Accounts',
             account: (accountId: string) => `/Accounts/${accountId}`,
             accountSearch: '/Accounts/search',
+            notificationsWatch: '/actions/watch',
         };
     }
 
@@ -76,6 +84,21 @@ export class Api extends OAuth2Requester {
     async _delete(options: any): Promise<any> {
         const response = await super._delete(options);
         return await this.parsedBody(response);
+    }
+
+    /**
+     * Build URL for notes endpoints with proper encoding
+     * @param module - Module API name (e.g., 'Contacts', 'Leads')
+     * @param recordId - Record ID
+     * @param noteId - Optional note ID for specific note operations
+     * @returns Encoded URL path for notes endpoint
+     */
+    private buildNotesUrl(module: string, recordId: string, noteId?: string): string {
+        const segments = [module, recordId, 'Notes'];
+        if (noteId) segments.push(noteId);
+
+        const encodedPath = segments.map(encodeURIComponent).join('/');
+        return `${this.baseUrl}/${encodedPath}`;
     }
 
     async listUsers(queryParams: QueryParams = {}): Promise<UsersResponse> {
@@ -321,6 +344,231 @@ export class Api extends OAuth2Requester {
             return await this._get({
                 url: this.baseUrl + this.URLs.accountSearch,
                 query: params,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * List all notes for a specific record
+     * @param module - Module API name (Contacts, Leads, Accounts, etc.)
+     * @param recordId - Record ID to get notes for
+     * @param queryParams - Optional query parameters (per_page, page, etc.)
+     * @returns Promise<NoteListResponse> Notes list response
+     */
+    async listNotes(module: string, recordId: string, queryParams: QueryParams = {}): Promise<NoteListResponse> {
+        if (!module) {
+            throw new Error('module is required');
+        }
+        if (!recordId) {
+            throw new Error('recordId is required');
+        }
+        try {
+            return await this._get({
+                url: this.buildNotesUrl(module, recordId),
+                query: queryParams,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Get a specific note by ID
+     * @param module - Module API name (Contacts, Leads, Accounts, etc.)
+     * @param recordId - Record ID the note is attached to
+     * @param noteId - Note ID to retrieve
+     * @returns Promise<NotesResponse> Note details
+     */
+    async getNote(module: string, recordId: string, noteId: string): Promise<NotesResponse> {
+        if (!module) {
+            throw new Error('module is required');
+        }
+        if (!recordId) {
+            throw new Error('recordId is required');
+        }
+        if (!noteId) {
+            throw new Error('noteId is required');
+        }
+        try {
+            return await this._get({
+                url: this.buildNotesUrl(module, recordId, noteId),
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Create a note for a specific record
+     * @param module - Module API name (Contacts, Leads, Accounts, etc.)
+     * @param recordId - Record ID to attach note to
+     * @param noteData - Note data with Note_Content (required) and optional Note_Title
+     * @returns Promise<NotesResponse> Created note response
+     */
+    async createNote(module: string, recordId: string, noteData: CreateNoteData): Promise<NotesResponse> {
+        if (!module) {
+            throw new Error('module is required');
+        }
+        if (!recordId) {
+            throw new Error('recordId is required');
+        }
+        if (!noteData || !noteData.Note_Content) {
+            throw new Error('noteData.Note_Content is required');
+        }
+
+        const body = {
+            data: [{
+                Note_Content: noteData.Note_Content,
+                ...(noteData.Note_Title && { Note_Title: noteData.Note_Title }),
+            }]
+        };
+
+        try {
+            return await this._post({
+                url: this.buildNotesUrl(module, recordId),
+                body: body,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Update an existing note
+     * @param module - Module API name (Contacts, Leads, Accounts, etc.)
+     * @param recordId - Record ID the note is attached to
+     * @param noteId - Note ID to update
+     * @param noteData - Updated note data. At least one of Note_Content or Note_Title must be provided.
+     * @returns Promise<NotesResponse> Updated note response
+     */
+    async updateNote(module: string, recordId: string, noteId: string, noteData: Partial<CreateNoteData>): Promise<NotesResponse> {
+        if (!module) {
+            throw new Error('module is required');
+        }
+        if (!recordId) {
+            throw new Error('recordId is required');
+        }
+        if (!noteId) {
+            throw new Error('noteId is required');
+        }
+        if (!noteData || (!noteData.Note_Content && !noteData.Note_Title)) {
+            throw new Error('noteData must contain Note_Content or Note_Title');
+        }
+
+        const body = {
+            data: [{
+                ...(noteData.Note_Content && { Note_Content: noteData.Note_Content }),
+                ...(noteData.Note_Title && { Note_Title: noteData.Note_Title }),
+            }]
+        };
+
+        try {
+            return await this._put({
+                url: this.buildNotesUrl(module, recordId, noteId),
+                body: body,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Delete a note
+     * @param module - Module API name (Contacts, Leads, Accounts, etc.)
+     * @param recordId - Record ID the note is attached to
+     * @param noteId - Note ID to delete
+     * @returns Promise<NotesResponse> Deletion response
+     */
+    async deleteNote(module: string, recordId: string, noteId: string): Promise<NotesResponse> {
+        if (!module) {
+            throw new Error('module is required');
+        }
+        if (!recordId) {
+            throw new Error('recordId is required');
+        }
+        if (!noteId) {
+            throw new Error('noteId is required');
+        }
+        try {
+            return await this._delete({
+                url: this.buildNotesUrl(module, recordId, noteId),
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Enable notification channel to receive real-time events
+     * @param body - Notification configuration with watch items
+     * @returns Promise<NotificationResponse> Response with channel details
+     * @see https://www.zoho.com/crm/developer/docs/api/v8/notifications/enable.html
+     */
+    async enableNotification(body: NotificationWatchConfig): Promise<NotificationResponse> {
+        if (!body || !body.watch || !Array.isArray(body.watch)) {
+            throw new Error('Body must contain watch array');
+        }
+
+        // Validate each watch item
+        body.watch.forEach((item, index) => {
+            if (!item.channel_id) {
+                throw new Error(`watch[${index}].channel_id is required`);
+            }
+            if (!item.events || !Array.isArray(item.events) || item.events.length === 0) {
+                throw new Error(`watch[${index}].events must be a non-empty array`);
+            }
+            if (!item.notify_url) {
+                throw new Error(`watch[${index}].notify_url is required`);
+            }
+            if (item.token && item.token.length > 50) {
+                throw new Error(`watch[${index}].token must be 50 characters or less`);
+            }
+        });
+
+        try {
+            return await this._post({
+                url: this.baseUrl + this.URLs.notificationsWatch,
+                body: body,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Disable notification channels
+     * @param channelIds - Array of channel IDs to disable
+     * @returns Promise<NotificationResponse> Response confirming deletion
+     * @see https://www.zoho.com/crm/developer/docs/api/v8/notifications/disable.html
+     */
+    async disableNotification(channelIds: Array<string | number>): Promise<NotificationResponse> {
+        if (!channelIds || !Array.isArray(channelIds) || channelIds.length === 0) {
+            throw new Error('channelIds must be a non-empty array');
+        }
+
+        try {
+            return await this._delete({
+                url: this.baseUrl + this.URLs.notificationsWatch,
+                query: {
+                    channel_ids: channelIds.join(',')
+                },
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Get details of all active notification channels
+     * @returns Promise<NotificationDetailsResponse> Details of all active channels
+     * @see https://www.zoho.com/crm/developer/docs/api/v8/notifications/get-details.html
+     */
+    async getNotificationDetails(): Promise<NotificationDetailsResponse> {
+        try {
+            return await this._get({
+                url: this.baseUrl + this.URLs.notificationsWatch,
             });
         } catch (error) {
             throw error;

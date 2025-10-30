@@ -169,6 +169,55 @@ export interface GetPersonParams {
   custom_fields?: string;
 }
 
+export interface SearchPersonsParams {
+  term: string;
+  fields?: string;
+  exact_match?: boolean;
+  organization_id?: number;
+  include_fields?: string;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface CreateDealParams {
+  title: string;
+  value?: number;
+  currency?: string;
+  person_id?: number;
+  org_id?: number;
+  pipeline_id?: number;
+  stage_id?: number;
+  status?: 'open' | 'won' | 'lost';
+  probability?: number;
+  expected_close_date?: string;
+  visible_to?: number;
+}
+
+export interface SearchParams {
+  term: string;
+  item_types?: string;
+  exact_match?: boolean;
+  fields?: string;
+  limit?: number;
+  start?: number;
+}
+
+export interface CreateNoteParams {
+  content: string;
+  lead_id?: string;
+  deal_id?: number;
+  person_id?: number;
+  org_id?: number;
+  project_id?: number;
+  user_id?: number;
+  add_time?: string;
+  pinned_to_lead_flag?: 0 | 1;
+  pinned_to_deal_flag?: 0 | 1;
+  pinned_to_organization_flag?: 0 | 1;
+  pinned_to_person_flag?: 0 | 1;
+  pinned_to_project_flag?: 0 | 1;
+}
+
 export interface ListOrganizationsParams {
   /** For pagination, cursor marker for next page */
   cursor?: string;
@@ -398,6 +447,29 @@ export interface Person {
 }
 
 /**
+ * Search result item from persons search endpoint
+ */
+export interface SearchPersonItem {
+  result_score: number;
+  item: {
+    id: number;
+    type: string;
+    name: string;
+    phones?: string[];
+    emails?: string[];
+    visible_to?: number;
+    owner?: { id: number };
+    organization?: {
+      id: number;
+      name: string;
+      address: string | null;
+    };
+    custom_fields?: any[];
+    notes?: any[];
+  };
+}
+
+/**
  * Organization entity returned from Pipedrive API
  */
 export interface Organization {
@@ -432,4 +504,33 @@ export interface Organization {
   related_won_deals_count?: number;
   lost_deals_count?: number;
   related_lost_deals_count?: number;
+}
+
+// ==================== Webhook Types ====================
+
+export interface CreateWebhookParams {
+  subscription_url: string;
+  event_action: "added" | "updated" | "deleted" | "merged" | "*";
+  event_object: "person" | "organization" | "deal" | "activity" | "product" | "pipeline" | "stage" | "user" | "*";
+  name: string;
+  user_id?: number;
+  http_auth_user?: string;
+  http_auth_password?: string;
+  version?: "1.0" | "2.0";
+}
+
+export interface WebhookData {
+  id: number;
+  company_id: number;
+  subscription_url: string;
+  event_action: string;
+  event_object: string;
+  name: string;
+  user_id: number;
+  http_auth_user?: string;
+  version: string;
+  add_time: string;
+  remove_time?: string;
+  active_flag: boolean;
+  last_delivery_time?: string;
 }

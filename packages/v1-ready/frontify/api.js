@@ -496,20 +496,23 @@ class Api extends OAuth2Requester {
      * Lists collections in a library
      * @param {Object} query - Query parameters
      * @param {string} query.libraryId - ID of the library
-     * @returns {Promise<Object>} List of collections
+     * @param {number} [query.page=1] - Page number
+     * @param {number} [query.limit=25] - Items per page
+     * @returns {Promise<Object>} Paginated list of collections
      */
     async listCollections(query) {
         const ql = `query Collections {
-                    library(id: "${query.libraryId}") {
-                      collections {
-                        items {
-                          id
-                          name
-                          __typename
+                      library(id: "${query.libraryId}") {
+                        collections(${this._paginationParamsQuery(query)}) {
+                          items {
+                            id
+                            name
+                            __typename
+                          }
+                          ${this._paginationPropsQuery()}
                         }
                       }
-                    }
-                  }`;
+                    }`;
 
         const response = await this._post(this.buildRequestOptions(ql));
         this.assertResponse(response);

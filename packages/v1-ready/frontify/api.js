@@ -815,10 +815,50 @@ class Api extends OAuth2Requester {
     }
 
     /**
+     * Lists assets in a subfolder
+     * @param {Object} query - Query parameters
+     * @param {string} query.subFolderId - ID of the subfolder
+     * @param {number} [query.page=1] - Page number
+     * @param {number} [query.limit=25] - Items per page
+     * @returns {Promise<Object>} Paginated list of assets
+     */
+    async listSubFolderAssets(query) {
+        const ql = `query SubFolderAssets {
+                      node(id: "${query.subFolderId}") {
+                        ... on Folder {
+                          assets(${this._paginationParamsQuery(query)}) {
+                            items {
+                              id
+                              title
+                              description
+                              tags { source value }
+                              __typename
+                              ${this._filesQuery()}
+                            }
+                            ${this._paginationPropsQuery()}
+                          }
+                        }
+                      }
+                    }`;
+
+        const response = await this._post(this.buildRequestOptions(ql));
+        this.assertResponse(response);
+
+        const {
+            items,
+            total,
+            page,
+            hasNextPage
+        } = response.data.node.assets;
+
+        return { items, total, page, hasNextPage };
+    }
+
+    /**
      * Gets metadata field definitions for a library or project
      * @param {Object} query - Query parameters
      * @param {string} [query.libraryId] - ID of the library
-     * @param {string} [query.projectId] - ID of the project  
+     * @param {string} [query.projectId] - ID of the project
      * @returns {Promise<Object>} Metadata field definitions
      */
     async getMetadataFields(query) {

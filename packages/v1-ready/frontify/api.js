@@ -72,6 +72,7 @@ class Api extends OAuth2Requester {
         params.append('client_secret', this.client_secret);
         params.append('refresh_token', refreshTokenObject.refresh_token);
         params.append('redirect_uri', this.redirect_uri);
+        params.append('scope', this.scope);
 
         const options = {
             body: params,

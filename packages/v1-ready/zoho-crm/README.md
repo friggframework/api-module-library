@@ -52,7 +52,7 @@ If you've already done this, skip to the next section.
     ```shell
     ZOHO_CRM_CLIENT_ID=your_client_id
     ZOHO_CRM_CLIENT_SECRET=your_client_secret
-    ZOHO_CRM_SCOPE=ZohoCRM.users.ALL,ZohoCRM.org.ALL,ZohoCRM.settings.roles.ALL,ZohoCRM.settings.profiles.ALL,ZohoCRM.modules.contacts.ALL,ZohoCRM.modules.leads.ALL,ZohoCRM.modules.accounts.ALL,ZohoCRM.modules.calls.ALL
+    ZOHO_CRM_SCOPE=ZohoCRM.users.ALL ZohoCRM.org.ALL ZohoCRM.settings.roles.ALL ZohoCRM.settings.profiles.ALL ZohoCRM.modules.contacts.ALL ZohoCRM.modules.leads.ALL ZohoCRM.modules.accounts.ALL ZohoCRM.modules.calls.ALL
     REDIRECT_URI=http://localhost:3000/redirect
     ```
 

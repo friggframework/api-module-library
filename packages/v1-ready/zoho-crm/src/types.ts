@@ -385,3 +385,49 @@ export interface NotificationCallbackPayload {
     /** Verification token (if provided during setup) */
     token?: string;
 }
+
+/**
+ * Data for creating/updating a call record in Zoho CRM Calls module
+ */
+export interface ZohoCallData {
+    /** Call subject/title (required) */
+    Subject: string;
+    /** Call type: Inbound, Outbound, or Missed (required) */
+    Call_Type: 'Inbound' | 'Outbound' | 'Missed';
+    /** Call start time in ISO 8601 format (required) */
+    Call_Start_Time: string;
+    /** Call duration in "HH:mm" or "mm:ss" format (required for Inbound/Outbound, cannot be zero) */
+    Call_Duration: string;
+    /** Call notes/description */
+    Description?: string;
+    /** Contact or Lead ID to associate the call with */
+    Who_Id?: string;
+    /** Module name for the Who_Id association: "Contacts" or "Leads" */
+    $se_module?: string;
+    /** Additional custom fields */
+    [key: string]: any;
+}
+
+/**
+ * Response from Calls module operations
+ */
+export interface CallsResponse {
+    data: Array<{
+        code: string;
+        details: {
+            id: string;
+            Created_Time: string;
+            Modified_Time: string;
+            Created_By?: {
+                name: string;
+                id: string;
+            };
+            Modified_By?: {
+                name: string;
+                id: string;
+            };
+        };
+        message: string;
+        status: string;
+    }>;
+}

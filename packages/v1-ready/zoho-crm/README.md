@@ -52,7 +52,7 @@ If you've already done this, skip to the next section.
     ```shell
     ZOHO_CRM_CLIENT_ID=your_client_id
     ZOHO_CRM_CLIENT_SECRET=your_client_secret
-    ZOHO_CRM_SCOPE=ZohoCRM.users.ALL,ZohoCRM.org.ALL,ZohoCRM.settings.roles.ALL,ZohoCRM.settings.profiles.ALL,ZohoCRM.modules.contacts.ALL,ZohoCRM.modules.leads.ALL,ZohoCRM.modules.accounts.ALL
+    ZOHO_CRM_SCOPE=ZohoCRM.users.ALL,ZohoCRM.org.ALL,ZohoCRM.settings.roles.ALL,ZohoCRM.settings.profiles.ALL,ZohoCRM.modules.contacts.ALL,ZohoCRM.modules.leads.ALL,ZohoCRM.modules.accounts.ALL,ZohoCRM.modules.calls.ALL
     REDIRECT_URI=http://localhost:3000/redirect
     ```
 
@@ -89,6 +89,21 @@ If you've already done this, skip to the next section.
 - `listAccounts(queryParams)` - List accounts with optional filters (fields, per_page, page, sort_by, sort_order)
 - `getAccount(accountId)` - Get a specific account by ID
 - `searchAccounts(searchParams)` - Search accounts by phone, criteria, or word
+
+### Calls
+- `logCall(callData)` - Log a call in the Zoho CRM Calls module
+- `updateCall(callId, callData)` - Update an existing call record
+
+**Call Data Fields:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `Subject` | string | Yes | Call subject/title |
+| `Call_Type` | string | Yes | `Inbound`, `Outbound`, or `Missed` |
+| `Call_Start_Time` | string | Yes | ISO 8601 datetime |
+| `Call_Duration` | string | Yes* | `mm:ss` format (*required for Inbound/Outbound, cannot be zero) |
+| `Description` | string | No | Call notes |
+| `Who_Id` | string | No | Contact/Lead ID to associate |
+| `$se_module` | string | No | Module for Who_Id: `Contacts` or `Leads` |
 
 ## Using the API Module from the Terminal
 

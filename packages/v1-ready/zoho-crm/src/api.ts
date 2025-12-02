@@ -21,6 +21,8 @@ import {
     NotificationWatchConfig,
     NotificationResponse,
     NotificationDetailsResponse,
+    ZohoCallData,
+    CallsResponse,
 } from './types';
 
 export class Api extends OAuth2Requester {
@@ -55,6 +57,8 @@ export class Api extends OAuth2Requester {
             accounts: '/Accounts',
             account: (accountId: string) => `/Accounts/${accountId}`,
             accountSearch: '/Accounts/search',
+            calls: '/Calls',
+            call: (callId: string) => `/Calls/${callId}`,
             notificationsWatch: '/actions/watch',
         };
     }
@@ -247,7 +251,13 @@ export class Api extends OAuth2Requester {
                 url: this.baseUrl + this.URLs.contactSearch,
                 query: params,
             });
-        } catch (error) {
+        } catch (error: any) {
+            // Zoho returns 204 No Content with empty body when no results found
+            // This causes JSON parsing to fail with "Unexpected end of JSON input"
+            if (error?.message?.includes('Unexpected end of JSON input') ||
+                error?.message?.includes('invalid json response body')) {
+                return { data: [], info: undefined };
+            }
             throw error;
         }
     }
@@ -296,7 +306,12 @@ export class Api extends OAuth2Requester {
                 url: this.baseUrl + this.URLs.leadSearch,
                 query: params,
             });
-        } catch (error) {
+        } catch (error: any) {
+            // Zoho returns 204 No Content with empty body when no results found
+            if (error?.message?.includes('Unexpected end of JSON input') ||
+                error?.message?.includes('invalid json response body')) {
+                return { data: [], info: undefined };
+            }
             throw error;
         }
     }
@@ -345,7 +360,12 @@ export class Api extends OAuth2Requester {
                 url: this.baseUrl + this.URLs.accountSearch,
                 query: params,
             });
-        } catch (error) {
+        } catch (error: any) {
+            // Zoho returns 204 No Content with empty body when no results found
+            if (error?.message?.includes('Unexpected end of JSON input') ||
+                error?.message?.includes('invalid json response body')) {
+                return { data: [], info: undefined };
+            }
             throw error;
         }
     }
@@ -569,6 +589,77 @@ export class Api extends OAuth2Requester {
         try {
             return await this._get({
                 url: this.baseUrl + this.URLs.notificationsWatch,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Log a call in Zoho CRM Calls module
+     * @param callData - Call record data with Subject, Call_Type, Call_Start_Time, Call_Duration
+     * @returns Promise<CallsResponse> Created call response
+     * @see https://www.zoho.com/crm/developer/docs/api/v8/insert-records.html
+     */
+    async logCall(callData: ZohoCallData): Promise<CallsResponse> {
+        if (!callData.Subject) {
+            throw new Error('callData.Subject is required');
+        }
+        if (!callData.Call_Type) {
+            throw new Error('callData.Call_Type is required');
+        }
+        if (!callData.Call_Start_Time) {
+            throw new Error('callData.Call_Start_Time is required');
+        }
+
+        // Duration is mandatory for Inbound/Outbound calls and cannot be zero
+        if ((callData.Call_Type === 'Inbound' || callData.Call_Type === 'Outbound') && !callData.Call_Duration) {
+            throw new Error('callData.Call_Duration is required for Inbound/Outbound calls');
+        }
+
+        const body = {
+            data: [callData]
+        };
+
+        try {
+            return await this._post({
+                url: this.baseUrl + this.URLs.calls,
+                body: body,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Update an existing call record in Zoho CRM Calls module
+     * @param callId - Zoho Call ID to update
+     * @param callData - Partial call data to update (e.g., Description, Subject)
+     * @returns Promise<CallsResponse> Updated call response
+     * @see https://www.zoho.com/crm/developer/docs/api/v8/update-records.html
+     */
+    async updateCall(callId: string, callData: Partial<ZohoCallData>): Promise<CallsResponse> {
+        if (!callId) {
+            throw new Error('callId is required');
+        }
+        if (!callData || Object.keys(callData).length === 0) {
+            throw new Error('callData must contain at least one field to update');
+        }
+
+        const body = {
+            data: [callData]
+        };
+
+        try {
+            return await this._put({
+                url: this.baseUrl + (this.URLs.call as (id: string) => string)(callId),
+                body: body,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             });
         } catch (error) {
             throw error;

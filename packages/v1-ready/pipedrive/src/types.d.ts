@@ -534,3 +534,68 @@ export interface WebhookData {
   active_flag: boolean;
   last_delivery_time?: string;
 }
+
+// ==================== CallLog Types ====================
+
+export type CallLogOutcome =
+  | "connected"
+  | "no_answer"
+  | "left_message"
+  | "left_voicemail"
+  | "wrong_number"
+  | "busy";
+
+export interface CreateCallLogParams {
+  // Required
+  to_phone_number: string;
+  outcome: CallLogOutcome;
+  start_time: string;  // UTC format: YYYY-MM-DD HH:MM:SS
+  end_time: string;    // UTC format: YYYY-MM-DD HH:MM:SS
+
+  // Optional associations
+  user_id?: number;
+  person_id?: number;
+  org_id?: number;
+  deal_id?: number;
+  lead_id?: string;  // UUID format
+
+  // Optional details
+  subject?: string;
+  duration?: string;  // Duration in seconds
+  from_phone_number?: string;
+  note?: string;  // HTML format
+  activity_id?: number;  // Convert existing activity to call log
+}
+
+export interface UpdateCallLogParams {
+  outcome?: CallLogOutcome;
+  subject?: string;
+  note?: string;  // HTML format
+}
+
+export interface CallLog {
+  id: string;
+  company_id: number;
+  user_id: number;
+  activity_id: number;
+  subject: string;
+  start_time: string;
+  end_time: string;
+  duration: string;
+  outcome: CallLogOutcome;
+  from_phone_number: string;
+  to_phone_number: string;
+  person_id: number;
+  org_id: number;
+  deal_id: number;
+  lead_id: string;
+  note: string;
+  has_recording: boolean;
+  add_time: string;
+  update_time: string;
+}
+
+export interface ListCallLogsParams {
+  start?: number;  // Pagination start, default 0
+  limit?: number;  // Max 50
+}

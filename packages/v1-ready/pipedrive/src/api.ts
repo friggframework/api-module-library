@@ -16,6 +16,9 @@ import {
   PipedriveUser,
   PipedriveTokenResponse,
   CreateWebhookParams,
+  CreateCallLogParams,
+  UpdateCallLogParams,
+  ListCallLogsParams,
 } from "./types";
 
 export class Api extends OAuth2Requester {
@@ -36,6 +39,8 @@ export class Api extends OAuth2Requester {
     webhooks: string;
     webhookById: (webhookId: string | number) => string;
     search: string;
+    callLogs: string;
+    callLogById: (callLogId: string) => string;
   };
 
   constructor(params: OAuth2RequesterOptions) {
@@ -62,6 +67,8 @@ export class Api extends OAuth2Requester {
       webhooks: "/v1/webhooks",
       webhookById: (webhookId: string | number) => `/v1/webhooks/${webhookId}`,
       search: "/v1/search",
+      callLogs: "/v1/callLogs",
+      callLogById: (callLogId: string) => `/v1/callLogs/${callLogId}`,
     };
 
     this.authorizationUri = encodeURI(
@@ -400,6 +407,99 @@ export class Api extends OAuth2Requester {
   ): Promise<PipedriveResponse> {
     const options: RequestOptions = {
       url: this.baseUrl + this.URLs.webhookById(webhookId),
+    };
+    return this._delete(options);
+  }
+
+  // **************************   Call Logs   **********************************
+
+  /**
+   * List all call logs
+   * @param params - Pagination parameters
+   * @param params.start - Pagination start position (default: 0)
+   * @param params.limit - Max entries per page (max: 50)
+   * @returns Response with call log data array
+   */
+  async listCallLogs(params?: ListCallLogsParams): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.callLogs,
+    };
+    if (params && Object.keys(params).length > 0) {
+      options.query = params;
+    }
+    return this._get(options);
+  }
+
+  /**
+   * Get a single call log by ID
+   * @param callLogId - The ID of the call log to retrieve
+   * @returns Response with call log data
+   */
+  async getCallLog(callLogId: string): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.callLogById(callLogId),
+    };
+    return this._get(options);
+  }
+
+  /**
+   * Create a new call log
+   * @param params - Call log data
+   * @param params.to_phone_number - The number called (required)
+   * @param params.outcome - Call result: connected, no_answer, left_message, left_voicemail, wrong_number, busy (required)
+   * @param params.start_time - Call start in UTC YYYY-MM-DD HH:MM:SS (required)
+   * @param params.end_time - Call end in UTC YYYY-MM-DD HH:MM:SS (required)
+   * @param params.person_id - Associated person ID
+   * @param params.org_id - Associated organization ID
+   * @param params.deal_id - Associated deal ID
+   * @param params.subject - Activity name/subject
+   * @param params.duration - Duration in seconds
+   * @param params.from_phone_number - Caller's number
+   * @param params.note - Notes in HTML format
+   * @returns Response with created call log data
+   */
+  async createCallLog(params: CreateCallLogParams): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.callLogs,
+      body: params,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    return this._post(options);
+  }
+
+  /**
+   * Update an existing call log
+   * @param callLogId - The ID of the call log to update
+   * @param params - Fields to update
+   * @param params.outcome - Call result
+   * @param params.subject - Activity name/subject
+   * @param params.note - Notes in HTML format
+   * @returns Response with updated call log data
+   */
+  async updateCallLog(
+    callLogId: string,
+    params: UpdateCallLogParams
+  ): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.callLogById(callLogId),
+      body: params,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    return this._patch(options);
+  }
+
+  /**
+   * Delete a call log by ID
+   * @param callLogId - The ID of the call log to delete
+   * @returns Response confirming deletion
+   */
+  async deleteCallLog(callLogId: string): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.callLogById(callLogId),
     };
     return this._delete(options);
   }

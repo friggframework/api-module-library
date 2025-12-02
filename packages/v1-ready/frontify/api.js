@@ -914,10 +914,11 @@ class Api extends OAuth2Requester {
               case 'CustomMetadataPropertyTypeDate':
                   return 'date';
               case 'CustomMetadataPropertyTypeSelect':
-              case 'CustomMetadataPropertyTypeMultiSelect':
                   return 'select';
+              case 'CustomMetadataPropertyTypeMultiSelect':
+                  return 'multiselect';
               case 'CustomMetadataPropertyTypeUrl':
-                  return 'string';
+                  return 'url';
               default:
                   return 'string';
           }
@@ -970,13 +971,13 @@ class Api extends OAuth2Requester {
   
           const metadataItems = entries
               .filter((e) => e && e.propertyId && e.value !== undefined && e.value !== null && e.value !== '')
-              .map((e) => {
+              .flatMap((e) => {
                   if (Array.isArray(e.value)) {
-                      const values = e.value
+                      // For multi-select, create separate entries for each selected value
+                      return e.value
                           .map((v) => normalizeValue(v))
                           .filter((v) => v !== null)
-                          .join(', ');
-                      return `{ propertyId: "${e.propertyId}", values: [ ${values} ] }`;
+                          .map((v) => `{ propertyId: "${e.propertyId}", value: ${v} }`);
                   }
                   const coerced = normalizeValue(e.value);
                   return `{ propertyId: "${e.propertyId}", value: ${coerced} }`;
@@ -1263,6 +1264,27 @@ class Api extends OAuth2Requester {
         this.assertResponse(response);
         return {
             id: response.data.createAsset.job.assetId
+        };
+    }
+
+    /**
+     * Deletes an existing asset
+     * @param {string} assetId - ID of the asset to delete
+     * @returns {Promise<Object>} Deleted asset ID
+     */
+    async deleteAsset(assetId) {
+        const ql = `mutation DeleteAsset {
+                      deleteAsset(input: {
+                        id: "${assetId}"
+                      }) {
+                        id
+                      }
+                    }`;
+
+        const response = await this._post(this.buildRequestOptions(ql));
+        this.assertResponse(response);
+        return {
+            id: response.data.deleteAsset.id
         };
     }
 

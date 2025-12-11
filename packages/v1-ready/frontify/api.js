@@ -3,6 +3,21 @@ const fetch = require('node-fetch');
 const querystring = require('node:querystring');
 
 /**
+ * Escapes special characters in a string for safe use in GraphQL queries
+ * @param {string} str - The string to escape
+ * @returns {string|null} The escaped string, or null if input is null/undefined
+ */
+function escapeGraphQLString(str) {
+    if (str === null || str === undefined) return null;
+    return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t');
+}
+
+/**
  * Frontify API client
  * @extends OAuth2Requester
  */
@@ -1341,11 +1356,16 @@ class Api extends OAuth2Requester {
      * @returns {Promise<Object>} Created asset ID
      */
     async createAsset(asset) {
+        const externalIdLine = asset.externalId
+            ? `externalId: "${escapeGraphQLString(asset.externalId)}",`
+            : '';
+
         const ql = `mutation CreateAsset {
                       createAsset(input: {
                         fileId: "${asset.id}",
                         title: "${asset.title}",
-                        parentId: "${asset.projectId}"
+                        parentId: "${asset.projectId}",
+                        ${externalIdLine}
                       }) {
                         job {
                           assetId

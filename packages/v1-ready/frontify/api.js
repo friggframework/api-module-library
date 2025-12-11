@@ -163,6 +163,44 @@ class Api extends OAuth2Requester {
     }
 
     /**
+     * Gets an asset by ID with custom metadata values
+     * @param {Object} query - Query parameters
+     * @param {string} query.assetId - ID of the asset
+     * @returns {Promise<Object>} Asset details with customMetadataValues
+     */
+    async getAssetWithMetadata(query) {
+        // Query all metadata values - customMetadata returns CustomMetadata interface
+        // CustomMetadataValue (singular) - for text, url, select, date
+        // CustomMetadataValues (plural) - for multiselect (uses 'values' array)
+        const ql = `query AssetWithMetadata {
+                      asset(id: "${query.assetId}") {
+                        id
+                        title
+                        customMetadata {
+                          __typename
+                          ... on CustomMetadataValue {
+                            value
+                            property {
+                              id
+                            }
+                          }
+                          ... on CustomMetadataValues {
+                            values
+                            property {
+                              id
+                            }
+                          }
+                        }
+                      }
+                    }`;
+
+        const response = await this._post(this.buildRequestOptions(ql));
+        console.log('[getAssetWithMetadata] Raw response:', JSON.stringify(response.data, null, 2));
+        this.assertResponse(response);
+        return response.data.asset;
+    }
+
+    /**
      * Gets permissions for an asset
      * @param {Object} query - Query parameters
      * @param {string} query.assetId - ID of the asset
@@ -952,6 +990,51 @@ class Api extends OAuth2Requester {
     }
 
     /**
+     * Removes custom metadata values from an asset
+     * @param {string} assetId - The asset ID
+     * @param {Array<{propertyId: string, value: any}>} entries - Metadata entries to remove
+     * @returns {Promise<Object>} Result
+     */
+    async removeAssetCustomMetadata(assetId, entries = []) {
+        if (!entries.length) return null;
+
+        const normalizeValue = (val) => {
+            if (val === null || val === undefined || val === '') return null;
+            if (typeof val === 'number') return val;
+            if (typeof val === 'string') return JSON.stringify(val.trim());
+            return JSON.stringify(val);
+        };
+
+        const metadataItems = entries
+            .filter((e) => e && e.propertyId && e.value !== undefined && e.value !== null)
+            .flatMap((e) => {
+                if (Array.isArray(e.value)) {
+                    // For multi-select, create separate entries for each value to remove
+                    return e.value
+                        .map((v) => normalizeValue(v))
+                        .filter((v) => v !== null)
+                        .map((v) => `{ propertyId: "${e.propertyId}", value: ${v} }`);
+                }
+                const coerced = normalizeValue(e.value);
+                if (coerced === null) return [];
+                return `{ propertyId: "${e.propertyId}", value: ${coerced} }`;
+            })
+            .join(', ');
+
+        if (!metadataItems) return null;
+
+        const ql = `mutation RemoveAssetCustomMetadata {\n` +
+            `  removeCustomMetadata(input: { parentIds: ["${assetId}"], customMetadata: [ ${metadataItems} ] }) {\n` +
+            `    __typename\n` +
+            `  }\n` +
+            `}`;
+
+        const response = await this._post(this.buildRequestOptions(ql));
+        this.assertResponse(response);
+        return response.data.removeCustomMetadata;
+    }
+
+    /**
      * Sets or updates custom metadata values on an asset
      * @param {string} assetId - The asset ID
      * @param {Array<{propertyId: string, value: string|number}>} entries - Metadata entries
@@ -968,7 +1051,7 @@ class Api extends OAuth2Requester {
               }
               return JSON.stringify(val);
           };
-  
+
           const metadataItems = entries
               .filter((e) => e && e.propertyId && e.value !== undefined && e.value !== null && e.value !== '')
               .flatMap((e) => {
@@ -983,13 +1066,13 @@ class Api extends OAuth2Requester {
                   return `{ propertyId: "${e.propertyId}", value: ${coerced} }`;
               })
               .join(', ');
-  
+
           const ql = `mutation AddAssetCustomMetadata {\n` +
               `  addCustomMetadata(input: { parentIds: ["${assetId}"], customMetadata: [ ${metadataItems} ] }) {\n` +
               `    __typename\n` +
               `  }\n` +
               `}`;
-  
+
           const response = await this._post(this.buildRequestOptions(ql));
           this.assertResponse(response);
           return response.data.addCustomMetadata;
@@ -1125,7 +1208,12 @@ class Api extends OAuth2Requester {
                             status
                             externalId
                             createdAt
-                            modifiedAt                          
+                            modifiedAt
+                            location {
+                              folder {
+                                id
+                              }
+                            }
                             tags {
                               source
                               value
@@ -1208,7 +1296,12 @@ class Api extends OAuth2Requester {
                             status
                             externalId
                             createdAt
-                            modifiedAt                            
+                            modifiedAt
+                            location {
+                              folder {
+                                id
+                              }
+                            }
                             tags {
                               source
                               value
@@ -1220,10 +1313,10 @@ class Api extends OAuth2Requester {
                         }
                       }
                     }`;
-        
+
         const response = await this._post(this.buildRequestOptions(ql));
         this.assertResponse(response);
-        
+
         const {
             items,
             total,

@@ -1125,7 +1125,12 @@ class Api extends OAuth2Requester {
                             status
                             externalId
                             createdAt
-                            modifiedAt                          
+                            modifiedAt
+                            location {
+                              folder {
+                                id
+                              }
+                            }
                             tags {
                               source
                               value
@@ -1208,7 +1213,12 @@ class Api extends OAuth2Requester {
                             status
                             externalId
                             createdAt
-                            modifiedAt                            
+                            modifiedAt
+                            location {
+                              folder {
+                                id
+                              }
+                            }
                             tags {
                               source
                               value
@@ -1220,10 +1230,10 @@ class Api extends OAuth2Requester {
                         }
                       }
                     }`;
-        
+
         const response = await this._post(this.buildRequestOptions(ql));
         this.assertResponse(response);
-        
+
         const {
             items,
             total,

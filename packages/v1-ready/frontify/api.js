@@ -1544,6 +1544,7 @@ class Api extends OAuth2Requester {
                   ${dimensionProps.join(' ')}
                   duration
                   bitrate
+                  thumbnailUrl
                 }
                 ... on EmbeddedContent {
                   description

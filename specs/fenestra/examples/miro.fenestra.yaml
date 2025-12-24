@@ -1,0 +1,276 @@
+# Fenestra Document: Miro Developer Platform
+#
+# Miro represents the "optional components" end of the spectrum.
+# The Mirotone library is provided but developers have full freedom.
+
+fenestra: "0.1.0"
+
+info:
+  title: Miro Developer Platform UI Ecosystem
+  version: "1.0.0"
+  description: |
+    Miro's Developer Platform provides the Web SDK for board interactions
+    and Mirotone as an optional CSS component library for native-feeling UIs.
+
+    Key characteristic: Component usage is OPTIONAL - developers can use
+    Mirotone, their own components, or any framework they prefer.
+
+platform:
+  name: Miro
+  vendor: Miro, Inc.
+  documentation: https://developers.miro.com/
+  appMarketplace: https://miro.com/marketplace/
+
+sdks:
+  miro-web-sdk:
+    name: Miro Web SDK
+    packageManager: npm
+    package: "@mirohq/websdk-types"
+    documentation: https://developers.miro.com/docs/miro-web-sdk-introduction
+    exports:
+      miro:
+        type: utility
+        description: Global miro object for board interactions
+
+  mirotone:
+    name: Mirotone CSS Library
+    packageManager: npm
+    package: "mirotone"
+    repository: https://github.com/miroapp/mirotone
+    documentation: https://www.mirotone.xyz/
+    description: |
+      Lightweight CSS component library that styles HTML to match Miro's UI.
+      Unlike React component libraries, Mirotone works with plain HTML.
+    exports:
+      # Mirotone uses CSS classes, not component exports
+      # Listed here for documentation purposes
+      button:
+        type: component
+        description: ".button class for buttons"
+      input:
+        type: component
+        description: ".input class for text inputs"
+      select:
+        type: component
+        description: ".select class for dropdowns"
+      checkbox:
+        type: component
+        description: ".checkbox class for checkboxes"
+      radio:
+        type: component
+        description: ".radio class for radio buttons"
+      tabs:
+        type: component
+        description: ".tabs class for tab navigation"
+      tooltip:
+        type: component
+        description: ".tooltip class for tooltips"
+      modal:
+        type: component
+        description: ".modal class for modal dialogs"
+
+componentCatalog:
+  categories:
+    action:
+      name: Actions
+      description: Interactive elements
+      components: [button]
+
+    input:
+      name: Inputs
+      description: Form controls
+      components: [input, select, checkbox, radio, textarea]
+
+    navigation:
+      name: Navigation
+      description: Navigation components
+      components: [tabs, sidebar]
+
+    overlay:
+      name: Overlays
+      description: Modal and tooltip components
+      components: [modal, tooltip]
+
+  components:
+    button:
+      name: Button
+      description: Mirotone button styling
+      category: action
+      sdkBinding:
+        sdk: mirotone
+        export: button
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+      props:
+        class:
+          type: string
+          description: "CSS class: .button, .button.button-primary, .button.button-danger"
+      variants:
+        - default
+        - primary
+        - secondary
+        - danger
+      examples:
+        - title: Primary Button
+          code: |
+            <button class="button button-primary">Click me</button>
+          language: html
+        - title: Icon Button
+          code: |
+            <button class="button button-icon">
+              <span class="icon icon-plus"></span>
+            </button>
+          language: html
+
+    modal:
+      name: Modal
+      description: Mirotone modal dialog
+      category: overlay
+      sdkBinding:
+        sdk: mirotone
+        export: modal
+      webStandardMapping:
+        htmlElement: dialog
+        ariaRole: dialog
+        semanticType: container
+      examples:
+        - title: Basic Modal
+          code: |
+            <div class="modal">
+              <div class="modal-overlay"></div>
+              <div class="modal-container">
+                <div class="modal-header">
+                  <h3>Modal Title</h3>
+                </div>
+                <div class="modal-body">
+                  Content here
+                </div>
+                <div class="modal-footer">
+                  <button class="button">Cancel</button>
+                  <button class="button button-primary">Confirm</button>
+                </div>
+              </div>
+            </div>
+          language: html
+
+policies:
+  componentRequirement:
+    level: optional
+    scope: all
+    rationale: |
+      Miro provides Mirotone as a convenience library but does not
+      require its use. Developers have complete freedom in their
+      UI implementation choices.
+
+  customComponents:
+    allowed: true
+    constraints: []
+    registrationRequired: false
+    approvalRequired: false
+    documentation: https://developers.miro.com/docs/build-and-deploy-your-app
+
+  publishing:
+    privateApps:
+      componentRequirement: optional
+      customComponentsAllowed: true
+      reviewRequired: false
+      notes: "Complete freedom for private apps"
+
+    publicApps:
+      componentRequirement: optional
+      customComponentsAllowed: true
+      reviewRequired: true
+      notes: "Review focuses on functionality, not UI implementation"
+
+    marketplaceApps:
+      componentRequirement: optional
+      customComponentsAllowed: true
+      certificationRequired: true
+      notes: "Certification covers security and functionality"
+
+  designGuidelines:
+    required: false
+    designSystem: "Mirotone"
+    designSystemUrl: https://www.mirotone.xyz/
+    designTokensProvided: true
+
+extensionPoints:
+  - id: app-panel
+    name: App Panel
+    type: panel
+    description: Panel that opens from the app icon in the left toolbar
+    supportedComponents:
+      - all
+    constraints:
+      maxWidth: 320
+      responsive: false
+    context:
+      provides:
+        - selectedItems
+        - viewport
+        - board
+        - user
+      actions:
+        - createItem
+        - updateItem
+        - deleteItem
+        - zoomTo
+
+  - id: modal
+    name: Modal Dialog
+    type: modal
+    description: Full modal overlay opened via SDK
+    supportedComponents:
+      - all
+    constraints:
+      maxWidth: 600
+      maxHeight: 400
+      responsive: true
+    context:
+      provides:
+        - selectedItems
+        - board
+        - user
+
+  - id: board-item
+    name: Board Item
+    type: canvas
+    description: Custom items rendered on the board canvas
+    supportedComponents:
+      - iframe-based
+    constraints:
+      responsive: true
+    context:
+      provides:
+        - itemData
+        - board
+        - user
+
+renderingEngines:
+  html-css:
+    type: custom
+    name: HTML + CSS
+    description: Plain HTML styled with Mirotone CSS classes
+
+  any-framework:
+    type: custom
+    name: Any Framework
+    description: React, Vue, Svelte, vanilla JS - developer's choice
+    sandboxing:
+      iframeSandbox: true
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+        - allow-same-origin
+
+jsonFormsIntegration:
+  supported: true
+  rendererSet: custom
+  customRenderersAllowed: true
+  notes: "Developers can integrate JSON Forms with their own renderers"
+
+mcpAppsIntegration:
+  supported: false
+  notes: "Potential future integration via iframe embedding"

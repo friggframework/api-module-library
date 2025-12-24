@@ -1,0 +1,922 @@
+# Fenestra Specification
+# Version: 0.1.0-draft
+#
+# A specification for describing platform UI component ecosystems, SDK bindings,
+# and UI rendering capabilities in a standardized, machine-readable format.
+#
+# Designed for submission to the OpenAPI Initiative (OAI), a Linux Foundation
+# Collaborative Project, to complement OpenAPI, Arazzo, and emerging specifications
+# like MCP Apps.
+
+openapi: 3.1.0
+info:
+  title: Fenestra Specification
+  version: 0.1.0-draft
+  description: |
+    # Fenestra Specification
+
+    **Fenestra** (Latin for "window") is a specification for describing how platforms
+    expose UI component ecosystems to developers building integrations, apps, and extensions.
+
+    ## Purpose
+
+    Modern platforms (HubSpot, Salesforce, Canva, Miro, Front, Slack, etc.) provide
+    UI extension points with varying degrees of flexibility. Fenestra standardizes
+    the description of:
+
+    1. **Component Catalogs** - What UI components a platform provides
+    2. **SDK Bindings** - How to import and use components from platform SDKs
+    3. **Requirement Levels** - Whether platform components are required, recommended, or optional
+    4. **Custom Component Policies** - Whether developers can bring their own components
+    5. **Publishing Constraints** - Different rules for public vs private apps
+    6. **Rendering Engines** - How UI definitions translate to rendered interfaces
+
+    ## Relationship to Other Specifications
+
+    - **OpenAPI**: Fenestra extends OpenAPI patterns for UI description
+    - **Arazzo**: Workflow sequences can reference Fenestra UI definitions for user interactions
+    - **MCP Apps**: Fenestra component definitions can map to MCP App UI resources
+    - **JSON Forms/JSON Schema**: Fenestra supports JSON Schema-based UI rendering
+
+  contact:
+    name: Fenestra Working Group
+    url: https://github.com/friggframework/fenestra-spec
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+# =============================================================================
+# FENESTRA SPECIFICATION SCHEMA
+# =============================================================================
+
+components:
+  schemas:
+
+    # =========================================================================
+    # ROOT DOCUMENT
+    # =========================================================================
+
+    FenestraDocument:
+      type: object
+      required:
+        - fenestra
+        - info
+      properties:
+        fenestra:
+          type: string
+          description: Fenestra specification version
+          pattern: '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$'
+          example: "0.1.0"
+
+        info:
+          $ref: '#/components/schemas/Info'
+
+        platform:
+          $ref: '#/components/schemas/Platform'
+
+        sdks:
+          type: object
+          description: SDK ecosystem definitions indexed by SDK identifier
+          additionalProperties:
+            $ref: '#/components/schemas/SDK'
+
+        componentCatalog:
+          $ref: '#/components/schemas/ComponentCatalog'
+
+        renderingEngines:
+          type: object
+          description: Supported rendering engine configurations
+          additionalProperties:
+            $ref: '#/components/schemas/RenderingEngine'
+
+        policies:
+          $ref: '#/components/schemas/Policies'
+
+        extensionPoints:
+          type: array
+          description: Where UI can be injected in the host platform
+          items:
+            $ref: '#/components/schemas/ExtensionPoint'
+
+    # =========================================================================
+    # INFO OBJECT
+    # =========================================================================
+
+    Info:
+      type: object
+      required:
+        - title
+        - version
+      properties:
+        title:
+          type: string
+          description: Human-readable name of this Fenestra document
+        version:
+          type: string
+          description: Version of this document
+        description:
+          type: string
+          description: Extended description (CommonMark supported)
+        termsOfService:
+          type: string
+          format: uri
+        contact:
+          type: object
+          properties:
+            name:
+              type: string
+            url:
+              type: string
+              format: uri
+            email:
+              type: string
+              format: email
+        license:
+          type: object
+          properties:
+            name:
+              type: string
+            url:
+              type: string
+              format: uri
+
+    # =========================================================================
+    # PLATFORM OBJECT
+    # =========================================================================
+
+    Platform:
+      type: object
+      description: |
+        Describes the host platform that provides the UI extension capabilities.
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Platform name
+          examples:
+            - HubSpot
+            - Salesforce
+            - Canva
+            - Miro
+            - Front
+            - Slack
+
+        vendor:
+          type: string
+          description: Platform vendor/company name
+
+        documentation:
+          type: string
+          format: uri
+          description: URL to platform developer documentation
+
+        appMarketplace:
+          type: string
+          format: uri
+          description: URL to the platform's app marketplace/directory
+
+    # =========================================================================
+    # SDK OBJECT
+    # =========================================================================
+
+    SDK:
+      type: object
+      description: |
+        Describes an SDK package that provides UI components or utilities.
+        SDKs can be required, recommended, or optional depending on platform policies.
+      required:
+        - name
+        - packageManager
+        - package
+      properties:
+        name:
+          type: string
+          description: Human-readable SDK name
+          examples:
+            - "HubSpot UI Extensions"
+            - "Canva App UI Kit"
+            - "Salesforce Lightning Web Components"
+
+        packageManager:
+          type: string
+          description: Package manager ecosystem
+          enum:
+            - npm
+            - yarn
+            - pip
+            - maven
+            - gradle
+            - nuget
+            - cargo
+            - go
+            - composer
+          default: npm
+
+        package:
+          type: string
+          description: Package identifier (e.g., npm package name)
+          examples:
+            - "@hubspot/ui-extensions"
+            - "@canva/app-ui-kit"
+            - "lightning/ui"
+
+        version:
+          type: string
+          description: Recommended or minimum version
+          examples:
+            - "^0.11.2"
+            - ">=1.0.0"
+
+        repository:
+          type: string
+          format: uri
+          description: Source code repository URL
+
+        documentation:
+          type: string
+          format: uri
+          description: SDK documentation URL
+
+        exports:
+          type: object
+          description: Named exports from the SDK package
+          additionalProperties:
+            $ref: '#/components/schemas/SDKExport'
+
+        subpackages:
+          type: object
+          description: |
+            Additional subpackages within the SDK ecosystem.
+            Some SDKs split components across multiple packages.
+          additionalProperties:
+            type: object
+            properties:
+              package:
+                type: string
+              description:
+                type: string
+              exports:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/SDKExport'
+
+    SDKExport:
+      type: object
+      description: A named export from an SDK package
+      properties:
+        type:
+          type: string
+          enum:
+            - component
+            - hook
+            - utility
+            - icon
+            - token
+            - context
+            - type
+          description: Type of export
+
+        description:
+          type: string
+          description: What this export provides
+
+        deprecated:
+          type: boolean
+          default: false
+
+        since:
+          type: string
+          description: Version when this export was added
+
+    # =========================================================================
+    # COMPONENT CATALOG
+    # =========================================================================
+
+    ComponentCatalog:
+      type: object
+      description: |
+        The catalog of UI components available on this platform.
+        Components can be categorized and mapped to web standards.
+      properties:
+        categories:
+          type: object
+          description: Component categories (layout, input, display, etc.)
+          additionalProperties:
+            $ref: '#/components/schemas/ComponentCategory'
+
+        components:
+          type: object
+          description: All components indexed by canonical identifier
+          additionalProperties:
+            $ref: '#/components/schemas/Component'
+
+    ComponentCategory:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        components:
+          type: array
+          items:
+            type: string
+          description: References to component identifiers in this category
+
+    Component:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Component display name
+
+        description:
+          type: string
+          description: What this component does
+
+        category:
+          type: string
+          description: Category this component belongs to
+          examples:
+            - layout
+            - input
+            - display
+            - navigation
+            - overlay
+            - feedback
+            - data
+
+        sdkBinding:
+          $ref: '#/components/schemas/SDKBinding'
+
+        webStandardMapping:
+          $ref: '#/components/schemas/WebStandardMapping'
+
+        props:
+          type: object
+          description: Component properties/attributes (JSON Schema format)
+          additionalProperties: true
+
+        slots:
+          type: object
+          description: Named slots/children this component accepts
+          additionalProperties:
+            $ref: '#/components/schemas/Slot'
+
+        events:
+          type: object
+          description: Events this component can emit
+          additionalProperties:
+            $ref: '#/components/schemas/ComponentEvent'
+
+        variants:
+          type: array
+          description: Visual or behavioral variants
+          items:
+            type: string
+
+        accessibility:
+          $ref: '#/components/schemas/AccessibilityInfo'
+
+        examples:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComponentExample'
+
+    SDKBinding:
+      type: object
+      description: How to import this component from an SDK
+      required:
+        - sdk
+        - export
+      properties:
+        sdk:
+          type: string
+          description: Reference to SDK identifier in the sdks object
+
+        subpackage:
+          type: string
+          description: Subpackage within the SDK (if applicable)
+
+        export:
+          type: string
+          description: Named export from the package
+
+        importPath:
+          type: string
+          description: |
+            Full import path if different from default package.
+            Example: "@hubspot/ui-extensions/crm"
+
+    WebStandardMapping:
+      type: object
+      description: |
+        Maps this platform component to web platform standards.
+        Enables cross-platform compatibility and semantic understanding.
+      properties:
+        htmlElement:
+          type: string
+          description: Closest HTML element equivalent
+          examples:
+            - button
+            - input
+            - select
+            - dialog
+            - form
+
+        ariaRole:
+          type: string
+          description: ARIA role this component fulfills
+          examples:
+            - button
+            - textbox
+            - listbox
+            - dialog
+            - alert
+
+        webComponent:
+          type: string
+          description: Web Components standard equivalent (if any)
+
+        semanticType:
+          type: string
+          description: Semantic UI pattern type
+          enum:
+            - action
+            - input
+            - display
+            - layout
+            - navigation
+            - feedback
+            - container
+
+    Slot:
+      type: object
+      properties:
+        description:
+          type: string
+        required:
+          type: boolean
+          default: false
+        accepts:
+          type: array
+          description: Component types this slot accepts
+          items:
+            type: string
+
+    ComponentEvent:
+      type: object
+      properties:
+        description:
+          type: string
+        payload:
+          type: object
+          description: JSON Schema for event payload
+
+    AccessibilityInfo:
+      type: object
+      properties:
+        keyboardSupport:
+          type: boolean
+        screenReaderSupport:
+          type: boolean
+        focusManagement:
+          type: string
+        notes:
+          type: string
+
+    ComponentExample:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        code:
+          type: string
+          description: Example code snippet
+        language:
+          type: string
+          default: jsx
+
+    # =========================================================================
+    # RENDERING ENGINES
+    # =========================================================================
+
+    RenderingEngine:
+      type: object
+      description: |
+        A rendering engine that can interpret UI definitions and produce rendered output.
+        Supports multiple paradigms: declarative JSON, React components, web components, etc.
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - jsonForms
+            - jsonSchema
+            - mcpApps
+            - react
+            - webComponents
+            - lwc
+            - custom
+          description: Rendering paradigm
+
+        name:
+          type: string
+          description: Human-readable engine name
+
+        description:
+          type: string
+
+        schemaSupport:
+          type: object
+          description: Schema-based rendering configuration
+          properties:
+            dataSchema:
+              type: string
+              enum:
+                - jsonSchema
+                - custom
+              description: Schema format for data definition
+
+            uiSchema:
+              type: string
+              enum:
+                - jsonFormsUISchema
+                - mcpAppsTemplate
+                - custom
+              description: Schema format for UI definition
+
+            customRenderers:
+              type: boolean
+              description: Whether custom renderers can be registered
+              default: false
+
+        sandboxing:
+          $ref: '#/components/schemas/SandboxConfig'
+
+    SandboxConfig:
+      type: object
+      description: Security sandboxing configuration for rendered UI
+      properties:
+        iframeSandbox:
+          type: boolean
+          description: Whether UI runs in sandboxed iframe
+
+        sandboxAttributes:
+          type: array
+          items:
+            type: string
+          description: iframe sandbox attribute values
+          examples:
+            - allow-scripts
+            - allow-forms
+            - allow-same-origin
+
+        cspPolicy:
+          type: string
+          description: Content Security Policy for rendered content
+
+    # =========================================================================
+    # POLICIES
+    # =========================================================================
+
+    Policies:
+      type: object
+      description: |
+        Platform policies governing UI component usage, custom components,
+        and publishing requirements.
+      properties:
+
+        componentRequirement:
+          $ref: '#/components/schemas/ComponentRequirementPolicy'
+
+        customComponents:
+          $ref: '#/components/schemas/CustomComponentPolicy'
+
+        publishing:
+          $ref: '#/components/schemas/PublishingPolicy'
+
+        designGuidelines:
+          $ref: '#/components/schemas/DesignGuidelinesPolicy'
+
+    ComponentRequirementPolicy:
+      type: object
+      description: |
+        Whether platform-provided components are required.
+
+        Examples:
+        - HubSpot: Required (can only use SDK components)
+        - Canva: Strongly recommended for public apps
+        - Miro: Optional (Mirotone is available but not required)
+      properties:
+        level:
+          type: string
+          enum:
+            - required
+            - recommended
+            - optional
+          description: |
+            - required: Must use platform components exclusively
+            - recommended: Platform components preferred, alternatives allowed
+            - optional: Platform components available but not required
+
+        scope:
+          type: string
+          enum:
+            - all
+            - publicApps
+            - marketplaceApps
+          description: What app types this requirement applies to
+
+        rationale:
+          type: string
+          description: Why this policy exists
+
+        exceptions:
+          type: array
+          items:
+            type: string
+          description: Documented exceptions to this policy
+
+    CustomComponentPolicy:
+      type: object
+      description: |
+        Whether developers can bring their own (BYO) components.
+
+        Key dimensions:
+        - Allowed at all?
+        - Must wrap platform primitives?
+        - Must follow design system?
+        - Review required for marketplace?
+      properties:
+        allowed:
+          type: boolean
+          description: Whether custom components are permitted at all
+
+        constraints:
+          type: array
+          items:
+            type: string
+            enum:
+              - mustWrapPlatformPrimitives
+              - mustFollowDesignSystem
+              - mustPassAccessibilityAudit
+              - requiresReview
+              - sandboxOnly
+          description: Constraints on custom components
+
+        registrationRequired:
+          type: boolean
+          description: Whether custom components must be registered
+          default: false
+
+        approvalRequired:
+          type: boolean
+          description: Whether custom components require platform approval
+          default: false
+
+        documentation:
+          type: string
+          format: uri
+          description: Documentation for custom component requirements
+
+    PublishingPolicy:
+      type: object
+      description: |
+        Different rules for public/marketplace apps vs private/internal apps.
+
+        Common pattern:
+        - Private apps: More flexibility, fewer requirements
+        - Public apps: Strict component requirements, review process
+      properties:
+
+        privateApps:
+          type: object
+          properties:
+            componentRequirement:
+              type: string
+              enum: [required, recommended, optional]
+            customComponentsAllowed:
+              type: boolean
+            reviewRequired:
+              type: boolean
+            notes:
+              type: string
+
+        publicApps:
+          type: object
+          properties:
+            componentRequirement:
+              type: string
+              enum: [required, recommended, optional]
+            customComponentsAllowed:
+              type: boolean
+            reviewRequired:
+              type: boolean
+            designReviewRequired:
+              type: boolean
+            accessibilityAuditRequired:
+              type: boolean
+            notes:
+              type: string
+
+        marketplaceApps:
+          type: object
+          description: Apps published to official marketplace (may differ from public)
+          properties:
+            componentRequirement:
+              type: string
+              enum: [required, recommended, optional]
+            customComponentsAllowed:
+              type: boolean
+            certificationRequired:
+              type: boolean
+            notes:
+              type: string
+
+    DesignGuidelinesPolicy:
+      type: object
+      description: Platform design system and guidelines
+      properties:
+        required:
+          type: boolean
+          description: Whether following guidelines is mandatory
+
+        designSystem:
+          type: string
+          description: Name of the design system
+          examples:
+            - "Lightning Design System"
+            - "Canva Design Guidelines"
+            - "HubSpot Canvas"
+
+        designSystemUrl:
+          type: string
+          format: uri
+
+        designTokensProvided:
+          type: boolean
+          description: Whether design tokens are available for custom styling
+
+    # =========================================================================
+    # EXTENSION POINTS
+    # =========================================================================
+
+    ExtensionPoint:
+      type: object
+      description: |
+        A location in the host platform where UI can be injected.
+
+        Examples:
+        - Sidebar panel
+        - Modal dialog
+        - Card on a record page
+        - Toolbar button
+        - Canvas element (Miro, Canva)
+      required:
+        - id
+        - name
+        - type
+      properties:
+        id:
+          type: string
+          description: Unique identifier for this extension point
+
+        name:
+          type: string
+          description: Human-readable name
+
+        type:
+          type: string
+          enum:
+            - sidebar
+            - modal
+            - panel
+            - card
+            - toolbar
+            - contextMenu
+            - canvas
+            - composer
+            - fullPage
+            - embedded
+          description: Type of extension point
+
+        description:
+          type: string
+
+        supportedComponents:
+          type: array
+          items:
+            type: string
+          description: Component types allowed at this extension point
+
+        constraints:
+          type: object
+          properties:
+            maxWidth:
+              type: integer
+              description: Maximum width in pixels
+            maxHeight:
+              type: integer
+              description: Maximum height in pixels
+            responsive:
+              type: boolean
+              description: Whether extension must be responsive
+
+        context:
+          type: object
+          description: Data context available at this extension point
+          properties:
+            provides:
+              type: array
+              items:
+                type: string
+              description: Context data types provided
+              examples:
+                - currentRecord
+                - selectedItems
+                - user
+                - conversation
+
+            actions:
+              type: array
+              items:
+                type: string
+              description: Actions that can be performed from this context
+
+    # =========================================================================
+    # MCP APPS INTEGRATION
+    # =========================================================================
+
+    MCPAppsIntegration:
+      type: object
+      description: |
+        Integration with MCP Apps specification for AI-driven UI.
+        Maps Fenestra components to MCP Apps UI resources.
+      properties:
+        supported:
+          type: boolean
+          description: Whether this platform supports MCP Apps
+
+        templateMappings:
+          type: object
+          description: Maps MCP App templates to Fenestra components
+          additionalProperties:
+            type: string
+
+        customTemplatesAllowed:
+          type: boolean
+          description: Whether custom MCP App templates are allowed
+
+        communicationProtocol:
+          type: string
+          enum:
+            - jsonRpc
+            - postMessage
+            - custom
+          description: Protocol for host-UI communication
+
+    # =========================================================================
+    # JSON FORMS INTEGRATION
+    # =========================================================================
+
+    JSONFormsIntegration:
+      type: object
+      description: |
+        Integration with JSON Forms specification for schema-driven UI.
+        Enables declarative form rendering from JSON Schema.
+      properties:
+        supported:
+          type: boolean
+          description: Whether this platform supports JSON Forms rendering
+
+        rendererSet:
+          type: string
+          enum:
+            - default
+            - material
+            - vanilla
+            - platform
+            - custom
+          description: Which JSON Forms renderer set to use
+
+        customRenderersAllowed:
+          type: boolean
+          description: Whether custom JSON Forms renderers can be registered
+
+        componentBindings:
+          type: object
+          description: Maps JSON Forms control types to platform components
+          additionalProperties:
+            type: string
+          examples:
+            text: TextField
+            number: NumberInput
+            boolean: Checkbox
+            date: DatePicker

@@ -9,35 +9,50 @@
 | **JSON Response** | Platform-sanctioned JSON payloads to API endpoints, renders pre-built components | Endpoint, schema, component renderer | JSON conforming to schema |
 | **Coded Components** | SDK/UI Kit React components, sometimes BYO allowed | Component library, build tooling | React code using SDK |
 | **Iframe** | Any HTML/JS/CSS at a URL | Iframe container, sometimes postMessage API | Full web application |
-| **Embedded SDK** | ??? (needs clarification) | ??? | ??? |
+| **Embedded SDK** | Platform SDK embedded in developer's app for secure/compliant UI | SDK that renders in dev's page | Mount point, configuration, host app |
 
 ### Cross-cutting: JavaScript SDK
 
-When platforms expose a JS object to interact with host UI (e.g., `window.miro`, `window.Front`).
+When platforms expose a JS object to interact with host UI (e.g., `window.miro`, `window.Front`, `window.Stripe`).
 
 ---
 
 ## Tasks
 
 ### Phase 1: Diagrams for Each Type
-- [ ] Create diagram: JSON Response type (render flow)
-- [ ] Create diagram: Coded Components type (render flow)
-- [ ] Create diagram: Iframe type (render flow)
-- [ ] Create diagram: Embedded SDK type (render flow)
-- [ ] Create diagram: JS SDK interaction pattern
+- [x] Create diagram: JSON Response type (render flow)
+- [x] Create diagram: Coded Components type (render flow)
+- [x] Create diagram: Iframe type (render flow)
+- [x] Create diagram: Embedded SDK type (render flow)
+- [x] Create diagram: JS SDK interaction pattern
+
+**Output**: [DIAGRAMS.md](./DIAGRAMS.md)
 
 ### Phase 2: Map Real Ecosystems
-- [ ] Google Workspace Apps → JSON Response
-- [ ] Asana → JSON Response
-- [ ] Gorgias → JSON Response
-- [ ] HubSpot Timeline Events → JSON Response
-- [ ] Pipedrive Extensions → JSON Response
-- [ ] Salesforce LWC → Coded Components
-- [ ] HubSpot UI Extensions → Coded Components
-- [ ] Zendesk → Coded Components
-- [ ] Canva SDK Apps → Coded Components
-- [ ] (Identify iframe examples)
-- [ ] (Identify embedded SDK examples)
+- [x] Google Workspace Apps → JSON Response
+- [x] Asana → JSON Response
+- [x] Gorgias → JSON Response
+- [x] Pipedrive Extensions → JSON Response (hybrid)
+- [x] Slack Block Kit → JSON Response
+- [x] Microsoft Adaptive Cards → JSON Response
+- [x] Salesforce LWC → Coded Components
+- [x] HubSpot UI Extensions → Coded Components
+- [x] Zendesk → Coded Components / Iframe (hybrid)
+- [x] Canva SDK Apps → Coded Components
+- [x] Shopify App Bridge → Coded Components
+- [x] Monday.com → Coded Components
+- [x] Front → Iframe
+- [x] Figma → Iframe
+- [x] Freshdesk → Iframe
+- [x] Intercom → Iframe
+- [x] Stripe Elements → Embedded SDK
+- [x] Plaid Link → Embedded SDK
+- [x] PayPal Buttons → Embedded SDK
+- [x] Auth0 Lock → Embedded SDK
+- [x] Calendly → Embedded SDK
+- [x] Typeform → Embedded SDK
+
+**Output**: [ECOSYSTEM-MAPPING.md](./ECOSYSTEM-MAPPING.md)
 
 ### Phase 3: Update Spec Schema
 - [ ] Add `extensionType` enum to spec
@@ -48,50 +63,53 @@ When platforms expose a JS object to interact with host UI (e.g., `window.miro`,
 - [ ] Add JS SDK exposure schema
 
 ### Phase 4: Create Example Documents
-- [ ] Example: JSON Response platform
-- [ ] Example: Coded Components platform
-- [ ] Example: Iframe platform
-- [ ] Example: Hybrid platform (multiple types)
+- [ ] Example: JSON Response platform (Slack Block Kit)
+- [ ] Example: Coded Components platform (already have HubSpot)
+- [ ] Example: Iframe platform (Front)
+- [ ] Example: Embedded SDK platform (Stripe)
+- [ ] Example: Hybrid platform (Pipedrive or Zendesk)
 
 ---
 
-## Questions to Clarify
+## Key Findings from Research
 
-1. **Embedded SDK/Options** - Can you give an example of this type? Is this like Stripe.js or analytics SDKs that get embedded in the dev's own app?
+### JSON Response Platforms
+- Typically 10s timeout for endpoint responses
+- No client-side JS SDK needed (purely server-side)
+- Schema validation enforced by platform
+- Limited customization (only predefined components)
 
-2. **Hybrid platforms** - Some platforms offer multiple types (e.g., HubSpot has both JSON Timeline Events AND Coded UI Extensions). Should the spec handle this per-extension-point?
+### Coded Components Platforms
+- React is dominant framework
+- BYO policy varies: HubSpot (no), Canva (yes with constraints), Zendesk (yes)
+- Often paired with JS SDK for host interaction
+- Sandboxed execution (iframes or workers)
+
+### Iframe Platforms
+- Maximum developer flexibility
+- Platform provides SDK for communication (postMessage wrapper)
+- Security via sandbox attributes and CSP
+- Developer responsible for styling consistency
+
+### Embedded SDK Platforms
+- Platform maintains control for security/compliance (PCI, etc.)
+- Must load from platform CDN (cannot bundle)
+- Theming options vary (Stripe: extensive, Plaid: limited)
+- Callback/event-based communication
+
+### Hybrid Platforms
+- Pipedrive: JSON panels + iframe custom UI
+- HubSpot: JSON Timeline Events + Coded UI Extensions
+- Zendesk: Garden components (recommended) + any framework
+- Salesforce: LWC + Canvas (iframe)
+- Intercom: Canvas Kit (JSON) + Sheets (iframe)
 
 ---
 
-## Ecosystem Research List
+## Questions Resolved
 
-### JSON Response Type
-- Google Workspace Add-ons (Cards)
-- Asana App Components
-- Gorgias
-- HubSpot Timeline Events (legacy)
-- Pipedrive Extensions
-- Slack Block Kit
-- Microsoft Adaptive Cards
-- Zoom Apps
+1. ~~**Embedded SDK/Options** - What is this type?~~
+   **Answer**: Platform SDK embedded in developer's own app for secure UI (e.g., Stripe Elements, Plaid Link)
 
-### Coded Components Type
-- Salesforce Lightning Web Components
-- HubSpot UI Extensions
-- Zendesk Apps Framework
-- Canva Apps SDK
-- Shopify App Bridge + Polaris
-
-### Iframe Type
-- Front Plugins
-- Intercom Messenger Apps
-- Many older integrations
-
-### Embedded SDK Type
-- (Examples needed)
-
-### JS SDK Flavor (cross-cutting)
-- Miro Web SDK (`miro` global)
-- Front SDK (`Front` global)
-- Canva SDK
-- Figma Plugin API
+2. **Hybrid platforms** - How to handle?
+   **Answer**: Model at extension-point level. Each extension point can have a different type.

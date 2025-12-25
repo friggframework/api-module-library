@@ -783,6 +783,7 @@ components:
         - id
         - name
         - type
+        - extensionType
       properties:
         id:
           type: string
@@ -806,6 +807,28 @@ components:
             - fullPage
             - embedded
           description: Type of extension point
+
+        extensionType:
+          type: string
+          enum:
+            - jsonResponse
+            - codedComponents
+            - iframe
+            - embeddedSdk
+          description: |
+            How the developer provides UI for this extension point:
+            - jsonResponse: Developer returns JSON from endpoint, platform renders
+            - codedComponents: Developer writes code using platform SDK/UI Kit
+            - iframe: Developer provides full web app at URL
+            - embeddedSdk: Platform SDK embedded in developer's app
+
+        extensionTypeConfig:
+          oneOf:
+            - $ref: '#/components/schemas/JsonResponseConfig'
+            - $ref: '#/components/schemas/CodedComponentsConfig'
+            - $ref: '#/components/schemas/IframeConfig'
+            - $ref: '#/components/schemas/EmbeddedSdkConfig'
+          description: Configuration specific to the extension type
 
         description:
           type: string
@@ -920,3 +943,351 @@ components:
             number: NumberInput
             boolean: Checkbox
             date: DatePicker
+
+    # =========================================================================
+    # EXTENSION TYPE CONFIGURATIONS
+    # =========================================================================
+
+    JsonResponseConfig:
+      type: object
+      description: |
+        Configuration for JSON Response extension type.
+        Developer returns JSON from endpoint, platform renders pre-built components.
+
+        Examples: Slack Block Kit, Google Workspace Add-ons, Asana App Components
+      properties:
+        schema:
+          type: object
+          description: JSON Schema definition for valid responses
+          properties:
+            format:
+              type: string
+              description: Schema format identifier
+              examples:
+                - "google.apps.card.v1"
+                - "slack.blocks"
+                - "adaptive-cards"
+                - "custom"
+
+            version:
+              type: string
+              description: Schema version
+
+            schemaUrl:
+              type: string
+              format: uri
+              description: URL to full JSON Schema definition
+
+            encoding:
+              type: string
+              default: "UTF-8"
+
+        endpoint:
+          type: object
+          description: How the platform calls the developer's endpoint
+          properties:
+            method:
+              type: string
+              enum: [GET, POST]
+              default: POST
+
+            contentType:
+              type: string
+              default: "application/json"
+
+            timeout:
+              type: integer
+              description: Request timeout in seconds
+              default: 10
+
+            authentication:
+              type: string
+              enum:
+                - none
+                - oauth
+                - jwt
+                - signedRequest
+                - apiKey
+              description: How requests are authenticated
+
+            contextProvided:
+              type: array
+              items:
+                type: string
+              description: Context data sent with each request
+              examples:
+                - user
+                - record
+                - locale
+                - permissions
+
+        interactivity:
+          type: object
+          description: How user interactions are handled
+          properties:
+            callbackUrl:
+              type: boolean
+              description: Whether platform POSTs interactions to callback URL
+
+            payloadTypes:
+              type: array
+              items:
+                type: string
+              description: Types of interaction payloads
+              examples:
+                - block_actions
+                - view_submission
+                - form_submit
+
+    CodedComponentsConfig:
+      type: object
+      description: |
+        Configuration for Coded Components extension type.
+        Developer writes code using platform's SDK/UI Kit.
+
+        Examples: HubSpot UI Extensions, Salesforce LWC, Canva Apps SDK
+      properties:
+        sdk:
+          type: string
+          description: Reference to SDK in the sdks object
+
+        framework:
+          type: string
+          enum:
+            - react
+            - vue
+            - lwc
+            - webComponents
+            - agnostic
+          description: Required or primary framework
+
+        runtime:
+          type: object
+          description: How developer code is executed
+          properties:
+            type:
+              type: string
+              enum:
+                - sandboxedIframe
+                - webWorker
+                - directExecution
+              description: Execution environment
+
+            bundling:
+              type: string
+              enum:
+                - platformBuild
+                - developerBuild
+                - cdn
+              description: How code is bundled and deployed
+
+        hostInteraction:
+          $ref: '#/components/schemas/JsSdkConfig'
+
+    IframeConfig:
+      type: object
+      description: |
+        Configuration for Iframe extension type.
+        Developer provides full web app at URL, platform loads in iframe.
+
+        Examples: Front Plugins, Zendesk Apps, Figma Plugins
+      properties:
+        sandboxAttributes:
+          type: array
+          items:
+            type: string
+          description: iframe sandbox attribute values
+          examples:
+            - allow-scripts
+            - allow-forms
+            - allow-same-origin
+            - allow-popups
+
+        cspRequirements:
+          type: string
+          description: Required Content Security Policy
+
+        sizeConstraints:
+          type: object
+          properties:
+            minWidth:
+              type: integer
+            maxWidth:
+              type: integer
+            minHeight:
+              type: integer
+            maxHeight:
+              type: integer
+            resizable:
+              type: boolean
+              description: Whether iframe can be resized dynamically
+
+        communication:
+          $ref: '#/components/schemas/JsSdkConfig'
+
+    EmbeddedSdkConfig:
+      type: object
+      description: |
+        Configuration for Embedded SDK extension type.
+        Platform SDK is embedded in developer's own application.
+
+        Examples: Stripe Elements, Plaid Link, PayPal Buttons
+      properties:
+        sdk:
+          type: object
+          description: SDK package details
+          properties:
+            package:
+              type: string
+              description: npm/CDN package name
+
+            cdn:
+              type: string
+              format: uri
+              description: CDN URL (often required for security)
+
+            cdnRequired:
+              type: boolean
+              description: Whether SDK must be loaded from CDN (cannot bundle)
+              default: false
+
+        mountPattern:
+          type: string
+          enum:
+            - domSelector
+            - reactComponent
+            - webComponent
+            - function
+          description: How SDK components are mounted
+
+        theming:
+          type: object
+          description: Styling/theming capabilities
+          properties:
+            system:
+              type: string
+              description: Theming system name
+              examples:
+                - "Appearance API"
+                - "Theme options"
+                - "CSS variables"
+
+            prebuiltThemes:
+              type: array
+              items:
+                type: string
+              description: Available pre-built themes
+
+            customizable:
+              type: boolean
+              description: Whether theming is customizable
+
+            variables:
+              type: array
+              items:
+                type: string
+              description: Customizable theme variables
+
+        communication:
+          type: object
+          properties:
+            pattern:
+              type: string
+              enum:
+                - callbacks
+                - events
+                - promises
+                - observables
+              description: Primary async communication pattern
+
+            events:
+              type: array
+              items:
+                type: string
+              description: Events the SDK can emit
+
+    # =========================================================================
+    # JAVASCRIPT SDK CONFIGURATION
+    # =========================================================================
+
+    JsSdkConfig:
+      type: object
+      description: |
+        Configuration for JavaScript SDK that enables host interaction.
+        Cross-cutting concern that applies to multiple extension types.
+      properties:
+        globalObject:
+          type: string
+          description: Global window object name
+          examples:
+            - miro
+            - Front
+            - ZAFClient
+            - figma
+            - Stripe
+
+        package:
+          type: string
+          description: npm package name (if applicable)
+
+        cdn:
+          type: string
+          format: uri
+          description: CDN script URL
+
+        initialization:
+          type: object
+          properties:
+            method:
+              type: string
+              description: How SDK is initialized
+              examples:
+                - "auto"
+                - "ZAFClient.init()"
+                - "loadStripe(key)"
+
+            async:
+              type: boolean
+              description: Whether initialization is async
+
+        namespaces:
+          type: object
+          description: SDK namespace structure
+          additionalProperties:
+            type: object
+            properties:
+              description:
+                type: string
+              methods:
+                type: array
+                items:
+                  type: string
+
+        capabilities:
+          type: object
+          description: What the SDK can do
+          properties:
+            context:
+              type: boolean
+              description: Can access current context/state
+
+            uiActions:
+              type: boolean
+              description: Can trigger platform UI (toasts, modals)
+
+            dataActions:
+              type: boolean
+              description: Can perform CRUD on platform data
+
+            events:
+              type: boolean
+              description: Can subscribe to platform events
+
+        asyncPattern:
+          type: string
+          enum:
+            - promises
+            - callbacks
+            - observables
+            - sync
+          description: Primary async pattern used

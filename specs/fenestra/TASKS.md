@@ -1,8 +1,8 @@
 # Fenestra Spec Development Tasks
 
-## Current Focus: Define the 4 Extension Types
+## Current Focus: Define the 5 Extension Types
 
-### The Four Types
+### The Five Types
 
 | Type | Description | Platform Provides | Developer Provides |
 |------|-------------|-------------------|-------------------|
@@ -10,6 +10,7 @@
 | **Coded Components** | SDK/UI Kit React components, sometimes BYO allowed | Component library, build tooling | React code using SDK |
 | **Iframe** | Any HTML/JS/CSS at a URL | Iframe container, sometimes postMessage API | Full web application |
 | **Embedded SDK** | Platform SDK embedded in developer's app for secure/compliant UI | SDK that renders in dev's page | Mount point, configuration, host app |
+| **Agent UI** | AI agent-driven UI with predeclared templates + custom iframe fallback | Template renderer, communication protocol | Template invocations, optional custom iframe |
 
 ### Cross-cutting: JavaScript SDK
 
@@ -25,6 +26,7 @@ When platforms expose a JS object to interact with host UI (e.g., `window.miro`,
 - [x] Create diagram: Iframe type (render flow)
 - [x] Create diagram: Embedded SDK type (render flow)
 - [x] Create diagram: JS SDK interaction pattern
+- [x] Create diagram: Agent UI type (render flow)
 
 **Output**: [DIAGRAMS.md](./DIAGRAMS.md)
 
@@ -55,19 +57,21 @@ When platforms expose a JS object to interact with host UI (e.g., `window.miro`,
 **Output**: [ECOSYSTEM-MAPPING.md](./ECOSYSTEM-MAPPING.md)
 
 ### Phase 3: Update Spec Schema
-- [ ] Add `extensionType` enum to spec
-- [ ] Define JSON Response schema details
-- [ ] Define Coded Components schema details
-- [ ] Define Iframe schema details
-- [ ] Define Embedded SDK schema details
-- [ ] Add JS SDK exposure schema
+- [x] Add `extensionType` enum to spec
+- [x] Define JSON Response schema details
+- [x] Define Coded Components schema details
+- [x] Define Iframe schema details
+- [x] Define Embedded SDK schema details
+- [x] Add JS SDK exposure schema
+- [x] Define Agent UI schema details (AgentUIConfig, AgentUITemplate)
 
 ### Phase 4: Create Example Documents
 - [ ] Example: JSON Response platform (Slack Block Kit)
-- [ ] Example: Coded Components platform (already have HubSpot)
+- [x] Example: Coded Components platform (HubSpot)
 - [ ] Example: Iframe platform (Front)
 - [ ] Example: Embedded SDK platform (Stripe)
 - [ ] Example: Hybrid platform (Pipedrive or Zendesk)
+- [x] Example: Agent UI platform (MCP Apps)
 
 ---
 
@@ -103,6 +107,15 @@ When platforms expose a JS object to interact with host UI (e.g., `window.miro`,
 - Zendesk: Garden components (recommended) + any framework
 - Salesforce: LWC + Canvas (iframe)
 - Intercom: Canvas Kit (JSON) + Sheets (iframe)
+
+### Agent UI Platforms (NEW)
+- MCP Apps hosts: Pre-declared templates + custom iframe fallback
+- Key characteristics:
+  - AI agent drives the UI through structured invocations
+  - Templates for common patterns (forms, confirmations, progress)
+  - Custom iframe escape hatch for complex interactions
+  - JSON-RPC communication protocol
+  - JSON Forms for structured input collection
 
 ---
 

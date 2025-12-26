@@ -1,6 +1,6 @@
 # Fenestra Extension Types - Diagrams
 
-This document illustrates the 4 broad extension types and how rendering flows from developer-provided assets to user-visible UI.
+This document illustrates the 5 broad extension types and how rendering flows from developer-provided assets to user-visible UI.
 
 ---
 
@@ -382,6 +382,119 @@ Many extension types include a JS SDK for interacting with the host platform:
 
 ---
 
+## Type 5: Agent UI
+
+**Pattern**: AI agent drives UI through pre-declared templates + custom iframe fallback
+
+**Examples**: MCP Apps hosts, AI assistant sidebars, LLM-powered interfaces
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              PLATFORM/HOST SIDE                             │
+│                                                                             │
+│  ┌─────────────┐    ┌──────────────────────────────────────────────────┐   │
+│  │   AI Agent  │    │              Host Application                    │   │
+│  │  (Server)   │───▶│                                                   │   │
+│  │             │    │   ┌────────────────────────────────────────────┐ │   │
+│  └─────────────┘    │   │        Template Renderer                   │ │   │
+│        │            │   │                                            │ │   │
+│        │            │   │  Agent invokes template:                   │ │   │
+│        │            │   │  ┌────────────────────────────────────┐   │ │   │
+│        │            │   │  │  {                                 │   │ │   │
+│        │            │   │  │    "template": "form",             │   │ │   │
+│        │            │   │  │    "data": {                       │   │ │   │
+│        │ JSON-RPC   │   │  │      "title": "Enter Details",     │   │ │   │
+│        │ over MCP   │   │  │      "schema": { ... }             │   │ │   │
+│        ▼            │   │  │    }                               │   │ │   │
+│  ┌───────────┐      │   │  │  }                                 │   │ │   │
+│  │ Template  │      │   │  └────────────────────────────────────┘   │ │   │
+│  │ Request   │──────│   │                    │                      │ │   │
+│  └───────────┘      │   │                    ▼                      │ │   │
+│                     │   │  ┌────────────────────────────────────┐   │ │   │
+│                     │   │  │  Pre-built Templates               │   │ │   │
+│                     │   │  │  ┌──────┐ ┌──────┐ ┌──────┐       │   │ │   │
+│                     │   │  │  │ Form │ │Confirm││Result│ ...   │   │ │   │
+│                     │   │  │  └──────┘ └──────┘ └──────┘       │   │ │   │
+│                     │   │  │  (JSON Forms, platform components) │   │ │   │
+│                     │   │  └────────────────────────────────────┘   │ │   │
+│                     │   │                                            │ │   │
+│                     │   └────────────────────────────────────────────┘ │   │
+│                     │                                                   │   │
+│                     │   ┌────────────────────────────────────────────┐ │   │
+│                     │   │  OR: Custom Iframe Fallback                │ │   │
+│                     │   │                                            │ │   │
+│                     │   │  Agent opens custom UI when templates      │ │   │
+│                     │   │  aren't sufficient:                        │ │   │
+│                     │   │  ┌──────────────────────────────────────┐ │ │   │
+│                     │   │  │  <iframe                             │ │ │   │
+│                     │   │  │    src="https://agent-app.com/ui"    │ │ │   │
+│                     │   │  │    sandbox="allow-scripts"           │ │ │   │
+│                     │   │  │  >                                   │ │ │   │
+│                     │   │  │    [Complex custom UI]               │ │ │   │
+│                     │   │  │  </iframe>                           │ │ │   │
+│                     │   │  └──────────────────────────────────────┘ │ │   │
+│                     │   └────────────────────────────────────────────┘ │   │
+│                     │                         ▲                        │   │
+│                     │                         │ User interaction       │   │
+│                     │                         ▼                        │   │
+│                     │   ┌────────────────────────────────────────────┐ │   │
+│                     │   │  Event Flow Back to Agent                  │ │   │
+│                     │   │  - Form submitted → agent receives data    │ │   │
+│                     │   │  - Confirmation → agent continues/stops    │ │   │
+│                     │   │  - Custom action → agent handles event     │ │   │
+│                     │   └────────────────────────────────────────────┘ │   │
+│                     └──────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+                             ▲
+                             │ MCP Protocol
+                             │
+┌────────────────────────────┴────────────────────────────────────────────────┐
+│                           AGENT/MCP SERVER SIDE                             │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                     MCP Server with UI Capability                   │   │
+│  │                                                                      │   │
+│  │   Declares UI templates in manifest:                                 │   │
+│  │   {                                                                  │   │
+│  │     "templates": ["form", "confirmation", "progress", "result"],     │   │
+│  │     "customUIAllowed": true                                          │   │
+│  │   }                                                                  │   │
+│  │                                                                      │   │
+│  │   During tool execution:                                             │   │
+│  │   1. Agent decides UI is needed                                      │   │
+│  │   2. Invokes template: showUI("form", { schema, data })              │   │
+│  │   3. Waits for user response                                         │   │
+│  │   4. Continues processing with user input                            │   │
+│  │                                                                      │   │
+│  │   Or for complex UI:                                                 │   │
+│  │   1. Opens custom iframe: openCustomUI("https://...")                │   │
+│  │   2. Communicates via JSON-RPC in iframe                             │   │
+│  │   3. Receives events and responds                                    │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Agent provides: Template invocations, custom iframe URL (optional)         │
+│  Agent does NOT provide: Template rendering logic (host handles that)       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Characteristics**:
+- AI agent drives the UI programmatically
+- Pre-declared templates for common patterns (forms, confirmations, progress)
+- Custom iframe escape hatch for complex interactions
+- JSON-RPC communication over MCP protocol
+- JSON Forms used for structured input collection
+- Agent can chain multiple UI interactions
+
+**Comparison to Other Types**:
+| Aspect | Agent UI | JSON Response | Iframe |
+|--------|----------|---------------|--------|
+| Who decides what UI? | AI Agent | Developer endpoint | Developer app |
+| Pre-declared templates? | Yes | Yes | No |
+| Custom UI? | Via iframe fallback | No | Primary mode |
+| Interaction pattern | Agent-driven loop | Request-response | User-driven |
+
+---
+
 ## Summary Table
 
 | Type | Who Renders? | Developer Provides | BYO Styling? | JS SDK? |
@@ -390,3 +503,4 @@ Many extension types include a JS SDK for interacting with the host platform:
 | **Coded Components** | Platform (from dev code) | React code + SDK components | Limited | Often |
 | **Iframe** | Developer | Full web app | Yes | Optional |
 | **Embedded SDK** | Platform (in dev's app) | Mount point + config | Limited | Required |
+| **Agent UI** | Platform (from agent invocations) | Template data + optional iframe | Via iframe only | Required (MCP) |

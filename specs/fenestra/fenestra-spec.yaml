@@ -815,12 +815,14 @@ components:
             - codedComponents
             - iframe
             - embeddedSdk
+            - agentUI
           description: |
             How the developer provides UI for this extension point:
             - jsonResponse: Developer returns JSON from endpoint, platform renders
             - codedComponents: Developer writes code using platform SDK/UI Kit
             - iframe: Developer provides full web app at URL
             - embeddedSdk: Platform SDK embedded in developer's app
+            - agentUI: AI agent-driven UI with predeclared templates + custom iframe
 
         extensionTypeConfig:
           oneOf:
@@ -828,6 +830,7 @@ components:
             - $ref: '#/components/schemas/CodedComponentsConfig'
             - $ref: '#/components/schemas/IframeConfig'
             - $ref: '#/components/schemas/EmbeddedSdkConfig'
+            - $ref: '#/components/schemas/AgentUIConfig'
           description: Configuration specific to the extension type
 
         description:
@@ -1205,6 +1208,173 @@ components:
               items:
                 type: string
               description: Events the SDK can emit
+
+    AgentUIConfig:
+      type: object
+      description: |
+        Configuration for Agent UI extension type.
+        AI agents drive UI through predeclared templates + custom iframe fallback.
+
+        Based on the MCP Apps proposal - enables AI-driven UI through structured
+        templates while preserving escape hatch to full custom UI.
+
+        Examples: MCP Apps hosts, AI assistant sidebars, LLM-powered interfaces
+      properties:
+        templates:
+          type: object
+          description: Pre-declared UI templates the agent can invoke
+          properties:
+            supported:
+              type: array
+              items:
+                type: string
+              description: Template types supported by the host
+              examples:
+                - form
+                - confirmation
+                - progress
+                - result
+                - error
+                - list
+                - detail
+                - media
+
+            definitions:
+              type: object
+              description: Template definitions with their schemas
+              additionalProperties:
+                $ref: '#/components/schemas/AgentUITemplate'
+
+        customUI:
+          type: object
+          description: Custom iframe fallback for complex UI needs
+          properties:
+            allowed:
+              type: boolean
+              description: Whether custom iframe UI is supported
+              default: true
+
+            sandboxAttributes:
+              type: array
+              items:
+                type: string
+              description: iframe sandbox attributes for custom UI
+
+            sizeConstraints:
+              type: object
+              properties:
+                maxWidth:
+                  type: integer
+                maxHeight:
+                  type: integer
+                resizable:
+                  type: boolean
+
+        communication:
+          type: object
+          description: How agent and UI communicate
+          properties:
+            protocol:
+              type: string
+              enum:
+                - jsonRpc
+                - postMessage
+                - mcp
+              description: Primary communication protocol
+              default: jsonRpc
+
+            channels:
+              type: array
+              items:
+                type: string
+              description: Communication channels available
+              examples:
+                - templates
+                - customUI
+                - events
+                - actions
+
+        agentCapabilities:
+          type: object
+          description: What the agent can do through the UI
+          properties:
+            invokeTemplates:
+              type: boolean
+              description: Can invoke pre-declared templates
+              default: true
+
+            openCustomUI:
+              type: boolean
+              description: Can open custom iframe UI
+              default: true
+
+            receiveEvents:
+              type: boolean
+              description: Can receive UI events (clicks, submissions)
+              default: true
+
+            closeUI:
+              type: boolean
+              description: Can programmatically close UI
+              default: true
+
+            chainInteractions:
+              type: boolean
+              description: Can chain multiple UI interactions
+              default: true
+
+    AgentUITemplate:
+      type: object
+      description: Definition of a pre-declared agent UI template
+      properties:
+        name:
+          type: string
+          description: Template identifier
+
+        description:
+          type: string
+          description: What this template is used for
+
+        inputSchema:
+          type: object
+          description: JSON Schema for template input data
+
+        outputSchema:
+          type: object
+          description: JSON Schema for template output (user response)
+
+        rendering:
+          type: object
+          description: How the template is rendered
+          properties:
+            type:
+              type: string
+              enum:
+                - platform
+                - jsonForms
+                - custom
+              description: Rendering strategy
+
+            component:
+              type: string
+              description: Platform component used for rendering
+
+        interactivity:
+          type: object
+          properties:
+            submitButton:
+              type: boolean
+              description: Has a submit action
+
+            cancelButton:
+              type: boolean
+              description: Has a cancel action
+
+            events:
+              type: array
+              items:
+                type: string
+              description: Events this template can emit
 
     # =========================================================================
     # JAVASCRIPT SDK CONFIGURATION

@@ -525,6 +525,15 @@ Integration/automation platforms with their own UI extension models.
 | **Zapier** | JSON + Coded | Field defs + Interfaces | Field schemas, triggers | [Link](https://docs.zapier.com/) |
 | **Make.com** | JSON (RPC) | Parameter specs | Module config, RPC endpoints | [Link](https://developers.make.com/) |
 | **Power Automate** | JSON (OpenAPI + Adaptive Cards) | OpenAPI 2.0 + Card JSON | API spec, card definitions | [Link](https://learn.microsoft.com/en-us/connectors/) |
+
+---
+
+## ERP Platforms
+
+Enterprise Resource Planning systems with UI customization capabilities.
+
+| Platform | Types Supported | UI Definition | Developer Provides | Docs |
+|----------|-----------------|---------------|-------------------|------|
 | **NetSuite** | JSON + Coded (SuiteScript + SPAs) | Point-click + SuiteScript API + JSX | Code or config | [Link](https://docs.oracle.com/en/cloud/saas/netsuite/) |
 
 ### Detailed Breakdown

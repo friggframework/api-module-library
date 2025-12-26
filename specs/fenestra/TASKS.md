@@ -53,10 +53,10 @@ When platforms expose a JS object to interact with host UI (e.g., `window.miro`,
 - [x] Auth0 Lock → Embedded SDK
 - [x] Calendly → Embedded SDK
 - [x] Typeform → Embedded SDK
-- [x] Zapier → JSON Response + Coded Components (hybrid)
-- [x] Make.com → JSON Response (RPC-driven)
-- [x] Power Automate → JSON Response (OpenAPI + Adaptive Cards)
-- [x] NetSuite → JSON Response + Coded Components (hybrid)
+- [x] Zapier → JSON Response + Coded Components (hybrid) [Workflow]
+- [x] Make.com → JSON Response (RPC-driven) [Workflow]
+- [x] Power Automate → JSON Response (OpenAPI + Adaptive Cards) [Workflow]
+- [x] NetSuite → JSON Response + Coded Components (hybrid) [ERP]
 
 **Output**: [ECOSYSTEM-MAPPING.md](./ECOSYSTEM-MAPPING.md)
 
@@ -125,9 +125,15 @@ When platforms expose a JS object to interact with host UI (e.g., `window.miro`,
 - Zapier: JSON field definitions + Interfaces (no-code component builder)
 - Make.com: RPC-driven parameter system (unique dynamic field pattern)
 - Power Automate: OpenAPI 2.0 connectors + Adaptive Cards
-- NetSuite: Point-click customization + SuiteScript + JSX SPAs (2025.1+)
 - Key insight: All rely heavily on JSON-driven schemas
 - No iframe mode: Unlike Figma/Front, these platforms maintain strict rendering control
+
+### ERP Platforms (NEW)
+- NetSuite: Point-click customization + SuiteScript + JSX SPAs (2025.1+)
+- Unique characteristics:
+  - Server-side UI rendering (SuiteScript 2.x)
+  - Modern JSX/ESM approach (SuiteScript 2.1 SPAs)
+  - AI-powered development assistant
 
 ---
 

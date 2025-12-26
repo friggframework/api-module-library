@@ -1,6 +1,6 @@
 # Fenestra Ecosystem Mapping
 
-This document maps real-world platforms to the 4 extension types defined in the Fenestra specification.
+This document maps real-world platforms to the 5 extension types defined in the Fenestra specification.
 
 ---
 
@@ -516,26 +516,208 @@ Some platforms support multiple extension types:
 
 ---
 
+## Workflow & Automation Platforms
+
+Integration/automation platforms with their own UI extension models.
+
+| Platform | Types Supported | UI Definition | Developer Provides | Docs |
+|----------|-----------------|---------------|-------------------|------|
+| **Zapier** | JSON + Coded | Field defs + Interfaces | Field schemas, triggers | [Link](https://docs.zapier.com/) |
+| **Make.com** | JSON (RPC) | Parameter specs | Module config, RPC endpoints | [Link](https://developers.make.com/) |
+| **Power Automate** | JSON (OpenAPI + Adaptive Cards) | OpenAPI 2.0 + Card JSON | API spec, card definitions | [Link](https://learn.microsoft.com/en-us/connectors/) |
+| **NetSuite** | JSON + Coded (SuiteScript + SPAs) | Point-click + SuiteScript API + JSX | Code or config | [Link](https://docs.oracle.com/en/cloud/saas/netsuite/) |
+
+### Detailed Breakdown
+
+#### Zapier Apps
+```yaml
+platform: Zapier
+type: hybrid (jsonResponse + codedComponents)
+approaches:
+  platformUI:
+    type: jsonResponse
+    description: "JSON field definitions for triggers/actions"
+    fieldTypes:
+      - text, email, url, password
+      - dropdown (static/dynamic)
+      - checkbox, radio, toggle
+      - date/datetime, code
+    dynamicFields: true (via hidden triggers)
+
+  interfaces:
+    type: codedComponents
+    description: "No-code component builder for custom pages"
+    components:
+      - Form, Table, Kanban
+      - Button, Layout
+      - Media, Rich Text, Embed
+
+sdk:
+  package: "@zapier/platform-sdk" # Optional, for CLI
+  globalObject: none
+  jsSdk: false # Platform controls rendering
+
+constraints:
+  - Input forms optional for triggers, required for actions
+  - Dynamic fields limited in Platform UI (full support in CLI)
+  - Custom styling not allowed
+  - Interfaces components have predefined styling
+```
+
+#### Make.com (Integromat)
+```yaml
+platform: Make.com
+type: jsonResponse
+description: "RPC-driven parameter system for dynamic fields"
+
+uiDefinition:
+  format: Make parameter specification
+  fieldTypes:
+    - text (all text-based inputs)
+    - select (static or RPC-generated)
+    - search button (large datasets)
+    - checkbox, radio, file
+
+rpcSystem:
+  description: "Remote Procedure Calls for runtime field generation"
+  types:
+    dynamicOptions: "Generates dropdown/search options from API"
+    dynamicFields: "Fetches field definitions from server"
+  output: "Array of { label, value } objects"
+  nesting: true # RPCs can call other RPCs
+
+sdk:
+  package: none # REST/GraphQL to external services
+  globalObject: none
+
+constraints:
+  - No npm packages; must use external API calls
+  - Type conversion needed (Make uses "text" not "string")
+  - Cannot build custom React components or iframe UIs
+  - Field types limited to platform-supported types
+```
+
+#### Power Automate
+```yaml
+platform: Power Automate
+type: hybrid (jsonResponse)
+approaches:
+  customConnectors:
+    type: jsonResponse
+    description: "OpenAPI 2.0 based connector definitions"
+    format: OpenAPI 2.0 (Swagger)
+    inputTypes:
+      - All primitives (string, number, boolean, integer)
+      - Array/object structures
+      - Enums (dropdown options)
+      - File upload/download
+    maxFileSize: 1MB
+    authentication: API Key, OAuth, Basic
+
+  adaptiveCards:
+    type: jsonResponse
+    description: "Platform-agnostic card format"
+    format: AdaptiveCard JSON
+    version: "1.5" # Teams, 1.2 for mobile
+    components:
+      - TextBlock, RichTextBlock
+      - Input.Text, Input.Number, Input.Date, Input.Time
+      - Input.Toggle, Input.ChoiceSet
+      - Container, ColumnSet, Table
+      - Button actions (OpenUrl, Submit, ShowCard)
+
+copilotStudio:
+  type: agentUI
+  description: "Ask with Adaptive Card nodes for AI interactions"
+
+sdk:
+  adaptiveCards: "@microsoft/adaptivecards"
+  purpose: Client-side card rendering
+
+constraints:
+  - Connectors limited to OpenAPI 2.0 format
+  - No custom code execution in connectors
+  - Adaptive Cards: restricted component set, no arbitrary HTML/CSS
+  - Security/compliance validation required for published connectors
+```
+
+#### NetSuite
+```yaml
+platform: NetSuite
+type: hybrid (jsonResponse + codedComponents)
+approaches:
+  customization:
+    type: jsonResponse
+    description: "Point-and-click form customization"
+    capabilities:
+      - Field visibility/organization
+      - Drag-and-drop UI
+    codeRequired: false
+
+  suiteScript:
+    type: codedComponents
+    description: "Server-side UI component rendering"
+    framework: SuiteScript 2.x
+    module: N/ui/serverWidget
+    pageTypes:
+      - Form
+      - List
+      - Assistant
+    components:
+      - Button, TextField, Textarea
+      - Select (dropdown), Checkbox, Radio
+      - Date/datetime, Fields with custom formatting
+      - Sublist (data grid), Group/Tab organization
+    rendering: Server-side to HTML
+
+  spas:
+    type: codedComponents
+    description: "Modern JSX-based Single Page Applications (2025.1+)"
+    framework: SuiteScript 2.1 + JSX
+    uiFramework: UIF (User Interface Framework)
+    components:
+      - Grids, buttons, inputs, modals
+      - Form handling, Layout components
+    moduleSystem: ESM (ECMAScript Modules)
+    tools: SuiteCloud Development Framework (SDF)
+
+sdk:
+  suiteScript: "N/ui/serverWidget, N/record"
+  spas: "@netsuite/uif"
+  devTools: SuiteCloud Developer Assistant (AI-powered)
+
+constraints:
+  - Customization limited to form layout/visibility
+  - SuiteScript: Server-side rendering, client interaction via Client Scripts
+  - SPAs require SuiteScript 2.1 (not backward compatible with 2.0)
+  - Module system migration required (ESM for SPAs vs RequireJS for older code)
+```
+
+---
+
 ## Summary by Extension Type
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         EXTENSION TYPE DISTRIBUTION                         │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  JSON RESPONSE          CODED COMPONENTS        IFRAME           EMBEDDED  │
-│  ──────────────         ─────────────────      ──────           ────────   │
-│  • Google Workspace     • HubSpot UI Ext       • Front          • Stripe   │
-│  • Asana                • Salesforce LWC       • Zendesk        • Plaid    │
-│  • Gorgias              • Canva                • Freshdesk      • PayPal   │
-│  • Pipedrive (panels)   • Shopify              • Intercom       • Auth0    │
-│  • Slack Block Kit      • Monday.com           • Figma          • Calendly │
-│  • Adaptive Cards       • Zendesk Garden       • Salesforce     • Typeform │
-│                                                  Canvas                     │
-│                                                                             │
-│  ════════════════════════════════════════════════════════════════════════  │
-│  Platform renders        Platform runs          Developer app    Platform  │
-│  from JSON               developer code         in iframe        in dev's  │
-│                                                                   app      │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────────┐
+│                            EXTENSION TYPE DISTRIBUTION                                 │
+├───────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│  JSON RESPONSE      CODED COMPONENTS    IFRAME         EMBEDDED SDK    AGENT UI      │
+│  ──────────────     ─────────────────   ──────         ────────────    ────────      │
+│  • Google Workspace • HubSpot UI Ext    • Front        • Stripe        • MCP Apps    │
+│  • Asana            • Salesforce LWC    • Zendesk      • Plaid         • Copilot     │
+│  • Gorgias          • Canva             • Freshdesk    • PayPal          Studio      │
+│  • Pipedrive        • Shopify           • Intercom     • Auth0                       │
+│  • Slack Block Kit  • Monday.com        • Figma        • Calendly                    │
+│  • Adaptive Cards   • Zendesk Garden    • Salesforce   • Typeform                    │
+│  • Zapier (fields)  • Zapier Interfaces   Canvas                                     │
+│  • Make.com (RPC)   • NetSuite SPAs                                                  │
+│  • Power Automate   • NetSuite Script                                                │
+│  • NetSuite Custom                                                                   │
+│                                                                                       │
+│  ════════════════════════════════════════════════════════════════════════════════   │
+│  Platform renders   Platform runs       Developer app  Platform SDK    AI agent      │
+│  from JSON          developer code      in iframe      in dev's app    drives UI     │
+│                                                                                       │
+└───────────────────────────────────────────────────────────────────────────────────────┘
 ```

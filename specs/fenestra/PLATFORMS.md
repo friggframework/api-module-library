@@ -24,6 +24,7 @@ Popular platforms with well-documented extension ecosystems.
 | VS Code | Dev Tools | Coded Components | [Link](https://code.visualstudio.com/api) | ⏳ Pending |
 | Zendesk | Support | Iframe + Coded | [Link](https://developer.zendesk.com) | ⏳ Pending |
 | Microsoft Teams | Collaboration | JSON (Adaptive Cards) | [Link](https://docs.microsoft.com/en-us/microsoftteams/platform/) | ⏳ Pending |
+| DocuSign | Document & Agreement | Embedded SDK + Extensions + Agent UI | [Link](https://developers.docusign.com) | ⏳ Pending |
 
 ### Tier 2: Medium Priority
 Well-established platforms with good documentation.
@@ -224,6 +225,23 @@ Smaller or more specialized platforms.
 | Contentful | Iframe + JSON | [Link](https://www.contentful.com/developers/) | [App Framework](https://www.contentful.com/developers/docs/concepts/apps/) | @contentful/app-sdk |
 | WordPress | Coded (PHP) | [Link](https://developer.wordpress.org) | [Plugins](https://wordpress.org/plugins/) | WordPress Plugin API |
 
+### 18. Document & Agreement
+
+| Platform | Extension Type | Dev Docs | Marketplace | SDK |
+|----------|----------------|----------|-------------|-----|
+| DocuSign | Embedded SDK + Extensions + Agent UI | [Link](https://developers.docusign.com) | [App Center](https://www.docusign.com/partners/app-center) | @docusign/esign, Mobile SDKs, MCP Server |
+| Adobe Sign | Embedded SDK + Iframe | [Link](https://developer.adobe.com/document-services/docs/overview/) | [Exchange](https://exchange.adobe.com) | Adobe Sign API |
+| PandaDoc | Embedded SDK + Iframe | [Link](https://developers.pandadoc.com) | [Integrations](https://www.pandadoc.com/integrations/) | PandaDoc API |
+| HelloSign (Dropbox Sign) | Embedded SDK | [Link](https://developers.hellosign.com) | [Integrations](https://www.hellosign.com/integrations) | hellosign-sdk |
+| SignNow | Embedded SDK | [Link](https://docs.signnow.com) | [Integrations](https://www.signnow.com/integrations) | SignNow API |
+
+> **DocuSign Notes (2024-2025):**
+> - **Extension Apps**: JSON-based apps via Developer Console, distributed through App Center
+> - **Embedded Signing/Sending**: Embed signing ceremonies in your app via Focused View
+> - **1FE Micro-frontend**: Modular embedded DocuSign experiences
+> - **MCP Server**: AI integration with Claude, GitHub Copilot, ChatGPT (beta)
+> - **Maestro API**: Programmatic agreement workflow orchestration (GA 2025)
+
 ---
 
 ## Extension Type Distribution
@@ -233,8 +251,8 @@ Smaller or more specialized platforms.
 | **JSON Response** | ~22 | Slack, Asana, Zapier, Make.com, Power Automate |
 | **Coded Components** | ~28 | HubSpot, Canva, VS Code, Shopify, Monday.com |
 | **Iframe** | ~31 | Front, Zendesk, Figma, Miro, Freshdesk |
-| **Embedded SDK** | ~14 | Stripe, PayPal, Plaid, Auth0, Typeform, Klaviyo, Braze |
-| **Agent UI** | ~8 | MCP Apps, Power Automate Copilot |
+| **Embedded SDK** | ~18 | Stripe, PayPal, Plaid, Auth0, DocuSign, PandaDoc, HelloSign |
+| **Agent UI** | ~9 | MCP Apps, Power Automate Copilot, DocuSign MCP |
 
 ---
 

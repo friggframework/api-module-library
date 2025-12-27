@@ -306,6 +306,7 @@ extensionPoints:
   - id: crm-card
     name: CRM Record Card
     type: card
+    extensionType: codedComponents
     description: Card displayed on CRM record pages
     supportedComponents:
       - all
@@ -323,6 +324,7 @@ extensionPoints:
   - id: crm-sidebar
     name: CRM Sidebar Panel
     type: sidebar
+    extensionType: codedComponents
     description: Panel in the right sidebar of CRM records
     supportedComponents:
       - all

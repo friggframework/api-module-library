@@ -200,6 +200,7 @@ extensionPoints:
   - id: app-panel
     name: App Panel
     type: panel
+    extensionType: iframe
     description: Panel that opens from the app icon in the left toolbar
     supportedComponents:
       - all
@@ -221,6 +222,7 @@ extensionPoints:
   - id: modal
     name: Modal Dialog
     type: modal
+    extensionType: iframe
     description: Full modal overlay opened via SDK
     supportedComponents:
       - all
@@ -237,6 +239,7 @@ extensionPoints:
   - id: board-item
     name: Board Item
     type: canvas
+    extensionType: iframe
     description: Custom items rendered on the board canvas
     supportedComponents:
       - iframe-based

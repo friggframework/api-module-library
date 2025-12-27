@@ -243,6 +243,87 @@ Migration Report:
 Estimated compatibility: 78%
 ```
 
+### 8. Build Your Own Platform
+
+Use Fenestra as a **design blueprint** when building extensibility into your own platform:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                 PLATFORM BUILDER'S CHECKLIST                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  "I'm building a platform. What extensibility should I add?"    │
+│                                                                 │
+│  Fenestra shows you the patterns:                               │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ Extension Type?                                          │   │
+│  │ ☐ JSON Response - Simple, platform-controlled            │   │
+│  │ ☐ Coded Components - Flexible, SDK-based                 │   │
+│  │ ☐ Iframe - Maximum developer freedom                     │   │
+│  │ ☐ Agent UI - AI-driven with templates                    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ Platform Hooks (Extension Points)?                       │   │
+│  │ ☐ Sidebar panels                                         │   │
+│  │ ☐ Modal dialogs                                          │   │
+│  │ ☐ Record/detail pages                                    │   │
+│  │ ☐ Toolbar/action buttons                                 │   │
+│  │ ☐ Context menus                                          │   │
+│  │ ☐ Canvas elements                                        │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ Policies to define?                                      │   │
+│  │ ☐ Component requirements (required/recommended/optional) │   │
+│  │ ☐ BYO component policy                                   │   │
+│  │ ☐ Public vs private app rules                            │   │
+│  │ ☐ Marketplace certification                              │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ SDK to provide?                                          │   │
+│  │ ☐ Component library (Button, Card, Input...)            │   │
+│  │ ☐ JS SDK for host interaction (context, actions)        │   │
+│  │ ☐ CLI tool for development                               │   │
+│  │ ☐ Starter templates                                      │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  Output: Your own Fenestra spec documenting your platform!     │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+Study existing Fenestra specs to:
+- **Learn patterns** - How do HubSpot, Canva, Slack handle similar problems?
+- **Avoid mistakes** - What policies cause developer friction?
+- **Design consistently** - Use proven component taxonomies
+- **Document from day one** - Ship your platform with a Fenestra spec
+
+---
+
+## Platform Hooks
+
+> *"Extension points"* can also be thought of as **"platform hooks"** - the places where external developers can hook into your platform to modify or extend its behavior.
+
+Fenestra documents these hooks:
+
+```yaml
+extensionPoints:    # a.k.a. "Platform Hooks"
+  - id: crm-sidebar
+    name: CRM Record Sidebar
+    type: sidebar
+    description: "Hook into CRM record pages with a sidebar panel"
+
+  - id: compose-action
+    name: Compose Action Button
+    type: toolbar
+    description: "Hook into the email composer toolbar"
+```
+
+This framing helps platform owners think about extensibility as **"what hooks am I exposing?"** rather than just "what features do I have?"
+
 ---
 
 ## Why Fenestra?

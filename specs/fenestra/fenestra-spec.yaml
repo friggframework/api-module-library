@@ -238,6 +238,79 @@ components:
           format: uri
           description: SDK documentation URL
 
+        # Installation & Setup
+        installCommand:
+          type: string
+          description: Full install command for quick setup
+          examples:
+            - "npm install @hubspot/ui-extensions"
+            - "npx create-canva-app my-app"
+            - "pip install stripe"
+
+        cdn:
+          type: string
+          format: uri
+          description: CDN URL for script tag loading (if supported)
+          examples:
+            - "https://js.stripe.com/v3/"
+            - "https://cdn.plaid.com/link/v2/stable/link-initialize.js"
+
+        cdnRequired:
+          type: boolean
+          description: Whether SDK must be loaded from CDN (cannot be bundled)
+          default: false
+
+        typesPackage:
+          type: string
+          description: TypeScript types package (if separate from main package)
+          examples:
+            - "@types/stripe"
+            - "@figma/plugin-typings"
+
+        # Developer Experience
+        starterTemplate:
+          type: object
+          description: Starter template/scaffolding for new projects
+          properties:
+            command:
+              type: string
+              description: CLI command to scaffold new project
+              examples:
+                - "npx create-canva-app"
+                - "hs project create"
+                - "sf force:lightning:component:create"
+            repository:
+              type: string
+              format: uri
+              description: GitHub template repository
+            documentation:
+              type: string
+              format: uri
+
+        cliTool:
+          type: object
+          description: Platform CLI tool for development
+          properties:
+            package:
+              type: string
+              description: CLI package name
+              examples:
+                - "@hubspot/cli"
+                - "@canva/cli"
+                - "sfdx-cli"
+            installCommand:
+              type: string
+            commands:
+              type: object
+              description: Key CLI commands
+              additionalProperties:
+                type: string
+              examples:
+                - dev: "hs project dev"
+                  deploy: "hs project upload"
+                - dev: "canva app dev"
+                  build: "canva app build"
+
         exports:
           type: object
           description: Named exports from the SDK package

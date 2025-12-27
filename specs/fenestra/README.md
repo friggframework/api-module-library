@@ -31,12 +31,219 @@ The OAI has demonstrated success in standardizing API descriptions. Fenestra ext
 
 ## Relationship to Other Specifications
 
-| Specification | Purpose | Fenestra Integration |
-|--------------|---------|---------------------|
-| **OpenAPI** | API description | Fenestra extends OpenAPI patterns for UI description |
-| **Arazzo** | Workflow orchestration | Workflow steps can reference Fenestra UI for user interactions |
-| **MCP Apps** | AI-driven UI resources | Fenestra components map to MCP App templates |
-| **JSON Forms** | Schema-driven forms | Fenestra supports JSON Schema-based rendering |
+Fenestra is **not an API specification** - it's a **Platform Capabilities Specification**. It describes UI ecosystems, not HTTP endpoints.
+
+### Spec Family Comparison
+
+| Specification | Describes | Example |
+|---------------|-----------|---------|
+| **OpenAPI** | REST API endpoints | `POST /contacts` returns `Contact` |
+| **AsyncAPI** | Event-driven APIs | `order.created` event payload |
+| **Arazzo** | Workflows across APIs | "Create contact, then send email" |
+| **Fenestra** | UI extension ecosystems | "Platform has Button, Card, uses React SDK" |
+
+### Can Fenestra Exist Independently?
+
+**Yes.** A platform's UI ecosystem exists independently of its API:
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    HubSpot                          │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│   OpenAPI Doc                 Fenestra Doc          │
+│   ─────────────               ────────────          │
+│   • GET /contacts             • UI Extensions SDK   │
+│   • POST /deals               • CRM Cards           │
+│   • OAuth flows               • Component catalog   │
+│   • Webhook schemas           • BYO policy: No      │
+│                                                     │
+│   (How to call the API)       (How to build UI)     │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+### Relationship Models
+
+Fenestra can relate to OpenAPI in several ways:
+
+1. **Standalone** - Fenestra doc exists independently (most common)
+2. **Companion** - Both specs describe the same platform side-by-side
+3. **Cross-Reference** - OpenAPI operations reference Fenestra for UI responses
+4. **Embedded** - `x-fenestra` extension embeds UI info in OpenAPI docs
+
+| Integration | Fenestra Relation |
+|-------------|-------------------|
+| **OpenAPI** | Companion spec; can cross-reference via `$ref` |
+| **Arazzo** | Workflow steps can invoke Fenestra-described UI for user interactions |
+| **MCP Apps** | Fenestra describes host UI capabilities for agent-driven interfaces |
+| **JSON Forms** | Fenestra documents which platforms support JSON Schema-based rendering |
+
+---
+
+## Use Cases
+
+Having Fenestra specs for each platform enables powerful tooling and workflows.
+
+### 1. Visual Designer with Code Generation
+
+Build a **generative design platform** where:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    VISUAL DESIGNER                              │
+│                                                                 │
+│  ┌─────────────┐    ┌─────────────────────────────────────────┐│
+│  │ Target:     │    │                                         ││
+│  │ [HubSpot ▼] │    │   ┌─────────────────────────────────┐   ││
+│  └─────────────┘    │   │  Card                           │   ││
+│                     │   │  ┌─────────────────────────────┐│   ││
+│  Components:        │   │  │ Text: "Customer Info"       ││   ││
+│  ┌─────────────┐    │   │  ├─────────────────────────────┤│   ││
+│  │ ☑ Button    │    │   │  │ [Input: Email     ]        ││   ││
+│  │ ☑ Card      │    │   │  │ [Select: Status ▼]        ││   ││
+│  │ ☑ Input     │    │   │  │                            ││   ││
+│  │ ☑ Select    │    │   │  │     [Save Button]          ││   ││
+│  │ ☐ CustomDiv │←───│───│  └─────────────────────────────┘│   ││
+│  │   (blocked) │    │   └─────────────────────────────────┘   ││
+│  └─────────────┘    │                                         ││
+│                     └─────────────────────────────────────────┘│
+│  Fenestra tells     Canvas reflects platform constraints       │
+│  designer what's                                                │
+│  allowed                                                        │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ Generate
+┌─────────────────────────────────────────────────────────────────┐
+│  // Generated HubSpot UI Extension                              │
+│  import { Card, Input, Select, Button } from '@hubspot/ui-ext'; │
+│                                                                 │
+│  export function CustomerCard({ context }) {                    │
+│    return (                                                     │
+│      <Card>                                                     │
+│        <Text>Customer Info</Text>                               │
+│        <Input name="email" label="Email" />                     │
+│        <Select name="status" options={...} />                   │
+│        <Button onClick={...}>Save</Button>                      │
+│      </Card>                                                    │
+│    );                                                           │
+│  }                                                              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+The designer reads the Fenestra spec to:
+- **Populate the component palette** with available components
+- **Block unavailable components** based on BYO policy
+- **Validate designs** against platform constraints
+- **Generate accurate code** with correct imports and SDK usage
+
+### 2. Cross-Platform Portability
+
+Design once, generate for multiple platforms:
+
+```
+┌──────────────────┐     ┌───────────────────────────────────────┐
+│ Universal Design │────▶│ fenestra generate --platform hubspot  │
+│   (Platform-     │     │ fenestra generate --platform canva    │
+│    agnostic)     │     │ fenestra generate --platform slack    │
+└──────────────────┘     └───────────────────────────────────────┘
+                                          │
+                    ┌─────────────────────┼─────────────────────┐
+                    ▼                     ▼                     ▼
+            ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
+            │ HubSpot     │       │ Canva       │       │ Slack       │
+            │ React Code  │       │ React Code  │       │ Block Kit   │
+            │             │       │             │       │ JSON        │
+            └─────────────┘       └─────────────┘       └─────────────┘
+```
+
+### 3. AI Agent Interoperability
+
+MCP-compatible agents query UI capabilities:
+
+```javascript
+// Agent discovers what UI it can show
+const capabilities = await fenestra.load('claude-desktop');
+
+if (capabilities.templates.includes('form')) {
+  // Show a form to collect user input
+  await mcp.ui.showTemplate('form', {
+    title: 'Enter Details',
+    schema: { /* JSON Schema */ }
+  });
+}
+
+if (capabilities.customUI.allowed) {
+  // Fall back to custom iframe for complex UI
+  await mcp.ui.openCustomUI('https://my-app.com/complex-form');
+}
+```
+
+### 4. Frigg Module Integration
+
+Frigg integration modules declare UI capabilities:
+
+```javascript
+// frigg-hubspot module
+export const uiCapabilities = await fenestra.load('hubspot');
+
+// Orchestrator knows this module can render:
+// - CRM Cards (sidebar, record page)
+// - UI Extensions (React components)
+// - Timeline Events (JSON response)
+```
+
+### 5. Validation & Linting
+
+Pre-flight validation before deployment:
+
+```bash
+$ fenestra validate ./my-hubspot-app --platform hubspot
+
+✗ Error: CustomButton component not allowed
+  └─ HubSpot policy: componentRequirement = required
+  └─ Only @hubspot/ui-extensions components permitted
+
+✗ Error: Using <div> directly
+  └─ Must use <Box> or <Flex> from SDK
+
+✓ 12 components validated
+✗ 2 errors found
+```
+
+### 6. Documentation Generation
+
+Auto-generate developer docs from specs:
+
+```bash
+$ fenestra docs --platform hubspot --output ./docs
+
+Generated:
+  - docs/components/Button.md
+  - docs/components/Card.md
+  - docs/sdk-reference.md
+  - docs/policies.md
+  - docs/extension-points.md
+```
+
+### 7. Migration Assistance
+
+Help developers port between platforms:
+
+```bash
+$ fenestra migrate ./slack-app --from slack --to hubspot
+
+Migration Report:
+─────────────────
+✓ section → Card (compatible)
+✓ button → Button (compatible)
+✗ overflow_menu → No equivalent (manual work needed)
+✗ image → Image (props differ: url→src)
+
+Estimated compatibility: 78%
+```
+
+---
 
 ## Why Fenestra?
 

@@ -732,6 +732,53 @@
           "$ref": "#/$defs/Context"
         }
       },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "extensionType": { "const": "jsonResponse" } },
+            "required": ["extensionType"]
+          },
+          "then": {
+            "properties": { "extensionTypeConfig": { "$ref": "#/$defs/JsonResponseConfig" } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "extensionType": { "const": "codedComponents" } },
+            "required": ["extensionType"]
+          },
+          "then": {
+            "properties": { "extensionTypeConfig": { "$ref": "#/$defs/CodedComponentsConfig" } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "extensionType": { "const": "iframe" } },
+            "required": ["extensionType"]
+          },
+          "then": {
+            "properties": { "extensionTypeConfig": { "$ref": "#/$defs/IframeConfig" } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "extensionType": { "const": "embeddedSdk" } },
+            "required": ["extensionType"]
+          },
+          "then": {
+            "properties": { "extensionTypeConfig": { "$ref": "#/$defs/EmbeddedSdkConfig" } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "extensionType": { "const": "agentUI" } },
+            "required": ["extensionType"]
+          },
+          "then": {
+            "properties": { "extensionTypeConfig": { "$ref": "#/$defs/AgentUIConfig" } }
+          }
+        }
+      ],
       "patternProperties": {
         "^x-": {}
       }
@@ -769,6 +816,7 @@
     },
     "JsonResponseConfig": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "schema": {
           "type": "object",
@@ -835,6 +883,7 @@
     },
     "CodedComponentsConfig": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "sdk": {
           "type": "string"
@@ -863,6 +912,7 @@
     },
     "IframeConfig": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "sandboxAttributes": {
           "type": "array",
@@ -903,6 +953,7 @@
     },
     "EmbeddedSdkConfig": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "sdk": {
           "type": "object",
@@ -966,6 +1017,7 @@
     },
     "AgentUIConfig": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "templates": {
           "type": "object",
@@ -1200,6 +1252,9 @@
             "url": { "type": "string", "format": "uri" }
           }
         }
+      },
+      "patternProperties": {
+        "^x-": {}
       }
     },
     "I18n": {
@@ -1261,6 +1316,9 @@
           }
         },
         "documentation": { "type": "string", "format": "uri" }
+      },
+      "patternProperties": {
+        "^x-": {}
       }
     },
     "Compliance": {
@@ -1365,6 +1423,9 @@
             "documentation": { "type": "string", "format": "uri" }
           }
         }
+      },
+      "patternProperties": {
+        "^x-": {}
       }
     },
     "AgentInteraction": {
@@ -1441,6 +1502,9 @@
             }
           }
         }
+      },
+      "patternProperties": {
+        "^x-": {}
       }
     }
   }

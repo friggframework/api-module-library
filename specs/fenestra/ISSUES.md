@@ -223,3 +223,68 @@ ComponentDefinitionStyle:
 - [ ] AI agent interaction mechanisms
 - [ ] Tooling for validation and code generation
 - [ ] Reference implementations for major platforms
+
+---
+
+## Required Tooling
+
+### Spec Validator (Critical - Required for OAI Submission)
+
+A reference implementation that validates Fenestra documents:
+
+```bash
+# Validate a Fenestra spec
+fenestra validate ./hubspot.fenestra.yaml
+
+# Output
+✓ Schema valid
+✓ Required fields present
+✓ SDK references resolved
+✓ Component bindings valid
+✗ Warning: Component 'CustomButton' not in catalog
+```
+
+**Requirements**:
+- JSON Schema validation against `fenestra-spec.yaml`
+- Reference resolution ($ref support)
+- Custom validation rules (SDK exists, components match)
+- CLI interface
+- Programmatic API (JavaScript/TypeScript)
+
+**Repository**: `fenestra-tools` or part of main spec repo
+
+### Code Generator (High Priority)
+
+Generate SDK bindings and types from Fenestra specs:
+
+```bash
+# Generate TypeScript types
+fenestra generate --platform hubspot --output ./src/types
+
+# Generate React component stubs
+fenestra generate --platform hubspot --template react --output ./src/components
+```
+
+### Documentation Generator (Medium Priority)
+
+Auto-generate developer docs from specs:
+
+```bash
+fenestra docs --platform hubspot --output ./docs
+```
+
+### IDE Extension (Medium Priority)
+
+VS Code extension with:
+- Autocomplete for Fenestra YAML
+- Schema validation
+- Component catalog browsing
+- Quick navigation to SDK docs
+
+---
+
+## See Also
+
+- [SUBMISSION.md](./SUBMISSION.md) - OAI submission guide
+- [PLATFORMS.md](./PLATFORMS.md) - Target platform list
+- [TASKS.md](./TASKS.md) - Development progress

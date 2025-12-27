@@ -43,6 +43,22 @@
       "items": {
         "$ref": "#/$defs/ExtensionPoint"
       }
+    },
+    "declarativeSchemas": {
+      "type": "object",
+      "description": "JSON-based UI schema definitions (e.g., Slack Block Kit, Adaptive Cards)",
+      "additionalProperties": {
+        "$ref": "#/$defs/DeclarativeSchema"
+      }
+    },
+    "i18n": {
+      "$ref": "#/$defs/I18n"
+    },
+    "compliance": {
+      "$ref": "#/$defs/Compliance"
+    },
+    "agentInteraction": {
+      "$ref": "#/$defs/AgentInteraction"
     }
   },
   "patternProperties": {
@@ -162,7 +178,7 @@
         },
         "packageManager": {
           "type": "string",
-          "enum": ["npm", "yarn", "pip", "maven", "gradle", "nuget", "cargo", "go", "composer"]
+          "enum": ["npm", "yarn", "pip", "maven", "gradle", "nuget", "cargo", "go", "composer", "cocoapods", "carthage", "swift-package-manager"]
         },
         "package": {
           "type": "string",
@@ -171,6 +187,15 @@
         "version": {
           "type": "string",
           "description": "Recommended or minimum version"
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["web", "ios", "android", "react-native", "flutter", "electron"],
+          "default": "web",
+          "description": "Target platform"
+        },
+        "mobile": {
+          "$ref": "#/$defs/MobileSDK"
         },
         "repository": {
           "type": "string",
@@ -1127,6 +1152,294 @@
         "asyncPattern": {
           "type": "string",
           "enum": ["promises", "callbacks", "observables", "sync"]
+        }
+      }
+    },
+    "MobileSDK": {
+      "type": "object",
+      "description": "Mobile-specific SDK requirements",
+      "properties": {
+        "minOsVersion": { "type": "string" },
+        "targetOsVersion": { "type": "string" },
+        "capabilities": { "type": "array", "items": { "type": "string" } },
+        "permissions": { "type": "object", "additionalProperties": { "type": "string" } },
+        "architectures": { "type": "array", "items": { "type": "string" } },
+        "frameworks": { "type": "array", "items": { "type": "string" } },
+        "appStoreGuidelines": { "type": "string", "format": "uri" }
+      }
+    },
+    "DeclarativeSchema": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "schemaUrl": { "type": "string", "format": "uri" },
+        "documentation": { "type": "string", "format": "uri" },
+        "delivery": {
+          "type": "object",
+          "properties": {
+            "method": { "type": "string", "enum": ["httpResponse", "webhook", "websocket"] },
+            "contentType": { "type": "string", "default": "application/json" }
+          }
+        },
+        "elementMappings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "fenestraComponent": { "type": "string" },
+              "notes": { "type": "string" }
+            }
+          }
+        },
+        "validator": {
+          "type": "object",
+          "properties": {
+            "tool": { "type": "string" },
+            "url": { "type": "string", "format": "uri" }
+          }
+        }
+      }
+    },
+    "I18n": {
+      "type": "object",
+      "properties": {
+        "platformSupport": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "availableLocales": { "type": "array", "items": { "type": "string" } },
+            "localeDetection": {
+              "type": "object",
+              "properties": {
+                "method": { "type": "string", "enum": ["automatic", "manual", "both"] },
+                "sources": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "rtlSupport": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean", "default": false },
+                "languages": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "componentTranslations": {
+          "type": "object",
+          "properties": {
+            "provided": { "type": "boolean" },
+            "scope": { "type": "string", "enum": ["all", "partial", "none"] }
+          }
+        },
+        "developerRequirements": {
+          "type": "object",
+          "properties": {
+            "translationMechanism": {
+              "type": "object",
+              "properties": {
+                "format": { "type": "string", "enum": ["icu", "i18next", "gettext", "json", "custom"] },
+                "bundleLocation": { "type": "string", "enum": ["embedded", "remote", "platform-hosted"] }
+              }
+            },
+            "marketplaceRequirement": {
+              "type": "object",
+              "properties": {
+                "required": { "type": "boolean" },
+                "minimumLocales": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "formatting": {
+              "type": "object",
+              "properties": {
+                "dates": { "type": "string", "enum": ["platform", "developer"] },
+                "numbers": { "type": "string", "enum": ["platform", "developer"] },
+                "currencies": { "type": "string", "enum": ["platform", "developer"] }
+              }
+            }
+          }
+        },
+        "documentation": { "type": "string", "format": "uri" }
+      }
+    },
+    "Compliance": {
+      "type": "object",
+      "properties": {
+        "accessibility": {
+          "type": "object",
+          "properties": {
+            "platformStandard": { "type": "string" },
+            "extensionRequirements": {
+              "type": "object",
+              "properties": {
+                "standard": { "type": "string", "enum": ["none", "WCAG 2.0 A", "WCAG 2.0 AA", "WCAG 2.1 A", "WCAG 2.1 AA", "WCAG 2.2 AA", "Section 508"] },
+                "scope": { "type": "string", "enum": ["all", "marketplace", "public", "none"] },
+                "auditRequired": { "type": "boolean", "default": false }
+              }
+            },
+            "platformProvides": {
+              "type": "object",
+              "properties": {
+                "accessibleComponents": { "type": "boolean" },
+                "screenReaderTested": { "type": "boolean" },
+                "keyboardNavigation": { "type": "boolean" },
+                "focusManagement": { "type": "boolean" },
+                "ariaAttributesHandled": { "type": "boolean" }
+              }
+            },
+            "documentation": { "type": "string", "format": "uri" }
+          }
+        },
+        "security": {
+          "type": "object",
+          "properties": {
+            "platformCertifications": { "type": "array", "items": { "type": "string" } },
+            "extensionRequirements": {
+              "type": "object",
+              "properties": {
+                "httpsOnly": { "type": "boolean", "default": true },
+                "cspCompliance": { "type": "boolean" },
+                "noInlineScripts": { "type": "boolean" },
+                "noExternalScripts": { "type": "boolean", "default": false },
+                "securityReview": {
+                  "type": "object",
+                  "properties": {
+                    "required": { "type": "boolean" },
+                    "scope": { "type": "string", "enum": ["all", "marketplace", "public", "none"] }
+                  }
+                },
+                "dataHandling": {
+                  "type": "object",
+                  "properties": {
+                    "piiAllowed": { "type": "boolean" },
+                    "piiMustEncrypt": { "type": "boolean" },
+                    "dataRetentionPolicy": { "type": "string", "enum": ["required", "recommended", "none"] }
+                  }
+                }
+              }
+            },
+            "documentation": { "type": "string", "format": "uri" }
+          }
+        },
+        "privacy": {
+          "type": "object",
+          "properties": {
+            "platformCompliance": {
+              "type": "object",
+              "properties": {
+                "gdpr": { "type": "boolean" },
+                "ccpa": { "type": "boolean" }
+              }
+            },
+            "dataResidency": {
+              "type": "object",
+              "properties": {
+                "available": { "type": "boolean" },
+                "regions": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "extensionRequirements": {
+              "type": "object",
+              "properties": {
+                "privacyPolicyRequired": { "type": "boolean" },
+                "consentManagement": { "type": "string", "enum": ["platform", "developer", "both"] },
+                "dataProcessingAgreement": { "type": "string", "enum": ["required", "recommended", "none"] }
+              }
+            },
+            "userRights": {
+              "type": "object",
+              "properties": {
+                "dataExportSupported": { "type": "boolean" },
+                "dataDeletionSupported": { "type": "boolean" }
+              }
+            },
+            "documentation": { "type": "string", "format": "uri" }
+          }
+        },
+        "sharedResponsibility": {
+          "type": "object",
+          "properties": {
+            "platformHandles": { "type": "array", "items": { "type": "string" } },
+            "developerHandles": { "type": "array", "items": { "type": "string" } },
+            "documentation": { "type": "string", "format": "uri" }
+          }
+        }
+      }
+    },
+    "AgentInteraction": {
+      "type": "object",
+      "properties": {
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "templateInvocation": { "type": "boolean" },
+            "customUISupport": { "type": "boolean" },
+            "eventCallbacks": { "type": "boolean" },
+            "actionChaining": { "type": "boolean" }
+          }
+        },
+        "protocols": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string" },
+              "version": { "type": "string" },
+              "package": { "type": "string" },
+              "schemaFormat": { "type": "string", "enum": ["openapi", "jsonSchema", "custom"] },
+              "documentation": { "type": "string", "format": "uri" }
+            }
+          }
+        },
+        "discovery": {
+          "type": "object",
+          "properties": {
+            "templateDiscovery": { "type": "boolean" },
+            "actionDiscovery": { "type": "boolean" },
+            "manifest": { "type": "string", "format": "uri" }
+          }
+        },
+        "context": {
+          "type": "object",
+          "properties": {
+            "available": { "type": "array", "items": { "type": "string" } },
+            "format": { "type": "string", "default": "json" },
+            "piiFiltering": { "type": "string", "enum": ["automatic", "manual", "none"] }
+          }
+        },
+        "uiInvocation": {
+          "type": "object",
+          "properties": {
+            "methods": { "type": "array", "items": { "type": "string" } },
+            "chainingSupported": { "type": "boolean" },
+            "interactionTimeout": { "type": "integer" },
+            "cancellationSupported": { "type": "boolean" }
+          }
+        },
+        "events": {
+          "type": "object",
+          "properties": {
+            "supported": { "type": "array", "items": { "type": "string" } },
+            "delivery": { "type": "string", "enum": ["callback", "webhook", "polling"] }
+          }
+        },
+        "permissions": {
+          "type": "object",
+          "properties": {
+            "canInvokeTemplates": { "type": "boolean" },
+            "canOpenCustomUI": { "type": "boolean" },
+            "canAccessUserData": { "type": "boolean" },
+            "canPerformActions": { "type": "boolean" },
+            "userApprovalRequired": {
+              "type": "object",
+              "properties": {
+                "forActions": { "type": "boolean" },
+                "forDataAccess": { "type": "boolean" }
+              }
+            }
+          }
         }
       }
     }

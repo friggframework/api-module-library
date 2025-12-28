@@ -1,0 +1,181 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://spec.openapis.org/fenestra/extensions/i18n/v0.1/schema.json",
+  "title": "Fenestra I18n Extension Schema",
+  "description": "JSON Schema for validating Fenestra I18n extension documents describing internationalization and localization capabilities",
+  "type": "object",
+  "$ref": "#/$defs/I18n",
+  "$defs": {
+    "I18n": {
+      "type": "object",
+      "properties": {
+        "platformSupport": {
+          "$ref": "#/$defs/I18nPlatformSupport"
+        },
+        "componentTranslations": {
+          "$ref": "#/$defs/ComponentTranslations"
+        },
+        "developerRequirements": {
+          "$ref": "#/$defs/I18nDeveloperRequirements"
+        },
+        "documentation": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "patternProperties": {
+        "^x-": {
+          "description": "Specification extension"
+        }
+      }
+    },
+    "I18nPlatformSupport": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "availableLocales": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "localeDetection": {
+          "$ref": "#/$defs/LocaleDetection"
+        },
+        "rtlSupport": {
+          "$ref": "#/$defs/RtlSupport"
+        }
+      }
+    },
+    "LocaleDetection": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "automatic",
+            "manual",
+            "both"
+          ]
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "RtlSupport": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ComponentTranslations": {
+      "type": "object",
+      "properties": {
+        "provided": {
+          "type": "boolean"
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "all",
+            "partial",
+            "none"
+          ]
+        }
+      }
+    },
+    "I18nDeveloperRequirements": {
+      "type": "object",
+      "properties": {
+        "translationMechanism": {
+          "$ref": "#/$defs/TranslationMechanism"
+        },
+        "marketplaceRequirement": {
+          "$ref": "#/$defs/MarketplaceI18nRequirement"
+        },
+        "formatting": {
+          "$ref": "#/$defs/Formatting"
+        }
+      }
+    },
+    "TranslationMechanism": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "icu",
+            "i18next",
+            "gettext",
+            "json",
+            "custom"
+          ]
+        },
+        "bundleLocation": {
+          "type": "string",
+          "enum": [
+            "embedded",
+            "remote",
+            "platform-hosted"
+          ]
+        }
+      }
+    },
+    "MarketplaceI18nRequirement": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "minimumLocales": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Formatting": {
+      "type": "object",
+      "properties": {
+        "dates": {
+          "type": "string",
+          "enum": [
+            "platform",
+            "developer"
+          ]
+        },
+        "numbers": {
+          "type": "string",
+          "enum": [
+            "platform",
+            "developer"
+          ]
+        },
+        "currencies": {
+          "type": "string",
+          "enum": [
+            "platform",
+            "developer"
+          ]
+        }
+      }
+    }
+  }
+}

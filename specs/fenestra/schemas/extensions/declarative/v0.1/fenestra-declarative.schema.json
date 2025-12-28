@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://spec.openapis.org/fenestra/extensions/declarative/v0.1/schema.json",
+  "title": "Fenestra Declarative Schema Extension",
+  "description": "JSON Schema for validating Fenestra Declarative Schema extension documents describing declarative UI schemas like Block Kit and Adaptive Cards",
+  "type": "object",
+  "$ref": "#/$defs/DeclarativeSchema",
+  "$defs": {
+    "DeclarativeSchema": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "schemaUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "documentation": {
+          "type": "string",
+          "format": "uri"
+        },
+        "delivery": {
+          "$ref": "#/$defs/Delivery"
+        },
+        "elementMappings": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ElementMapping"
+          }
+        },
+        "validator": {
+          "$ref": "#/$defs/ValidatorTool"
+        }
+      },
+      "patternProperties": {
+        "^x-": {
+          "description": "Specification extension"
+        }
+      }
+    },
+    "Delivery": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "httpResponse",
+            "webhook",
+            "websocket"
+          ]
+        },
+        "contentType": {
+          "type": "string",
+          "default": "application/json"
+        }
+      }
+    },
+    "ElementMapping": {
+      "type": "object",
+      "properties": {
+        "fenestraComponent": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "ValidatorTool": {
+      "type": "object",
+      "properties": {
+        "tool": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    }
+  }
+}

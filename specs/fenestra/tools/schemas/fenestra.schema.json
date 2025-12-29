@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://spec.openapis.org/fenestra/v0.1/schema.json",
-  "title": "Fenestra Specification Schema",
-  "description": "JSON Schema for validating Fenestra Description documents",
+  "$id": "https://spec.openapis.org/fenestra/core/v0.1/schema.json",
+  "title": "Fenestra Core Specification Schema",
+  "description": "JSON Schema for validating Fenestra Core Description documents",
   "type": "object",
   "required": [
     "fenestra",
@@ -46,22 +46,6 @@
       "items": {
         "$ref": "#/$defs/ExtensionPoint"
       }
-    },
-    "declarativeSchemas": {
-      "type": "object",
-      "description": "JSON-based UI schema definitions (e.g., Slack Block Kit, Adaptive Cards)",
-      "additionalProperties": {
-        "$ref": "#/$defs/DeclarativeSchema"
-      }
-    },
-    "i18n": {
-      "$ref": "#/$defs/I18n"
-    },
-    "compliance": {
-      "$ref": "#/$defs/Compliance"
-    },
-    "agentInteraction": {
-      "$ref": "#/$defs/AgentInteraction"
     }
   },
   "patternProperties": {
@@ -354,6 +338,46 @@
           "additionalProperties": {
             "$ref": "#/$defs/SDKExport"
           }
+        }
+      }
+    },
+    "MobileSDK": {
+      "type": "object",
+      "description": "Mobile-specific SDK requirements",
+      "properties": {
+        "minOsVersion": {
+          "type": "string"
+        },
+        "targetOsVersion": {
+          "type": "string"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "permissions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "architectures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "frameworks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "appStoreGuidelines": {
+          "type": "string",
+          "format": "uri"
         }
       }
     },
@@ -820,8 +844,7 @@
             "jsonResponse",
             "codedComponents",
             "iframe",
-            "embeddedSdk",
-            "agentUI"
+            "embeddedSdk"
           ]
         },
         "extensionTypeConfig": {
@@ -920,25 +943,6 @@
               }
             }
           }
-        },
-        {
-          "if": {
-            "properties": {
-              "extensionType": {
-                "const": "agentUI"
-              }
-            },
-            "required": [
-              "extensionType"
-            ]
-          },
-          "then": {
-            "properties": {
-              "extensionTypeConfig": {
-                "$ref": "#/$defs/AgentUIConfig"
-              }
-            }
-          }
         }
       ],
       "patternProperties": {
@@ -988,1015 +992,6 @@
         },
         "interactivity": {
           "$ref": "#/$defs/Interactivity"
-        }
-      }
-    },
-    "CodedComponentsConfig": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "sdk": {
-          "type": "string"
-        },
-        "framework": {
-          "type": "string",
-          "enum": [
-            "react",
-            "vue",
-            "lwc",
-            "webComponents",
-            "agnostic"
-          ]
-        },
-        "runtime": {
-          "$ref": "#/$defs/Runtime"
-        },
-        "hostInteraction": {
-          "$ref": "#/$defs/JsSdkConfig"
-        }
-      }
-    },
-    "IframeConfig": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "sandboxAttributes": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "cspRequirements": {
-          "type": "string"
-        },
-        "sizeConstraints": {
-          "$ref": "#/$defs/SizeConstraints"
-        },
-        "communication": {
-          "$ref": "#/$defs/JsSdkConfig"
-        }
-      }
-    },
-    "SizeConstraints": {
-      "type": "object",
-      "properties": {
-        "minWidth": {
-          "type": "integer"
-        },
-        "maxWidth": {
-          "type": "integer"
-        },
-        "minHeight": {
-          "type": "integer"
-        },
-        "maxHeight": {
-          "type": "integer"
-        },
-        "resizable": {
-          "type": "boolean"
-        }
-      }
-    },
-    "EmbeddedSdkConfig": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "sdk": {
-          "$ref": "#/$defs/EmbeddedSdkDetails"
-        },
-        "mountPattern": {
-          "type": "string",
-          "enum": [
-            "domSelector",
-            "reactComponent",
-            "webComponent",
-            "function"
-          ]
-        },
-        "theming": {
-          "$ref": "#/$defs/Theming"
-        },
-        "communication": {
-          "$ref": "#/$defs/Communication"
-        }
-      }
-    },
-    "AgentUIConfig": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "templates": {
-          "$ref": "#/$defs/AgentTemplates"
-        },
-        "customUI": {
-          "$ref": "#/$defs/CustomUI"
-        },
-        "communication": {
-          "$ref": "#/$defs/AgentCommunication"
-        },
-        "agentCapabilities": {
-          "$ref": "#/$defs/AgentCapabilities"
-        }
-      }
-    },
-    "AgentUITemplate": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "inputSchema": {
-          "type": "object"
-        },
-        "outputSchema": {
-          "type": "object"
-        },
-        "rendering": {
-          "$ref": "#/$defs/TemplateRendering"
-        },
-        "interactivity": {
-          "$ref": "#/$defs/TemplateInteractivity"
-        }
-      }
-    },
-    "JsSdkConfig": {
-      "type": "object",
-      "properties": {
-        "globalObject": {
-          "type": "string"
-        },
-        "package": {
-          "type": "string"
-        },
-        "cdn": {
-          "type": "string",
-          "format": "uri"
-        },
-        "initialization": {
-          "$ref": "#/$defs/Initialization"
-        },
-        "namespaces": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Namespace"
-          }
-        },
-        "capabilities": {
-          "$ref": "#/$defs/SdkCapabilities"
-        },
-        "asyncPattern": {
-          "type": "string",
-          "enum": [
-            "promises",
-            "callbacks",
-            "observables",
-            "sync"
-          ]
-        }
-      }
-    },
-    "MobileSDK": {
-      "type": "object",
-      "description": "Mobile-specific SDK requirements",
-      "properties": {
-        "minOsVersion": {
-          "type": "string"
-        },
-        "targetOsVersion": {
-          "type": "string"
-        },
-        "capabilities": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "permissions": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "architectures": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "frameworks": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "appStoreGuidelines": {
-          "type": "string",
-          "format": "uri"
-        }
-      }
-    },
-    "DeclarativeSchema": {
-      "type": "object",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        },
-        "schemaUrl": {
-          "type": "string",
-          "format": "uri"
-        },
-        "documentation": {
-          "type": "string",
-          "format": "uri"
-        },
-        "delivery": {
-          "$ref": "#/$defs/Delivery"
-        },
-        "elementMappings": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/ElementMapping"
-          }
-        },
-        "validator": {
-          "$ref": "#/$defs/ValidatorTool"
-        }
-      },
-      "patternProperties": {
-        "^x-": {}
-      }
-    },
-    "I18n": {
-      "type": "object",
-      "properties": {
-        "platformSupport": {
-          "$ref": "#/$defs/I18nPlatformSupport"
-        },
-        "componentTranslations": {
-          "$ref": "#/$defs/ComponentTranslations"
-        },
-        "developerRequirements": {
-          "$ref": "#/$defs/I18nDeveloperRequirements"
-        },
-        "documentation": {
-          "type": "string",
-          "format": "uri"
-        }
-      },
-      "patternProperties": {
-        "^x-": {}
-      }
-    },
-    "I18nPlatformSupport": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "default": false
-        },
-        "availableLocales": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "localeDetection": {
-          "$ref": "#/$defs/LocaleDetection"
-        },
-        "rtlSupport": {
-          "$ref": "#/$defs/RtlSupport"
-        }
-      }
-    },
-    "LocaleDetection": {
-      "type": "object",
-      "properties": {
-        "method": {
-          "type": "string",
-          "enum": [
-            "automatic",
-            "manual",
-            "both"
-          ]
-        },
-        "sources": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "RtlSupport": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "default": false
-        },
-        "languages": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "ComponentTranslations": {
-      "type": "object",
-      "properties": {
-        "provided": {
-          "type": "boolean"
-        },
-        "scope": {
-          "type": "string",
-          "enum": [
-            "all",
-            "partial",
-            "none"
-          ]
-        }
-      }
-    },
-    "I18nDeveloperRequirements": {
-      "type": "object",
-      "properties": {
-        "translationMechanism": {
-          "$ref": "#/$defs/TranslationMechanism"
-        },
-        "marketplaceRequirement": {
-          "$ref": "#/$defs/MarketplaceI18nRequirement"
-        },
-        "formatting": {
-          "$ref": "#/$defs/Formatting"
-        }
-      }
-    },
-    "TranslationMechanism": {
-      "type": "object",
-      "properties": {
-        "format": {
-          "type": "string",
-          "enum": [
-            "icu",
-            "i18next",
-            "gettext",
-            "json",
-            "custom"
-          ]
-        },
-        "bundleLocation": {
-          "type": "string",
-          "enum": [
-            "embedded",
-            "remote",
-            "platform-hosted"
-          ]
-        }
-      }
-    },
-    "MarketplaceI18nRequirement": {
-      "type": "object",
-      "properties": {
-        "required": {
-          "type": "boolean"
-        },
-        "minimumLocales": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "Formatting": {
-      "type": "object",
-      "properties": {
-        "dates": {
-          "type": "string",
-          "enum": [
-            "platform",
-            "developer"
-          ]
-        },
-        "numbers": {
-          "type": "string",
-          "enum": [
-            "platform",
-            "developer"
-          ]
-        },
-        "currencies": {
-          "type": "string",
-          "enum": [
-            "platform",
-            "developer"
-          ]
-        }
-      }
-    },
-    "Compliance": {
-      "type": "object",
-      "properties": {
-        "accessibility": {
-          "$ref": "#/$defs/AccessibilityCompliance"
-        },
-        "security": {
-          "$ref": "#/$defs/SecurityCompliance"
-        },
-        "privacy": {
-          "$ref": "#/$defs/PrivacyCompliance"
-        },
-        "sharedResponsibility": {
-          "$ref": "#/$defs/SharedResponsibility"
-        }
-      },
-      "patternProperties": {
-        "^x-": {}
-      }
-    },
-    "AccessibilityCompliance": {
-      "type": "object",
-      "properties": {
-        "platformStandard": {
-          "type": "string"
-        },
-        "extensionRequirements": {
-          "$ref": "#/$defs/AccessibilityExtensionRequirements"
-        },
-        "platformProvides": {
-          "$ref": "#/$defs/PlatformAccessibility"
-        },
-        "documentation": {
-          "type": "string",
-          "format": "uri"
-        }
-      }
-    },
-    "AccessibilityExtensionRequirements": {
-      "type": "object",
-      "properties": {
-        "standard": {
-          "type": "string",
-          "enum": [
-            "none",
-            "WCAG 2.0 A",
-            "WCAG 2.0 AA",
-            "WCAG 2.1 A",
-            "WCAG 2.1 AA",
-            "WCAG 2.2 AA",
-            "Section 508"
-          ]
-        },
-        "scope": {
-          "type": "string",
-          "enum": [
-            "all",
-            "marketplace",
-            "public",
-            "none"
-          ]
-        },
-        "auditRequired": {
-          "type": "boolean",
-          "default": false
-        }
-      }
-    },
-    "PlatformAccessibility": {
-      "type": "object",
-      "properties": {
-        "accessibleComponents": {
-          "type": "boolean"
-        },
-        "screenReaderTested": {
-          "type": "boolean"
-        },
-        "keyboardNavigation": {
-          "type": "boolean"
-        },
-        "focusManagement": {
-          "type": "boolean"
-        },
-        "ariaAttributesHandled": {
-          "type": "boolean"
-        }
-      }
-    },
-    "SecurityCompliance": {
-      "type": "object",
-      "properties": {
-        "platformCertifications": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "extensionRequirements": {
-          "$ref": "#/$defs/SecurityExtensionRequirements"
-        },
-        "documentation": {
-          "type": "string",
-          "format": "uri"
-        }
-      }
-    },
-    "SecurityExtensionRequirements": {
-      "type": "object",
-      "properties": {
-        "httpsOnly": {
-          "type": "boolean",
-          "default": true
-        },
-        "cspCompliance": {
-          "type": "boolean"
-        },
-        "noInlineScripts": {
-          "type": "boolean"
-        },
-        "noExternalScripts": {
-          "type": "boolean",
-          "default": false
-        },
-        "securityReview": {
-          "$ref": "#/$defs/ReviewRequirement"
-        },
-        "dataHandling": {
-          "$ref": "#/$defs/DataHandling"
-        }
-      }
-    },
-    "ReviewRequirement": {
-      "type": "object",
-      "properties": {
-        "required": {
-          "type": "boolean"
-        },
-        "scope": {
-          "type": "string",
-          "enum": [
-            "all",
-            "marketplace",
-            "public",
-            "none"
-          ]
-        }
-      }
-    },
-    "DataHandling": {
-      "type": "object",
-      "properties": {
-        "piiAllowed": {
-          "type": "boolean"
-        },
-        "piiMustEncrypt": {
-          "type": "boolean"
-        },
-        "dataRetentionPolicy": {
-          "type": "string",
-          "enum": [
-            "required",
-            "recommended",
-            "none"
-          ]
-        }
-      }
-    },
-    "PrivacyCompliance": {
-      "type": "object",
-      "properties": {
-        "platformCompliance": {
-          "$ref": "#/$defs/PlatformPrivacy"
-        },
-        "dataResidency": {
-          "$ref": "#/$defs/DataResidency"
-        },
-        "extensionRequirements": {
-          "$ref": "#/$defs/PrivacyExtensionRequirements"
-        },
-        "userRights": {
-          "$ref": "#/$defs/UserRights"
-        },
-        "documentation": {
-          "type": "string",
-          "format": "uri"
-        }
-      }
-    },
-    "PlatformPrivacy": {
-      "type": "object",
-      "properties": {
-        "gdpr": {
-          "type": "boolean"
-        },
-        "ccpa": {
-          "type": "boolean"
-        }
-      }
-    },
-    "DataResidency": {
-      "type": "object",
-      "properties": {
-        "available": {
-          "type": "boolean"
-        },
-        "regions": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "PrivacyExtensionRequirements": {
-      "type": "object",
-      "properties": {
-        "privacyPolicyRequired": {
-          "type": "boolean"
-        },
-        "consentManagement": {
-          "type": "string",
-          "enum": [
-            "platform",
-            "developer",
-            "both"
-          ]
-        },
-        "dataProcessingAgreement": {
-          "type": "string",
-          "enum": [
-            "required",
-            "recommended",
-            "none"
-          ]
-        }
-      }
-    },
-    "UserRights": {
-      "type": "object",
-      "properties": {
-        "dataExportSupported": {
-          "type": "boolean"
-        },
-        "dataDeletionSupported": {
-          "type": "boolean"
-        }
-      }
-    },
-    "SharedResponsibility": {
-      "type": "object",
-      "properties": {
-        "platformHandles": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "developerHandles": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "documentation": {
-          "type": "string",
-          "format": "uri"
-        }
-      }
-    },
-    "AgentInteraction": {
-      "type": "object",
-      "properties": {
-        "capabilities": {
-          "$ref": "#/$defs/AgentCapabilitiesSummary"
-        },
-        "protocols": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/AgentProtocol"
-          }
-        },
-        "discovery": {
-          "$ref": "#/$defs/AgentDiscovery"
-        },
-        "context": {
-          "$ref": "#/$defs/AgentContext"
-        },
-        "uiInvocation": {
-          "$ref": "#/$defs/UIInvocation"
-        },
-        "events": {
-          "$ref": "#/$defs/AgentEvents"
-        },
-        "permissions": {
-          "$ref": "#/$defs/AgentPermissions"
-        }
-      },
-      "patternProperties": {
-        "^x-": {}
-      }
-    },
-    "AgentCapabilitiesSummary": {
-      "type": "object",
-      "description": "High-level agent interaction capabilities",
-      "properties": {
-        "templateInvocation": {
-          "type": "boolean",
-          "description": "Agent can invoke pre-defined UI templates"
-        },
-        "customUISupport": {
-          "type": "boolean",
-          "description": "Agent can open custom UI (iframe)"
-        },
-        "eventCallbacks": {
-          "type": "boolean",
-          "description": "Agent can receive UI events"
-        },
-        "actionChaining": {
-          "type": "boolean",
-          "description": "Agent can chain multiple UI interactions"
-        }
-      },
-      "patternProperties": {
-        "^x-": {}
-      }
-    },
-    "AgentProtocol": {
-      "type": "object",
-      "required": [
-        "name"
-      ],
-      "description": "A supported agent protocol",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Protocol name (e.g., mcp, openai-functions, anthropic-tools, langchain-tools, custom)"
-        },
-        "version": {
-          "type": "string",
-          "description": "Protocol version"
-        },
-        "package": {
-          "type": "string",
-          "description": "Package providing the protocol implementation"
-        },
-        "schemaFormat": {
-          "type": "string",
-          "enum": [
-            "openapi",
-            "jsonSchema",
-            "custom"
-          ],
-          "description": "Schema format for function/tool definitions"
-        },
-        "documentation": {
-          "type": "string",
-          "format": "uri",
-          "description": "URI to protocol documentation"
-        }
-      },
-      "patternProperties": {
-        "^x-": {}
-      }
-    },
-    "AgentDiscovery": {
-      "type": "object",
-      "description": "How agents discover UI capabilities",
-      "properties": {
-        "templateDiscovery": {
-          "type": "boolean",
-          "description": "Agent can query available UI templates"
-        },
-        "actionDiscovery": {
-          "type": "boolean",
-          "description": "Agent can query available actions"
-        },
-        "manifest": {
-          "type": "string",
-          "format": "uri",
-          "description": "URI to agent UI manifest/schema"
-        }
-      },
-      "patternProperties": {
-        "^x-": {}
-      }
-    },
-    "AgentContext": {
-      "type": "object",
-      "description": "Context passing to agents",
-      "properties": {
-        "available": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Available context types (e.g., conversationHistory, userIdentity, currentDocument)"
-        },
-        "format": {
-          "type": "string",
-          "default": "json",
-          "description": "Serialization format"
-        },
-        "piiFiltering": {
-          "type": "string",
-          "enum": [
-            "automatic",
-            "manual",
-            "none"
-          ],
-          "description": "PII filtering mode"
-        }
-      },
-      "patternProperties": {
-        "^x-": {}
-      }
-    },
-    "UIInvocation": {
-      "type": "object",
-      "description": "How agents invoke UI",
-      "properties": {
-        "methods": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Available invocation methods (e.g., templates, customIframe, deepLinks)"
-        },
-        "chainingSupported": {
-          "type": "boolean",
-          "description": "Whether chaining multiple interactions is supported"
-        },
-        "interactionTimeout": {
-          "type": "integer",
-          "description": "Timeout for interactions in seconds"
-        },
-        "cancellationSupported": {
-          "type": "boolean",
-          "description": "Whether interactions can be cancelled"
-        }
-      },
-      "patternProperties": {
-        "^x-": {}
-      }
-    },
-    "AgentEvents": {
-      "type": "object",
-      "description": "Events sent back to agents",
-      "properties": {
-        "supported": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Supported event types (e.g., formSubmitted, actionClicked, uiDismissed, errorOccurred)"
-        },
-        "delivery": {
-          "type": "string",
-          "enum": [
-            "callback",
-            "webhook",
-            "polling"
-          ],
-          "description": "Event delivery method"
-        }
-      },
-      "patternProperties": {
-        "^x-": {}
-      }
-    },
-    "AgentPermissions": {
-      "type": "object",
-      "description": "Agent permission model",
-      "properties": {
-        "canInvokeTemplates": {
-          "type": "boolean",
-          "description": "Agent can invoke UI templates"
-        },
-        "canOpenCustomUI": {
-          "type": "boolean",
-          "description": "Agent can open custom UI"
-        },
-        "canAccessUserData": {
-          "type": "boolean",
-          "description": "Agent can access user data"
-        },
-        "canPerformActions": {
-          "type": "boolean",
-          "description": "Agent can perform actions (not just show UI)"
-        },
-        "userApprovalRequired": {
-          "$ref": "#/$defs/UserApproval"
-        }
-      },
-      "patternProperties": {
-        "^x-": {}
-      }
-    },
-    "UserApproval": {
-      "type": "object",
-      "description": "When user approval is required",
-      "properties": {
-        "forActions": {
-          "type": "boolean",
-          "description": "User must approve actions"
-        },
-        "forDataAccess": {
-          "type": "boolean",
-          "description": "User must approve data access"
-        }
-      },
-      "patternProperties": {
-        "^x-": {}
-      }
-    },
-    "Delivery": {
-      "type": "object",
-      "properties": {
-        "method": {
-          "type": "string",
-          "enum": [
-            "httpResponse",
-            "webhook",
-            "websocket"
-          ]
-        },
-        "contentType": {
-          "type": "string",
-          "default": "application/json"
-        }
-      }
-    },
-    "ElementMapping": {
-      "type": "object",
-      "properties": {
-        "fenestraComponent": {
-          "type": "string"
-        },
-        "notes": {
-          "type": "string"
-        }
-      }
-    },
-    "ValidatorTool": {
-      "type": "object",
-      "properties": {
-        "tool": {
-          "type": "string"
-        },
-        "url": {
-          "type": "string",
-          "format": "uri"
-        }
-      }
-    },
-    "Initialization": {
-      "type": "object",
-      "properties": {
-        "method": {
-          "type": "string"
-        },
-        "async": {
-          "type": "boolean"
-        }
-      }
-    },
-    "Namespace": {
-      "type": "object",
-      "properties": {
-        "description": {
-          "type": "string"
-        },
-        "methods": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "SdkCapabilities": {
-      "type": "object",
-      "properties": {
-        "context": {
-          "type": "boolean"
-        },
-        "uiActions": {
-          "type": "boolean"
-        },
-        "dataActions": {
-          "type": "boolean"
-        },
-        "events": {
-          "type": "boolean"
         }
       }
     },
@@ -2070,6 +1065,31 @@
         }
       }
     },
+    "CodedComponentsConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sdk": {
+          "type": "string"
+        },
+        "framework": {
+          "type": "string",
+          "enum": [
+            "react",
+            "vue",
+            "lwc",
+            "webComponents",
+            "agnostic"
+          ]
+        },
+        "runtime": {
+          "$ref": "#/$defs/Runtime"
+        },
+        "hostInteraction": {
+          "$ref": "#/$defs/JsSdkConfig"
+        }
+      }
+    },
     "Runtime": {
       "type": "object",
       "properties": {
@@ -2088,6 +1108,71 @@
             "developerBuild",
             "cdn"
           ]
+        }
+      }
+    },
+    "IframeConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sandboxAttributes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cspRequirements": {
+          "type": "string"
+        },
+        "sizeConstraints": {
+          "$ref": "#/$defs/SizeConstraints"
+        },
+        "communication": {
+          "$ref": "#/$defs/JsSdkConfig"
+        }
+      }
+    },
+    "SizeConstraints": {
+      "type": "object",
+      "properties": {
+        "minWidth": {
+          "type": "integer"
+        },
+        "maxWidth": {
+          "type": "integer"
+        },
+        "minHeight": {
+          "type": "integer"
+        },
+        "maxHeight": {
+          "type": "integer"
+        },
+        "resizable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "EmbeddedSdkConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sdk": {
+          "$ref": "#/$defs/EmbeddedSdkDetails"
+        },
+        "mountPattern": {
+          "type": "string",
+          "enum": [
+            "domSelector",
+            "reactComponent",
+            "webComponent",
+            "function"
+          ]
+        },
+        "theming": {
+          "$ref": "#/$defs/Theming"
+        },
+        "communication": {
+          "$ref": "#/$defs/Communication"
         }
       }
     },
@@ -2150,116 +1235,81 @@
         }
       }
     },
-    "AgentTemplates": {
+    "JsSdkConfig": {
       "type": "object",
       "properties": {
-        "supported": {
+        "globalObject": {
+          "type": "string"
+        },
+        "package": {
+          "type": "string"
+        },
+        "cdn": {
+          "type": "string",
+          "format": "uri"
+        },
+        "initialization": {
+          "$ref": "#/$defs/Initialization"
+        },
+        "namespaces": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Namespace"
+          }
+        },
+        "capabilities": {
+          "$ref": "#/$defs/SdkCapabilities"
+        },
+        "asyncPattern": {
+          "type": "string",
+          "enum": [
+            "promises",
+            "callbacks",
+            "observables",
+            "sync"
+          ]
+        }
+      }
+    },
+    "Initialization": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string"
+        },
+        "async": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Namespace": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "methods": {
           "type": "array",
           "items": {
             "type": "string"
           }
-        },
-        "definitions": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/AgentUITemplate"
-          }
         }
       }
     },
-    "TemplateRendering": {
+    "SdkCapabilities": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "platform",
-            "jsonForms",
-            "custom"
-          ]
-        },
-        "component": {
-          "type": "string"
-        }
-      }
-    },
-    "TemplateInteractivity": {
-      "type": "object",
-      "properties": {
-        "submitButton": {
+        "context": {
           "type": "boolean"
         },
-        "cancelButton": {
+        "uiActions": {
+          "type": "boolean"
+        },
+        "dataActions": {
           "type": "boolean"
         },
         "events": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "CustomUI": {
-      "type": "object",
-      "properties": {
-        "allowed": {
-          "type": "boolean",
-          "default": true
-        },
-        "sandboxAttributes": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "sizeConstraints": {
-          "$ref": "#/$defs/SizeConstraints"
-        }
-      }
-    },
-    "AgentCommunication": {
-      "type": "object",
-      "properties": {
-        "protocol": {
-          "type": "string",
-          "enum": [
-            "jsonRpc",
-            "postMessage",
-            "mcp"
-          ],
-          "default": "jsonRpc"
-        },
-        "channels": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "AgentCapabilities": {
-      "type": "object",
-      "properties": {
-        "invokeTemplates": {
-          "type": "boolean",
-          "default": true
-        },
-        "openCustomUI": {
-          "type": "boolean",
-          "default": true
-        },
-        "receiveEvents": {
-          "type": "boolean",
-          "default": true
-        },
-        "closeUI": {
-          "type": "boolean",
-          "default": true
-        },
-        "chainInteractions": {
-          "type": "boolean",
-          "default": true
+          "type": "boolean"
         }
       }
     }

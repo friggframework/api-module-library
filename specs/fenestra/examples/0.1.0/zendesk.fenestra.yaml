@@ -1,0 +1,1298 @@
+# Fenestra Document: Zendesk Apps Framework
+#
+# Zendesk Apps Framework represents iframe-based apps with recommended
+# component library. Apps run in sandboxed iframes and communicate via
+# ZAFClient. Garden Design System (React) is strongly recommended.
+
+fenestra: "0.1.0"
+
+info:
+  title: Zendesk Apps Framework UI Ecosystem
+  version: "1.0.0"
+  description: |
+    Zendesk Apps Framework (ZAF) enables developers to extend Zendesk products
+    with custom apps running in sandboxed iframes. Apps communicate with the
+    host Zendesk product via the ZAFClient SDK for cross-frame messaging.
+
+    Key characteristic: Apps run in iframes with ZAFClient REQUIRED for platform
+    communication. Garden Design System (React components) is RECOMMENDED for
+    consistent UI but not enforced. Developers can use their own components.
+
+  contact:
+    name: Zendesk Developer Relations
+    url: https://developer.zendesk.com/
+    email: developers@zendesk.com
+
+platform:
+  name: Zendesk
+  vendor: Zendesk, Inc.
+  documentation: https://developer.zendesk.com/documentation/apps/
+  appMarketplace: https://www.zendesk.com/marketplace/
+  developerPortal: https://apps.zendesk.com/
+  changelog: https://developer.zendesk.com/documentation/apps/changelog/
+
+sdks:
+  zaf-sdk:
+    name: Zendesk Apps Framework SDK
+    packageManager: npm
+    package: "zendesk_app_framework_sdk"
+    version: "^2.0.0"
+    repository: https://github.com/zendesk/zendesk_app_framework_sdk
+    documentation: https://developer.zendesk.com/api-reference/apps/apps-core-api/client_api/
+    cdn: https://static.zdassets.com/zendesk_app_framework_sdk/2.0/zaf_sdk.min.js
+    description: |
+      The ZAF SDK provides the ZAFClient for cross-frame communication between
+      your iframe app and the host Zendesk product. Enables event listening,
+      property access, and action invocation on the Zendesk platform.
+    exports:
+      ZAFClient:
+        type: class
+        description: |
+          Main client for communicating with Zendesk Apps Framework.
+          Initialize with ZAFClient.init() to establish connection.
+      init:
+        type: method
+        description: |
+          Initializes connection between app and ZAF platform. Returns
+          client instance for ongoing communication. Triggers app.registered
+          event when connection is established.
+      get:
+        type: method
+        description: Retrieves data from the Zendesk platform (ticket, user, context)
+      set:
+        type: method
+        description: Sets data on the Zendesk platform
+      invoke:
+        type: method
+        description: Invokes actions on the Zendesk platform (resize, modal, notify)
+      on:
+        type: method
+        description: Registers event listeners for platform events
+      request:
+        type: method
+        description: Makes HTTP requests with authentication handled by ZAF
+      metadata:
+        type: method
+        description: Retrieves app metadata and settings
+      context:
+        type: method
+        description: Gets current context (location, instanceGuid, account)
+
+  garden-react:
+    name: Zendesk Garden React Components
+    packageManager: npm
+    package: "@zendeskgarden/react-components"
+    version: "^9.0.0"
+    repository: https://github.com/zendeskgarden/react-components
+    documentation: https://garden.zendesk.com/components/
+    description: |
+      Garden is Zendesk's design system providing React components for
+      building consistent, accessible UIs. Components are published as
+      individual packages but can be used together seamlessly.
+    exports:
+      # Action Components
+      Button:
+        type: component
+        description: Primary action button with variants
+        package: "@zendeskgarden/react-buttons"
+      IconButton:
+        type: component
+        description: Button with icon only
+        package: "@zendeskgarden/react-buttons"
+      Anchor:
+        type: component
+        description: Styled link component
+        package: "@zendeskgarden/react-buttons"
+
+      # Form Components
+      Input:
+        type: component
+        description: Text input field
+        package: "@zendeskgarden/react-forms"
+      Textarea:
+        type: component
+        description: Multi-line text input
+        package: "@zendeskgarden/react-forms"
+      Checkbox:
+        type: component
+        description: Checkbox input
+        package: "@zendeskgarden/react-forms"
+      Radio:
+        type: component
+        description: Radio button input
+        package: "@zendeskgarden/react-forms"
+      Toggle:
+        type: component
+        description: Toggle switch
+        package: "@zendeskgarden/react-forms"
+      Field:
+        type: component
+        description: Form field container with label and hint
+        package: "@zendeskgarden/react-forms"
+
+      # Dropdown Components
+      Select:
+        type: component
+        description: Select dropdown (non-editable)
+        package: "@zendeskgarden/react-dropdowns"
+      Combobox:
+        type: component
+        description: Editable dropdown with autocomplete
+        package: "@zendeskgarden/react-dropdowns"
+      Menu:
+        type: component
+        description: Dropdown menu with items
+        package: "@zendeskgarden/react-dropdowns"
+      Autocomplete:
+        type: component
+        description: Autocomplete input
+        package: "@zendeskgarden/react-dropdowns"
+
+      # Chrome Components (Layout)
+      Chrome:
+        type: component
+        description: Main application shell container
+        package: "@zendeskgarden/react-chrome"
+      Header:
+        type: component
+        description: Application header
+        package: "@zendeskgarden/react-chrome"
+      Nav:
+        type: component
+        description: Navigation container
+        package: "@zendeskgarden/react-chrome"
+      Body:
+        type: component
+        description: Main content body
+        package: "@zendeskgarden/react-chrome"
+      Footer:
+        type: component
+        description: Application footer
+        package: "@zendeskgarden/react-chrome"
+
+      # Modal Components
+      Modal:
+        type: component
+        description: Modal dialog overlay
+        package: "@zendeskgarden/react-modals"
+      Drawer:
+        type: component
+        description: Slide-in drawer panel
+        package: "@zendeskgarden/react-modals"
+      TooltipModal:
+        type: component
+        description: Tooltip-style modal
+        package: "@zendeskgarden/react-modals"
+
+      # Navigation Components
+      Tabs:
+        type: component
+        description: Tab navigation component
+        package: "@zendeskgarden/react-tabs"
+      Accordion:
+        type: component
+        description: Expandable/collapsible sections
+        package: "@zendeskgarden/react-accordions"
+
+      # Notification Components
+      Notification:
+        type: component
+        description: Toast/banner notification
+        package: "@zendeskgarden/react-notifications"
+      Alert:
+        type: component
+        description: Alert message component
+        package: "@zendeskgarden/react-notifications"
+      Well:
+        type: component
+        description: Highlighted content container
+        package: "@zendeskgarden/react-notifications"
+
+      # Data Display
+      Table:
+        type: component
+        description: Data table with sorting and selection
+        package: "@zendeskgarden/react-tables"
+      Avatar:
+        type: component
+        description: User avatar component
+        package: "@zendeskgarden/react-avatars"
+      Tag:
+        type: component
+        description: Tag/label component
+        package: "@zendeskgarden/react-tags"
+      Tooltip:
+        type: component
+        description: Tooltip overlay
+        package: "@zendeskgarden/react-tooltips"
+
+      # Layout Components
+      Grid:
+        type: component
+        description: Responsive grid system
+        package: "@zendeskgarden/react-grid"
+      Pagination:
+        type: component
+        description: Pagination controls
+        package: "@zendeskgarden/react-pagination"
+
+      # Loaders
+      Spinner:
+        type: component
+        description: Loading spinner
+        package: "@zendeskgarden/react-loaders"
+      Skeleton:
+        type: component
+        description: Skeleton placeholder
+        package: "@zendeskgarden/react-loaders"
+      Dots:
+        type: component
+        description: Dots loading indicator
+        package: "@zendeskgarden/react-loaders"
+
+componentCatalog:
+  categories:
+    action:
+      name: Actions
+      description: Interactive elements for user actions
+      components: [button, iconButton, anchor]
+
+    input:
+      name: Form Inputs
+      description: Form controls for user input
+      components: [input, textarea, checkbox, radio, toggle, field]
+
+    dropdown:
+      name: Dropdowns
+      description: Dropdown menus and select components
+      components: [select, combobox, menu, autocomplete]
+
+    chrome:
+      name: Chrome (Layout)
+      description: Application shell and layout components
+      components: [chrome, header, nav, body, footer]
+
+    overlay:
+      name: Overlays
+      description: Modal dialogs and overlays
+      components: [modal, drawer, tooltipModal, tooltip]
+
+    navigation:
+      name: Navigation
+      description: Navigation and organization components
+      components: [tabs, accordion]
+
+    notification:
+      name: Notifications
+      description: Alert and notification components
+      components: [notification, alert, well]
+
+    dataDisplay:
+      name: Data Display
+      description: Components for displaying data
+      components: [table, avatar, tag]
+
+    layout:
+      name: Layout
+      description: Grid and layout utilities
+      components: [grid, pagination]
+
+    feedback:
+      name: Feedback
+      description: Loading and progress indicators
+      components: [spinner, skeleton, dots]
+
+  components:
+    # ACTION COMPONENTS
+    button:
+      name: Button
+      description: |
+        Primary action button with multiple variants and sizes.
+        Supports default, primary, and basic types with optional danger styling.
+      category: action
+      sdkBinding:
+        sdk: garden-react
+        export: Button
+        package: "@zendeskgarden/react-buttons"
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+      props:
+        size:
+          type: string
+          enum: [small, medium, large]
+          default: medium
+          description: Button size
+        isPrimary:
+          type: boolean
+          default: false
+          description: Primary button style (blue)
+        isBasic:
+          type: boolean
+          default: false
+          description: Basic button style (minimal)
+        isDanger:
+          type: boolean
+          default: false
+          description: Danger styling for destructive actions
+        isStretched:
+          type: boolean
+          default: false
+          description: Stretch to fill container width
+        disabled:
+          type: boolean
+          default: false
+          description: Disable the button
+        focusInset:
+          type: boolean
+          default: false
+          description: Inset focus indicator
+      variants:
+        - default
+        - primary
+        - basic
+        - danger
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        labelRequired: true
+      examples:
+        - title: Primary Button
+          code: |
+            import { Button } from '@zendeskgarden/react-buttons';
+
+            <Button isPrimary>Submit</Button>
+          language: jsx
+        - title: Danger Button
+          code: |
+            import { Button } from '@zendeskgarden/react-buttons';
+
+            <Button isDanger>Delete</Button>
+          language: jsx
+
+    modal:
+      name: Modal
+      description: |
+        Modal dialog that overlays the page and blocks interaction with
+        the rest of the content. Available in default and large sizes.
+      category: overlay
+      sdkBinding:
+        sdk: garden-react
+        export: Modal
+        package: "@zendeskgarden/react-modals"
+      webStandardMapping:
+        htmlElement: dialog
+        ariaRole: dialog
+        semanticType: container
+      props:
+        isLarge:
+          type: boolean
+          default: false
+          description: Large modal size
+        focusOnMount:
+          type: boolean
+          default: true
+          description: Focus modal on mount
+        backdropProps:
+          type: object
+          description: Props for the backdrop element
+        onClose:
+          type: function
+          description: Callback when modal is closed
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        focusTrap: true
+        escapeToClose: true
+      examples:
+        - title: Basic Modal
+          code: |
+            import { Modal, Header, Body, Footer, Close } from '@zendeskgarden/react-modals';
+            import { Button } from '@zendeskgarden/react-buttons';
+
+            <Modal onClose={() => setIsOpen(false)}>
+              <Header>Modal Title</Header>
+              <Body>Modal content goes here</Body>
+              <Footer>
+                <Button onClick={() => setIsOpen(false)}>Cancel</Button>
+                <Button isPrimary>Confirm</Button>
+              </Footer>
+              <Close aria-label="Close modal" />
+            </Modal>
+          language: jsx
+
+    input:
+      name: Input
+      description: |
+        Text input field for user data entry. Should be nested within
+        a Field component for proper accessibility attributes.
+      category: input
+      sdkBinding:
+        sdk: garden-react
+        export: Input
+        package: "@zendeskgarden/react-forms"
+      webStandardMapping:
+        htmlElement: input
+        inputType: text
+        semanticType: input
+      props:
+        isCompact:
+          type: boolean
+          default: false
+          description: Compact sizing
+        isBare:
+          type: boolean
+          default: false
+          description: Remove borders and padding
+        focusInset:
+          type: boolean
+          default: false
+          description: Inset focus indicator
+        validation:
+          type: string
+          enum: [success, warning, error]
+          description: Validation state
+      accessibility:
+        labelRequired: true
+        keyboardSupport: true
+        screenReaderSupport: true
+      examples:
+        - title: Input with Label
+          code: |
+            import { Field, Label, Input, Hint } from '@zendeskgarden/react-forms';
+
+            <Field>
+              <Label>Email address</Label>
+              <Hint>Enter your email</Hint>
+              <Input placeholder="email@example.com" />
+            </Field>
+          language: jsx
+
+    select:
+      name: Select
+      description: |
+        Non-editable dropdown select component. Use isMultiselectable
+        for multiple selections. For editable dropdowns, use Combobox.
+      category: dropdown
+      sdkBinding:
+        sdk: garden-react
+        export: Select
+        package: "@zendeskgarden/react-dropdowns"
+      webStandardMapping:
+        htmlElement: select
+        ariaRole: listbox
+        semanticType: input
+      props:
+        isMultiselectable:
+          type: boolean
+          default: false
+          description: Allow multiple selections
+        isCompact:
+          type: boolean
+          default: false
+          description: Compact sizing
+        disabled:
+          type: boolean
+          default: false
+        placeholder:
+          type: string
+          description: Placeholder text
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        labelRequired: true
+
+    chrome:
+      name: Chrome
+      description: |
+        Main application shell container that provides consistent layout
+        structure for Zendesk-style applications.
+      category: chrome
+      sdkBinding:
+        sdk: garden-react
+        export: Chrome
+        package: "@zendeskgarden/react-chrome"
+      webStandardMapping:
+        htmlElement: div
+        semanticType: container
+      props:
+        isFluid:
+          type: boolean
+          default: false
+          description: Fluid width layout
+        hue:
+          type: string
+          description: Color hue for theming
+      examples:
+        - title: Basic Chrome Layout
+          code: |
+            import { Chrome, Header, Nav, Body, Footer } from '@zendeskgarden/react-chrome';
+
+            <Chrome>
+              <Header>Application Header</Header>
+              <Nav>Navigation</Nav>
+              <Body>Main Content</Body>
+              <Footer>Footer</Footer>
+            </Chrome>
+          language: jsx
+
+    table:
+      name: Table
+      description: |
+        Data table component with support for sorting, selection, and
+        row reordering (via dnd-kit). Available in small, medium, and large sizes.
+      category: dataDisplay
+      sdkBinding:
+        sdk: garden-react
+        export: Table
+        package: "@zendeskgarden/react-tables"
+      webStandardMapping:
+        htmlElement: table
+        ariaRole: table
+        semanticType: data
+      props:
+        size:
+          type: string
+          enum: [small, medium, large]
+          default: medium
+          description: Table row size
+        isReadOnly:
+          type: boolean
+          default: false
+          description: Read-only mode (no hover states)
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        captionRecommended: true
+
+    notification:
+      name: Notification
+      description: |
+        Toast/banner notification for displaying messages to users.
+        Supports multiple types (success, warning, error, info).
+      category: notification
+      sdkBinding:
+        sdk: garden-react
+        export: Notification
+        package: "@zendeskgarden/react-notifications"
+      props:
+        type:
+          type: string
+          enum: [success, warning, error, info]
+          description: Notification type
+        placement:
+          type: string
+          enum: [top-start, top, top-end, bottom-start, bottom, bottom-end]
+          description: Notification placement
+      accessibility:
+        ariaRole: status
+        screenReaderSupport: true
+
+policies:
+  componentRequirement:
+    level: recommended
+    scope: all
+    rationale: |
+      Zendesk strongly recommends using Garden Design System components for
+      consistent UI, accessibility, and integration with Zendesk products.
+      However, component usage is not enforced - developers can use their
+      own components or frameworks while still communicating via ZAFClient.
+
+  customComponents:
+    allowed: true
+    constraints:
+      - Apps must run in sandboxed iframe
+      - Must use ZAFClient SDK for platform communication
+      - Must respect iframe sandbox constraints
+    registrationRequired: false
+    approvalRequired: false
+    documentation: https://developer.zendesk.com/documentation/apps/app-developer-guide/using-the-apps-framework/
+    rationale: |
+      Apps have freedom to use any UI framework (React, Vue, Angular, vanilla JS)
+      as long as they communicate via ZAFClient and follow security guidelines.
+
+  publishing:
+    privateApps:
+      name: Private Apps
+      componentRequirement: recommended
+      customComponentsAllowed: true
+      reviewRequired: false
+      notes: |
+        Private apps for single Zendesk accounts. Garden recommended but
+        not required. No marketplace review needed.
+
+    publicApps:
+      name: Public Apps
+      componentRequirement: recommended
+      customComponentsAllowed: true
+      reviewRequired: true
+      securityReviewRequired: true
+      notes: |
+        Apps distributed to multiple customers must be submitted to Marketplace
+        for security and compliance review. Must use global OAuth for auth.
+      requirements:
+        - Global OAuth authentication required
+        - Custom API headers required (X-Zendesk-Marketplace-*)
+        - Security review for data handling
+        - Privacy policy disclosure required
+
+    marketplaceApps:
+      name: Marketplace Apps
+      componentRequirement: recommended
+      customComponentsAllowed: true
+      certificationRequired: false
+      reviewRequired: true
+      securityReviewRequired: true
+      notes: |
+        Apps listed in Zendesk Marketplace undergo comprehensive review
+        including security, functionality, and compliance verification.
+      requirements:
+        - Must include X-Zendesk-Marketplace-Name header
+        - Must include X-Zendesk-Marketplace-Organization-Id header
+        - Must include X-Zendesk-Marketplace-App-Id header
+        - Data handling disclosure required
+        - Privacy policy and terms of service required
+        - OAuth scope audit
+        - API security verification
+
+  designGuidelines:
+    required: false
+    designSystem: "Zendesk Garden"
+    designSystemUrl: https://garden.zendesk.com/
+    designTokensProvided: true
+    guidelines:
+      - Use Garden components for consistent UI (recommended)
+      - Follow accessibility best practices (WCAG 2.1 AA)
+      - Provide clear labels and helper text
+      - Use validation states appropriately
+      - Ensure keyboard navigation support
+      - Test in different iframe contexts
+
+  security:
+    iframeSandbox: true
+    sandboxAttributes:
+      - allow-scripts
+      - allow-forms
+      - allow-same-origin
+      - allow-popups
+    secureSettings:
+      enabled: true
+      description: |
+        Use secure settings for sensitive data like API tokens or passwords.
+        Secure settings are encrypted and cannot be read by the app - they
+        can only be used as placeholders replaced by the server.
+      domainWhitelist: required
+    authentication:
+      globalOAuth: required
+      apiTokens: prohibited
+      notes: |
+        Public apps must use global OAuth access tokens. API tokens or
+        regular OAuth tokens are prohibited per Zendesk Developer Terms.
+
+extensionPoints:
+  - id: ticket-sidebar
+    name: Ticket Sidebar
+    type: panel
+    extensionType: iframe
+    description: |
+      Panel on the right side of the ticket in the agent interface.
+      Primary location for ticket-related app functionality.
+    supportedComponents:
+      - all
+    constraints:
+      defaultWidth: 320
+      flexible: true
+      autoLoad: optional
+      autoHide: optional
+    configuration:
+      flexible:
+        type: boolean
+        default: true
+        description: |
+          If true, iframe automatically resizes to match app tray width.
+          If false, iframe stays fixed at 320px width.
+      autoLoad:
+        type: boolean
+        default: true
+        description: Automatically load app when ticket opens
+      autoHide:
+        type: boolean
+        default: false
+        description: Hide app by default until clicked
+    context:
+      provides:
+        - ticket
+        - user
+        - currentUser
+        - organization
+        - group
+        - locale
+        - instances
+      actions:
+        - resize
+        - invoke
+        - get
+        - set
+        - request
+        - notify
+      events:
+        - ticket.save
+        - ticket.updated
+        - ticket.submit.start
+        - ticket.submit.done
+        - app.activated
+        - app.deactivated
+        - app.registered
+    documentation: https://developer.zendesk.com/api-reference/apps/apps-support-api/ticket_sidebar/
+
+  - id: new-ticket-sidebar
+    name: New Ticket Sidebar
+    type: panel
+    extensionType: iframe
+    description: |
+      Panel on the right side of the new ticket interface. Similar to
+      ticket sidebar but for new ticket creation flow.
+    supportedComponents:
+      - all
+    constraints:
+      defaultWidth: 320
+      flexible: true
+      autoLoad: optional
+    context:
+      provides:
+        - ticket
+        - user
+        - currentUser
+        - locale
+      actions:
+        - resize
+        - invoke
+        - get
+        - set
+    documentation: https://developer.zendesk.com/api-reference/apps/apps-support-api/ticket_sidebar/
+
+  - id: nav-bar
+    name: Navigation Bar
+    type: panel
+    extensionType: iframe
+    description: |
+      Icon in the left navigation bar. Opens a modal or panel when clicked.
+      Good for app functionality not tied to specific tickets.
+    supportedComponents:
+      - all
+    constraints:
+      iconRequired: true
+      responsive: true
+    configuration:
+      icon:
+        type: string
+        required: true
+        description: Icon to display in nav bar
+      url:
+        type: string
+        description: URL to load in iframe
+    context:
+      provides:
+        - currentUser
+        - locale
+        - instances
+      actions:
+        - resize
+        - invoke
+        - get
+        - request
+    documentation: https://developer.zendesk.com/api-reference/apps/apps-support-api/nav_bar/
+
+  - id: top-bar
+    name: Top Bar
+    type: panel
+    extensionType: iframe
+    description: |
+      Panel in the top bar of the agent interface. Can be always visible
+      or triggered by an icon. Supports custom sizing.
+    supportedComponents:
+      - all
+    constraints:
+      maxWidth: 600
+      maxHeight: 600
+      responsive: true
+      autoHide: optional
+    configuration:
+      autoHide:
+        type: boolean
+        default: false
+        description: Hide by default, show on icon click
+      url:
+        type: string
+        description: URL to load in iframe
+      size:
+        type: object
+        properties:
+          width:
+            type: string
+            description: Width in px or %
+          height:
+            type: string
+            description: Height in px or %
+    context:
+      provides:
+        - currentUser
+        - locale
+        - instances
+      actions:
+        - resize
+        - invoke
+        - get
+    documentation: https://developer.zendesk.com/api-reference/apps/apps-support-api/top_bar/
+
+  - id: modal
+    name: Modal Dialog
+    type: modal
+    extensionType: iframe
+    description: |
+      Modal overlay opened programmatically via client.invoke('instances.create').
+      Good for focused tasks or data collection workflows.
+    supportedComponents:
+      - all
+    constraints:
+      maxWidth: 800
+      maxHeight: 600
+      responsive: true
+    configuration:
+      url:
+        type: string
+        description: URL to load in modal iframe
+      size:
+        type: object
+        properties:
+          width:
+            type: string
+          height:
+            type: string
+    context:
+      provides:
+        - context
+        - currentUser
+        - locale
+      actions:
+        - close
+        - resize
+        - get
+        - invoke
+    invocation:
+      method: client.invoke('instances.create')
+      parameters:
+        location: modal
+        url: string
+        size: object
+    documentation: https://developer.zendesk.com/api-reference/apps/apps-support-api/modal/
+
+  - id: background
+    name: Background
+    type: service
+    extensionType: iframe
+    description: |
+      Background app with no UI. Runs invisibly to handle events and
+      perform server-side operations. Useful for webhooks and automation.
+    supportedComponents:
+      - none (no UI)
+    constraints:
+      noUI: true
+      eventsOnly: true
+    context:
+      provides:
+        - currentUser
+        - locale
+        - account
+      actions:
+        - get
+        - request
+        - invoke
+      events:
+        - ticket.save
+        - ticket.updated
+        - app.activated
+        - app.registered
+    notes: |
+      Background apps don't have a visible UI. They respond to platform
+      events like ticket.save (server-side completion) and can perform
+      automated actions or integrations.
+    documentation: https://developer.zendesk.com/api-reference/apps/apps-support-api/background/
+
+  - id: organization-sidebar
+    name: Organization Sidebar
+    type: panel
+    extensionType: iframe
+    description: |
+      Panel on the organization page, similar to ticket sidebar but
+      for organization-related functionality.
+    supportedComponents:
+      - all
+    constraints:
+      defaultWidth: 320
+      flexible: true
+    context:
+      provides:
+        - organization
+        - currentUser
+        - locale
+      actions:
+        - resize
+        - get
+        - invoke
+    documentation: https://developer.zendesk.com/api-reference/apps/apps-support-api/organization_sidebar/
+
+  - id: user-sidebar
+    name: User Sidebar
+    type: panel
+    extensionType: iframe
+    description: |
+      Panel on the user profile page for user-specific app features.
+    supportedComponents:
+      - all
+    constraints:
+      defaultWidth: 320
+      flexible: true
+    context:
+      provides:
+        - user
+        - currentUser
+        - locale
+      actions:
+        - resize
+        - get
+        - invoke
+    documentation: https://developer.zendesk.com/api-reference/apps/apps-support-api/user_sidebar/
+
+renderingEngines:
+  iframe-sandbox:
+    type: custom
+    name: Sandboxed IFrame
+    description: |
+      Apps run in sandboxed iframes with restricted permissions.
+      Communication with the host Zendesk product happens via ZAFClient
+      using secure cross-frame messaging (postMessage).
+    sandboxing:
+      iframeSandbox: true
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+        - allow-same-origin
+        - allow-popups
+      crossFrameMessaging: postMessage
+      securityModel: |
+        Apps are isolated in iframes and can only interact with Zendesk
+        via the ZAFClient SDK. This ensures security and prevents direct
+        DOM access to the host application.
+
+  any-framework:
+    type: custom
+    name: Any JavaScript Framework
+    description: |
+      Developers can use any frontend framework (React, Vue, Angular,
+      Svelte, vanilla JS) inside the iframe as long as they integrate
+      with ZAFClient for platform communication.
+    frameworks:
+      - React (recommended with Garden)
+      - Vue
+      - Angular
+      - Svelte
+      - Vanilla JavaScript
+      - Any framework that can run in a browser iframe
+
+jsonFormsIntegration:
+  supported: true
+  rendererSet: custom
+  customRenderersAllowed: true
+  notes: |
+    Developers can integrate JSON Forms with Garden component renderers
+    or custom renderers within their iframe apps.
+
+mcpAppsIntegration:
+  supported: false
+  notes: "Potential future integration via iframe embedding"
+
+extensionType: iframe
+
+extensions:
+  i18n:
+    enabled: true
+    localeDetection: automatic
+    description: |
+      Zendesk Apps Framework provides automatic locale detection via
+      ZAFClient. Apps can localize content using translation JSON files
+      in the translations folder with data-i18n-key attributes.
+    implementation:
+      translationFiles:
+        location: translations/
+        format: json
+        naming: "{locale}.json"
+        example: |
+          translations/en.json:
+          { "default": { "hello_world": "Hello World!" }}
+
+          translations/fr.json:
+          { "default": { "hello_world": "Bonjour le Monde!" }}
+      htmlIntegration:
+        attribute: data-i18n-key
+        description: |
+          Add data-i18n-key attribute to HTML elements. The framework
+          replaces element text with the corresponding translation string
+          based on user locale.
+        example: <span data-i18n-key="hello_world"></span>
+      fallbackBehavior:
+        defaultLocale: en
+        description: Falls back to English if user locale not available
+      clientProvides:
+        - currentUser.locale
+        - currentAccount.locale
+      developerResponsibility:
+        - Create translation files for supported locales
+        - Add data-i18n-key attributes to HTML elements
+        - Handle locale-specific date/time formatting
+        - Support RTL languages if needed
+    supportedLocales:
+      - en-US (English - United States)
+      - en-GB (English - United Kingdom)
+      - de (German)
+      - es (Spanish)
+      - es-419 (Spanish - Latin America)
+      - fr (French)
+      - fr-ca (French - Canada)
+      - it (Italian)
+      - ja (Japanese)
+      - ko (Korean)
+      - nl (Dutch)
+      - pl (Polish)
+      - pt-br (Portuguese - Brazil)
+      - pt (Portuguese)
+      - ru (Russian)
+      - sv (Swedish)
+      - tr (Turkish)
+      - zh-cn (Chinese - Simplified)
+      - zh-tw (Chinese - Traditional)
+      - da (Danish)
+      - fi (Finnish)
+      - no (Norwegian)
+      - cs (Czech)
+      - id (Indonesian)
+      - th (Thai)
+      - ar (Arabic)
+      - he (Hebrew)
+    documentation: https://developer.zendesk.com/documentation/apps/build-an-app/localizing-a-support-app/
+
+  compliance:
+    enabled: true
+    description: |
+      Apps distributed to multiple Zendesk customers must comply with
+      Marketplace security requirements, data handling policies, and
+      authentication standards.
+    requirements:
+      securityReview:
+        required: true
+        scope: publicDistribution
+        includes:
+          - Data handling and privacy review
+          - OAuth implementation verification
+          - Secure API usage patterns
+          - Permission scope audit
+          - Custom header verification
+        documentation: https://developer.zendesk.com/documentation/marketplace/
+      functionalReview:
+        required: true
+        scope: marketplaceApps
+        includes:
+          - App functionality testing
+          - Error handling validation
+          - User experience assessment
+          - Performance testing
+      contentReview:
+        required: true
+        scope: marketplaceApps
+        includes:
+          - App listing content accuracy
+          - Screenshots and media quality
+          - Privacy policy completeness
+          - Terms of service clarity
+      authenticationRequirements:
+        globalOAuth: required
+        apiTokens: prohibited
+        scope: publicApps
+        description: |
+          Public apps must use global OAuth access tokens. API tokens
+          and regular OAuth tokens are prohibited for apps distributed
+          to multiple customers.
+        documentation: https://developer.zendesk.com/api-reference/introduction/security-and-auth/
+      apiHeaderRequirements:
+        required: true
+        scope: marketplaceApps
+        headers:
+          X-Zendesk-Marketplace-Name:
+            required: true
+            description: Name of the integration (can change)
+          X-Zendesk-Marketplace-Organization-Id:
+            required: true
+            description: Organization ID from developer portal (static)
+          X-Zendesk-Marketplace-App-Id:
+            required: true
+            description: App ID assigned when submitted
+        notes: |
+          Custom headers verified during submission process. Required for
+          all external API requests from marketplace apps.
+        documentation: https://developer.zendesk.com/documentation/marketplace/building-a-marketplace-app/request-header-requirements-for-marketplace-apps/
+      dataHandling:
+        disclosureRequired: true
+        description: |
+          Apps must disclose what Zendesk data they access and for what
+          purpose. Must follow data protection and privacy regulations.
+        constraints:
+          - No unauthorized data sharing
+          - Secure data storage
+          - Compliance with GDPR, CCPA, etc.
+          - Customer data isolation
+      secureSettings:
+        enabled: true
+        description: |
+          Use secure settings in manifest.json for sensitive data.
+          Secure settings are encrypted and can only be used as
+          server-side placeholders, not read by client code.
+        domainWhitelist: required
+        bestPractices:
+          - Never expose API tokens in client code
+          - Use secure settings with domainWhitelist
+          - Don't attempt to read secure settings (won't work)
+    certifications:
+      marketplaceListing:
+        available: true
+        description: Apps approved for Marketplace listing
+      securityCompliance:
+        available: true
+        description: Security and compliance verification
+    documentation: https://support.zendesk.com/hc/en-us/articles/9590471542170
+    guidelines: https://developer.zendesk.com/documentation/marketplace/building-a-marketplace-app/
+
+  analytics:
+    enabled: true
+    description: |
+      Zendesk provides analytics for marketplace apps including
+      installation metrics, usage data, and performance monitoring
+      through the developer portal.
+    metrics:
+      - Active installations
+      - User engagement
+      - API usage
+      - Error rates
+      - Performance metrics
+    dashboard: https://apps.zendesk.com/ (Developer Portal)
+
+  testing:
+    enabled: true
+    description: Tools and methods for testing Zendesk apps
+    tools:
+      zcli:
+        name: Zendesk CLI
+        description: Command-line tool for app development and testing
+        features:
+          - Local app server for development
+          - App packaging and validation
+          - App deployment to Zendesk instances
+          - Manifest validation
+        installation: npm install -g @zendesk/zcli
+        documentation: https://developer.zendesk.com/documentation/apps/getting-started/using-zcli/
+      localTesting:
+        description: |
+          Use ZCLI server to run app locally and test in Zendesk
+          products with live reloading and debugging.
+        command: zcli apps:server
+      validation:
+        manifestValidation: true
+        translationValidation: true
+        securityValidation: true
+    documentation: https://developer.zendesk.com/documentation/apps/app-developer-guide/build-and-test-your-app/
+
+  accessibilityFeatures:
+    keyboardNavigation: true
+    screenReaderSupport: true
+    highContrastMode: true
+    description: |
+      Garden components are built with accessibility in mind, following
+      WCAG 2.1 AA standards. Apps using Garden inherit these features.
+    guidelines:
+      - Use semantic HTML elements
+      - Provide ARIA labels where needed
+      - Ensure keyboard navigation works
+      - Test with screen readers
+      - Support high contrast modes
+      - Maintain adequate color contrast
+      - Provide focus indicators
+    documentation: https://garden.zendesk.com/components/
+
+  rateLimits:
+    description: Rate limits for Zendesk API requests
+    limits:
+      standard:
+        rate: 200 requests per minute per account
+        description: Standard API rate limit
+      concurrent:
+        rate: 5 concurrent requests per account
+        description: Maximum concurrent requests
+      search:
+        rate: 60 requests per minute
+        description: Search API specific limit
+    documentation: https://developer.zendesk.com/api-reference/introduction/rate-limits/
+
+  securityFeatures:
+    oauthRequired: true
+    scopedPermissions: true
+    iframeSandbox: true
+    description: |
+      Zendesk apps use OAuth for authentication with granular permission
+      scopes. Apps run in sandboxed iframes with controlled communication
+      via ZAFClient. Secure settings protect sensitive data.
+    features:
+      - OAuth 2.0 authentication
+      - Granular permission scopes
+      - Sandboxed iframe execution
+      - Secure settings encryption
+      - Domain whitelisting
+      - Request signing for marketplace apps
+      - HTTPS required for production
+    documentation: https://developer.zendesk.com/api-reference/introduction/security-and-auth/
+
+notes: |
+  Zendesk Apps Framework provides a flexible iframe-based extension model
+  where apps run in sandboxed iframes and communicate with the host Zendesk
+  product via the ZAFClient SDK.
+
+  Key characteristics:
+  - Iframe-based: Apps run in sandboxed iframes with controlled communication
+  - ZAFClient required: All platform interaction goes through ZAFClient SDK
+  - Garden recommended: Garden Design System strongly recommended but not enforced
+  - Framework agnostic: Use any frontend framework (React, Vue, Angular, etc.)
+  - Multiple locations: Apps can appear in sidebar, nav bar, top bar, modal, background
+  - Secure by default: OAuth, sandboxing, secure settings, domain whitelisting
+  - I18n support: Built-in locale detection and translation system
+  - Marketplace ready: Comprehensive review process for public apps
+
+  Apps have complete freedom in their UI implementation while maintaining
+  security through iframe sandboxing and ZAFClient communication protocol.
+  Garden components are strongly recommended for consistency with Zendesk UI
+  and built-in accessibility, but developers can choose their own approach.
+
+metadata:
+  fenestra:
+    createdAt: "2025-12-30"
+    author: "Fenestra Specification Team"
+    category: "Customer Service Platform"
+    tags:
+      - customer-service
+      - help-desk
+      - iframe
+      - react
+      - garden
+      - zaf
+    relatedPlatforms:
+      - Miro (iframe with optional components)
+      - Salesforce (Lightning Web Components)
+      - Intercom (iframe-based apps)

@@ -1,0 +1,1033 @@
+# Fenestra Document: Stripe Elements
+#
+# Stripe Elements represents an embeddedSdk extension type - pre-built UI components
+# that developers embed in their websites for secure payment collection.
+#
+# Key characteristics:
+# - SDK MUST be loaded from Stripe's CDN (cannot be bundled)
+# - Handles PCI compliance automatically
+# - Extensive customization via Appearance API
+# - Components integrate seamlessly into merchant checkout pages
+
+fenestra: "0.1.0"
+
+info:
+  title: Stripe Elements UI Ecosystem
+  version: "1.0.0"
+  description: |
+    Stripe Elements is a set of pre-built UI components for securely collecting
+    payment information on the web. Elements are designed to be embedded in
+    merchant checkout pages and handle the complex requirements of payment security.
+
+    Stripe.js and Elements provide:
+    - PCI DSS Level 1 compliant payment collection
+    - Automatic card validation and formatting
+    - Support for 40+ payment methods
+    - Dynamic localization for 40+ languages
+    - Real-time error handling and validation
+    - Extensive styling and theming capabilities
+
+    Security Model: Payment data never touches merchant servers. Elements communicate
+    directly with Stripe, significantly reducing PCI compliance scope.
+
+platform:
+  name: Stripe
+  vendor: Stripe, Inc.
+  documentation: https://stripe.com/docs
+  appMarketplace: https://marketplace.stripe.com/
+
+# =============================================================================
+# SDK DEFINITIONS
+# =============================================================================
+
+sdks:
+  stripe-js:
+    name: Stripe.js
+    packageManager: npm
+    package: "@stripe/stripe-js"
+    version: "^2.0.0"
+    platform: web
+    documentation: https://stripe.com/docs/js
+    repository: https://github.com/stripe/stripe-js
+    cdn: https://js.stripe.com/v3/
+    cdnRequired: true
+    installCommand: npm install @stripe/stripe-js
+    exports:
+      loadStripe:
+        type: utility
+        description: Loads Stripe.js asynchronously from CDN
+      Stripe:
+        type: utility
+        description: Main Stripe.js instance for creating Elements
+
+  react-stripe-js:
+    name: React Stripe.js
+    packageManager: npm
+    package: "@stripe/react-stripe-js"
+    version: "^2.0.0"
+    platform: web
+    documentation: https://stripe.com/docs/stripe-js/react
+    repository: https://github.com/stripe/react-stripe-js
+    installCommand: npm install @stripe/react-stripe-js @stripe/stripe-js
+    exports:
+      # Provider Components
+      Elements:
+        type: component
+        description: Provider component that wraps all Stripe Elements
+      # Element Components
+      PaymentElement:
+        type: component
+        description: All-in-one payment method collection component
+      CardElement:
+        type: component
+        description: Complete card input (number, expiry, CVC)
+      CardNumberElement:
+        type: component
+        description: Card number input only
+      CardExpiryElement:
+        type: component
+        description: Card expiry date input only
+      CardCvcElement:
+        type: component
+        description: Card CVC input only
+      ExpressCheckoutElement:
+        type: component
+        description: One-click payment buttons (Apple Pay, Google Pay, etc.)
+      LinkAuthenticationElement:
+        type: component
+        description: Email input with Link autofill
+      AddressElement:
+        type: component
+        description: Complete address collection form
+      PaymentMethodMessagingElement:
+        type: component
+        description: Marketing messages for payment methods (BNPL, etc.)
+      IbanElement:
+        type: component
+        description: IBAN input for SEPA Direct Debit
+      IdealBankElement:
+        type: component
+        description: iDEAL bank selection
+      AuBankAccountElement:
+        type: component
+        description: Australian bank account input
+      # Hooks
+      useStripe:
+        type: hook
+        description: Hook to access Stripe instance
+      useElements:
+        type: hook
+        description: Hook to access Elements instance
+
+  stripe-ios:
+    name: Stripe iOS SDK
+    packageManager: cocoapods
+    package: Stripe
+    version: "^23.0.0"
+    platform: ios
+    documentation: https://stripe.com/docs/mobile/ios
+    repository: https://github.com/stripe/stripe-ios
+    installCommand: pod 'Stripe'
+    mobile:
+      minOsVersion: "13.0"
+      targetOsVersion: "17.0"
+      architectures: [arm64, x86_64]
+      appStoreGuidelines: https://stripe.com/docs/security/guide#app-store
+
+  stripe-android:
+    name: Stripe Android SDK
+    packageManager: gradle
+    package: com.stripe:stripe-android
+    version: "^20.0.0"
+    platform: android
+    documentation: https://stripe.com/docs/mobile/android
+    repository: https://github.com/stripe/stripe-android
+    installCommand: implementation 'com.stripe:stripe-android:20.+'
+    mobile:
+      minOsVersion: "5.0"
+      targetOsVersion: "14.0"
+
+  stripe-react-native:
+    name: Stripe React Native SDK
+    packageManager: npm
+    package: "@stripe/stripe-react-native"
+    version: "^0.35.0"
+    platform: react-native
+    documentation: https://stripe.com/docs/mobile/react-native
+    repository: https://github.com/stripe/stripe-react-native
+    installCommand: npm install @stripe/stripe-react-native
+
+# =============================================================================
+# COMPONENT CATALOG
+# =============================================================================
+
+componentCatalog:
+  categories:
+    payment:
+      name: Payment Collection
+      description: Components for collecting payment information
+      components:
+        - PaymentElement
+        - CardElement
+        - CardNumberElement
+        - CardExpiryElement
+        - CardCvcElement
+        - IbanElement
+        - IdealBankElement
+        - AuBankAccountElement
+
+    express:
+      name: Express Checkout
+      description: One-click payment experiences
+      components:
+        - ExpressCheckoutElement
+
+    identity:
+      name: Identity & Authentication
+      description: User identification and Link integration
+      components:
+        - LinkAuthenticationElement
+
+    address:
+      name: Address Collection
+      description: Shipping and billing address forms
+      components:
+        - AddressElement
+
+    messaging:
+      name: Payment Messaging
+      description: Marketing and informational messages
+      components:
+        - PaymentMethodMessagingElement
+
+  components:
+    PaymentElement:
+      name: Payment Element
+      description: |
+        All-in-one component that dynamically displays relevant payment methods
+        based on transaction amount, currency, and customer location. Recommended
+        for most integrations as it automatically adapts to customer preferences.
+      category: payment
+      sdkBinding:
+        sdk: react-stripe-js
+        export: PaymentElement
+        importPath: "@stripe/react-stripe-js"
+      webStandardMapping:
+        htmlElement: div
+        ariaRole: group
+        semanticType: input
+      props:
+        type: object
+        properties:
+          options:
+            type: object
+            properties:
+              layout:
+                type: string
+                enum: [tabs, accordion, auto]
+                default: auto
+                description: How to display multiple payment methods
+              business:
+                type: object
+                description: Business name shown to customers
+              fields:
+                type: object
+                properties:
+                  billingDetails:
+                    type: string
+                    enum: [auto, never]
+                    description: Whether to collect billing details
+              wallets:
+                type: object
+                properties:
+                  applePay:
+                    type: string
+                    enum: [auto, never]
+                  googlePay:
+                    type: string
+                    enum: [auto, never]
+              readOnly:
+                type: boolean
+                default: false
+          onChange:
+            type: function
+            description: Callback when payment method state changes
+          onReady:
+            type: function
+            description: Callback when component is fully loaded
+          onFocus:
+            type: function
+          onBlur:
+            type: function
+      events:
+        change:
+          description: Payment method or validation state changed
+          payload:
+            type: object
+            properties:
+              complete:
+                type: boolean
+              value:
+                type: object
+        ready:
+          description: Component fully loaded and ready
+        focus:
+          description: Component received focus
+        blur:
+          description: Component lost focus
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        focusManagement: Automatic focus management within multi-field component
+        notes: |
+          Stripe Elements are built with accessibility in mind, including
+          proper ARIA labels, keyboard navigation, and screen reader support.
+      examples:
+        - title: Basic Payment Element
+          code: |
+            import { PaymentElement } from '@stripe/react-stripe-js';
+
+            function CheckoutForm() {
+              return (
+                <form>
+                  <PaymentElement />
+                  <button type="submit">Pay</button>
+                </form>
+              );
+            }
+          language: jsx
+        - title: Payment Element with Options
+          code: |
+            <PaymentElement
+              options={{
+                layout: 'tabs',
+                wallets: {
+                  applePay: 'never',
+                  googlePay: 'auto'
+                },
+                fields: {
+                  billingDetails: 'auto'
+                }
+              }}
+              onChange={(event) => {
+                if (event.complete) {
+                  console.log('Payment method ready');
+                }
+              }}
+            />
+          language: jsx
+
+    CardElement:
+      name: Card Element
+      description: |
+        Single-line card input that collects card number, expiry date, and CVC.
+        Provides automatic formatting, validation, and card brand detection.
+      category: payment
+      sdkBinding:
+        sdk: react-stripe-js
+        export: CardElement
+        importPath: "@stripe/react-stripe-js"
+      webStandardMapping:
+        htmlElement: div
+        ariaRole: group
+        semanticType: input
+      props:
+        type: object
+        properties:
+          options:
+            type: object
+            properties:
+              hidePostalCode:
+                type: boolean
+                default: false
+              iconStyle:
+                type: string
+                enum: [solid, default]
+              disabled:
+                type: boolean
+                default: false
+          onChange:
+            type: function
+          onReady:
+            type: function
+          onFocus:
+            type: function
+          onBlur:
+            type: function
+      events:
+        change:
+          description: Card input state changed
+          payload:
+            type: object
+            properties:
+              complete:
+                type: boolean
+              brand:
+                type: string
+                description: "Card brand: visa, mastercard, amex, etc."
+              error:
+                type: object
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        focusManagement: Single tab stop with internal field navigation
+      examples:
+        - title: Basic Card Element
+          code: |
+            import { CardElement } from '@stripe/react-stripe-js';
+
+            <CardElement
+              options={{
+                hidePostalCode: false,
+                iconStyle: 'solid'
+              }}
+              onChange={(event) => {
+                console.log('Brand:', event.brand);
+                if (event.error) {
+                  console.error(event.error.message);
+                }
+              }}
+            />
+          language: jsx
+
+    ExpressCheckoutElement:
+      name: Express Checkout Element
+      description: |
+        Displays one-click payment buttons (Apple Pay, Google Pay, Link, etc.)
+        based on customer device and saved payment methods. Automatically handles
+        eligibility and payment sheet presentation.
+      category: express
+      sdkBinding:
+        sdk: react-stripe-js
+        export: ExpressCheckoutElement
+        importPath: "@stripe/react-stripe-js"
+      webStandardMapping:
+        htmlElement: div
+        ariaRole: button
+        semanticType: action
+      props:
+        type: object
+        properties:
+          options:
+            type: object
+            properties:
+              buttonType:
+                type: object
+                properties:
+                  applePay:
+                    type: string
+                    enum: [plain, buy, donate, check-out, book, subscribe]
+                  googlePay:
+                    type: string
+                    enum: [buy, donate, plain, book, checkout, subscribe, pay]
+              buttonTheme:
+                type: object
+                properties:
+                  applePay:
+                    type: string
+                    enum: [black, white, white-outline]
+                  googlePay:
+                    type: string
+                    enum: [black, white]
+              buttonHeight:
+                type: string
+                description: CSS height value (e.g., "48px")
+          onConfirm:
+            type: function
+            description: Called when customer authorizes payment
+          onClick:
+            type: function
+            description: Called when button is clicked
+      examples:
+        - title: Express Checkout Element
+          code: |
+            import { ExpressCheckoutElement } from '@stripe/react-stripe-js';
+
+            <ExpressCheckoutElement
+              options={{
+                buttonType: {
+                  applePay: 'buy',
+                  googlePay: 'buy'
+                },
+                buttonTheme: {
+                  applePay: 'black',
+                  googlePay: 'black'
+                },
+                buttonHeight: '48px'
+              }}
+              onConfirm={async (event) => {
+                // Handle payment confirmation
+                const { error } = await stripe.confirmPayment({
+                  elements,
+                  confirmParams: { return_url: '...' }
+                });
+              }}
+            />
+          language: jsx
+
+    LinkAuthenticationElement:
+      name: Link Authentication Element
+      description: |
+        Email input with Link integration. Allows returning customers to
+        autofill their payment details with a simple OTP verification.
+      category: identity
+      sdkBinding:
+        sdk: react-stripe-js
+        export: LinkAuthenticationElement
+        importPath: "@stripe/react-stripe-js"
+      webStandardMapping:
+        htmlElement: input
+        ariaRole: textbox
+        semanticType: input
+      props:
+        type: object
+        properties:
+          options:
+            type: object
+            properties:
+              defaultValues:
+                type: object
+                properties:
+                  email:
+                    type: string
+          onChange:
+            type: function
+      examples:
+        - title: Link Authentication Element
+          code: |
+            import { LinkAuthenticationElement } from '@stripe/react-stripe-js';
+
+            <LinkAuthenticationElement
+              options={{
+                defaultValues: {
+                  email: 'customer@example.com'
+                }
+              }}
+              onChange={(event) => {
+                console.log('Email:', event.value.email);
+              }}
+            />
+          language: jsx
+
+    AddressElement:
+      name: Address Element
+      description: |
+        Complete address collection form with automatic postal code lookup,
+        address validation, and international format support. Adapts fields
+        based on selected country.
+      category: address
+      sdkBinding:
+        sdk: react-stripe-js
+        export: AddressElement
+        importPath: "@stripe/react-stripe-js"
+      webStandardMapping:
+        htmlElement: div
+        ariaRole: group
+        semanticType: input
+      props:
+        type: object
+        properties:
+          options:
+            type: object
+            properties:
+              mode:
+                type: string
+                enum: [shipping, billing]
+                description: Determines required fields
+              allowedCountries:
+                type: array
+                items:
+                  type: string
+                description: ISO country codes
+              autocomplete:
+                type: object
+                properties:
+                  mode:
+                    type: string
+                    enum: [automatic, google_maps_api, disabled]
+              defaultValues:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  address:
+                    type: object
+              fields:
+                type: object
+                properties:
+                  phone:
+                    type: string
+                    enum: [always, auto, never]
+          onChange:
+            type: function
+      examples:
+        - title: Shipping Address Element
+          code: |
+            import { AddressElement } from '@stripe/react-stripe-js';
+
+            <AddressElement
+              options={{
+                mode: 'shipping',
+                allowedCountries: ['US', 'CA', 'GB'],
+                fields: {
+                  phone: 'always'
+                },
+                autocomplete: {
+                  mode: 'google_maps_api'
+                }
+              }}
+              onChange={(event) => {
+                if (event.complete) {
+                  console.log('Address:', event.value.address);
+                }
+              }}
+            />
+          language: jsx
+
+    PaymentMethodMessagingElement:
+      name: Payment Method Messaging Element
+      description: |
+        Displays promotional messaging for payment methods like "Pay in 4
+        interest-free installments" for Buy Now, Pay Later options.
+      category: messaging
+      sdkBinding:
+        sdk: react-stripe-js
+        export: PaymentMethodMessagingElement
+        importPath: "@stripe/react-stripe-js"
+      webStandardMapping:
+        htmlElement: div
+        ariaRole: region
+        semanticType: display
+      props:
+        type: object
+        properties:
+          options:
+            type: object
+            properties:
+              amount:
+                type: number
+                description: Amount in cents
+              currency:
+                type: string
+              paymentMethodTypes:
+                type: array
+                items:
+                  type: string
+              countryCode:
+                type: string
+      examples:
+        - title: Afterpay Messaging
+          code: |
+            import { PaymentMethodMessagingElement } from '@stripe/react-stripe-js';
+
+            <PaymentMethodMessagingElement
+              options={{
+                amount: 5000,  // $50.00
+                currency: 'usd',
+                paymentMethodTypes: ['afterpay_clearpay'],
+                countryCode: 'US'
+              }}
+            />
+          language: jsx
+
+    IbanElement:
+      name: IBAN Element
+      description: |
+        IBAN input for SEPA Direct Debit payments. Automatically validates
+        IBAN format and displays supported country codes.
+      category: payment
+      sdkBinding:
+        sdk: react-stripe-js
+        export: IbanElement
+        importPath: "@stripe/react-stripe-js"
+      webStandardMapping:
+        htmlElement: input
+        ariaRole: textbox
+        semanticType: input
+      props:
+        type: object
+        properties:
+          options:
+            type: object
+            properties:
+              supportedCountries:
+                type: array
+                items:
+                  type: string
+              placeholderCountry:
+                type: string
+      examples:
+        - title: SEPA Direct Debit
+          code: |
+            import { IbanElement } from '@stripe/react-stripe-js';
+
+            <IbanElement
+              options={{
+                supportedCountries: ['SEPA'],
+                placeholderCountry: 'DE'
+              }}
+            />
+          language: jsx
+
+# =============================================================================
+# EXTENSION POINTS
+# =============================================================================
+
+extensionPoints:
+  - id: merchant-checkout-page
+    name: Merchant Checkout Page
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Stripe Elements are embedded directly into merchant checkout pages.
+      The SDK creates secure iframe-based inputs that merchants style and
+      position within their own page layout. Payment data flows directly
+      from the customer's browser to Stripe without touching merchant servers.
+
+    extensionTypeConfig:
+      sdk:
+        package: "@stripe/stripe-js"
+        cdn: https://js.stripe.com/v3/
+        cdnRequired: true
+
+      mountPattern: domSelector
+
+      theming:
+        system: Appearance API
+        customizable: true
+        variables:
+          - theme
+          - variables.colorPrimary
+          - variables.colorBackground
+          - variables.colorText
+          - variables.colorDanger
+          - variables.fontFamily
+          - variables.spacingUnit
+          - variables.borderRadius
+          - variables.fontSizeBase
+          - variables.fontSizeSm
+          - variables.fontSizeXs
+          - rules (CSS-like object)
+        prebuiltThemes:
+          - stripe
+          - night
+          - flat
+          - none
+
+      communication:
+        pattern: promises
+        events:
+          - ready
+          - change
+          - focus
+          - blur
+          - escape
+          - networkerror
+
+    supportedComponents:
+      - PaymentElement
+      - CardElement
+      - CardNumberElement
+      - CardExpiryElement
+      - CardCvcElement
+      - ExpressCheckoutElement
+      - LinkAuthenticationElement
+      - AddressElement
+      - PaymentMethodMessagingElement
+      - IbanElement
+      - IdealBankElement
+      - AuBankAccountElement
+
+    constraints:
+      responsive: true
+
+    context:
+      provides:
+        - publishableKey
+        - clientSecret
+        - customer
+        - locale
+      actions:
+        - createPaymentMethod
+        - confirmPayment
+        - confirmSetup
+        - handleCardAction
+        - retrievePaymentIntent
+        - retrieveSetupIntent
+
+  - id: mobile-checkout
+    name: Mobile Native Checkout
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Native mobile SDKs for iOS and Android provide pre-built UI components
+      for payment collection with platform-native look and feel.
+
+    extensionTypeConfig:
+      sdk:
+        package: Stripe
+        cdnRequired: false
+
+      mountPattern: function
+
+      theming:
+        system: Platform Native
+        customizable: true
+        variables:
+          - primaryBackgroundColor
+          - secondaryBackgroundColor
+          - primaryForegroundColor
+          - secondaryForegroundColor
+          - accentColor
+          - errorColor
+          - font
+
+      communication:
+        pattern: callbacks
+        events:
+          - didChange
+          - didFinish
+          - didFail
+
+    supportedComponents:
+      - PaymentSheet
+      - CardForm
+      - ApplePayButton
+      - GooglePayButton
+
+    context:
+      provides:
+        - publishableKey
+        - ephemeralKey
+        - customer
+        - paymentIntent
+      actions:
+        - presentPaymentSheet
+        - confirmPayment
+        - createPaymentMethod
+
+# =============================================================================
+# POLICIES
+# =============================================================================
+
+policies:
+  componentRequirement:
+    level: required
+    scope: all
+    rationale: |
+      Stripe Elements components MUST be used for payment data collection
+      to maintain PCI DSS Level 1 compliance. Payment data never touches
+      merchant servers - it flows directly from Elements to Stripe.
+
+      This requirement is non-negotiable for security and compliance reasons.
+
+  customComponents:
+    allowed: false
+    constraints:
+      - Merchants cannot create custom payment input fields
+      - All payment data collection must use Stripe Elements
+      - Styling is allowed via Appearance API only
+    documentation: https://stripe.com/docs/security/guide
+
+  publishing:
+    allIntegrations:
+      componentRequirement: required
+      customComponentsAllowed: false
+      reviewRequired: false
+      notes: |
+        All Stripe integrations, whether using publishable or restricted keys,
+        must use Elements for payment collection. No exceptions.
+
+  designGuidelines:
+    required: false
+    designSystem: "Appearance API"
+    designSystemUrl: https://stripe.com/docs/elements/appearance-api
+    designTokensProvided: true
+
+  security:
+    cdnRequirement:
+      required: true
+      rationale: |
+        Stripe.js MUST be loaded from js.stripe.com CDN. Self-hosting or
+        bundling Stripe.js is prohibited for security reasons:
+
+        1. Stripe can push critical security updates instantly
+        2. Version integrity is guaranteed
+        3. PCI compliance is maintained
+        4. TLS and certificate management is handled by Stripe
+      enforcement: Runtime validation
+      documentation: https://stripe.com/docs/security/guide#validating-pci-compliance
+
+    pciCompliance:
+      level: PCI DSS Level 1
+      scope: Stripe handles all payment data
+      merchantScope: SAQ A (minimal compliance burden)
+      documentation: https://stripe.com/docs/security
+
+# =============================================================================
+# RENDERING ENGINES
+# =============================================================================
+
+renderingEngines:
+  stripe-elements:
+    type: custom
+    name: Stripe Elements Renderer
+    description: |
+      Secure iframe-based rendering engine. Each Element component creates
+      an isolated iframe that communicates with the parent page via postMessage.
+      This ensures payment data never touches the merchant's JavaScript context.
+
+    sandboxing:
+      iframeSandbox: true
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+      cspPolicy: |
+        Merchants must allow https://js.stripe.com in their CSP:
+        script-src https://js.stripe.com;
+        frame-src https://js.stripe.com;
+        connect-src https://api.stripe.com;
+
+  react-renderer:
+    type: react
+    name: React Stripe.js
+    description: |
+      React wrapper components that manage Element lifecycle and provide
+      idiomatic React patterns (hooks, context, etc.) while maintaining
+      the same security model as vanilla Stripe.js.
+
+# =============================================================================
+# EXTENSIONS
+# =============================================================================
+
+x-compliance:
+  security:
+    platformCertifications:
+      - PCI DSS Level 1
+      - SOC 2 Type II
+      - ISO 27001
+    extensionRequirements:
+      httpsOnly: true
+      cspCompliance: true
+      noInlineScripts: true
+      noExternalScripts: false
+      securityReview:
+        required: false
+        scope: none
+      dataHandling:
+        piiAllowed: true
+        piiMustEncrypt: true
+        dataRetentionPolicy: none
+    documentation: https://stripe.com/docs/security
+
+  privacy:
+    platformCompliance:
+      gdpr: true
+      ccpa: true
+    dataResidency:
+      available: true
+      regions:
+        - US
+        - EU
+        - APAC
+    extensionRequirements:
+      privacyPolicyRequired: true
+      consentManagement: both
+      dataProcessingAgreement: required
+    userRights:
+      dataExportSupported: true
+      dataDeletionSupported: true
+    documentation: https://stripe.com/privacy
+
+  sharedResponsibility:
+    platformHandles:
+      - Payment data collection and storage
+      - PCI DSS compliance
+      - Card tokenization
+      - Payment processing security
+      - Fraud detection (Stripe Radar)
+      - Strong Customer Authentication (SCA/3DS)
+      - Regional payment method support
+    developerHandles:
+      - HTTPS implementation on their domain
+      - User authentication and authorization
+      - Order/transaction data storage
+      - Privacy policy and terms of service
+      - User consent management
+      - Webhook signature verification
+    documentation: https://stripe.com/docs/security/guide
+
+x-i18n:
+  platformSupport:
+    enabled: true
+    availableLocales:
+      - ar      # Arabic
+      - bg      # Bulgarian
+      - cs      # Czech
+      - da      # Danish
+      - de      # German
+      - el      # Greek
+      - en      # English
+      - en-GB   # English (UK)
+      - es      # Spanish
+      - es-419  # Spanish (Latin America)
+      - et      # Estonian
+      - fi      # Finnish
+      - fil     # Filipino
+      - fr      # French
+      - fr-CA   # French (Canada)
+      - he      # Hebrew
+      - hr      # Croatian
+      - hu      # Hungarian
+      - id      # Indonesian
+      - it      # Italian
+      - ja      # Japanese
+      - ko      # Korean
+      - lt      # Lithuanian
+      - lv      # Latvian
+      - ms      # Malay
+      - mt      # Maltese
+      - nb      # Norwegian Bokmål
+      - nl      # Dutch
+      - pl      # Polish
+      - pt      # Portuguese (Brazil)
+      - pt-BR   # Portuguese (Brazil)
+      - ro      # Romanian
+      - ru      # Russian
+      - sk      # Slovak
+      - sl      # Slovenian
+      - sv      # Swedish
+      - th      # Thai
+      - tr      # Turkish
+      - vi      # Vietnamese
+      - zh      # Chinese (Simplified)
+      - zh-HK   # Chinese (Hong Kong)
+      - zh-TW   # Chinese (Traditional)
+    localeDetection:
+      method: automatic
+      sources:
+        - stripe.elements({ locale: '...' }) option
+        - Accept-Language header
+        - Customer's saved preferences
+    rtlSupport:
+      enabled: true
+      languages:
+        - ar  # Arabic
+        - he  # Hebrew
+
+  componentTranslations:
+    provided: true
+    scope: all
+
+  developerRequirements:
+    translationMechanism:
+      format: json
+      bundleLocation: platform-hosted
+    marketplaceRequirement:
+      required: false
+    formatting:
+      dates: platform
+      numbers: platform
+      currencies: platform
+
+  documentation: https://stripe.com/docs/js/appendix/supported_locales

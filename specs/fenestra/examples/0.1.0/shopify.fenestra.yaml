@@ -1,0 +1,1400 @@
+# Fenestra Document: Shopify Extensions Ecosystem
+#
+# Shopify represents a HYBRID extension ecosystem with multiple surfaces requiring
+# different integration approaches:
+#
+# 1. Admin Embedded Apps: iframe + App Bridge SDK for communication
+# 2. Checkout UI Extensions: React components with limited Checkout UI component set
+# 3. Post-purchase Extensions: React components with Checkout UI components
+# 4. POS UI Extensions: Native mobile components
+# 5. Theme App Extensions: Liquid templates + custom sections
+#
+# Key Characteristics:
+# - Multiple component catalogs for different surfaces (Polaris vs Checkout UI)
+# - Hybrid extensionType (iframe for admin, codedComponents for checkout)
+# - App Bridge for iframe-admin communication
+# - Strict App Store review for public apps
+# - Multi-language support via Shopify Markets
+# - Different security models per surface
+
+fenestra: "0.1.0"
+
+info:
+  title: Shopify Extensions Ecosystem
+  version: "1.0.0"
+  summary: Multi-surface extension platform for commerce applications
+  description: |
+    Shopify provides multiple extension surfaces for building commerce applications,
+    each with different technical approaches and component requirements:
+
+    **Admin Extensions (Embedded Apps):**
+    - Embedded in iframe within Shopify Admin
+    - Use App Bridge SDK for communication with host
+    - Polaris design system for UI consistency
+    - Full React/custom component flexibility
+
+    **Checkout UI Extensions:**
+    - React components running in sandboxed runtime
+    - Limited to Checkout UI component set (NOT Polaris)
+    - Strict performance and security requirements
+    - No iframe - direct component rendering
+
+    **Post-purchase Extensions:**
+    - React components with Checkout UI components
+    - Displayed after payment confirmation
+    - Limited time window for customer interaction
+
+    **POS UI Extensions:**
+    - Native iOS/Android components
+    - Used in Shopify POS app
+    - Touch-optimized for retail environments
+
+    **Theme App Extensions:**
+    - Liquid templates and custom sections
+    - Integrated into merchant themes
+    - No React - uses Shopify's templating language
+
+    This hybrid approach allows Shopify to balance flexibility (admin apps),
+    performance (checkout extensions), and security (sandboxed runtimes).
+
+  contact:
+    name: Shopify Developer Support
+    url: https://shopify.dev/support
+    email: developers@shopify.com
+
+platform:
+  name: Shopify
+  vendor: Shopify Inc.
+  documentation: https://shopify.dev/docs/apps
+  appMarketplace: https://apps.shopify.com/
+
+# =============================================================================
+# SDK DEFINITIONS
+# =============================================================================
+
+sdks:
+  shopify-app-bridge:
+    name: Shopify App Bridge
+    packageManager: npm
+    package: "@shopify/app-bridge"
+    version: "^3.7.0"
+    platform: web
+    documentation: https://shopify.dev/docs/api/app-bridge
+    repository: https://github.com/Shopify/app-bridge
+    installCommand: npm install @shopify/app-bridge
+    description: |
+      App Bridge enables communication between embedded admin apps (running in
+      iframes) and the Shopify Admin host. It provides a JavaScript API for:
+      - Navigation within Shopify Admin
+      - Opening modals and toasts
+      - Triggering actions (ResourcePicker, etc.)
+      - Context awareness (shop, user, etc.)
+      - TitleBar and navigation customization
+
+      App Bridge uses postMessage for secure cross-origin communication.
+
+    exports:
+      createApp:
+        type: utility
+        description: Initialize App Bridge connection
+      actions:
+        type: utility
+        description: Namespace for all App Bridge actions
+
+    subpackages:
+      actions:
+        package: "@shopify/app-bridge/actions"
+        description: App Bridge action modules
+        exports:
+          TitleBar:
+            type: utility
+            description: Customize app title bar in admin
+          Toast:
+            type: utility
+            description: Show toast notifications
+          Modal:
+            type: utility
+            description: Open modals
+          ResourcePicker:
+            type: utility
+            description: Pick products, collections, variants
+          Navigation:
+            type: utility
+            description: Navigate within Shopify Admin
+          Redirect:
+            type: utility
+            description: Redirect to URLs
+          Loading:
+            type: utility
+            description: Show/hide loading indicator
+          ContextualSaveBar:
+            type: utility
+            description: Show save/discard bar
+          Features:
+            type: utility
+            description: Check feature availability
+
+  shopify-app-bridge-react:
+    name: Shopify App Bridge React
+    packageManager: npm
+    package: "@shopify/app-bridge-react"
+    version: "^3.7.0"
+    platform: web
+    documentation: https://shopify.dev/docs/api/app-bridge/previous-versions/react-components
+    repository: https://github.com/Shopify/app-bridge
+    installCommand: npm install @shopify/app-bridge-react
+    description: |
+      React bindings for App Bridge, providing hooks and components for
+      seamless integration in React apps.
+
+    exports:
+      Provider:
+        type: component
+        description: App Bridge provider for React apps
+      useAppBridge:
+        type: hook
+        description: Access App Bridge instance
+      useNavigate:
+        type: hook
+        description: Navigate within Shopify Admin
+      TitleBar:
+        type: component
+        description: Configure title bar
+      ResourcePicker:
+        type: component
+        description: Product/collection picker
+      Modal:
+        type: component
+        description: Modal dialogs
+      Toast:
+        type: component
+        description: Toast notifications
+
+  shopify-polaris:
+    name: Shopify Polaris
+    packageManager: npm
+    package: "@shopify/polaris"
+    version: "^12.0.0"
+    platform: web
+    documentation: https://polaris.shopify.com/
+    repository: https://github.com/Shopify/polaris
+    installCommand: npm install @shopify/polaris
+    description: |
+      Polaris is Shopify's design system for building admin apps. It provides
+      React components, design tokens, and guidelines for creating consistent,
+      accessible experiences in Shopify Admin.
+
+      **IMPORTANT:** Polaris is ONLY for admin apps. Checkout extensions use
+      the separate Checkout UI component set.
+
+    exports:
+      # Layout Components
+      Page:
+        type: component
+        description: Top-level page container with header
+      Layout:
+        type: component
+        description: Page layout with sections
+      Card:
+        type: component
+        description: Content container
+      Stack:
+        type: component
+        description: Flex layout for spacing items
+
+      # Action Components
+      Button:
+        type: component
+        description: Standard button
+      ButtonGroup:
+        type: component
+        description: Group related buttons
+
+      # Form Components
+      TextField:
+        type: component
+        description: Text input field
+      Select:
+        type: component
+        description: Dropdown select
+      Checkbox:
+        type: component
+        description: Checkbox input
+      RadioButton:
+        type: component
+        description: Radio button
+      ChoiceList:
+        type: component
+        description: List of checkboxes or radios
+
+      # Data Display
+      DataTable:
+        type: component
+        description: Table for tabular data
+      ResourceList:
+        type: component
+        description: List of resources with bulk actions
+      ResourceItem:
+        type: component
+        description: Item within ResourceList
+
+      # Feedback
+      Banner:
+        type: component
+        description: Contextual messages and alerts
+      Toast:
+        type: component
+        description: Brief messages (deprecated - use App Bridge)
+      Spinner:
+        type: component
+        description: Loading indicator
+
+      # Navigation
+      Tabs:
+        type: component
+        description: Tab navigation
+
+      # Overlays
+      Modal:
+        type: component
+        description: Modal dialogs (deprecated - use App Bridge)
+      Popover:
+        type: component
+        description: Floating content
+
+      # Icons
+      Icon:
+        type: component
+        description: Icon component
+
+  checkout-ui-extensions:
+    name: Checkout UI Extensions
+    packageManager: npm
+    package: "@shopify/ui-extensions/checkout"
+    version: "^2024.10.0"
+    platform: web
+    documentation: https://shopify.dev/docs/api/checkout-ui-extensions
+    repository: https://github.com/Shopify/ui-extensions
+    installCommand: npm install @shopify/ui-extensions
+    description: |
+      Checkout UI Extensions provide a LIMITED set of React components for
+      building extensions in Shopify checkout. These components are DIFFERENT
+      from Polaris and are optimized for the checkout experience.
+
+      Key differences from Polaris:
+      - Smaller component set (performance-critical)
+      - Checkout-specific components (e.g., DeliveryOptions)
+      - No direct DOM access (sandboxed runtime)
+      - Automatic accessibility and responsive design
+      - Localization handled by Shopify
+
+    exports:
+      # Layout
+      BlockStack:
+        type: component
+        description: Vertical stack layout
+      InlineStack:
+        type: component
+        description: Horizontal inline layout
+      Grid:
+        type: component
+        description: Grid layout
+      View:
+        type: component
+        description: Generic container
+
+      # Typography
+      Text:
+        type: component
+        description: Text with semantic styles
+      Heading:
+        type: component
+        description: Heading text
+
+      # Forms
+      TextField:
+        type: component
+        description: Text input
+      Checkbox:
+        type: component
+        description: Checkbox input
+      Select:
+        type: component
+        description: Select dropdown
+
+      # Actions
+      Button:
+        type: component
+        description: Action button
+      Link:
+        type: component
+        description: Hyperlink
+
+      # Display
+      Image:
+        type: component
+        description: Image display
+      Icon:
+        type: component
+        description: Icon display
+      Badge:
+        type: component
+        description: Status badge
+
+      # Checkout-specific
+      Choice:
+        type: component
+        description: Radio or checkbox choice
+      Divider:
+        type: component
+        description: Visual separator
+
+      # Hooks
+      useExtensionApi:
+        type: hook
+        description: Access extension runtime API
+      useCartLines:
+        type: hook
+        description: Access cart line items
+      useShop:
+        type: hook
+        description: Access shop information
+      useBuyerIdentity:
+        type: hook
+        description: Access customer information
+
+  shopify-cli:
+    name: Shopify CLI
+    packageManager: npm
+    package: "@shopify/cli"
+    version: "^3.51.0"
+    documentation: https://shopify.dev/docs/api/shopify-cli
+    installCommand: npm install -g @shopify/cli
+    description: |
+      Command-line interface for building Shopify apps and extensions.
+
+    cliTool:
+      package: "@shopify/cli"
+      installCommand: npm install -g @shopify/cli
+      commands:
+        init: "shopify app init"
+        dev: "shopify app dev"
+        deploy: "shopify app deploy"
+        generate: "shopify app generate extension"
+
+# =============================================================================
+# COMPONENT CATALOG - POLARIS (Admin Apps)
+# =============================================================================
+
+componentCatalog:
+  categories:
+    admin-layout:
+      name: Admin Layout
+      description: Polaris layout components for admin apps
+      components:
+        - Page
+        - Layout
+        - Card
+        - Stack
+
+    admin-actions:
+      name: Admin Actions
+      description: Polaris action components for admin apps
+      components:
+        - Button
+        - ButtonGroup
+
+    admin-forms:
+      name: Admin Forms
+      description: Polaris form components for admin apps
+      components:
+        - TextField
+        - Select
+        - Checkbox
+        - RadioButton
+
+    admin-data:
+      name: Admin Data Display
+      description: Polaris data components for admin apps
+      components:
+        - DataTable
+        - ResourceList
+
+    checkout-layout:
+      name: Checkout Layout
+      description: Checkout UI layout components
+      components:
+        - BlockStack
+        - InlineStack
+        - Grid
+        - View
+
+    checkout-forms:
+      name: Checkout Forms
+      description: Checkout UI form components
+      components:
+        - CheckoutTextField
+        - CheckoutCheckbox
+        - CheckoutSelect
+
+  components:
+    # ==========================================================================
+    # POLARIS COMPONENTS (Admin Apps)
+    # ==========================================================================
+
+    Page:
+      name: Page
+      description: |
+        Top-level container for admin pages. Provides consistent header,
+        breadcrumbs, and action areas. Used in embedded admin apps.
+      category: admin-layout
+      sdkBinding:
+        sdk: shopify-polaris
+        export: Page
+        importPath: "@shopify/polaris"
+      webStandardMapping:
+        htmlElement: div
+        ariaRole: main
+        semanticType: container
+      props:
+        type: object
+        properties:
+          title:
+            type: string
+            description: Page title
+            required: true
+          primaryAction:
+            type: object
+            description: Primary action button config
+          secondaryActions:
+            type: array
+            description: Secondary action buttons
+          breadcrumbs:
+            type: array
+            description: Breadcrumb navigation
+      slots:
+        default:
+          description: Page content
+          required: true
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        focusManagement: Automatic heading hierarchy
+      examples:
+        - title: Basic Page
+          code: |
+            import { Page, Card } from '@shopify/polaris';
+
+            function MyPage() {
+              return (
+                <Page
+                  title="Products"
+                  primaryAction={{
+                    content: 'Add product',
+                    onAction: handleAddProduct
+                  }}
+                >
+                  <Card>
+                    <p>Page content goes here</p>
+                  </Card>
+                </Page>
+              );
+            }
+          language: jsx
+
+    Card:
+      name: Card
+      description: |
+        Container for grouping related content. Polaris Card provides
+        sections, headers, and actions.
+      category: admin-layout
+      sdkBinding:
+        sdk: shopify-polaris
+        export: Card
+        importPath: "@shopify/polaris"
+      webStandardMapping:
+        htmlElement: div
+        semanticType: container
+      props:
+        type: object
+        properties:
+          title:
+            type: string
+            description: Card title
+          sectioned:
+            type: boolean
+            description: Automatically wrap content in section
+          actions:
+            type: array
+            description: Card header actions
+      examples:
+        - title: Card with Sections
+          code: |
+            import { Card } from '@shopify/polaris';
+
+            <Card title="Order details" sectioned>
+              <p>Order information</p>
+            </Card>
+          language: jsx
+
+    Button:
+      name: Button
+      description: Standard action button with Polaris styling
+      category: admin-actions
+      sdkBinding:
+        sdk: shopify-polaris
+        export: Button
+        importPath: "@shopify/polaris"
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+      props:
+        type: object
+        properties:
+          children:
+            type: string
+            description: Button text
+          primary:
+            type: boolean
+            description: Primary button style
+          destructive:
+            type: boolean
+            description: Destructive action style
+          disabled:
+            type: boolean
+          loading:
+            type: boolean
+            description: Show loading state
+          onClick:
+            type: function
+      variants:
+        - primary
+        - plain
+        - destructive
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+
+    TextField:
+      name: TextField
+      description: Text input field with label and validation
+      category: admin-forms
+      sdkBinding:
+        sdk: shopify-polaris
+        export: TextField
+        importPath: "@shopify/polaris"
+      webStandardMapping:
+        htmlElement: input
+        ariaRole: textbox
+        semanticType: input
+      props:
+        type: object
+        properties:
+          label:
+            type: string
+            description: Input label
+          value:
+            type: string
+            description: Input value
+          onChange:
+            type: function
+            description: Change handler
+          type:
+            type: string
+            enum: [text, email, number, password, search, tel, url, date, datetime-local, month, time, week]
+          error:
+            type: string
+            description: Error message
+          helpText:
+            type: string
+            description: Help text below input
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        ariaSupport: true
+
+    DataTable:
+      name: DataTable
+      description: Table for displaying tabular data
+      category: admin-data
+      sdkBinding:
+        sdk: shopify-polaris
+        export: DataTable
+        importPath: "@shopify/polaris"
+      webStandardMapping:
+        htmlElement: table
+        ariaRole: table
+        semanticType: display
+      props:
+        type: object
+        properties:
+          columnContentTypes:
+            type: array
+            description: Content types for each column
+          headings:
+            type: array
+            description: Column headings
+          rows:
+            type: array
+            description: Table data rows
+          sortable:
+            type: array
+            description: Sortable columns
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+
+    # ==========================================================================
+    # CHECKOUT UI COMPONENTS (Different from Polaris!)
+    # ==========================================================================
+
+    BlockStack:
+      name: BlockStack
+      description: |
+        Vertical stack layout for Checkout UI extensions.
+        This is part of Checkout UI components, NOT Polaris.
+      category: checkout-layout
+      sdkBinding:
+        sdk: checkout-ui-extensions
+        export: BlockStack
+        importPath: "@shopify/ui-extensions/checkout"
+      webStandardMapping:
+        htmlElement: div
+        semanticType: layout
+      props:
+        type: object
+        properties:
+          spacing:
+            type: string
+            enum: [none, extraTight, tight, base, loose, extraLoose]
+          inlineAlignment:
+            type: string
+            enum: [start, center, end]
+      examples:
+        - title: Vertical Stack in Checkout
+          code: |
+            import { BlockStack, Text } from '@shopify/ui-extensions/checkout';
+
+            <BlockStack spacing="loose">
+              <Text>First item</Text>
+              <Text>Second item</Text>
+            </BlockStack>
+          language: jsx
+
+    CheckoutTextField:
+      name: TextField
+      description: |
+        Text input for Checkout UI extensions. Different implementation
+        than Polaris TextField - optimized for checkout performance.
+      category: checkout-forms
+      sdkBinding:
+        sdk: checkout-ui-extensions
+        export: TextField
+        importPath: "@shopify/ui-extensions/checkout"
+      webStandardMapping:
+        htmlElement: input
+        ariaRole: textbox
+        semanticType: input
+      props:
+        type: object
+        properties:
+          label:
+            type: string
+          value:
+            type: string
+          onChange:
+            type: function
+          error:
+            type: string
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        notes: |
+          Checkout UI components handle accessibility automatically.
+          Developers cannot modify ARIA attributes directly.
+
+    CheckoutButton:
+      name: Button
+      description: |
+        Action button for Checkout UI extensions. Limited variants compared
+        to Polaris Button to maintain checkout consistency.
+      category: checkout-actions
+      sdkBinding:
+        sdk: checkout-ui-extensions
+        export: Button
+        importPath: "@shopify/ui-extensions/checkout"
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+      props:
+        type: object
+        properties:
+          onPress:
+            type: function
+            description: Press handler
+          disabled:
+            type: boolean
+          loading:
+            type: boolean
+      variants:
+        - primary
+        - secondary
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+
+# =============================================================================
+# EXTENSION POINTS
+# =============================================================================
+
+extensionPoints:
+  # ===========================================================================
+  # ADMIN EMBEDDED APP (iframe + App Bridge)
+  # ===========================================================================
+
+  - id: admin-embedded-app
+    name: Admin Embedded App
+    type: fullPage
+    extensionType: iframe
+    description: |
+      Apps embedded in Shopify Admin via iframe. Use App Bridge for
+      communication with the Shopify Admin host. Can use Polaris components
+      for consistent UI, but custom React components are also allowed.
+
+      **Key Characteristics:**
+      - Runs in iframe within Shopify Admin
+      - Uses postMessage via App Bridge for host communication
+      - Full flexibility - any React framework, custom components
+      - Polaris RECOMMENDED but not required
+      - Access to Shopify APIs via session tokens
+
+      **Different from checkout extensions:** Admin apps have more freedom
+      but less integration. Checkout extensions are rendered directly by
+      Shopify with strict component limitations.
+
+    extensionTypeConfig:
+      sandboxAttributes:
+        - allow-same-origin
+        - allow-scripts
+        - allow-forms
+
+      cspRequirements: |
+        Apps must be served over HTTPS with appropriate CSP headers.
+        Frame-ancestors must allow Shopify domains.
+
+      sizeConstraints:
+        resizable: true
+        minWidth: 320
+        minHeight: 400
+
+      communication:
+        globalObject: window.shopify
+        package: "@shopify/app-bridge"
+        cdn: https://cdn.shopify.com/shopifycloud/app-bridge.js
+
+        initialization:
+          method: createApp
+          async: true
+
+        namespaces:
+          TitleBar:
+            description: Configure app title bar
+            methods: [create, set, update]
+          Toast:
+            description: Show toast notifications
+            methods: [create, show]
+          Modal:
+            description: Open modals
+            methods: [create, open, close]
+          ResourcePicker:
+            description: Pick products/collections
+            methods: [create, subscribe]
+          Navigation:
+            description: Navigate in admin
+            methods: [navigate]
+
+        capabilities:
+          context: true
+          uiActions: true
+          dataActions: true
+          events: true
+
+        asyncPattern: promises
+
+    supportedComponents:
+      - All Polaris components
+      - Custom React components
+      - Standard HTML elements
+
+    constraints:
+      responsive: true
+      httpsRequired: true
+
+    context:
+      provides:
+        - shop
+        - apiKey
+        - host
+        - sessionToken
+      actions:
+        - navigate
+        - openModal
+        - showToast
+        - pickResource
+        - redirect
+
+  # ===========================================================================
+  # CHECKOUT UI EXTENSIONS (codedComponents - NOT iframe!)
+  # ===========================================================================
+
+  - id: checkout-ui-extension
+    name: Checkout UI Extension
+    type: embedded
+    extensionType: codedComponents
+    description: |
+      React components that run in Shopify's checkout. These are NOT iframes -
+      they're rendered directly by Shopify's checkout runtime.
+
+      **CRITICAL DIFFERENCES from Admin Apps:**
+      - NOT in iframe - runs in sandboxed JavaScript runtime
+      - MUST use Checkout UI components (NOT Polaris)
+      - Limited component set for performance
+      - No direct DOM access
+      - No external network requests from component code
+      - Automatic accessibility and localization
+      - Strict performance budgets
+
+      **Extension targets:**
+      - purchase.checkout.block.render (main checkout)
+      - purchase.checkout.shipping-option-item.render-after
+      - purchase.checkout.payment-method-list.render-after
+      - purchase.checkout.delivery-address.render-after
+
+    extensionTypeConfig:
+      sdk: checkout-ui-extensions
+      framework: react
+
+      runtime:
+        type: sandboxedIframe
+        bundling: platformBuild
+        description: |
+          Checkout extensions run in a sandboxed JavaScript runtime.
+          Shopify builds and bundles your extension code. You cannot
+          bundle third-party libraries arbitrarily.
+
+      hostInteraction:
+        package: "@shopify/ui-extensions/checkout"
+
+        initialization:
+          method: extend
+          async: false
+
+        capabilities:
+          context: true
+          uiActions: false
+          dataActions: true
+          events: true
+
+        asyncPattern: promises
+
+    supportedComponents:
+      - BlockStack
+      - InlineStack
+      - Grid
+      - View
+      - Text
+      - Heading
+      - CheckoutTextField
+      - CheckoutCheckbox
+      - CheckoutSelect
+      - CheckoutButton
+      - Link
+      - Image
+      - Icon
+      - Badge
+      - Choice
+      - Divider
+
+    constraints:
+      responsive: true
+      performanceBudget:
+        maxBundleSize: 50kb
+        maxRenderTime: 100ms
+
+    context:
+      provides:
+        - cart
+        - shop
+        - buyerIdentity
+        - settings
+      actions:
+        - applyCartLinesChange
+        - applyDiscountCodeChange
+        - applyAttributeChange
+
+  # ===========================================================================
+  # POST-PURCHASE EXTENSIONS
+  # ===========================================================================
+
+  - id: post-purchase-extension
+    name: Post-purchase Extension
+    type: fullPage
+    extensionType: codedComponents
+    description: |
+      Full-page extension shown after checkout completion. Allows merchants
+      to offer post-purchase upsells with one-click purchasing (no re-entering
+      payment info). Uses Checkout UI components.
+
+      **Constraints:**
+      - Time-limited (customer can skip after countdown)
+      - Must use Checkout UI components
+      - Can modify order with customer consent
+      - Automatic payment processing (no re-auth needed)
+
+    extensionTypeConfig:
+      sdk: checkout-ui-extensions
+      framework: react
+      runtime:
+        type: sandboxedIframe
+        bundling: platformBuild
+
+    supportedComponents:
+      - BlockStack
+      - InlineStack
+      - Text
+      - Heading
+      - CheckoutButton
+      - Image
+
+    constraints:
+      maxDuration: 60s
+      responsive: true
+
+    context:
+      provides:
+        - initialPurchase
+        - shop
+        - buyerIdentity
+      actions:
+        - updateOrder
+        - completeOrder
+
+  # ===========================================================================
+  # POS UI EXTENSIONS (Native Mobile)
+  # ===========================================================================
+
+  - id: pos-ui-extension
+    name: POS UI Extension
+    type: modal
+    extensionType: codedComponents
+    description: |
+      Native mobile components for Shopify POS (Point of Sale) app.
+      Available on iOS and Android. Used for custom workflows in retail
+      environments.
+
+      **Platform-specific:**
+      - iOS: Swift UI components
+      - Android: Jetpack Compose components
+      - NOT web-based - fully native
+
+    extensionTypeConfig:
+      framework: agnostic
+      runtime:
+        type: directExecution
+        bundling: platformBuild
+
+    supportedComponents:
+      - Native mobile components (platform-specific)
+
+    constraints:
+      responsive: false
+      touchOptimized: true
+
+    context:
+      provides:
+        - cart
+        - location
+        - staff
+      actions:
+        - addCartLine
+        - completeCheckout
+
+# =============================================================================
+# POLICIES
+# =============================================================================
+
+policies:
+  componentRequirement:
+    level: required
+    scope: checkout
+    rationale: |
+      Checkout UI extensions MUST use the provided Checkout UI component set.
+      This is non-negotiable for performance, security, and accessibility.
+
+      Admin apps SHOULD use Polaris but can use custom components with proper
+      accessibility and design considerations.
+
+  customComponents:
+    allowed: true
+    constraints:
+      - Admin apps can use custom components
+      - Checkout extensions CANNOT use custom components
+      - All custom components must be accessible (WCAG 2.1 AA)
+      - Custom components should align with Polaris design principles
+    documentation: https://shopify.dev/docs/apps/design-guidelines
+
+  publishing:
+    customApps:
+      componentRequirement: recommended
+      customComponentsAllowed: true
+      reviewRequired: false
+      notes: |
+        Custom apps (private to single merchant) have full flexibility.
+
+    publicApps:
+      componentRequirement: required
+      customComponentsAllowed: true
+      reviewRequired: true
+      designReviewRequired: false
+      accessibilityAuditRequired: true
+      notes: |
+        Public apps (installable from App Store) must pass security and
+        functionality review. Polaris usage strongly recommended.
+
+    appStoreListings:
+      componentRequirement: required
+      customComponentsAllowed: true
+      certificationRequired: false
+      securityReviewRequired: true
+      designReviewRequired: true
+      accessibilityAuditRequired: true
+      notes: |
+        Apps listed in Shopify App Store undergo comprehensive review including
+        security testing, design review, and functionality testing.
+
+  designGuidelines:
+    required: true
+    designSystem: Shopify Polaris
+    designSystemUrl: https://polaris.shopify.com/
+    designTokensProvided: true
+    scope: admin-apps
+    notes: |
+      Polaris design system is for admin apps only. Checkout extensions
+      use Checkout UI components with automatic styling.
+
+  security:
+    appBridge:
+      required: true
+      scope: admin-embedded-apps
+      description: |
+        Admin embedded apps must use App Bridge for secure communication.
+        Direct iframe manipulation or insecure postMessage patterns are
+        prohibited.
+      documentation: https://shopify.dev/docs/api/app-bridge
+
+    sessionTokens:
+      required: true
+      description: |
+        Apps must use session tokens (JWT) for authenticating API requests.
+        Session tokens are short-lived and scoped to the current shop.
+      documentation: https://shopify.dev/docs/apps/auth/oauth/session-tokens
+
+    webhooks:
+      signatureVerification: required
+      description: |
+        Apps must verify HMAC signatures on all webhook requests to ensure
+        they originated from Shopify.
+      documentation: https://shopify.dev/docs/apps/webhooks/configuration/https
+
+# =============================================================================
+# RENDERING ENGINES
+# =============================================================================
+
+renderingEngines:
+  admin-app-iframe:
+    type: custom
+    name: Admin App iframe Renderer
+    description: |
+      Admin apps run in iframes with App Bridge providing the communication
+      layer. Apps can use any web framework (React, Vue, vanilla JS, etc.)
+      as long as they integrate App Bridge.
+
+    sandboxing:
+      iframeSandbox: true
+      sandboxAttributes:
+        - allow-same-origin
+        - allow-scripts
+        - allow-forms
+      cspPolicy: |
+        Apps must be served over HTTPS and set appropriate CSP headers.
+
+  checkout-runtime:
+    type: react
+    name: Checkout Extension Runtime
+    description: |
+      Checkout extensions run in Shopify's custom React runtime. This is
+      NOT a standard iframe - it's a sandboxed JavaScript execution environment
+      with limited APIs.
+
+      **Key restrictions:**
+      - No direct DOM access
+      - No window or document globals
+      - No external network requests
+      - Limited to provided Checkout UI components
+      - Automatic tree-shaking and code splitting
+
+    sandboxing:
+      iframeSandbox: true
+      customRuntime: true
+      restrictedAPIs: true
+
+# =============================================================================
+# EXTENSIONS
+# =============================================================================
+
+x-compliance:
+  security:
+    platformCertifications:
+      - PCI DSS Level 1
+      - SOC 2 Type II
+      - ISO 27001
+
+    extensionRequirements:
+      httpsOnly: true
+      cspCompliance: true
+      noInlineScripts: false
+      noExternalScripts: false
+
+      securityReview:
+        required: true
+        scope: marketplace
+        description: |
+          Apps submitted to Shopify App Store undergo security review including:
+          - Automated vulnerability scanning
+          - Manual code review for critical apps
+          - API usage verification
+          - Webhook signature verification
+          - OAuth flow validation
+
+      dataHandling:
+        piiAllowed: true
+        piiMustEncrypt: true
+        dataRetentionPolicy: required
+
+    documentation: https://shopify.dev/docs/apps/store/security
+
+  privacy:
+    platformCompliance:
+      gdpr: true
+      ccpa: true
+
+    dataResidency:
+      available: false
+      notes: Shopify stores data in centralized regions
+
+    extensionRequirements:
+      privacyPolicyRequired: true
+      consentManagement: both
+      dataProcessingAgreement: required
+      notes: |
+        Apps must provide a privacy policy and comply with merchant's
+        customer consent settings. Apps that access customer data must
+        sign a Data Processing Agreement.
+
+    userRights:
+      dataExportSupported: true
+      dataDeletionSupported: true
+      notes: |
+        Apps must support data export and deletion requests via
+        GDPR webhooks (customers/data_request, customers/redact).
+
+    documentation: https://shopify.dev/docs/apps/store/data-protection
+
+  sharedResponsibility:
+    platformHandles:
+      - Payment processing (PCI compliance)
+      - Customer data encryption at rest
+      - Infrastructure security
+      - DDoS protection
+      - SSL/TLS certificates
+      - Checkout security and fraud prevention
+      - App Bridge security (postMessage validation)
+      - Checkout extension sandboxing
+      - Customer consent management (via Customer Privacy API)
+
+    developerHandles:
+      - App server security (HTTPS, firewalls)
+      - API credential security
+      - Webhook signature verification
+      - Session token validation
+      - Data encryption in transit (to external services)
+      - Third-party service security
+      - Privacy policy and terms of service
+      - GDPR webhook implementation (data export/deletion)
+      - Secure storage of merchant/customer data
+
+    documentation: https://shopify.dev/docs/apps/store/security/shared-responsibility
+
+x-i18n:
+  platformSupport:
+    enabled: true
+
+    availableLocales:
+      # Shopify supports 20+ languages for merchants and customers
+      - ar      # Arabic
+      - cs      # Czech
+      - da      # Danish
+      - de      # German
+      - en      # English
+      - es      # Spanish
+      - fi      # Finnish
+      - fr      # French
+      - hi      # Hindi
+      - id      # Indonesian
+      - it      # Italian
+      - ja      # Japanese
+      - ko      # Korean
+      - ms      # Malay
+      - nb      # Norwegian
+      - nl      # Dutch
+      - pl      # Polish
+      - pt-BR   # Portuguese (Brazil)
+      - pt-PT   # Portuguese (Portugal)
+      - sv      # Swedish
+      - th      # Thai
+      - tr      # Turkish
+      - vi      # Vietnamese
+      - zh-CN   # Chinese (Simplified)
+      - zh-TW   # Chinese (Traditional)
+
+    localeDetection:
+      method: automatic
+      sources:
+        - Shop's primary language
+        - Customer's browser language (checkout)
+        - Admin user's language preference
+        - Shopify Markets (country-specific stores)
+
+    rtlSupport:
+      enabled: true
+      languages:
+        - ar  # Arabic
+      notes: |
+        Polaris components support RTL automatically. Checkout UI components
+        handle RTL based on shop locale.
+
+  componentTranslations:
+    provided: true
+    scope: all
+    notes: |
+      Polaris and Checkout UI components include built-in translations for
+      all supported languages. Developers don't need to translate component
+      strings.
+
+  developerRequirements:
+    translationMechanism:
+      format: json
+      bundleLocation: embedded
+      notes: |
+        Apps provide translations via locale files. For admin apps,
+        use i18next or similar. For checkout extensions, use Shopify's
+        i18n API provided by the runtime.
+
+    marketplaceRequirement:
+      required: false
+      minimumLocales: []
+      notes: |
+        Multi-language support not required but recommended for global reach.
+        Apps should respect shop's primary language.
+
+    formatting:
+      dates: platform
+      numbers: platform
+      currencies: platform
+      notes: |
+        Shopify provides formatted dates, numbers, and currencies based on
+        shop locale and regional settings. Apps should use Shopify's
+        formatting APIs rather than implementing their own.
+
+  shopifyMarkets:
+    description: |
+      Shopify Markets allows merchants to sell globally with country-specific
+      pricing, languages, and domains. Apps should respect Markets settings
+      and adapt content accordingly.
+    documentation: https://shopify.dev/docs/apps/markets
+
+  documentation: https://shopify.dev/docs/apps/best-practices/internationalization
+
+# =============================================================================
+# NOTES
+# =============================================================================
+
+x-notes:
+  hybridArchitecture: |
+    Shopify's extension ecosystem is HYBRID by design:
+
+    1. **Admin Apps (iframe + App Bridge):**
+       - Maximum flexibility for developers
+       - Polaris for consistent UI but not enforced
+       - Full web framework freedom (React, Vue, etc.)
+       - Communication via App Bridge (postMessage)
+       - Slower integration (iframe overhead)
+
+    2. **Checkout Extensions (codedComponents):**
+       - Maximum performance and security
+       - Strict component limitations (Checkout UI only)
+       - Sandboxed runtime (no DOM access)
+       - Direct rendering by Shopify (no iframe)
+       - Automatic accessibility and localization
+
+    This hybrid approach balances:
+    - Developer flexibility (admin apps)
+    - Customer experience (checkout performance)
+    - Security (checkout sandboxing)
+    - Consistency (component requirements)
+
+  developmentTools:
+    cli: |
+      Shopify CLI (@shopify/cli) is the primary development tool:
+      - Create apps and extensions
+      - Local development with hot reload
+      - Deploy to Shopify partners dashboard
+      - Generate extension boilerplate
+
+    testing: |
+      - Admin apps: Standard web testing (Jest, Testing Library)
+      - Checkout extensions: Limited testing capabilities
+      - Shopify provides test shops for integration testing
+
+    deployment: |
+      - Extensions deployed via Shopify CLI
+      - Apps reviewed via Partners dashboard
+      - Automatic versioning and rollback support
+
+  performanceConsiderations:
+    adminApps: |
+      Admin apps run in iframes with App Bridge overhead. Best practices:
+      - Minimize postMessage calls
+      - Optimize bundle size
+      - Use code splitting
+      - Lazy load routes
+
+    checkoutExtensions: |
+      Checkout extensions have strict performance budgets:
+      - Max 50kb bundle size
+      - Max 100ms render time
+      - No blocking network requests
+      - Automatic performance monitoring
+      - Extensions that exceed budgets may be disabled
+
+  multiSurfaceSupport: |
+    Apps can provide multiple extension types:
+    - Admin embedded app for merchant configuration
+    - Checkout UI extension for customer-facing features
+    - Post-purchase extension for upsells
+    - Theme app extension for storefront integration
+    - Function extension for backend logic
+
+    Each surface has different technical requirements and component catalogs.

@@ -1,0 +1,840 @@
+# Fenestra Document: Canva Apps SDK
+#
+# Canva represents a strongly-recommended component approach with built-in
+# internationalization and comprehensive design system integration.
+
+fenestra: "0.1.0"
+
+info:
+  title: Canva Apps SDK Ecosystem
+  version: "1.0.0"
+  description: |
+    Canva's Apps SDK provides React-based components and APIs for building
+    apps that integrate seamlessly into the Canva design editor.
+
+    Key characteristics:
+    - App UI Kit components are strongly recommended for public apps
+    - Built-in i18n with free translation service for approved apps
+    - React 19 with comprehensive design system support
+    - Apps run in iframes embedded in the Canva editor
+
+platform:
+  name: Canva
+  vendor: Canva Pty Ltd
+  documentation: https://www.canva.dev/docs/apps/
+  appMarketplace: https://www.canva.com/your-apps/
+  designSystem: Canva Design System
+  designSystemUrl: https://www.figma.com/community/file/1314652421936534778
+
+sdks:
+  canva-app-ui-kit:
+    name: Canva App UI Kit
+    packageManager: npm
+    package: "@canva/app-ui-kit"
+    version: "^5.0.0"
+    repository: https://github.com/canva-sdks/canva-apps-sdk-starter-kit
+    documentation: https://www.canva.dev/docs/apps/app-ui-kit/
+    description: |
+      React-based component library designed for creating apps that emulate
+      Canva's look and feel. Built for accessibility, usability, and
+      cross-platform compatibility.
+    peerDependencies:
+      react: "^19.0.0"
+    exports:
+      # Layout Components
+      Box:
+        type: component
+        description: Generic container for layout
+        category: layout
+      Rows:
+        type: component
+        description: Vertical stack layout container
+        category: layout
+      Columns:
+        type: component
+        description: Horizontal layout container
+        category: layout
+      Column:
+        type: component
+        description: Individual column within Columns
+        category: layout
+      Grid:
+        type: component
+        description: Grid layout container
+        category: layout
+
+      # Action Components
+      Button:
+        type: component
+        description: Primary action button with variants
+        category: action
+      LinkButton:
+        type: component
+        description: Button styled as a link for in-app actions
+        category: action
+
+      # Input Components
+      TextInput:
+        type: component
+        description: Single-line text input field
+        category: input
+      MultilineInput:
+        type: component
+        description: Multi-line text input
+        category: input
+      NumberInput:
+        type: component
+        description: Numeric input field
+        category: input
+      DateInput:
+        type: component
+        description: Date picker input
+        category: input
+      Select:
+        type: component
+        description: Dropdown selection with support for descriptions and icons
+        category: input
+      CustomizableSelect:
+        type: component
+        description: Advanced select with customization options
+        category: input
+      Checkbox:
+        type: component
+        description: Single checkbox input
+        category: input
+      CheckboxGroup:
+        type: component
+        description: Group of related checkboxes
+        category: input
+      RadioGroup:
+        type: component
+        description: Radio button group for exclusive selection
+        category: input
+      Switch:
+        type: component
+        description: Toggle switch for boolean values
+        category: input
+      Slider:
+        type: component
+        description: Slider for numeric range selection
+        category: input
+      ColorSelector:
+        type: component
+        description: Color picker component
+        category: input
+      FileInput:
+        type: component
+        description: File upload input
+        category: input
+      FileInputItem:
+        type: component
+        description: Individual file item in FileInput
+        category: input
+      FormField:
+        type: component
+        description: Form field wrapper with label and validation
+        category: input
+
+      # Display Components
+      Text:
+        type: component
+        description: Text display with typography support
+        category: display
+      Title:
+        type: component
+        description: Section title/heading
+        category: display
+      Alert:
+        type: component
+        description: Alert/notification message
+        category: display
+      Badge:
+        type: component
+        description: Status badge indicator
+        category: display
+      Avatar:
+        type: component
+        description: User avatar display
+        category: display
+      AvatarGroup:
+        type: component
+        description: Group of user avatars
+        category: display
+      Pill:
+        type: component
+        description: Pill-shaped label
+        category: display
+      InputPill:
+        type: component
+        description: Interactive pill component for inputs
+        category: display
+      Swatch:
+        type: component
+        description: Color swatch display
+        category: display
+
+      # Card Components
+      HorizontalCard:
+        type: component
+        description: Horizontal layout card
+        category: card
+      ImageCard:
+        type: component
+        description: Card for displaying images
+        category: card
+      VideoCard:
+        type: component
+        description: Card for displaying videos
+        category: card
+      AudioCard:
+        type: component
+        description: Card for displaying audio content
+        category: card
+      EmbedCard:
+        type: component
+        description: Card for embedded content
+        category: card
+      TypographyCard:
+        type: component
+        description: Card for typography samples
+        category: card
+
+      # Overlay Components
+      Flyout:
+        type: component
+        description: Popup overlay component
+        category: overlay
+      FlyoutMenu:
+        type: component
+        description: Menu in a flyout overlay
+        category: overlay
+
+      # Organizational Components
+      Accordion:
+        type: component
+        description: Collapsible content sections
+        category: organizational
+      Carousel:
+        type: component
+        description: Carousel for scrolling through content
+        category: organizational
+      SegmentedControl:
+        type: component
+        description: Segmented control for tab-like selection
+        category: organizational
+
+      # Design System Utilities
+      AppUiProvider:
+        type: provider
+        description: Context provider for theme and i18n support
+        category: system
+
+      # Icons (selected examples)
+      PlusIcon:
+        type: icon
+        description: Plus icon
+        category: icon
+      SearchIcon:
+        type: icon
+        description: Search icon
+        category: icon
+
+  canva-design:
+    name: Canva Design API
+    packageManager: npm
+    package: "@canva/design"
+    documentation: https://www.canva.dev/docs/apps/integrating-canva/
+    description: |
+      Provides methods for interacting with the user's design, such as
+      creating elements and manipulating the canvas.
+    exports:
+      addPage:
+        type: function
+        description: Adds a page to the user's design
+      requestExport:
+        type: function
+        description: Exports the user's design as static files
+      addNativeElement:
+        type: function
+        description: Adds native Canva elements to the design
+      addAudioTrack:
+        type: function
+        description: Adds audio track to the design
+
+  canva-asset:
+    name: Canva Asset API
+    packageManager: npm
+    package: "@canva/asset"
+    documentation: https://www.canva.dev/docs/apps/integrating-canva/
+    description: |
+      Provides methods for working with assets such as image and video files,
+      including uploading to the user's media library.
+    exports:
+      upload:
+        type: function
+        description: Uploads assets to the user's media library
+
+  canva-platform:
+    name: Canva Platform Utilities
+    packageManager: npm
+    package: "@canva/platform"
+    documentation: https://www.canva.dev/docs/apps/integrating-canva/
+    description: |
+      Provides utility methods useful for a broad range of apps, including
+      opening external links and platform-level operations.
+    exports:
+      requestOpenExternalUrl:
+        type: function
+        description: Opens an external web page
+
+  canva-user:
+    name: Canva User API
+    packageManager: npm
+    package: "@canva/user"
+    documentation: https://www.canva.dev/docs/apps/integrating-canva/
+    description: |
+      Provides methods for accessing user data and authenticating users.
+    exports:
+      getUser:
+        type: function
+        description: Retrieves current user information
+      authenticate:
+        type: function
+        description: Authenticates user for external services
+
+  canva-error:
+    name: Canva Error Handling
+    packageManager: npm
+    package: "@canva/error"
+    documentation: https://www.canva.dev/docs/apps/integrating-canva/
+    description: |
+      Provides CanvaError class for standardized error handling.
+    exports:
+      CanvaError:
+        type: class
+        description: Standard error class for Canva apps
+
+  canva-i18n-kit:
+    name: Canva Internationalization Kit
+    packageManager: npm
+    package: "@canva/app-i18n-kit"
+    documentation: https://www.canva.dev/docs/apps/localization/
+    description: |
+      Provides internationalization utilities that integrate with react-intl
+      for app localization. Required for production apps.
+    peerDependencies:
+      react-intl: "^6.0.0"
+    exports:
+      initIntl:
+        type: function
+        description: Initializes internationalization for non-React contexts
+
+componentCatalog:
+  categories:
+    layout:
+      name: Layout
+      description: Components for organizing and structuring content
+      components: [Box, Rows, Columns, Column, Grid]
+
+    action:
+      name: Actions
+      description: Interactive elements for user actions
+      components: [Button, LinkButton]
+
+    input:
+      name: Form Inputs
+      description: Form input and control components
+      components:
+        - TextInput
+        - MultilineInput
+        - NumberInput
+        - DateInput
+        - Select
+        - CustomizableSelect
+        - Checkbox
+        - CheckboxGroup
+        - RadioGroup
+        - Switch
+        - Slider
+        - ColorSelector
+        - FileInput
+        - FormField
+
+    display:
+      name: Display
+      description: Components for showing information and status
+      components: [Text, Title, Alert, Badge, Avatar, AvatarGroup, Pill, InputPill, Swatch]
+
+    card:
+      name: Cards
+      description: Card components for various content types
+      components: [HorizontalCard, ImageCard, VideoCard, AudioCard, EmbedCard, TypographyCard]
+
+    overlay:
+      name: Overlays
+      description: Overlay and popup components
+      components: [Flyout, FlyoutMenu]
+
+    organizational:
+      name: Organizational
+      description: Components for organizing and navigating content
+      components: [Accordion, Carousel, SegmentedControl]
+
+  components:
+    Button:
+      name: Button
+      description: Primary action button with variant support
+      category: action
+      sdkBinding:
+        sdk: canva-app-ui-kit
+        export: Button
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+      props:
+        variant:
+          type: string
+          enum: [primary, secondary, tertiary]
+          default: primary
+        onClick:
+          type: function
+          description: Click handler
+        disabled:
+          type: boolean
+          default: false
+        loading:
+          type: boolean
+          default: false
+          description: Shows loading state
+      variants:
+        - primary
+        - secondary
+        - tertiary
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+      i18n:
+        supported: true
+        description: Button text can be localized using react-intl
+
+    FormField:
+      name: FormField
+      description: Form field wrapper that provides label, validation, and error display
+      category: input
+      sdkBinding:
+        sdk: canva-app-ui-kit
+        export: FormField
+      props:
+        label:
+          type: string
+          description: Field label
+        error:
+          type: string
+          description: Error message to display
+        description:
+          type: string
+          description: Helper text for the field
+      slots:
+        control:
+          description: The form control (input, select, etc.)
+          required: true
+      accessibility:
+        screenReaderSupport: true
+      i18n:
+        supported: true
+
+    Select:
+      name: Select
+      description: Dropdown selection component with rich option support
+      category: input
+      sdkBinding:
+        sdk: canva-app-ui-kit
+        export: Select
+      webStandardMapping:
+        htmlElement: select
+        ariaRole: combobox
+        semanticType: input
+      props:
+        options:
+          type: array
+          description: Array of option objects with value, label, description, disabled, and icon
+        value:
+          type: string
+          description: Currently selected value
+        onChange:
+          type: function
+          description: Change handler
+        placeholder:
+          type: string
+          description: Placeholder text
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+      i18n:
+        supported: true
+
+    Text:
+      name: Text
+      description: Text display component with typography system integration
+      category: display
+      sdkBinding:
+        sdk: canva-app-ui-kit
+        export: Text
+      webStandardMapping:
+        htmlElement: span
+        semanticType: text
+      props:
+        variant:
+          type: string
+          description: Typography variant
+        size:
+          type: string
+          enum: [small, medium, large]
+        tone:
+          type: string
+          description: Color tone from design system
+      accessibility:
+        screenReaderSupport: true
+      i18n:
+        supported: true
+
+    Rows:
+      name: Rows
+      description: Vertical stack layout container with consistent spacing
+      category: layout
+      sdkBinding:
+        sdk: canva-app-ui-kit
+        export: Rows
+      webStandardMapping:
+        htmlElement: div
+        semanticType: container
+      props:
+        spacing:
+          type: string
+          description: Spacing between rows using design tokens
+        align:
+          type: string
+          enum: [start, center, end, stretch]
+      slots:
+        default:
+          description: Child elements to stack vertically
+          required: true
+
+    Columns:
+      name: Columns
+      description: Horizontal layout container with responsive column support
+      category: layout
+      sdkBinding:
+        sdk: canva-app-ui-kit
+        export: Columns
+      webStandardMapping:
+        htmlElement: div
+        semanticType: container
+      props:
+        spacing:
+          type: string
+          description: Spacing between columns
+        align:
+          type: string
+          enum: [start, center, end, stretch]
+      slots:
+        default:
+          description: Column components
+          required: true
+
+    ColorSelector:
+      name: ColorSelector
+      description: Color picker component integrated with Canva's color system
+      category: input
+      sdkBinding:
+        sdk: canva-app-ui-kit
+        export: ColorSelector
+      props:
+        color:
+          type: string
+          description: Currently selected color
+        onChange:
+          type: function
+          description: Color change handler
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+
+extensionPoints:
+  - id: side-panel
+    name: Side Panel
+    type: panel
+    extensionType: codedComponents
+    description: |
+      Main app interface displayed in the Canva editor's side panel.
+      This is the primary extension point for most apps.
+    supportedComponents:
+      - all
+    constraints:
+      responsive: true
+      darkModeSupport: required
+      mobileFriendly: recommended
+    context:
+      provides:
+        - currentDesign
+        - user
+        - theme
+      actions:
+        - addElement
+        - uploadAsset
+        - exportDesign
+
+  - id: object-panel
+    name: Object Panel
+    type: contextual-panel
+    extensionType: codedComponents
+    description: |
+      Contextual panel that appears when a user selects an element created
+      by the app. Useful for element-specific editing controls.
+    supportedComponents:
+      - all
+    constraints:
+      responsive: true
+      darkModeSupport: required
+    context:
+      provides:
+        - selectedElement
+        - currentDesign
+        - user
+      actions:
+        - updateElement
+        - deleteElement
+
+  - id: editor-overlay
+    name: Editor Overlay
+    type: overlay
+    extensionType: codedComponents
+    description: |
+      Full-screen overlay for immersive editing experiences, such as
+      image editing or advanced configuration interfaces.
+    supportedComponents:
+      - all
+    constraints:
+      fullScreen: true
+      darkModeSupport: required
+    context:
+      provides:
+        - targetElement
+        - currentDesign
+        - user
+      actions:
+        - broadcastMessage
+        - closeOverlay
+        - saveChanges
+    documentation: https://www.canva.dev/docs/apps/creating-image-overlays/
+
+policies:
+  componentRequirement:
+    level: stronglyRecommended
+    scope: publicApps
+    rationale: |
+      Canva strongly recommends using the App UI Kit for public apps to
+      ensure consistent user experience and easier compliance with design
+      guidelines. Without the App UI Kit, meeting the design guidelines
+      can be challenging and may result in slower app review.
+
+  customComponents:
+    allowed: true
+    documentation: https://www.canva.dev/docs/apps/design-guidelines/
+    constraints:
+      - Must use design tokens for consistency
+      - Must support both light and dark themes
+      - Must be accessible (WCAG 2.1 AA minimum)
+      - Must work on both desktop and mobile (recommended)
+      - Should follow Canva's design patterns where applicable
+
+  publishing:
+    privateApps:
+      componentRequirement: recommended
+      customComponentsAllowed: true
+      reviewRequired: false
+      distributionScope: team
+      notes: |
+        Private apps are only available to members of the current team on
+        an Enterprise plan. Team administrators are responsible for review.
+
+    publicApps:
+      componentRequirement: stronglyRecommended
+      customComponentsAllowed: true
+      reviewRequired: true
+      designReviewRequired: true
+      localizationRequired: true
+      submissionLimit: "5 submissions per day"
+      notes: |
+        Public apps are reviewed by Canva's team of engineers, designers,
+        and QA experts. Apps must adhere to design guidelines and functional
+        requirements outlined in the submission checklist.
+
+  designGuidelines:
+    required: true
+    designSystem: Canva Design System
+    designSystemUrl: https://www.figma.com/community/file/1314652421936534778
+    designTokensProvided: true
+    designTokensUrl: https://www.canva.dev/docs/apps/app-ui-kit/design-tokens/
+    themeSupport:
+      - light
+      - dark
+    requirements:
+      - Apps must be tested in both light and dark themes
+      - Mobile compatibility is highly recommended
+      - All interactive elements must be keyboard accessible
+      - Must follow spacing and typography guidelines
+
+  internationalization:
+    required: true
+    scope: publicApps
+    provider: Canva
+    freeTranslation: true
+    freeTranslationConditions: |
+      Canva provides free translation for apps that have successfully
+      completed the app review process. Apps must use the @canva/app-i18n-kit
+      package and react-intl library.
+    supportedDirections:
+      - ltr
+      - rtl
+    implementation:
+      - App UI Kit components support i18n out of the box
+      - Must use react-intl for all user-facing strings
+      - Must use @canva/app-i18n-kit for non-React contexts
+      - Production apps must support multiple languages
+    documentation: https://www.canva.dev/docs/apps/localization/
+
+  security:
+    authentication:
+      signatureVerification: required
+      condition: Apps using Authentication or Fetch capabilities
+      documentation: https://www.canva.dev/docs/apps/submission-checklist/
+
+    sandboxing:
+      iframeSandbox: true
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+
+renderingEngines:
+  react:
+    type: react
+    name: React 19 Rendering
+    version: "^19.0.0"
+    description: |
+      All Canva apps render as React 19 components. The App UI Kit
+      requires React 19 as a peer dependency.
+    sandboxing:
+      iframeSandbox: true
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+    providers:
+      - AppUiProvider (required for theming and i18n)
+
+extensions:
+  i18n:
+    provider: Canva Translation Service
+    freeForApprovedApps: true
+    package: "@canva/app-i18n-kit"
+    peerDependencies:
+      - react-intl
+      - "@canva/app-ui-kit@^4.0.0"
+    features:
+      - All App UI Kit components support i18n automatically
+      - Bidirectional text support (LTR/RTL)
+      - Translation management through Canva's translation process
+      - No manual translation management required for approved apps
+    implementation:
+      - Wrap app in AppUiProvider
+      - Use react-intl's FormattedMessage for strings
+      - Use initIntl for non-React contexts
+      - Submit app for review to receive free translations
+    supportedLanguages: 100+
+    documentation: https://www.canva.dev/docs/apps/localization/
+
+  compliance:
+    appReviewProcess:
+      enabled: true
+      scope: publicApps
+      reviewers:
+        - Engineers
+        - Designers
+        - QA experts
+      trackingSystem: Jira Service Desk
+      communicationChannel: JSD tickets
+      documentation: https://www.canva.dev/docs/apps/app-review-process/
+
+    submissionChecklist:
+      functionalRequirements:
+        - App works on both desktop and mobile (recommended)
+        - Signature verification implemented (if using auth/fetch)
+        - Tested in light and dark themes
+        - No console errors or warnings
+      designRequirements:
+        - Follows Canva design guidelines
+        - Uses App UI Kit components (strongly recommended)
+        - Consistent with Canva's visual language
+        - Accessible (keyboard navigation, screen readers)
+      documentationRequirements:
+        - Test account credentials (if authentication required)
+        - Platform documentation
+        - Content source documentation (if applicable)
+      url: https://www.canva.dev/docs/apps/submission-checklist/
+
+    designGuidelines:
+      figmaLibrary: https://www.figma.com/community/file/1314652421936534778
+      documentation: https://www.canva.dev/docs/apps/design-guidelines/
+      categories:
+        - Content Publisher apps
+        - Design Publisher apps
+        - Forms and inputs
+        - Mobile considerations
+      reviewSupport: |
+        Canva provides feedback on custom components before and during
+        the review process.
+
+  developerTools:
+    starterKit:
+      repository: https://github.com/canva-sdks/canva-apps-sdk-starter-kit
+      includes:
+        - Boilerplate project structure
+        - App UI Kit
+        - TypeScript configuration
+        - React 19
+        - Webpack configuration
+        - Example apps
+
+    playroom:
+      description: Live playground for App UI Kit components
+      url: https://www.canva.dev/docs/apps/app-ui-kit/quickstart/
+
+    storybook:
+      description: Interactive component documentation
+      availability: Available for exploring App UI Kit components
+
+    devToolkit:
+      features:
+        - Theme toggling (light/dark)
+        - Live reload
+        - Error reporting
+      documentation: https://www.canva.dev/docs/apps/quickstart/
+
+    mcpServer:
+      name: Canva Dev MCP Server
+      description: |
+        Model Context Protocol server for AI coding tools like Cursor
+        or Claude Code to supercharge development workflow.
+      compatibility:
+        - Cursor
+        - Claude Code
+        - Other MCP-compatible tools
+
+jsonFormsIntegration:
+  supported: false
+  notes: "Canva uses its own form components from the App UI Kit"
+
+mcpAppsIntegration:
+  supported: false
+  notes: "Not yet integrated with MCP Apps specification"

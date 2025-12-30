@@ -1,0 +1,1844 @@
+# Fenestra Document: Microsoft Teams Platform
+#
+# Microsoft Teams represents a hybrid extensibility model combining:
+# 1. Adaptive Cards - Declarative JSON-based UI (like Slack Block Kit)
+# 2. Tabs - Embedded web apps in sandboxed iframes
+# 3. Bots - Conversational interfaces with Adaptive Card responses
+# 4. Message Extensions - Search and action commands
+# 5. Meeting Extensions - In-meeting experiences
+#
+# This specification documents both patterns: declarative (Adaptive Cards)
+# and iframe-based (Tabs), plus the Teams JavaScript SDK for context and interaction.
+
+fenestra: "0.1.0"
+
+info:
+  title: Microsoft Teams App Platform
+  version: "1.24.0"
+  description: |
+    Microsoft Teams App Platform enables developers to build collaborative
+    experiences using a hybrid model of declarative UI and embedded web content.
+
+    Key characteristics:
+    - Adaptive Cards: JSON-based declarative UI for bots and messages (REQUIRED)
+    - Tabs: Full web apps embedded in iframes with Teams context
+    - Bots: Conversational AI using Bot Framework + Adaptive Cards
+    - Message Extensions: Search/action commands extending compose box
+    - Meeting Extensions: In-meeting apps, stages, and panels
+    - Teams JS SDK: Bridge between iframe tabs and Teams context
+
+    Teams apps work across Microsoft Teams, Outlook, and Microsoft 365 app.
+
+  contact:
+    name: Microsoft Teams Platform Team
+    url: https://learn.microsoft.com/en-us/microsoftteams/platform/feedback
+    email: microsoftteamsdev@microsoft.com
+
+platform:
+  name: Microsoft Teams
+  vendor: Microsoft Corporation
+  documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/
+  appMarketplace: https://appsource.microsoft.com/en-us/marketplace/apps?product=teams
+  developerPortal: https://dev.teams.microsoft.com/
+  changelog: https://learn.microsoft.com/en-us/microsoftteams/platform/whats-new
+
+sdks:
+  teams-js:
+    name: Microsoft Teams JavaScript SDK
+    packageManager: npm
+    package: "@microsoft/teams-js"
+    version: "^2.47.2"
+    repository: https://github.com/OfficeDev/microsoft-teams-library-js
+    documentation: https://learn.microsoft.com/en-us/javascript/api/overview/msteams-client
+    description: |
+      The TeamsJS library enables tabs (web pages) to access Teams context,
+      authenticate users, open dialogs, and interact with Teams capabilities.
+      Starting with v2.0, TeamsJS enables apps to run in Teams, Outlook, and
+      Microsoft 365 app.
+    exports:
+      app:
+        type: namespace
+        description: Core app initialization and context
+      authentication:
+        type: namespace
+        description: Authentication flows and token management
+      dialog:
+        type: namespace
+        description: Open dialogs and task modules
+      pages:
+        type: namespace
+        description: Page navigation and configuration
+      meeting:
+        type: namespace
+        description: Meeting-specific capabilities
+      chat:
+        type: namespace
+        description: Chat and channel interactions
+      calendar:
+        type: namespace
+        description: Calendar integration
+
+  adaptivecards:
+    name: Adaptive Cards SDK
+    packageManager: npm
+    package: "adaptivecards"
+    version: "^3.0.4"
+    repository: https://github.com/microsoft/AdaptiveCards
+    documentation: https://learn.microsoft.com/en-us/adaptive-cards/sdk/rendering-cards/javascript/getting-started
+    description: |
+      JavaScript SDK for rendering Adaptive Cards. Used primarily for
+      previewing cards during development. In production, Teams/Outlook
+      render Adaptive Cards natively.
+    exports:
+      AdaptiveCard:
+        type: class
+        description: Adaptive Card renderer
+      HostConfig:
+        type: class
+        description: Host configuration for styling cards
+      Version:
+        type: utility
+        description: Schema version utilities
+
+  botbuilder:
+    name: Microsoft Bot Framework SDK
+    packageManager: npm
+    package: "botbuilder"
+    version: "^4.22.3"
+    repository: https://github.com/microsoft/botbuilder-js
+    documentation: https://learn.microsoft.com/en-us/azure/bot-service/
+    description: |
+      Bot Framework SDK for building conversational bots. Teams bots use
+      this SDK to handle messages, send Adaptive Cards, and respond to
+      user interactions.
+    exports:
+      BotFrameworkAdapter:
+        type: class
+        description: Adapter for Bot Framework protocol
+      TeamsActivityHandler:
+        type: class
+        description: Teams-specific bot handler
+      CardFactory:
+        type: utility
+        description: Factory for creating Adaptive Cards and other card types
+      MessageFactory:
+        type: utility
+        description: Factory for creating bot messages
+
+componentCatalog:
+  categories:
+    cardElements:
+      name: Adaptive Card Elements
+      description: Visual elements for displaying content in cards
+      components:
+        - TextBlock
+        - Image
+        - Media
+        - RichTextBlock
+        - Table
+        - FactSet
+        - ImageSet
+
+    cardContainers:
+      name: Adaptive Card Containers
+      description: Layout containers for organizing card content
+      components:
+        - Container
+        - ColumnSet
+        - Column
+        - ActionSet
+
+    cardInputs:
+      name: Adaptive Card Inputs
+      description: Form inputs for collecting user data
+      components:
+        - InputText
+        - InputNumber
+        - InputDate
+        - InputTime
+        - InputToggle
+        - InputChoiceSet
+
+    cardActions:
+      name: Adaptive Card Actions
+      description: Interactive actions users can trigger
+      components:
+        - ActionSubmit
+        - ActionOpenUrl
+        - ActionShowCard
+        - ActionToggleVisibility
+        - ActionExecute
+
+  components:
+    # ADAPTIVE CARD ELEMENTS
+
+    TextBlock:
+      name: TextBlock
+      description: Display text with formatting options
+      category: cardElements
+      sdkBinding:
+        type: jsonSchema
+        elementType: TextBlock
+      webStandardMapping:
+        htmlElement: p
+        ariaRole: text
+        semanticType: display
+      schema:
+        type: object
+        required: [type, text]
+        properties:
+          type:
+            type: string
+            const: TextBlock
+          text:
+            type: string
+            description: Text content (supports Markdown subset)
+          color:
+            type: string
+            enum: [default, dark, light, accent, good, warning, attention]
+          fontType:
+            type: string
+            enum: [default, monospace]
+          size:
+            type: string
+            enum: [small, default, medium, large, extraLarge]
+          weight:
+            type: string
+            enum: [lighter, default, bolder]
+          isSubtle:
+            type: boolean
+          maxLines:
+            type: integer
+            description: Maximum lines before truncation
+          wrap:
+            type: boolean
+            description: Enable text wrapping
+          horizontalAlignment:
+            type: string
+            enum: [left, center, right]
+          id:
+            type: string
+            description: Unique element identifier
+      constraints:
+        supportsMarkdown: true
+        markdownSubset: basic
+      accessibility:
+        screenReaderSupport: true
+
+    Image:
+      name: Image
+      description: Display an image
+      category: cardElements
+      sdkBinding:
+        type: jsonSchema
+        elementType: Image
+      webStandardMapping:
+        htmlElement: img
+        ariaRole: img
+        semanticType: media
+      schema:
+        type: object
+        required: [type, url]
+        properties:
+          type:
+            type: string
+            const: Image
+          url:
+            type: string
+            format: uri
+            description: Image URL (https required)
+          altText:
+            type: string
+            description: Alternative text for accessibility
+          backgroundColor:
+            type: string
+            description: Background color (hex)
+          size:
+            type: string
+            enum: [auto, stretch, small, medium, large]
+          style:
+            type: string
+            enum: [default, person]
+            description: "person = circular crop for profile pictures"
+          width:
+            type: string
+            description: Explicit width (e.g., "50px")
+          height:
+            type: string
+            description: Explicit height (e.g., "50px")
+          horizontalAlignment:
+            type: string
+            enum: [left, center, right]
+          selectAction:
+            description: Action when image is clicked
+            oneOf:
+              - $ref: "#/components/ActionOpenUrl"
+              - $ref: "#/components/ActionSubmit"
+          id:
+            type: string
+      accessibility:
+        altTextRequired: true
+        screenReaderSupport: true
+
+    Media:
+      name: Media
+      description: Display audio or video content
+      category: cardElements
+      sdkBinding:
+        type: jsonSchema
+        elementType: Media
+      webStandardMapping:
+        htmlElement: video
+        semanticType: media
+      schema:
+        type: object
+        required: [type, sources]
+        properties:
+          type:
+            type: string
+            const: Media
+          sources:
+            type: array
+            items:
+              type: object
+              required: [mimeType, url]
+              properties:
+                mimeType:
+                  type: string
+                  description: "video/mp4, audio/mp3, etc."
+                url:
+                  type: string
+                  format: uri
+          poster:
+            type: string
+            format: uri
+            description: Thumbnail image URL
+          altText:
+            type: string
+          id:
+            type: string
+
+    RichTextBlock:
+      name: RichTextBlock
+      description: Display rich formatted text with inline elements
+      category: cardElements
+      sdkBinding:
+        type: jsonSchema
+        elementType: RichTextBlock
+      schema:
+        type: object
+        required: [type, inlines]
+        properties:
+          type:
+            type: string
+            const: RichTextBlock
+          inlines:
+            type: array
+            description: Array of TextRun objects
+            items:
+              type: object
+              properties:
+                type:
+                  const: TextRun
+                text:
+                  type: string
+                color:
+                  type: string
+                fontType:
+                  type: string
+                highlight:
+                  type: boolean
+                isSubtle:
+                  type: boolean
+                italic:
+                  type: boolean
+                selectAction:
+                  type: object
+                size:
+                  type: string
+                strikethrough:
+                  type: boolean
+                underline:
+                  type: boolean
+                weight:
+                  type: string
+          horizontalAlignment:
+            type: string
+            enum: [left, center, right]
+          id:
+            type: string
+
+    Table:
+      name: Table
+      description: Display tabular data (Adaptive Cards v1.5+)
+      category: cardElements
+      sdkBinding:
+        type: jsonSchema
+        elementType: Table
+      webStandardMapping:
+        htmlElement: table
+        semanticType: display
+      schema:
+        type: object
+        required: [type, columns, rows]
+        properties:
+          type:
+            type: string
+            const: Table
+          columns:
+            type: array
+            items:
+              type: object
+              properties:
+                width:
+                  type: string
+                verticalCellContentAlignment:
+                  type: string
+                horizontalCellContentAlignment:
+                  type: string
+          rows:
+            type: array
+            items:
+              type: object
+              required: [type, cells]
+              properties:
+                type:
+                  const: TableRow
+                cells:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        const: TableCell
+                      items:
+                        type: array
+          showGridLines:
+            type: boolean
+          gridStyle:
+            type: string
+            enum: [default, emphasis, accent]
+          id:
+            type: string
+
+    FactSet:
+      name: FactSet
+      description: Display key-value pairs as facts
+      category: cardElements
+      sdkBinding:
+        type: jsonSchema
+        elementType: FactSet
+      webStandardMapping:
+        htmlElement: dl
+        semanticType: display
+      schema:
+        type: object
+        required: [type, facts]
+        properties:
+          type:
+            type: string
+            const: FactSet
+          facts:
+            type: array
+            items:
+              type: object
+              required: [title, value]
+              properties:
+                title:
+                  type: string
+                  description: Fact label
+                value:
+                  type: string
+                  description: Fact value
+          id:
+            type: string
+
+    ImageSet:
+      name: ImageSet
+      description: Display a gallery of images
+      category: cardElements
+      sdkBinding:
+        type: jsonSchema
+        elementType: ImageSet
+      schema:
+        type: object
+        required: [type, images]
+        properties:
+          type:
+            type: string
+            const: ImageSet
+          images:
+            type: array
+            items:
+              $ref: "#/components/Image"
+          imageSize:
+            type: string
+            enum: [auto, stretch, small, medium, large]
+          id:
+            type: string
+
+    # CONTAINERS
+
+    Container:
+      name: Container
+      description: Groups elements together with styling
+      category: cardContainers
+      sdkBinding:
+        type: jsonSchema
+        elementType: Container
+      webStandardMapping:
+        htmlElement: div
+        ariaRole: region
+        semanticType: container
+      schema:
+        type: object
+        required: [type, items]
+        properties:
+          type:
+            type: string
+            const: Container
+          items:
+            type: array
+            description: Array of card elements
+          style:
+            type: string
+            enum: [default, emphasis, good, attention, warning, accent]
+          verticalContentAlignment:
+            type: string
+            enum: [top, center, bottom]
+          bleed:
+            type: boolean
+            description: Bleed to parent container edges
+          backgroundImage:
+            type: string
+            format: uri
+          minHeight:
+            type: string
+          selectAction:
+            type: object
+          id:
+            type: string
+
+    ColumnSet:
+      name: ColumnSet
+      description: Arrange elements in columns
+      category: cardContainers
+      sdkBinding:
+        type: jsonSchema
+        elementType: ColumnSet
+      webStandardMapping:
+        htmlElement: div
+        semanticType: layout
+      schema:
+        type: object
+        required: [type, columns]
+        properties:
+          type:
+            type: string
+            const: ColumnSet
+          columns:
+            type: array
+            items:
+              $ref: "#/components/Column"
+          selectAction:
+            type: object
+          style:
+            type: string
+          bleed:
+            type: boolean
+          minHeight:
+            type: string
+          horizontalAlignment:
+            type: string
+          id:
+            type: string
+
+    Column:
+      name: Column
+      description: Single column within a ColumnSet
+      category: cardContainers
+      sdkBinding:
+        type: jsonSchema
+        elementType: Column
+      schema:
+        type: object
+        required: [type, items]
+        properties:
+          type:
+            type: string
+            const: Column
+          items:
+            type: array
+            description: Elements in this column
+          width:
+            description: "auto, stretch, weighted (1, 2, etc.), or pixel (50px)"
+            oneOf:
+              - type: string
+              - type: number
+          style:
+            type: string
+          verticalContentAlignment:
+            type: string
+          bleed:
+            type: boolean
+          backgroundImage:
+            type: string
+          selectAction:
+            type: object
+          id:
+            type: string
+
+    ActionSet:
+      name: ActionSet
+      description: Display a set of actions within card body
+      category: cardContainers
+      sdkBinding:
+        type: jsonSchema
+        elementType: ActionSet
+      webStandardMapping:
+        htmlElement: div
+        ariaRole: group
+        semanticType: container
+      schema:
+        type: object
+        required: [type, actions]
+        properties:
+          type:
+            type: string
+            const: ActionSet
+          actions:
+            type: array
+            description: Array of actions
+            items:
+              oneOf:
+                - $ref: "#/components/ActionSubmit"
+                - $ref: "#/components/ActionOpenUrl"
+                - $ref: "#/components/ActionShowCard"
+                - $ref: "#/components/ActionToggleVisibility"
+          id:
+            type: string
+
+    # INPUTS
+
+    InputText:
+      name: Input.Text
+      description: Single or multi-line text input
+      category: cardInputs
+      sdkBinding:
+        type: jsonSchema
+        elementType: Input.Text
+      webStandardMapping:
+        htmlElement: input
+        inputType: text
+        semanticType: input
+      schema:
+        type: object
+        required: [type, id]
+        properties:
+          type:
+            type: string
+            const: Input.Text
+          id:
+            type: string
+            description: Unique input identifier for form submission
+          placeholder:
+            type: string
+          value:
+            type: string
+            description: Default value
+          isMultiline:
+            type: boolean
+          maxLength:
+            type: integer
+          style:
+            type: string
+            enum: [text, tel, url, email, password]
+          inlineAction:
+            description: Action button shown inside input
+            oneOf:
+              - $ref: "#/components/ActionSubmit"
+              - $ref: "#/components/ActionExecute"
+          isRequired:
+            type: boolean
+          errorMessage:
+            type: string
+          label:
+            type: string
+            description: Accessible label (v1.3+)
+      accessibility:
+        labelRequired: true
+        screenReaderSupport: true
+
+    InputNumber:
+      name: Input.Number
+      description: Numeric input with validation
+      category: cardInputs
+      sdkBinding:
+        type: jsonSchema
+        elementType: Input.Number
+      webStandardMapping:
+        htmlElement: input
+        inputType: number
+        semanticType: input
+      schema:
+        type: object
+        required: [type, id]
+        properties:
+          type:
+            type: string
+            const: Input.Number
+          id:
+            type: string
+          placeholder:
+            type: string
+          value:
+            type: number
+          min:
+            type: number
+          max:
+            type: number
+          isRequired:
+            type: boolean
+          errorMessage:
+            type: string
+          label:
+            type: string
+
+    InputDate:
+      name: Input.Date
+      description: Date picker input
+      category: cardInputs
+      sdkBinding:
+        type: jsonSchema
+        elementType: Input.Date
+      webStandardMapping:
+        htmlElement: input
+        inputType: date
+        semanticType: input
+      schema:
+        type: object
+        required: [type, id]
+        properties:
+          type:
+            type: string
+            const: Input.Date
+          id:
+            type: string
+          value:
+            type: string
+            format: date
+            description: ISO 8601 date (YYYY-MM-DD)
+          placeholder:
+            type: string
+          min:
+            type: string
+            format: date
+          max:
+            type: string
+            format: date
+          isRequired:
+            type: boolean
+          errorMessage:
+            type: string
+          label:
+            type: string
+
+    InputTime:
+      name: Input.Time
+      description: Time picker input
+      category: cardInputs
+      sdkBinding:
+        type: jsonSchema
+        elementType: Input.Time
+      webStandardMapping:
+        htmlElement: input
+        inputType: time
+        semanticType: input
+      schema:
+        type: object
+        required: [type, id]
+        properties:
+          type:
+            type: string
+            const: Input.Time
+          id:
+            type: string
+          value:
+            type: string
+            description: "Time in HH:MM format (24-hour)"
+          placeholder:
+            type: string
+          min:
+            type: string
+          max:
+            type: string
+          isRequired:
+            type: boolean
+          errorMessage:
+            type: string
+          label:
+            type: string
+
+    InputToggle:
+      name: Input.Toggle
+      description: Checkbox or toggle switch
+      category: cardInputs
+      sdkBinding:
+        type: jsonSchema
+        elementType: Input.Toggle
+      webStandardMapping:
+        htmlElement: input
+        inputType: checkbox
+        ariaRole: switch
+        semanticType: input
+      schema:
+        type: object
+        required: [type, id, title]
+        properties:
+          type:
+            type: string
+            const: Input.Toggle
+          id:
+            type: string
+          title:
+            type: string
+            description: Label text next to toggle
+          value:
+            type: string
+            description: Value when toggled on (default "true")
+          valueOn:
+            type: string
+            default: "true"
+          valueOff:
+            type: string
+            default: "false"
+          wrap:
+            type: boolean
+          isRequired:
+            type: boolean
+          errorMessage:
+            type: string
+          label:
+            type: string
+
+    InputChoiceSet:
+      name: Input.ChoiceSet
+      description: Drop-down, radio buttons, or checkbox group
+      category: cardInputs
+      sdkBinding:
+        type: jsonSchema
+        elementType: Input.ChoiceSet
+      webStandardMapping:
+        htmlElement: select
+        ariaRole: listbox
+        semanticType: input
+      schema:
+        type: object
+        required: [type, id, choices]
+        properties:
+          type:
+            type: string
+            const: Input.ChoiceSet
+          id:
+            type: string
+          choices:
+            type: array
+            items:
+              type: object
+              required: [title, value]
+              properties:
+                title:
+                  type: string
+                value:
+                  type: string
+          style:
+            type: string
+            enum: [compact, expanded, filtered]
+            description: "compact=dropdown, expanded=radio/checkbox, filtered=searchable"
+          isMultiSelect:
+            type: boolean
+          value:
+            type: string
+            description: Default selected value(s)
+          placeholder:
+            type: string
+          wrap:
+            type: boolean
+          isRequired:
+            type: boolean
+          errorMessage:
+            type: string
+          label:
+            type: string
+
+    # ACTIONS
+
+    ActionSubmit:
+      name: Action.Submit
+      description: Submit form data to bot or webhook
+      category: cardActions
+      sdkBinding:
+        type: jsonSchema
+        elementType: Action.Submit
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+      schema:
+        type: object
+        required: [type, title]
+        properties:
+          type:
+            type: string
+            const: Action.Submit
+          title:
+            type: string
+            description: Button text
+          data:
+            type: object
+            description: Data merged with input values on submit
+          iconUrl:
+            type: string
+            format: uri
+          style:
+            type: string
+            enum: [default, positive, destructive]
+          associatedInputs:
+            type: string
+            enum: [auto, none]
+          id:
+            type: string
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+
+    ActionOpenUrl:
+      name: Action.OpenUrl
+      description: Open a URL in new tab
+      category: cardActions
+      sdkBinding:
+        type: jsonSchema
+        elementType: Action.OpenUrl
+      webStandardMapping:
+        htmlElement: a
+        ariaRole: link
+        semanticType: navigation
+      schema:
+        type: object
+        required: [type, title, url]
+        properties:
+          type:
+            type: string
+            const: Action.OpenUrl
+          title:
+            type: string
+          url:
+            type: string
+            format: uri
+          iconUrl:
+            type: string
+          style:
+            type: string
+          id:
+            type: string
+
+    ActionShowCard:
+      name: Action.ShowCard
+      description: Reveal an inline sub-card
+      category: cardActions
+      sdkBinding:
+        type: jsonSchema
+        elementType: Action.ShowCard
+      schema:
+        type: object
+        required: [type, title, card]
+        properties:
+          type:
+            type: string
+            const: Action.ShowCard
+          title:
+            type: string
+          card:
+            type: object
+            description: Nested Adaptive Card
+          iconUrl:
+            type: string
+          style:
+            type: string
+          id:
+            type: string
+
+    ActionToggleVisibility:
+      name: Action.ToggleVisibility
+      description: Show/hide elements dynamically
+      category: cardActions
+      sdkBinding:
+        type: jsonSchema
+        elementType: Action.ToggleVisibility
+      schema:
+        type: object
+        required: [type, title]
+        properties:
+          type:
+            type: string
+            const: Action.ToggleVisibility
+          title:
+            type: string
+          targetElements:
+            type: array
+            description: IDs of elements to toggle
+            items:
+              type: string
+          id:
+            type: string
+
+    ActionExecute:
+      name: Action.Execute
+      description: Universal Action for bots (v1.4+)
+      category: cardActions
+      sdkBinding:
+        type: jsonSchema
+        elementType: Action.Execute
+      schema:
+        type: object
+        required: [type, title]
+        properties:
+          type:
+            type: string
+            const: Action.Execute
+          title:
+            type: string
+          verb:
+            type: string
+            description: Action identifier for bot
+          data:
+            type: object
+          iconUrl:
+            type: string
+          style:
+            type: string
+          associatedInputs:
+            type: string
+            enum: [auto, none]
+          id:
+            type: string
+
+extensionPoints:
+  - id: personal-tab
+    name: Personal Tab
+    type: tab
+    extensionType: iframe
+    description: |
+      Personal tab shown in user's personal app scope. Can be pinned
+      to left rail for quick access. Full web app in iframe with
+      Teams context via Teams JS SDK.
+    supportedComponents:
+      - all (custom HTML/CSS/JS)
+    constraints:
+      responsive: true
+      httpsRequired: true
+      maxWidth: 1920
+      maxHeight: 1080
+    context:
+      provides:
+        - userId
+        - userPrincipalName
+        - tenantId
+        - locale
+        - theme
+        - loginHint
+        - userObjectId
+      actions:
+        - authentication.authenticate
+        - dialog.open
+        - pages.getConfig
+        - app.getContext
+    extensionTypeConfig:
+      sdk: teams-js
+      initialization:
+        required: true
+        method: "app.initialize()"
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+        - allow-same-origin
+      communication:
+        protocol: teams-js
+        globalObject: microsoftTeams
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/tabs/what-are-tabs
+
+  - id: channel-tab
+    name: Channel/Group Tab
+    type: tab
+    extensionType: iframe
+    description: |
+      Configurable tab in team channel or group chat. Supports
+      configuration page for initial setup. Shared across all
+      team/chat members.
+    supportedComponents:
+      - all (custom HTML/CSS/JS)
+    constraints:
+      responsive: true
+      httpsRequired: true
+      configurationRequired: true
+    context:
+      provides:
+        - channelId
+        - teamId
+        - groupId
+        - channelName
+        - teamName
+        - locale
+        - theme
+        - entityId
+      actions:
+        - pages.config.setConfig
+        - pages.config.setValidityState
+        - app.getContext
+    extensionTypeConfig:
+      sdk: teams-js
+      initialization:
+        required: true
+        method: "app.initialize()"
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+        - allow-same-origin
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/tabs/how-to/create-channel-group-tab
+
+  - id: meeting-tab
+    name: Meeting Tab
+    type: tab
+    extensionType: iframe
+    description: |
+      Tab shown in Teams meeting (pre-meeting, in-meeting, or
+      post-meeting). Can access meeting context and participant info.
+    supportedComponents:
+      - all (custom HTML/CSS/JS)
+    constraints:
+      responsive: true
+      httpsRequired: true
+    context:
+      provides:
+        - meetingId
+        - conversationId
+        - organizerId
+        - meetingType
+        - userRole
+      actions:
+        - meeting.getMeetingDetails
+        - meeting.getAppContentStageSharingCapabilities
+        - meeting.shareAppContentToStage
+    extensionTypeConfig:
+      sdk: teams-js
+      capabilities:
+        - meeting
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/apps-in-teams-meetings/teams-apps-in-meetings
+
+  - id: bot-chat
+    name: Bot Conversation
+    type: bot
+    extensionType: jsonResponse
+    description: |
+      Conversational bot using Bot Framework. Sends and receives
+      Adaptive Cards for rich interactions. Supports 1:1, group chat,
+      and channel conversations.
+    supportedComponents:
+      - all Adaptive Card elements
+      - all Adaptive Card inputs
+      - all Adaptive Card actions
+    constraints:
+      maxCardSize: 28000
+      schemaVersion: "1.5"
+      responseTimeout: 15000
+    context:
+      provides:
+        - conversation
+        - activity
+        - turnContext
+        - userId
+        - channelId
+      actions:
+        - sendActivity
+        - updateActivity
+        - deleteActivity
+        - sendTypingIndicator
+    extensionTypeConfig:
+      sdk: botbuilder
+      protocol: botFramework
+      schemaFormat: adaptiveCard
+      schemaUrl: http://adaptivecards.io/schemas/adaptive-card.json
+      validation: true
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/bots/what-are-bots
+
+  - id: message-extension
+    name: Message Extension
+    type: messageExtension
+    extensionType: jsonResponse
+    description: |
+      Search and action commands in compose box and message overflow.
+      Returns Adaptive Cards or Hero Cards as search results or
+      action responses.
+    supportedComponents:
+      - all Adaptive Card elements (in cards returned)
+    constraints:
+      maxResults: 25
+      maxCardSize: 28000
+    context:
+      provides:
+        - commandId
+        - commandContext
+        - messagePayload
+        - queryParameters
+      actions:
+        - composeExtension.queryResponse
+        - task.submitResponse
+    extensionTypeConfig:
+      sdk: botbuilder
+      protocol: botFramework
+      commandTypes:
+        - query
+        - action
+      schemaFormat: adaptiveCard
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/messaging-extensions/what-are-messaging-extensions
+
+  - id: meeting-stage
+    name: Meeting Stage
+    type: meetingExtension
+    extensionType: iframe
+    description: |
+      Full-screen app experience shared to meeting stage. All
+      participants see the same view. Supports collaborative
+      scenarios like whiteboards, design reviews, etc.
+    supportedComponents:
+      - all (custom HTML/CSS/JS)
+    constraints:
+      responsive: true
+      httpsRequired: true
+      collaborative: true
+    context:
+      provides:
+        - meetingId
+        - frameContext: meetingStage
+        - shareToStage
+      actions:
+        - meeting.getAppContentStageSharingCapabilities
+        - meeting.getAppContentStageSharingState
+    extensionTypeConfig:
+      sdk: teams-js
+      capabilities:
+        - meeting
+      initialization:
+        method: "app.initialize()"
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/apps-in-teams-meetings/enable-and-configure-your-app-for-teams-meetings
+
+  - id: meeting-panel
+    name: Meeting Side Panel
+    type: meetingExtension
+    extensionType: iframe
+    description: |
+      Side panel shown during meeting. Personal view per participant.
+      Used for notes, polls, Q&A, resources, etc.
+    supportedComponents:
+      - all (custom HTML/CSS/JS)
+    constraints:
+      responsive: true
+      httpsRequired: true
+      maxWidth: 400
+    context:
+      provides:
+        - meetingId
+        - frameContext: sidePanel
+        - participantId
+      actions:
+        - meeting.getMeetingDetails
+        - meeting.getParticipant
+    extensionTypeConfig:
+      sdk: teams-js
+      capabilities:
+        - meeting
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/apps-in-teams-meetings/build-apps-for-teams-meeting-stage
+
+  - id: adaptive-card-message
+    name: Adaptive Card in Message
+    type: message
+    extensionType: jsonResponse
+    description: |
+      Standalone Adaptive Card posted to chat/channel by bot or
+      via webhook. Supports rich interactive content.
+    supportedComponents:
+      - all Adaptive Card elements
+      - all Adaptive Card inputs
+      - all Adaptive Card actions
+    constraints:
+      maxCardSize: 28000
+      schemaVersion: "1.5"
+      actionTypes:
+        - Action.Submit
+        - Action.OpenUrl
+        - Action.Execute
+        - Action.ToggleVisibility
+    context:
+      provides:
+        - cardId
+        - conversationId
+      actions:
+        - refreshCard
+        - updateCard
+    extensionTypeConfig:
+      schemaFormat: adaptiveCard
+      schemaUrl: http://adaptivecards.io/schemas/adaptive-card.json
+      validation: true
+      rendering: native
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/task-modules-and-cards/cards/cards-reference
+
+  - id: task-module
+    name: Task Module (Dialog)
+    type: dialog
+    extensionType: iframe
+    description: |
+      Modal dialog for focused tasks. Can show iframe or Adaptive
+      Card. Opened via Teams JS SDK or bot card action.
+    supportedComponents:
+      - all (iframe mode)
+      - all Adaptive Card elements (card mode)
+    constraints:
+      maxWidth: 600
+      maxHeight: 600
+      responsive: true
+    context:
+      provides:
+        - taskInfo
+        - completionBotId
+      actions:
+        - dialog.submit
+        - dialog.url.submit
+    extensionTypeConfig:
+      modes:
+        - iframe
+        - adaptiveCard
+      sdk: teams-js
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/task-modules-and-cards/what-are-task-modules
+
+policies:
+  componentRequirement:
+    level: required
+    scope: bots
+    rationale: |
+      Teams bots MUST use Adaptive Cards for rich interactive messages.
+      Plain text is supported but Adaptive Cards are required for UI.
+      Tabs are iframe-based and have no component requirement.
+
+  customComponents:
+    allowed: true
+    scope: tabs
+    constraints:
+      - httpsRequired
+      - sandboxOnly
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/tabs/how-to/create-personal-tab
+    rationale: |
+      Tabs are full web applications with complete freedom to use any
+      HTML/CSS/JS framework. Bots must use Adaptive Cards exclusively.
+
+  publishing:
+    sideloading:
+      name: Sideloading
+      componentRequirement: optional
+      customComponentsAllowed: true
+      reviewRequired: false
+      notes: |
+        Development/testing mode. Apps can be uploaded directly to
+        Teams tenant without review.
+
+    organizationStore:
+      name: Organization App Catalog
+      componentRequirement: required
+      customComponentsAllowed: true
+      reviewRequired: true
+      adminApprovalRequired: true
+      notes: |
+        Internal apps distributed within organization. IT admin
+        reviews and approves before catalog listing.
+
+    teamsStore:
+      name: Microsoft Teams Store
+      componentRequirement: required
+      customComponentsAllowed: true
+      reviewRequired: true
+      certificationRequired: true
+      securityReviewRequired: true
+      notes: |
+        Public app store distribution. Requires passing app validation,
+        security review, and compliance certification.
+      validationUrl: https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/appsource/prepare/teams-store-validation-guidelines
+
+  designGuidelines:
+    required: true
+    designSystem: Fluent UI
+    designSystemUrl: https://developer.microsoft.com/en-us/fluentui
+    adaptiveCardsDesigner: https://adaptivecards.io/designer/
+    guidelines:
+      - Use Adaptive Cards Designer for card development
+      - Follow Fluent UI design principles for tabs
+      - Support light and dark themes
+      - Ensure mobile responsiveness
+      - Provide clear error messages
+      - Use appropriate card schema version
+    guidelinesUrl: https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/design/design-teams-app-overview
+
+  security:
+    httpsRequired: true
+    authenticationRequired: false
+    ssoSupported: true
+    description: |
+      All tab URLs must use HTTPS. Teams supports SSO via Azure AD.
+      Bots use Bot Framework authentication. Apps can request
+      resource-specific consent (RSC) permissions.
+    rscPermissions:
+      - TeamSettings.Read.Group
+      - ChannelMessage.Read.Group
+      - TeamsActivity.Send
+      - ChatMessage.Read.Chat
+      - OnlineMeeting.ReadBasic.Chat
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/authentication/authentication
+
+renderingEngines:
+  adaptive-cards-native:
+    type: native
+    name: Adaptive Cards Native Renderer
+    description: |
+      Teams natively renders Adaptive Cards sent by bots, message
+      extensions, and webhooks. Cards are defined as JSON and rendered
+      consistently across Teams desktop, mobile, and web.
+    schemaSupport:
+      dataSchema: adaptiveCard
+      schemaUrl: http://adaptivecards.io/schemas/adaptive-card.json
+      version: "1.5"
+      customRenderers: false
+    platforms:
+      - Teams Desktop (Windows, macOS, Linux)
+      - Teams Mobile (iOS, Android)
+      - Teams Web
+      - Outlook Desktop
+      - Outlook Web
+      - Microsoft 365 App
+
+  teams-tab-iframe:
+    type: custom
+    name: Teams Tab Iframe Renderer
+    description: |
+      Tabs are rendered as web pages in sandboxed iframes. Developers
+      have full control over HTML/CSS/JS. Teams JS SDK provides bridge
+      to Teams context and capabilities.
+    sandboxing:
+      iframeSandbox: true
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+        - allow-same-origin
+      cspPolicy: "Must allow https://teams.microsoft.com as frame-ancestor"
+    platforms:
+      - Teams Desktop (Windows, macOS, Linux)
+      - Teams Mobile (iOS, Android)
+      - Teams Web
+
+jsonFormsIntegration:
+  supported: true
+  scope: tabs
+  notes: |
+    Tabs can use JSON Forms or any other form library since they're
+    full web apps. Adaptive Cards have their own input system.
+
+mcpAppsIntegration:
+  supported: false
+  notes: |
+    Not currently integrated with MCP Apps specification.
+
+extensionType: hybrid
+
+extensions:
+  declarativeSchemas:
+    enabled: true
+    scope: adaptiveCards
+    schemaFormat: json
+    description: |
+      Adaptive Cards are entirely JSON-based declarative UI. Bots
+      construct cards as JSON conforming to Adaptive Card schema.
+    validation:
+      designerTool: https://adaptivecards.io/designer/
+      sdkValidation: true
+      runtimeValidation: true
+      schemaUrl: http://adaptivecards.io/schemas/adaptive-card.json
+    schemaVersions:
+      - "1.0"
+      - "1.2"
+      - "1.3"
+      - "1.4"
+      - "1.5"
+    fallbackSupport: true
+    documentation: https://adaptivecards.io/
+
+  i18n:
+    enabled: true
+    localeDetection: automatic
+    description: |
+      Teams provides user locale via Teams JS SDK context. Apps can
+      localize tab content, bot messages, and Adaptive Card text.
+    implementation:
+      clientProvides:
+        - locale
+        - userLocale
+        - osLocale
+      developerResponsibility:
+        - Localize tab UI
+        - Localize Adaptive Card text
+        - Localize bot messages
+        - Handle RTL languages
+        - Format dates/times/numbers per locale
+    supportedLocales:
+      - en-US
+      - en-GB
+      - es-ES
+      - es-MX
+      - fr-FR
+      - fr-CA
+      - de-DE
+      - it-IT
+      - ja-JP
+      - ko-KR
+      - pt-BR
+      - ru-RU
+      - zh-CN
+      - zh-TW
+      - ar-SA
+      - cs-CZ
+      - da-DK
+      - nl-NL
+      - fi-FI
+      - he-IL
+      - hi-IN
+      - hu-HU
+      - id-ID
+      - nb-NO
+      - pl-PL
+      - pt-PT
+      - ro-RO
+      - sv-SE
+      - th-TH
+      - tr-TR
+      - uk-UA
+      - vi-VN
+    appManifest:
+      localizationInfoRequired: true
+      additionalLanguagesField: true
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/build-and-test/apps-localization
+
+  compliance:
+    enabled: true
+    description: |
+      Apps distributed via Teams Store must pass Microsoft's app
+      validation, security review, and compliance certification.
+    requirements:
+      appValidation:
+        required: true
+        scope: teamsStore
+        includes:
+          - Manifest validation
+          - Functionality testing
+          - Performance testing
+          - UI/UX review
+          - Content policy compliance
+        documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/appsource/prepare/teams-store-validation-guidelines
+
+      securityReview:
+        required: true
+        scope: teamsStore
+        includes:
+          - Data handling and privacy
+          - Authentication security
+          - API usage patterns
+          - Permission scope audit
+          - Vulnerability assessment
+
+      publisherVerification:
+        required: true
+        scope: teamsStore
+        description: |
+          Publisher must verify identity via Microsoft Partner Center.
+          Shows blue verified badge in app listing.
+
+      publisherAttestation:
+        required: true
+        scope: teamsStore
+        description: |
+          Publisher attests to security, privacy, and compliance practices.
+
+    certifications:
+      microsoft365Certification:
+        available: true
+        tier: certified
+        description: |
+          Apps can achieve Microsoft 365 Certified status by passing
+          comprehensive security, compliance, and privacy assessments.
+        url: https://learn.microsoft.com/en-us/microsoft-365-app-certification/overview
+
+      cloudSecurityAlliance:
+        available: true
+        description: CSA STAR attestation available
+
+      iso27001:
+        available: true
+        description: ISO 27001 certification for data security
+
+      soc2:
+        available: true
+        description: SOC 2 Type II attestation
+
+    dataResidency:
+      supported: true
+      description: |
+        Teams supports data residency commitments for enterprise
+        customers via Microsoft 365 data location settings.
+
+    documentation: https://learn.microsoft.com/en-us/microsoft-365-app-certification/docs/enterprise-app-certification-guide
+
+  manifest:
+    file: manifest.json
+    description: |
+      Every Teams app requires a manifest.json file defining app
+      metadata, capabilities, permissions, and resource URLs.
+    schema: https://developer.microsoft.com/json-schemas/teams/v1.24/MicrosoftTeams.schema.json
+    currentVersion: "1.24"
+    packageFormat: .zip
+    packageContents:
+      - manifest.json
+      - color.png (192x192)
+      - outline.png (32x32)
+    keyProperties:
+      - id: Unique app ID (GUID)
+      - version: App version
+      - packageName: Reverse domain notation
+      - developer: Publisher info
+      - name: App name (short, full)
+      - description: App description (short, full)
+      - icons: App icons
+      - accentColor: Brand color (hex)
+      - configurableTabs: Channel/group tabs
+      - staticTabs: Personal tabs
+      - bots: Bot configuration
+      - composeExtensions: Message extensions
+      - permissions: Requested permissions
+      - validDomains: Allowed domains
+      - webApplicationInfo: SSO configuration
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/resources/schema/manifest-schema
+
+  analytics:
+    enabled: true
+    description: |
+      Teams provides app analytics in Partner Center showing usage,
+      installations, active users, and engagement metrics.
+    metrics:
+      - Daily/Monthly Active Users (DAU/MAU)
+      - Installations and uninstalls
+      - User retention
+      - Feature usage
+      - Platform distribution (desktop/mobile/web)
+      - Geographic distribution
+      - Tenant size distribution
+    dashboard: https://partner.microsoft.com/dashboard/
+    customTelemetry:
+      supported: true
+      description: Apps can implement custom telemetry using Application Insights
+
+  testing:
+    enabled: true
+    description: Tools and methods for testing Teams apps
+    tools:
+      adaptiveCardsDesigner:
+        url: https://adaptivecards.io/designer/
+        description: Visual designer for Adaptive Cards with live preview
+        features:
+          - Visual card composition
+          - JSON export/import
+          - Sample data binding
+          - Host config preview
+          - Validation errors
+
+      teamsAppStudio:
+        deprecated: true
+        replacement: Teams Developer Portal
+        description: Legacy tool replaced by Developer Portal
+
+      developerPortal:
+        url: https://dev.teams.microsoft.com/
+        description: Web-based app management and testing platform
+        features:
+          - App manifest editor
+          - Validation tools
+          - Test in Teams
+          - App submission
+          - Analytics
+
+      teamsToolkit:
+        url: https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/teams-toolkit-fundamentals
+        description: VS Code extension for Teams app development
+        features:
+          - Project scaffolding
+          - Local debugging
+          - Azure provisioning
+          - CI/CD integration
+          - Sample apps
+
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/build-and-test/test-app-overview
+
+  accessibilityFeatures:
+    keyboardNavigation: true
+    screenReaderSupport: true
+    highContrastMode: true
+    description: |
+      Teams platform provides built-in accessibility for Adaptive Cards.
+      Tab apps must implement their own accessibility features.
+    adaptiveCardsAccessibility:
+      - Automatic screen reader support
+      - Keyboard navigation built-in
+      - High contrast theme support
+      - Focus management
+      - ARIA attributes generated
+    tabAccessibility:
+      - Developer must implement WCAG 2.1 AA compliance
+      - Use semantic HTML
+      - Provide ARIA labels
+      - Ensure keyboard navigation
+      - Support high contrast themes
+      - Test with screen readers
+    guidelines:
+      - Use label property on Adaptive Card inputs (v1.3+)
+      - Provide alt text for images
+      - Ensure sufficient color contrast
+      - Support keyboard-only navigation
+      - Provide skip links in tabs
+      - Test with Narrator, JAWS, NVDA
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/design/design-teams-app-accessibility
+
+  rateLimits:
+    description: Rate limits for Teams platform APIs
+    limits:
+      botMessages:
+        rate: "1 message per second per conversation"
+        burst: "Up to 10 messages burst"
+        documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/bots/how-to/rate-limit
+
+      graphApi:
+        rate: "Varies by endpoint and tenant"
+        description: Microsoft Graph API has per-app and per-tenant limits
+        documentation: https://learn.microsoft.com/en-us/graph/throttling
+
+      adaptiveCardRefresh:
+        rate: "1 refresh per 60 seconds per user per card"
+
+      messageExtensionQueries:
+        rate: "5 queries per second per user"
+
+    retryPolicy: "Use exponential backoff with jitter"
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/bots/how-to/rate-limit
+
+  securityFeatures:
+    authentication:
+      aadSsoSupported: true
+      oauthSupported: true
+      description: |
+        Teams supports SSO via Azure AD. Tabs can use Teams JS SDK
+        authentication namespace. Bots use Bot Framework auth.
+
+    permissions:
+      rscPermissions: true
+      description: |
+        Resource-specific consent allows apps to request granular
+        permissions for team/chat resources without admin consent.
+
+    contentSecurityPolicy:
+      required: true
+      frameAncestors: "Must allow https://teams.microsoft.com"
+
+    features:
+      - Azure AD SSO
+      - OAuth 2.0 support
+      - Resource-specific consent (RSC)
+      - Bot authentication via Bot Framework
+      - Token exchange for seamless auth
+      - Secure iframe sandboxing
+      - HTTPS requirement for all endpoints
+
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/authentication/authentication
+
+notes: |
+  Microsoft Teams represents a hybrid extensibility platform combining:
+
+  1. **Adaptive Cards** (Declarative JSON):
+     - Used by bots and message extensions
+     - JSON-based declarative UI (similar to Slack Block Kit)
+     - Native rendering across Teams, Outlook, Microsoft 365
+     - Schema version 1.5 with rich elements and actions
+     - Required for bot messages with UI
+
+  2. **Tabs** (Iframe-based):
+     - Full web applications in sandboxed iframes
+     - Complete freedom with HTML/CSS/JS frameworks
+     - Teams JS SDK provides context and capabilities
+     - Personal, channel/group, and meeting scopes
+     - Can extend to Outlook and Microsoft 365 app
+
+  3. **Bots** (Conversational + Cards):
+     - Built on Microsoft Bot Framework
+     - Send/receive Adaptive Cards for rich interactions
+     - Support 1:1, group chat, channel conversations
+     - Can be proactive or reactive
+
+  4. **Message Extensions**:
+     - Search and action commands
+     - Extend compose box and message overflow menu
+     - Return Adaptive Cards as results
+     - Built on Bot Framework protocol
+
+  5. **Meeting Extensions**:
+     - In-meeting apps, stages, and side panels
+     - Meeting stage for collaborative experiences
+     - Side panels for personal tools
+     - Pre-meeting and post-meeting tabs
+
+  Key platform characteristics:
+  - Hybrid model: Declarative (Adaptive Cards) + Custom (Tabs)
+  - Cross-Microsoft 365: Works in Teams, Outlook, M365 app
+  - Modern SDK: TeamsJS v2+ with tree-shaking support
+  - Enterprise-ready: Comprehensive compliance and security
+  - Global reach: 40+ supported locales
+  - Accessibility: Built-in for cards, developer-implemented for tabs
+
+  Development tools:
+  - Adaptive Cards Designer for visual card building
+  - Teams Developer Portal for app management
+  - Teams Toolkit for VS Code
+  - Comprehensive documentation and samples
+
+metadata:
+  fenestra:
+    createdAt: "2025-12-30"
+    author: "Fenestra Specification Team"
+    category: "Collaboration Platform"
+    tags:
+      - collaboration
+      - microsoft-365
+      - adaptive-cards
+      - iframe
+      - bots
+      - meetings
+      - hybrid
+    relatedPlatforms:
+      - Slack (similar declarative UI with Block Kit)
+      - Discord (bots and embeds)
+      - Zoom Apps (meeting extensions)
+    references:
+      - https://learn.microsoft.com/en-us/microsoftteams/platform/
+      - https://adaptivecards.io/
+      - https://learn.microsoft.com/en-us/javascript/api/overview/msteams-client
+      - https://dev.botframework.com/

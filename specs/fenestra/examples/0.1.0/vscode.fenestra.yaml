@@ -1,0 +1,1184 @@
+# Fenestra Document: Visual Studio Code Extension Platform
+#
+# VS Code represents a dual-execution model with Extension Host + Webview architecture.
+# Extensions run in a Node.js Extension Host process with access to the vscode API,
+# while custom UI can be rendered in sandboxed Webview iframes.
+
+fenestra: "0.1.0"
+
+info:
+  title: Visual Studio Code Extension Platform
+  version: "1.0.0"
+  description: |
+    Visual Studio Code's Extension API enables developers to extend the editor
+    with new functionality through a dual-architecture model.
+
+    Key characteristics:
+    - Extension Host process (Node.js) for extension logic and VS Code API access
+    - Webview panels (sandboxed iframes) for custom HTML/CSS/JS UI
+    - Communication via postMessage between Extension Host and Webviews
+    - Webview UI Toolkit for consistent, accessible UI components
+    - Multiple contribution points (commands, views, editors, etc.)
+    - Rich extension capabilities: language support, debugging, source control, and more
+
+  contact:
+    name: VS Code Team
+    url: https://code.visualstudio.com/api
+    email: vscode@microsoft.com
+
+platform:
+  name: Visual Studio Code
+  vendor: Microsoft Corporation
+  documentation: https://code.visualstudio.com/api
+  appMarketplace: https://marketplace.visualstudio.com/vscode
+
+sdks:
+  vscode-api:
+    name: VS Code Extension API
+    packageManager: npm
+    package: "vscode"
+    typesPackage: "@types/vscode"
+    version: "^1.85.0"
+    documentation: https://code.visualstudio.com/api/references/vscode-api
+    description: |
+      The core VS Code Extension API. Extensions import this module to access
+      all VS Code capabilities including commands, windows, editors, workspace,
+      languages, debugging, and more.
+
+      Note: The 'vscode' module is provided by the Extension Host runtime and
+      should be declared as a dependency but not bundled.
+    exports:
+      commands:
+        type: utility
+        description: Execute and register commands (namespace)
+      window:
+        type: utility
+        description: Window management, UI elements, messages, input boxes (namespace)
+      workspace:
+        type: utility
+        description: Workspace folders, file system, configuration (namespace)
+      languages:
+        type: utility
+        description: Language features, diagnostics, hover, completion (namespace)
+      debug:
+        type: utility
+        description: Debugging sessions and configurations (namespace)
+      scm:
+        type: utility
+        description: Source control management (namespace)
+      extensions:
+        type: utility
+        description: Access to other extensions (namespace)
+      TreeView:
+        type: type
+        description: Tree view in sidebar or panel (class)
+      TreeDataProvider:
+        type: type
+        description: Data provider for tree views (interface)
+      WebviewPanel:
+        type: type
+        description: Webview panel with custom HTML content (interface)
+      CustomTextEditorProvider:
+        type: type
+        description: Custom editor for text files (interface)
+      CustomReadonlyEditorProvider:
+        type: type
+        description: Custom read-only editor provider (interface)
+      StatusBarItem:
+        type: type
+        description: Status bar item (class)
+      QuickPick:
+        type: type
+        description: Quick pick UI for user selection (interface)
+      InputBox:
+        type: type
+        description: Input box for user text entry (interface)
+      Uri:
+        type: type
+        description: Universal resource identifier (class)
+      Range:
+        type: type
+        description: Text range with start and end positions (class)
+      Position:
+        type: type
+        description: Position in a text document (class)
+      TextDocument:
+        type: type
+        description: Text document representation (interface)
+
+  webview-ui-toolkit:
+    name: Webview UI Toolkit
+    packageManager: npm
+    package: "@vscode/webview-ui-toolkit"
+    version: "^1.4.0"
+    repository: https://github.com/microsoft/vscode-webview-ui-toolkit
+    documentation: https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
+    description: |
+      A component library for building webview-based extensions. Provides
+      Web Components that match VS Code's look and feel with built-in theming
+      support (light, dark, high contrast).
+
+      Uses FAST Foundation under the hood for accessible, performant components.
+    exports:
+      provideVSCodeDesignSystem:
+        type: utility
+        description: Initialize the design system for webview (function)
+      vsCodeButton:
+        type: component
+        description: Button component
+      vsCodeCheckbox:
+        type: component
+        description: Checkbox component
+      vsCodeDataGrid:
+        type: component
+        description: Data grid/table component
+      vsCodeDropdown:
+        type: component
+        description: Dropdown/select component
+      vsCodeLink:
+        type: component
+        description: Hyperlink component
+      vsCodeOption:
+        type: component
+        description: Option for dropdowns
+      vsCodePanels:
+        type: component
+        description: Tab panels container
+      vsCodeProgressRing:
+        type: component
+        description: Loading spinner
+      vsCodeRadio:
+        type: component
+        description: Radio button
+      vsCodeRadioGroup:
+        type: component
+        description: Radio button group
+      vsCodeTextArea:
+        type: component
+        description: Multi-line text input
+      vsCodeTextField:
+        type: component
+        description: Single-line text input
+      vsCodeDivider:
+        type: component
+        description: Visual divider
+      vsCodeBadge:
+        type: component
+        description: Badge/pill component
+      vsCodeTag:
+        type: component
+        description: Tag component
+
+  yeoman-generator:
+    name: Yeoman VS Code Extension Generator
+    packageManager: npm
+    package: "generator-code"
+    version: "^1.8.0"
+    repository: https://github.com/microsoft/vscode-generator-code
+    documentation: https://code.visualstudio.com/api/get-started/your-first-extension
+    description: |
+      Yeoman generator for scaffolding new VS Code extensions.
+      Supports TypeScript, JavaScript, and various extension types.
+    starterTemplate:
+      command: "npm install -g yo generator-code && yo code"
+      documentation: https://code.visualstudio.com/api/get-started/your-first-extension
+
+  vsce:
+    name: Visual Studio Code Extensions CLI
+    packageManager: npm
+    package: "@vscode/vsce"
+    version: "^2.22.0"
+    repository: https://github.com/microsoft/vscode-vsce
+    documentation: https://code.visualstudio.com/api/working-with-extensions/publishing-extension
+    description: |
+      Command-line tool for packaging, publishing, and managing VS Code extensions.
+    cliTool:
+      package: "@vscode/vsce"
+      globalInstall: true
+      commands:
+        package: "Package extension into .vsix file"
+        publish: "Publish extension to marketplace"
+        ls: "List packaged files"
+
+componentCatalog:
+  categories:
+    action:
+      name: Actions
+      description: Interactive button and action components
+      components: [button, link]
+
+    input:
+      name: Inputs
+      description: Form input controls
+      components: [textField, textArea, dropdown, checkbox, radio, radioGroup]
+
+    data:
+      name: Data Display
+      description: Components for displaying data
+      components: [dataGrid, badge, tag, progressRing]
+
+    layout:
+      name: Layout
+      description: Layout and container components
+      components: [panels, divider]
+
+    treeView:
+      name: Tree Views
+      description: Hierarchical tree view components
+      components: [treeView, treeItem]
+
+    editor:
+      name: Editor Components
+      description: Editor-related UI components
+      components: [statusBarItem, quickPick, inputBox]
+
+  components:
+    button:
+      name: Button
+      description: VS Code styled button for webviews
+      category: action
+      sdkBinding:
+        sdk: webview-ui-toolkit
+        export: vsCodeButton
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+      props:
+        appearance:
+          type: string
+          enum: [primary, secondary, icon]
+          description: Button visual style
+        disabled:
+          type: boolean
+          description: Whether button is disabled
+        autofocus:
+          type: boolean
+          description: Auto-focus on load
+      variants:
+        - primary
+        - secondary
+        - icon
+      examples:
+        - title: Primary Button
+          code: |
+            <vscode-button>Click Me</vscode-button>
+          language: html
+        - title: Icon Button
+          code: |
+            <vscode-button appearance="icon">
+              <span class="codicon codicon-add"></span>
+            </vscode-button>
+          language: html
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        ariaSupport: true
+
+    textField:
+      name: Text Field
+      description: Single-line text input
+      category: input
+      sdkBinding:
+        sdk: webview-ui-toolkit
+        export: vsCodeTextField
+      webStandardMapping:
+        htmlElement: input
+        inputType: text
+        ariaRole: textbox
+        semanticType: input
+      props:
+        value:
+          type: string
+          description: Input value
+        placeholder:
+          type: string
+          description: Placeholder text
+        disabled:
+          type: boolean
+        readonly:
+          type: boolean
+        maxlength:
+          type: number
+      examples:
+        - title: Basic Text Field
+          code: |
+            <vscode-text-field placeholder="Enter text"></vscode-text-field>
+          language: html
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        labelRequired: true
+
+    textArea:
+      name: Text Area
+      description: Multi-line text input
+      category: input
+      sdkBinding:
+        sdk: webview-ui-toolkit
+        export: vsCodeTextArea
+      webStandardMapping:
+        htmlElement: textarea
+        ariaRole: textbox
+        semanticType: input
+      props:
+        value:
+          type: string
+        placeholder:
+          type: string
+        rows:
+          type: number
+        cols:
+          type: number
+        resize:
+          type: string
+          enum: [none, both, horizontal, vertical]
+      examples:
+        - title: Text Area
+          code: |
+            <vscode-text-area
+              placeholder="Enter description"
+              rows="5">
+            </vscode-text-area>
+          language: html
+
+    dropdown:
+      name: Dropdown
+      description: Dropdown select menu
+      category: input
+      sdkBinding:
+        sdk: webview-ui-toolkit
+        export: vsCodeDropdown
+      webStandardMapping:
+        htmlElement: select
+        ariaRole: listbox
+        semanticType: input
+      props:
+        disabled:
+          type: boolean
+        position:
+          type: string
+          enum: [above, below]
+      examples:
+        - title: Dropdown
+          code: |
+            <vscode-dropdown>
+              <vscode-option>Option 1</vscode-option>
+              <vscode-option>Option 2</vscode-option>
+              <vscode-option>Option 3</vscode-option>
+            </vscode-dropdown>
+          language: html
+
+    checkbox:
+      name: Checkbox
+      description: Checkbox input
+      category: input
+      sdkBinding:
+        sdk: webview-ui-toolkit
+        export: vsCodeCheckbox
+      webStandardMapping:
+        htmlElement: input[type="checkbox"]
+        ariaRole: checkbox
+        semanticType: input
+      props:
+        checked:
+          type: boolean
+        disabled:
+          type: boolean
+      examples:
+        - title: Checkbox
+          code: |
+            <vscode-checkbox>Enable feature</vscode-checkbox>
+          language: html
+
+    radio:
+      name: Radio Button
+      description: Single radio button
+      category: input
+      sdkBinding:
+        sdk: webview-ui-toolkit
+        export: vsCodeRadio
+      webStandardMapping:
+        htmlElement: input[type="radio"]
+        ariaRole: radio
+        semanticType: input
+      examples:
+        - title: Radio Button
+          code: |
+            <vscode-radio name="choice" value="1">Choice 1</vscode-radio>
+          language: html
+
+    radioGroup:
+      name: Radio Group
+      description: Group of radio buttons
+      category: input
+      sdkBinding:
+        sdk: webview-ui-toolkit
+        export: vsCodeRadioGroup
+      webStandardMapping:
+        ariaRole: radiogroup
+        semanticType: input
+      examples:
+        - title: Radio Group
+          code: |
+            <vscode-radio-group>
+              <label slot="label">Choose one:</label>
+              <vscode-radio value="1">Option 1</vscode-radio>
+              <vscode-radio value="2">Option 2</vscode-radio>
+              <vscode-radio value="3">Option 3</vscode-radio>
+            </vscode-radio-group>
+          language: html
+
+    dataGrid:
+      name: Data Grid
+      description: Table/grid for displaying data
+      category: data
+      sdkBinding:
+        sdk: webview-ui-toolkit
+        export: vsCodeDataGrid
+      webStandardMapping:
+        htmlElement: table
+        ariaRole: grid
+        semanticType: display
+      props:
+        gridTemplateColumns:
+          type: string
+          description: CSS grid template columns
+        generateHeader:
+          type: string
+          enum: [default, none, sticky]
+      examples:
+        - title: Data Grid
+          code: |
+            <vscode-data-grid>
+              <vscode-data-grid-row row-type="header">
+                <vscode-data-grid-cell cell-type="columnheader">Name</vscode-data-grid-cell>
+                <vscode-data-grid-cell cell-type="columnheader">Value</vscode-data-grid-cell>
+              </vscode-data-grid-row>
+              <vscode-data-grid-row>
+                <vscode-data-grid-cell>Item 1</vscode-data-grid-cell>
+                <vscode-data-grid-cell>100</vscode-data-grid-cell>
+              </vscode-data-grid-row>
+            </vscode-data-grid>
+          language: html
+
+    panels:
+      name: Panels
+      description: Tab panels for organizing content
+      category: layout
+      sdkBinding:
+        sdk: webview-ui-toolkit
+        export: vsCodePanels
+      webStandardMapping:
+        ariaRole: tablist
+        semanticType: navigation
+      examples:
+        - title: Tab Panels
+          code: |
+            <vscode-panels>
+              <vscode-panel-tab>Tab 1</vscode-panel-tab>
+              <vscode-panel-tab>Tab 2</vscode-panel-tab>
+              <vscode-panel-view>Content 1</vscode-panel-view>
+              <vscode-panel-view>Content 2</vscode-panel-view>
+            </vscode-panels>
+          language: html
+
+    badge:
+      name: Badge
+      description: Badge/pill component for counts or status
+      category: data
+      sdkBinding:
+        sdk: webview-ui-toolkit
+        export: vsCodeBadge
+      webStandardMapping:
+        htmlElement: span
+        semanticType: display
+      examples:
+        - title: Badge
+          code: |
+            <vscode-badge>5</vscode-badge>
+          language: html
+
+    divider:
+      name: Divider
+      description: Visual separator
+      category: layout
+      sdkBinding:
+        sdk: webview-ui-toolkit
+        export: vsCodeDivider
+      webStandardMapping:
+        htmlElement: hr
+        ariaRole: separator
+        semanticType: layout
+      examples:
+        - title: Divider
+          code: |
+            <vscode-divider></vscode-divider>
+          language: html
+
+    progressRing:
+      name: Progress Ring
+      description: Loading/progress indicator
+      category: data
+      sdkBinding:
+        sdk: webview-ui-toolkit
+        export: vsCodeProgressRing
+      webStandardMapping:
+        ariaRole: progressbar
+        semanticType: display
+      examples:
+        - title: Progress Ring
+          code: |
+            <vscode-progress-ring></vscode-progress-ring>
+          language: html
+
+    treeView:
+      name: Tree View
+      description: Hierarchical tree view in sidebar or panel
+      category: treeView
+      sdkBinding:
+        sdk: vscode-api
+        export: TreeView
+      examples:
+        - title: Tree View Registration
+          code: |
+            const treeDataProvider = new MyTreeDataProvider();
+            const treeView = vscode.window.createTreeView('myView', {
+              treeDataProvider
+            });
+          language: typescript
+
+    statusBarItem:
+      name: Status Bar Item
+      description: Item in the status bar
+      category: editor
+      sdkBinding:
+        sdk: vscode-api
+        export: StatusBarItem
+      examples:
+        - title: Status Bar Item
+          code: |
+            const statusBarItem = vscode.window.createStatusBarItem(
+              vscode.StatusBarAlignment.Right,
+              100
+            );
+            statusBarItem.text = "$(check) Ready";
+            statusBarItem.show();
+          language: typescript
+
+    quickPick:
+      name: Quick Pick
+      description: Quick pick UI for user selection
+      category: editor
+      sdkBinding:
+        sdk: vscode-api
+        export: QuickPick
+      examples:
+        - title: Quick Pick
+          code: |
+            const quickPick = vscode.window.createQuickPick();
+            quickPick.items = [
+              { label: 'Option 1' },
+              { label: 'Option 2' }
+            ];
+            quickPick.onDidChangeSelection(selection => {
+              console.log(selection[0].label);
+            });
+            quickPick.show();
+          language: typescript
+
+policies:
+  componentRequirement:
+    level: recommended
+    scope: all
+    rationale: |
+      VS Code API is REQUIRED for extension functionality, but UI components
+      are RECOMMENDED, not required. The Webview UI Toolkit is recommended
+      for webviews to ensure consistent look and feel, but developers can
+      use custom HTML/CSS or other frameworks.
+
+  customComponents:
+    allowed: true
+    constraints:
+      - sandboxOnly
+    registrationRequired: false
+    approvalRequired: false
+    documentation: https://code.visualstudio.com/api/extension-guides/webview
+    rationale: |
+      Extensions can use custom UI in webviews. The Extension Host runs
+      extension code in a Node.js process with VS Code API access, while
+      webviews run custom HTML/CSS/JS in sandboxed iframes.
+
+  publishing:
+    privateExtensions:
+      componentRequirement: optional
+      customComponentsAllowed: true
+      reviewRequired: false
+      notes: |
+        Private extensions (.vsix files) can be installed locally or
+        distributed privately without marketplace review.
+
+    publicExtensions:
+      componentRequirement: optional
+      customComponentsAllowed: true
+      reviewRequired: true
+      notes: |
+        Public marketplace extensions undergo automated and manual review
+        for security, quality, and adherence to guidelines.
+
+    verifiedPublisher:
+      certificationRequired: true
+      notes: |
+        Verified publisher status requires domain verification and
+        adherence to publisher agreement.
+
+  designGuidelines:
+    required: false
+    designSystem: "Webview UI Toolkit"
+    designSystemUrl: https://github.com/microsoft/vscode-webview-ui-toolkit
+    designTokensProvided: true
+    guidelines:
+      - Use Webview UI Toolkit for consistent theming
+      - Support light, dark, and high contrast themes
+      - Follow VS Code UX guidelines for extensions
+      - Use Codicons for icons
+      - Ensure keyboard accessibility
+
+  security:
+    sandbox: true
+    sandboxDescription: |
+      Webviews run in sandboxed iframes with limited permissions.
+      Extension Host code runs in a separate Node.js process.
+      Communication between Extension Host and Webview uses postMessage.
+    cspPolicy: "default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' ${webview.cspSource}; img-src ${webview.cspSource} https: data:;"
+    securityGuidelines: https://code.visualstudio.com/api/extension-guides/webview#security
+
+extensionPoints:
+  - id: sidebar-webview
+    name: Sidebar Webview Panel
+    type: sidebar
+    extensionType: iframe
+    description: |
+      Custom webview panel in the sidebar. Extensions register a view
+      in the activity bar and provide webview content.
+    supportedComponents:
+      - all webview components
+    constraints:
+      resizable: true
+      responsive: true
+    context:
+      provides:
+        - workspace
+        - activeEditor
+        - selection
+        - theme
+      actions:
+        - postMessage
+        - receiveMessage
+        - setState
+        - getState
+    extensionTypeConfig:
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+      communication:
+        globalObject: "acquireVsCodeApi"
+        initialization:
+          method: "acquireVsCodeApi() in webview"
+          async: false
+        asyncPattern: promises
+        capabilities:
+          context: true
+          uiActions: true
+          dataActions: true
+          events: true
+    examples:
+      - title: Webview Panel Registration
+        code: |
+          const provider = {
+            resolveWebviewView(webviewView) {
+              webviewView.webview.options = {
+                enableScripts: true
+              };
+              webviewView.webview.html = getWebviewContent();
+            }
+          };
+          vscode.window.registerWebviewViewProvider('myView', provider);
+        language: typescript
+
+  - id: editor-webview
+    name: Editor Webview Panel
+    type: panel
+    extensionType: iframe
+    description: |
+      Standalone webview panel that opens in the editor area.
+      Can be used for custom editors, dashboards, or tools.
+    supportedComponents:
+      - all webview components
+    constraints:
+      resizable: true
+      responsive: true
+      multiple: true
+    context:
+      provides:
+        - workspace
+        - theme
+      actions:
+        - postMessage
+        - receiveMessage
+        - setState
+        - getState
+    extensionTypeConfig:
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+      communication:
+        globalObject: "acquireVsCodeApi"
+    examples:
+      - title: Create Webview Panel
+        code: |
+          const panel = vscode.window.createWebviewPanel(
+            'myPanel',
+            'My Panel',
+            vscode.ViewColumn.One,
+            {
+              enableScripts: true
+            }
+          );
+          panel.webview.html = getWebviewContent();
+        language: typescript
+
+  - id: custom-editor
+    name: Custom Editor
+    type: panel
+    extensionType: codedComponents
+    description: |
+      Custom editor for specific file types. Can be text-based or
+      fully custom webview-based editor.
+    supportedComponents:
+      - all webview components (for webview editors)
+    constraints:
+      fileTypes: true
+      multiple: true
+    context:
+      provides:
+        - document
+        - workspace
+        - theme
+      actions:
+        - edit
+        - save
+        - undo
+        - redo
+    extensionTypeConfig:
+      sdk: vscode-api
+      runtime:
+        type: directExecution
+        bundling: developerBuild
+    examples:
+      - title: Custom Text Editor
+        code: |
+          class MyEditorProvider implements vscode.CustomTextEditorProvider {
+            resolveCustomTextEditor(document, webviewPanel) {
+              webviewPanel.webview.options = {
+                enableScripts: true
+              };
+              webviewPanel.webview.html = getEditorHtml();
+            }
+          }
+          vscode.window.registerCustomEditorProvider(
+            'myEditor.edit',
+            new MyEditorProvider()
+          );
+        language: typescript
+
+  - id: tree-view
+    name: Tree View
+    type: sidebar
+    extensionType: codedComponents
+    description: |
+      Hierarchical tree view in sidebar or panel. Uses TreeDataProvider
+      to supply data, VS Code renders the tree natively.
+    supportedComponents:
+      - treeView
+      - treeItem
+    constraints:
+      resizable: true
+      collapsible: true
+    context:
+      provides:
+        - selection
+        - workspace
+      actions:
+        - reveal
+        - refresh
+    extensionTypeConfig:
+      sdk: vscode-api
+      runtime:
+        type: directExecution
+        bundling: developerBuild
+    examples:
+      - title: Tree View
+        code: |
+          class MyTreeDataProvider implements vscode.TreeDataProvider<MyItem> {
+            getTreeItem(element) {
+              return element;
+            }
+            getChildren(element) {
+              return this.getChildElements(element);
+            }
+          }
+          vscode.window.createTreeView('myView', {
+            treeDataProvider: new MyTreeDataProvider()
+          });
+        language: typescript
+
+  - id: status-bar
+    name: Status Bar
+    type: toolbar
+    extensionType: codedComponents
+    description: |
+      Items in the status bar at the bottom of the window.
+      Can show text, icons, and be clickable.
+    supportedComponents:
+      - statusBarItem
+    constraints:
+      alignment: true
+      priority: true
+    context:
+      provides:
+        - workspace
+        - activeEditor
+      actions:
+        - show
+        - hide
+        - dispose
+    extensionTypeConfig:
+      sdk: vscode-api
+    examples:
+      - title: Status Bar Item
+        code: |
+          const item = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Right,
+            100
+          );
+          item.text = "$(rocket) Extension";
+          item.command = 'extension.command';
+          item.show();
+        language: typescript
+
+  - id: activity-bar
+    name: Activity Bar
+    type: toolbar
+    extensionType: codedComponents
+    description: |
+      Icon in the activity bar (left side) that opens a view container
+      in the sidebar. Defined via package.json contribution points.
+    supportedComponents: []
+    constraints:
+      iconRequired: true
+    context:
+      provides:
+        - viewContainer
+    extensionTypeConfig:
+      sdk: vscode-api
+
+  - id: quick-pick
+    name: Quick Pick
+    type: modal
+    extensionType: codedComponents
+    description: |
+      Quick pick UI for user selection. Native VS Code component
+      rendered by the editor, controlled via Extension API.
+    supportedComponents:
+      - quickPick
+    constraints:
+      searchable: true
+      multiSelect: true
+    context:
+      provides:
+        - workspace
+      actions:
+        - show
+        - hide
+        - dispose
+    extensionTypeConfig:
+      sdk: vscode-api
+
+  - id: input-box
+    name: Input Box
+    type: modal
+    extensionType: codedComponents
+    description: |
+      Input box for text entry. Native VS Code component.
+    supportedComponents:
+      - inputBox
+    constraints:
+      validation: true
+    context:
+      provides:
+        - workspace
+    extensionTypeConfig:
+      sdk: vscode-api
+
+renderingEngines:
+  webview-iframe:
+    type: custom
+    name: Webview (HTML + CSS + JS in Iframe)
+    description: |
+      Webviews run custom HTML/CSS/JavaScript in sandboxed iframes.
+      Developers can use Webview UI Toolkit, React, Vue, or any framework.
+      Communication with Extension Host via postMessage.
+    sandboxing:
+      iframeSandbox: true
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+      cspPolicy: "default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'"
+    platforms:
+      - VS Code Desktop (Windows, macOS, Linux)
+      - VS Code Web (browser)
+
+  native-vscode:
+    type: custom
+    name: Native VS Code Components
+    description: |
+      Tree views, status bar items, quick picks, and other native UI
+      elements are rendered by VS Code itself. Extensions provide data
+      and behavior via the Extension API.
+    platforms:
+      - VS Code Desktop (Windows, macOS, Linux)
+      - VS Code Web (browser)
+
+architecture:
+  executionModel: dual-process
+  description: |
+    VS Code extensions use a dual-process architecture:
+
+    1. Extension Host (Node.js): Runs extension code with access to VS Code API
+       - Full VS Code API access (vscode.*)
+       - File system access, Node.js capabilities
+       - Can open webviews and create UI elements
+       - No direct DOM access to editor
+
+    2. Webview (Sandboxed Iframe): Custom HTML/CSS/JS for rich UI
+       - Full DOM access for custom rendering
+       - No direct VS Code API access
+       - Communicates with Extension Host via postMessage
+       - Uses acquireVsCodeApi() for message passing
+
+    This separation ensures security while allowing rich custom UIs.
+
+  communication:
+    protocol: postMessage
+    description: |
+      Extension Host and Webview communicate via window.postMessage API.
+
+      Extension Host -> Webview: webview.postMessage(data)
+      Webview -> Extension Host: vscode.postMessage(data)
+
+      Extension Host listens: webview.onDidReceiveMessage(msg => { ... })
+      Webview listens: window.addEventListener('message', event => { ... })
+
+      Webview gets API handle: const vscode = acquireVsCodeApi()
+
+extensionType: codedComponents
+
+jsonFormsIntegration:
+  supported: true
+  rendererSet: custom
+  customRenderersAllowed: true
+  notes: |
+    Developers can integrate JSON Forms in webviews with custom renderers
+    using Webview UI Toolkit or other frameworks.
+
+mcpAppsIntegration:
+  supported: false
+  notes: |
+    Not currently integrated with MCP Apps specification, but webview
+    architecture could potentially support MCP Apps UI resources.
+
+extensions:
+  compliance:
+    marketplaceReview:
+      required: true
+      scope: publicExtensions
+      description: |
+        All public marketplace extensions undergo review:
+        1. Automated security scanning
+        2. Malware detection
+        3. Code analysis for suspicious patterns
+        4. Manual review for quality and functionality
+        5. Verification of description accuracy
+      timeline: "Typically 1-3 business days"
+      documentation: https://code.visualstudio.com/api/working-with-extensions/publishing-extension#review-extension-submission
+
+    securityRequirements:
+      - name: Content Security Policy
+        description: Webviews must use restrictive CSP
+        required: true
+      - name: Sandboxing
+        description: Webviews run in sandboxed iframes
+        required: true
+      - name: API Access
+        description: Only access VS Code API from Extension Host
+        required: true
+      - name: Data Privacy
+        description: No unauthorized telemetry or data collection
+        required: true
+      - name: Sensitive Data
+        description: Secure handling of credentials and tokens
+        required: true
+
+    securityGuidelines:
+      url: https://code.visualstudio.com/api/extension-guides/webview#security
+      requirements:
+        - Use Content Security Policy in all webviews
+        - Sanitize user input to prevent XSS
+        - Use nonces for inline scripts
+        - Validate messages from webviews
+        - Store secrets securely using VS Code's SecretStorage API
+        - Disable insecure content in webviews
+        - Follow principle of least privilege
+
+    accessibility:
+      platformStandard: "WCAG 2.1 AA"
+      requirements:
+        - Keyboard navigation support
+        - Screen reader compatibility
+        - High contrast theme support
+        - Focus indicators
+        - Semantic HTML in webviews
+        - ARIA labels where needed
+      documentation: https://code.visualstudio.com/api/extension-guides/accessibility
+
+  manifest:
+    file: package.json
+    description: |
+      Every extension requires a package.json manifest defining:
+      - Extension metadata (name, version, publisher, description)
+      - Activation events (when extension loads)
+      - Contribution points (commands, views, languages, etc.)
+      - Dependencies and engines
+      - Extension capabilities and permissions
+    schema:
+      name:
+        type: string
+        required: true
+        description: Extension name (lowercase, no spaces)
+      displayName:
+        type: string
+        required: true
+        description: Human-readable display name
+      version:
+        type: string
+        required: true
+        description: Semantic version
+      publisher:
+        type: string
+        required: true
+        description: Publisher identifier
+      engines:
+        type: object
+        required: true
+        description: VS Code version compatibility
+      activationEvents:
+        type: array
+        required: false
+        description: Events that trigger extension activation
+      main:
+        type: string
+        required: false
+        description: Entry point for Extension Host code
+      contributes:
+        type: object
+        required: false
+        description: Contribution points (commands, views, etc.)
+      categories:
+        type: array
+        required: false
+        description: Extension categories for marketplace
+      icon:
+        type: string
+        required: false
+        description: Path to extension icon
+
+  developmentTools:
+    - name: Extension Generator
+      description: Yeoman generator for scaffolding extensions
+      package: "generator-code"
+      command: "yo code"
+      url: https://github.com/microsoft/vscode-generator-code
+
+    - name: vsce (Publishing Tool)
+      description: CLI for packaging and publishing extensions
+      package: "@vscode/vsce"
+      command: "vsce package / vsce publish"
+      url: https://github.com/microsoft/vscode-vsce
+
+    - name: Extension Test Runner
+      description: Test framework for extensions
+      package: "@vscode/test-electron"
+      url: https://github.com/microsoft/vscode-test
+
+    - name: Webview UI Toolkit Samples
+      description: Sample code and documentation
+      url: https://github.com/microsoft/vscode-webview-ui-toolkit-samples
+
+    - name: Extension Samples Repository
+      description: Official extension samples
+      url: https://github.com/microsoft/vscode-extension-samples
+
+  theming:
+    enabled: true
+    description: |
+      VS Code supports multiple color themes (light, dark, high contrast).
+      Extensions should respect the active theme.
+    implementation:
+      webviewSupport: true
+      cssVariables: true
+      themingApi: true
+    colorThemes:
+      - Light (Visual Studio)
+      - Dark (Visual Studio Dark)
+      - High Contrast Light
+      - High Contrast Dark
+    guidelines:
+      - Use CSS variables for theming in webviews
+      - Support all theme types
+      - Use theme colors from VS Code API
+      - Test in all theme modes
+
+notes: |
+  Visual Studio Code's Extension Platform provides a sophisticated dual-process
+  architecture that balances security, performance, and flexibility.
+
+  Key characteristics:
+  - Extension Host: Node.js process for extension logic with full VS Code API
+  - Webview: Sandboxed iframe for custom UI with HTML/CSS/JS
+  - Communication: postMessage for Extension Host <-> Webview communication
+  - Webview UI Toolkit: Optional but recommended for consistent, themed UI
+  - Native Components: Tree views, status bar, quick picks rendered by VS Code
+  - Contribution Points: Extensive customization via package.json
+  - Security: Sandboxed webviews, CSP enforcement, marketplace review
+
+  The architecture allows rich custom UIs while maintaining editor security and
+  performance. Extensions can choose between native VS Code components (tree views,
+  status bar) or fully custom webview UIs.
+
+metadata:
+  fenestra:
+    createdAt: "2025-12-30"
+    author: "Fenestra Specification Team"
+    category: "Development Tools"
+    tags:
+      - code-editor
+      - ide
+      - extensions
+      - webview
+      - desktop-app
+    relatedPlatforms:
+      - JetBrains IDE Plugins
+      - Eclipse Plugins
+      - Atom Packages
+      - Sublime Text Packages

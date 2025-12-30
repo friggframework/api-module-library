@@ -1,0 +1,1118 @@
+# Fenestra Document: Salesforce Lightning Web Components (LWC)
+#
+# Salesforce LWC represents a component-based ecosystem with both required base
+# components and the flexibility to create custom components following strict
+# guidelines and security policies.
+
+fenestra: "0.1.0"
+
+info:
+  title: Salesforce Lightning Web Components Ecosystem
+  version: "1.0.0"
+  description: |
+    Salesforce Lightning Web Components (LWC) is a modern framework for building
+    enterprise applications on the Salesforce Platform using standard Web Components.
+
+    LWC leverages core Web Components standards (Custom Elements, Shadow DOM,
+    Templates, and ES Modules) to deliver fast, standards-based components that
+    work seamlessly within Salesforce's Lightning Experience and Experience Cloud.
+
+    Key characteristics:
+    - Built on Web Components standards
+    - Required use of Salesforce Lightning Design System (SLDS) for AppExchange apps
+    - Extensive base component library (lightning namespace)
+    - Strict security model with LockerService
+    - Governor limits enforce efficient code
+    - Mandatory security review for AppExchange publication
+
+platform:
+  name: Salesforce Platform
+  vendor: Salesforce, Inc.
+  documentation: https://developer.salesforce.com/docs/platform/lwc/overview
+  componentLibrary: https://developer.salesforce.com/docs/component-library
+  appMarketplace: https://appexchange.salesforce.com/
+  designSystem: https://www.lightningdesignsystem.com/
+
+sdks:
+  lightning-base-components:
+    name: Lightning Base Components
+    packageManager: salesforce
+    package: lightning/*
+    version: API 60.0
+    documentation: https://developer.salesforce.com/docs/component-library/overview/components
+    description: |
+      Base components provided by Salesforce in the lightning namespace.
+      These components are automatically available in all LWC components.
+    exports:
+      # Action Components
+      lightning-button:
+        type: component
+        description: Standard button with multiple variants
+        category: action
+      lightning-button-icon:
+        type: component
+        description: Icon-only button
+        category: action
+      lightning-button-group:
+        type: component
+        description: Group of related buttons
+        category: action
+      lightning-button-menu:
+        type: component
+        description: Dropdown menu button
+        category: action
+      lightning-button-stateful:
+        type: component
+        description: Button with selected/unselected states
+        category: action
+
+      # Input Components
+      lightning-input:
+        type: component
+        description: Input field supporting multiple types (text, number, email, etc.)
+        category: input
+      lightning-textarea:
+        type: component
+        description: Multi-line text input
+        category: input
+      lightning-combobox:
+        type: component
+        description: Dropdown selection with search
+        category: input
+      lightning-dual-listbox:
+        type: component
+        description: Dual list selection
+        category: input
+      lightning-checkbox-group:
+        type: component
+        description: Group of checkboxes
+        category: input
+      lightning-radio-group:
+        type: component
+        description: Radio button group
+        category: input
+      lightning-slider:
+        type: component
+        description: Range slider input
+        category: input
+      lightning-input-field:
+        type: component
+        description: Field-aware input for record forms
+        category: input
+
+      # Display Components
+      lightning-card:
+        type: component
+        description: Container with header, body, and footer
+        category: display
+      lightning-accordion:
+        type: component
+        description: Collapsible sections
+        category: display
+      lightning-avatar:
+        type: component
+        description: User or entity avatar
+        category: display
+      lightning-badge:
+        type: component
+        description: Status or label badge
+        category: display
+      lightning-pill:
+        type: component
+        description: Removable tag or label
+        category: display
+      lightning-formatted-text:
+        type: component
+        description: Display formatted text
+        category: display
+      lightning-formatted-number:
+        type: component
+        description: Display formatted numbers
+        category: display
+      lightning-formatted-date-time:
+        type: component
+        description: Display formatted dates and times
+        category: display
+      lightning-formatted-email:
+        type: component
+        description: Display email with mailto link
+        category: display
+      lightning-formatted-phone:
+        type: component
+        description: Display phone with tel link
+        category: display
+      lightning-formatted-url:
+        type: component
+        description: Display formatted URL
+        category: display
+      lightning-icon:
+        type: component
+        description: Display SLDS icons
+        category: display
+      lightning-progress-indicator:
+        type: component
+        description: Step-based progress indicator
+        category: display
+      lightning-progress-bar:
+        type: component
+        description: Linear progress bar
+        category: display
+      lightning-spinner:
+        type: component
+        description: Loading spinner
+        category: display
+
+      # Data Display Components
+      lightning-datatable:
+        type: component
+        description: Rich data table with sorting, inline editing
+        category: data
+      lightning-tree:
+        type: component
+        description: Hierarchical tree view
+        category: data
+      lightning-tree-grid:
+        type: component
+        description: Tree view with data table features
+        category: data
+
+      # Layout Components
+      lightning-layout:
+        type: component
+        description: Grid-based layout container
+        category: layout
+      lightning-layout-item:
+        type: component
+        description: Item within lightning-layout
+        category: layout
+      lightning-tab:
+        type: component
+        description: Tab within tabset
+        category: layout
+      lightning-tabset:
+        type: component
+        description: Tabbed interface
+        category: layout
+      lightning-vertical-navigation:
+        type: component
+        description: Vertical navigation menu
+        category: layout
+
+      # Record Components
+      lightning-record-form:
+        type: component
+        description: Automatic record create/edit/view form
+        category: record
+      lightning-record-edit-form:
+        type: component
+        description: Customizable record edit form
+        category: record
+      lightning-record-view-form:
+        type: component
+        description: Customizable record view form
+        category: record
+      lightning-output-field:
+        type: component
+        description: Display field value with formatting
+        category: record
+
+      # Overlay Components
+      lightning-modal:
+        type: component
+        description: Modal dialog (API 58.0+)
+        category: overlay
+        since: "API 58.0"
+
+      # Navigation
+      lightning-navigation:
+        type: component
+        description: Navigate to pages within Salesforce
+        category: navigation
+
+      # Messaging
+      lightning-messages:
+        type: component
+        description: Display field-level error messages
+        category: messaging
+
+      # Map
+      lightning-map:
+        type: component
+        description: Display map with markers
+        category: display
+
+  lightning-ui-api:
+    name: Lightning UI API Modules
+    packageManager: salesforce
+    package: lightning/ui*Api
+    version: API 60.0
+    documentation: https://developer.salesforce.com/docs/component-library/documentation/en/lwc/lwc.reference_ui_api
+    description: |
+      Wire adapters and functions for working with Salesforce data declaratively.
+      These modules provide reactive data access with automatic caching.
+    exports:
+      # Record APIs
+      getRecord:
+        type: wireAdapter
+        module: lightning/uiRecordApi
+        description: Get record data reactively
+      getRecords:
+        type: wireAdapter
+        module: lightning/uiRecordApi
+        description: Get multiple records
+      createRecord:
+        type: function
+        module: lightning/uiRecordApi
+        description: Create a new record
+      updateRecord:
+        type: function
+        module: lightning/uiRecordApi
+        description: Update existing record
+      deleteRecord:
+        type: function
+        module: lightning/uiRecordApi
+        description: Delete a record
+      getFieldValue:
+        type: function
+        module: lightning/uiRecordApi
+        description: Extract field value from record
+      getFieldDisplayValue:
+        type: function
+        module: lightning/uiRecordApi
+        description: Get formatted field value
+
+      # List APIs
+      getListUi:
+        type: wireAdapter
+        module: lightning/uiListApi
+        description: Get list view data
+
+      # Object APIs
+      getObjectInfo:
+        type: wireAdapter
+        module: lightning/uiObjectInfoApi
+        description: Get object metadata
+      getPicklistValues:
+        type: wireAdapter
+        module: lightning/uiObjectInfoApi
+        description: Get picklist values
+      getPicklistValuesByRecordType:
+        type: wireAdapter
+        module: lightning/uiObjectInfoApi
+        description: Get picklist values for record type
+
+  lightning-platform:
+    name: Lightning Platform Modules
+    packageManager: salesforce
+    package: lightning/platform*
+    version: API 60.0
+    documentation: https://developer.salesforce.com/docs/platform/lwc/guide
+    description: |
+      Platform services for navigation, messaging, and resource loading.
+    exports:
+      # Navigation
+      NavigationMixin:
+        type: mixin
+        module: lightning/navigation
+        description: Navigate to pages, records, and external URLs
+        category: navigation
+
+      # Messaging
+      publish:
+        type: function
+        module: lightning/messageService
+        description: Publish Lightning Message Service message
+        category: messaging
+      subscribe:
+        type: function
+        module: lightning/messageService
+        description: Subscribe to Lightning Message Service channel
+        category: messaging
+      unsubscribe:
+        type: function
+        module: lightning/messageService
+        description: Unsubscribe from message channel
+        category: messaging
+      createMessageContext:
+        type: function
+        module: lightning/messageService
+        description: Create message context
+        category: messaging
+
+      # Resource Loading
+      loadStyle:
+        type: function
+        module: lightning/platformResourceLoader
+        description: Load CSS from static resources
+        category: resource
+      loadScript:
+        type: function
+        module: lightning/platformResourceLoader
+        description: Load JavaScript from static resources
+        category: resource
+
+      # Notifications
+      ShowToastEvent:
+        type: event
+        module: lightning/platformShowToastEvent
+        description: Display toast notification
+        category: messaging
+
+      # Refresh
+      RefreshEvent:
+        type: event
+        module: lightning/refresh
+        description: Trigger standard refresh (API 59.0+)
+        category: event
+        since: "API 59.0"
+
+  salesforce-lightning-design-system:
+    name: Salesforce Lightning Design System (SLDS)
+    packageManager: npm
+    package: "@salesforce-ux/design-system"
+    version: "^2.24.0"
+    repository: https://github.com/salesforce-ux/design-system
+    documentation: https://www.lightningdesignsystem.com/
+    description: |
+      The design system for Salesforce Lightning. Provides CSS framework,
+      design tokens, icons, and design guidelines. Required for AppExchange apps.
+    exports:
+      # Design Tokens
+      design-tokens:
+        type: designTokens
+        description: SLDS design tokens for colors, spacing, typography
+
+      # Icons
+      standard-icons:
+        type: iconSet
+        description: Standard object icons
+      utility-icons:
+        type: iconSet
+        description: Utility action icons
+      custom-icons:
+        type: iconSet
+        description: Custom app icons
+      action-icons:
+        type: iconSet
+        description: Action icons
+      doctype-icons:
+        type: iconSet
+        description: Document type icons
+
+      # CSS Framework
+      slds-core:
+        type: css
+        description: Core SLDS CSS framework
+
+componentCatalog:
+  categories:
+    action:
+      name: Action
+      description: Buttons and actionable elements
+      components:
+        - lightning-button
+        - lightning-button-icon
+        - lightning-button-group
+        - lightning-button-menu
+        - lightning-button-stateful
+
+    input:
+      name: Input
+      description: Form input components
+      components:
+        - lightning-input
+        - lightning-textarea
+        - lightning-combobox
+        - lightning-dual-listbox
+        - lightning-checkbox-group
+        - lightning-radio-group
+        - lightning-slider
+        - lightning-input-field
+
+    display:
+      name: Display
+      description: Components for displaying content
+      components:
+        - lightning-card
+        - lightning-accordion
+        - lightning-avatar
+        - lightning-badge
+        - lightning-pill
+        - lightning-formatted-text
+        - lightning-formatted-number
+        - lightning-formatted-date-time
+        - lightning-icon
+        - lightning-progress-indicator
+        - lightning-progress-bar
+        - lightning-spinner
+        - lightning-map
+
+    data:
+      name: Data Display
+      description: Complex data visualization components
+      components:
+        - lightning-datatable
+        - lightning-tree
+        - lightning-tree-grid
+
+    layout:
+      name: Layout
+      description: Layout and structure components
+      components:
+        - lightning-layout
+        - lightning-layout-item
+        - lightning-tab
+        - lightning-tabset
+        - lightning-vertical-navigation
+
+    record:
+      name: Record
+      description: Salesforce record management components
+      components:
+        - lightning-record-form
+        - lightning-record-edit-form
+        - lightning-record-view-form
+        - lightning-output-field
+
+    overlay:
+      name: Overlay
+      description: Modal and overlay components
+      components:
+        - lightning-modal
+
+  components:
+    lightning-button:
+      name: Lightning Button
+      description: |
+        Standard button component with support for multiple variants, icons,
+        and accessibility features. Automatically styled per SLDS guidelines.
+      category: action
+      sdkBinding:
+        sdk: lightning-base-components
+        export: lightning-button
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+      props:
+        label:
+          type: string
+          description: Button label text
+        variant:
+          type: string
+          enum: [base, neutral, brand, brand-outline, destructive, destructive-text, inverse, success]
+          default: neutral
+          description: Visual variant of the button
+        type:
+          type: string
+          enum: [button, submit, reset]
+          default: button
+        disabled:
+          type: boolean
+          default: false
+        icon-name:
+          type: string
+          description: SLDS icon name
+        icon-position:
+          type: string
+          enum: [left, right]
+          default: left
+      variants:
+        - base
+        - neutral
+        - brand
+        - brand-outline
+        - destructive
+        - destructive-text
+        - inverse
+        - success
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        ariaSupport: true
+
+    lightning-datatable:
+      name: Lightning Datatable
+      description: |
+        Advanced data table with sorting, inline editing, row selection,
+        and custom cell rendering. Supports large datasets with virtualization.
+      category: data
+      sdkBinding:
+        sdk: lightning-base-components
+        export: lightning-datatable
+      webStandardMapping:
+        htmlElement: table
+        ariaRole: grid
+        semanticType: data
+      props:
+        data:
+          type: array
+          description: Array of data objects
+          required: true
+        columns:
+          type: array
+          description: Column definitions with type, label, and field name
+          required: true
+        key-field:
+          type: string
+          description: Unique identifier field for rows
+          required: true
+        sorted-by:
+          type: string
+          description: Field name to sort by
+        sorted-direction:
+          type: string
+          enum: [asc, desc]
+        show-row-number-column:
+          type: boolean
+          default: false
+        hide-checkbox-column:
+          type: boolean
+          default: false
+      events:
+        rowselection:
+          description: Fired when row selection changes
+        rowaction:
+          description: Fired when row action is clicked
+        sort:
+          description: Fired when column sort is requested
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        ariaSupport: true
+
+    lightning-card:
+      name: Lightning Card
+      description: |
+        Container component with optional header, body, and footer sections.
+        Follows SLDS card design patterns.
+      category: display
+      sdkBinding:
+        sdk: lightning-base-components
+        export: lightning-card
+      webStandardMapping:
+        htmlElement: article
+        ariaRole: article
+        semanticType: container
+      props:
+        title:
+          type: string
+          description: Card title in header
+        icon-name:
+          type: string
+          description: SLDS icon name for header
+      slots:
+        default:
+          description: Card body content
+          required: false
+        actions:
+          description: Actions in card header
+          required: false
+        footer:
+          description: Card footer content
+          required: false
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+
+    lightning-record-form:
+      name: Lightning Record Form
+      description: |
+        Automatically generates a form for creating, editing, or viewing
+        records with field-level security, validation, and layout support.
+      category: record
+      sdkBinding:
+        sdk: lightning-base-components
+        export: lightning-record-form
+      webStandardMapping:
+        htmlElement: form
+        ariaRole: form
+        semanticType: form
+      props:
+        object-api-name:
+          type: string
+          description: API name of the Salesforce object
+          required: true
+        record-id:
+          type: string
+          description: Record ID (omit for create mode)
+        fields:
+          type: array
+          description: Array of field API names to display
+        mode:
+          type: string
+          enum: [view, edit, readonly]
+          default: edit
+        layout-type:
+          type: string
+          enum: [Compact, Full]
+        columns:
+          type: number
+          enum: [1, 2]
+      events:
+        success:
+          description: Fired when record is successfully saved
+        error:
+          description: Fired when save operation fails
+        submit:
+          description: Fired when form is submitted
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        ariaSupport: true
+
+    lightning-modal:
+      name: Lightning Modal
+      description: |
+        Modal dialog component for confirmations and focused tasks.
+        Available in API 58.0+. Extends LightningModal base class.
+      category: overlay
+      sdkBinding:
+        sdk: lightning-base-components
+        export: lightning-modal
+      webStandardMapping:
+        htmlElement: dialog
+        ariaRole: dialog
+        semanticType: overlay
+      props:
+        size:
+          type: string
+          enum: [small, medium, large]
+          default: medium
+        label:
+          type: string
+          description: Modal header label (aria-label)
+      slots:
+        default:
+          description: Modal body content
+          required: true
+        header:
+          description: Modal header content
+          required: false
+        footer:
+          description: Modal footer content
+          required: false
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        focusManagement: "Focus automatically trapped within modal"
+        ariaSupport: true
+
+extensionPoints:
+  - id: record-page
+    name: Record Page
+    type: page
+    extensionType: codedComponents
+    description: |
+      Components displayed on Lightning Record Pages. Can access current
+      record context and be configured in Lightning App Builder.
+    supportedComponents:
+      - all
+    constraints:
+      responsive: true
+      sldsRequired: true
+    context:
+      provides:
+        - recordId
+        - objectApiName
+      actions:
+        - navigateToRecord
+        - refreshView
+        - fireToast
+    configuration:
+      targets:
+        - lightning__RecordPage
+      configurable: true
+      supportsDesignAttributes: true
+
+  - id: app-page
+    name: App Page
+    type: page
+    extensionType: codedComponents
+    description: |
+      Components for custom Lightning App Pages. Can be configured
+      in Lightning App Builder and accept design attributes.
+    supportedComponents:
+      - all
+    constraints:
+      responsive: true
+      sldsRequired: true
+    context:
+      provides:
+        - pageReference
+        - user
+      actions:
+        - navigate
+        - fireToast
+    configuration:
+      targets:
+        - lightning__AppPage
+      configurable: true
+      supportsDesignAttributes: true
+
+  - id: home-page
+    name: Home Page
+    type: page
+    extensionType: codedComponents
+    description: Components displayed on Lightning Home Pages
+    supportedComponents:
+      - all
+    constraints:
+      responsive: true
+      sldsRequired: true
+    configuration:
+      targets:
+        - lightning__HomePage
+      configurable: true
+
+  - id: utility-bar
+    name: Utility Bar
+    type: utility
+    extensionType: codedComponents
+    description: |
+      Dockable utility items in the footer of Lightning Experience.
+      Useful for tools that users need constant access to.
+    supportedComponents:
+      - all
+    constraints:
+      responsive: true
+      sldsRequired: true
+      maxHeight: 480px
+    context:
+      provides:
+        - utilityAPI
+      actions:
+        - minimizeUtility
+        - maximizeUtility
+        - closeUtility
+    configuration:
+      targets:
+        - lightning__UtilityBar
+      configurable: true
+
+  - id: quick-action
+    name: Quick Action
+    type: action
+    extensionType: codedComponents
+    description: |
+      Component launched as a quick action from records or global header.
+      Typically used for creating records or performing quick tasks.
+    supportedComponents:
+      - all
+    constraints:
+      responsive: true
+      sldsRequired: true
+    context:
+      provides:
+        - recordId
+        - objectApiName
+      actions:
+        - closeAction
+        - setActionResult
+    configuration:
+      targets:
+        - lightning__QuickAction
+      configurable: false
+
+  - id: flow-screen
+    name: Flow Screen
+    type: screen
+    extensionType: codedComponents
+    description: |
+      Components usable within Flow screens. Can define input/output
+      properties for Flow variable integration.
+    supportedComponents:
+      - all
+    constraints:
+      sldsRequired: true
+    context:
+      provides:
+        - flowAPI
+      actions:
+        - validate
+        - navigateNext
+        - navigatePrevious
+    configuration:
+      targets:
+        - lightning__FlowScreen
+      configurable: true
+      supportsFlowVariables: true
+
+  - id: tab
+    name: Lightning Tab
+    type: tab
+    extensionType: codedComponents
+    description: Components that can be opened as tabs in Lightning Experience
+    supportedComponents:
+      - all
+    constraints:
+      responsive: true
+      sldsRequired: true
+    configuration:
+      targets:
+        - lightning__Tab
+      configurable: true
+
+policies:
+  componentRequirement:
+    level: recommended
+    scope: public-apps
+    rationale: |
+      Salesforce recommends using Lightning Base Components for consistency,
+      accessibility, and automatic SLDS styling. However, custom components
+      are allowed if they follow SLDS guidelines and security requirements.
+
+      For AppExchange apps, use of base components is strongly recommended
+      to pass security review and design review.
+
+  customComponents:
+    allowed: true
+    documentation: https://developer.salesforce.com/docs/platform/lwc/guide/create-components.html
+    constraints:
+      - Must follow SLDS design guidelines
+      - Must implement proper accessibility (WCAG 2.1 AA)
+      - Must use LockerService-compatible JavaScript
+      - Must respect Salesforce governor limits
+      - Cannot include security vulnerabilities (XSS, CSRF, etc.)
+      - Must handle errors gracefully
+      - Custom styling must align with SLDS tokens
+
+  publishing:
+    privateDeployment:
+      componentRequirement: recommended
+      customComponentsAllowed: true
+      reviewRequired: false
+      notes: |
+        Private deployments have full flexibility but should follow best
+        practices for maintainability and user experience.
+
+    managedPackage:
+      componentRequirement: required
+      customComponentsAllowed: true
+      reviewRequired: true
+      securityReviewRequired: true
+      notes: |
+        Managed packages require adherence to packaging best practices
+        and may undergo review depending on distribution.
+
+    appExchange:
+      componentRequirement: required
+      customComponentsAllowed: true
+      certificationRequired: true
+      securityReviewRequired: true
+      designReviewRequired: true
+      notes: |
+        AppExchange apps must pass comprehensive security review including
+        manual code review, automated scans, and penetration testing.
+        Design review ensures SLDS compliance and UX quality.
+
+  designGuidelines:
+    required: true
+    designSystem: Salesforce Lightning Design System (SLDS)
+    designSystemUrl: https://www.lightningdesignsystem.com/
+    designTokensProvided: true
+    accessibility:
+      standard: WCAG 2.1 AA
+      required: true
+      documentation: https://www.lightningdesignsystem.com/accessibility/overview/
+
+  security:
+    lockerService:
+      enabled: true
+      description: |
+        LockerService enforces security by isolating components in separate
+        namespaces, providing secure wrappers for DOM APIs, and preventing
+        access to non-published component properties.
+      documentation: https://developer.salesforce.com/docs/platform/lwc/guide/security-locker-service.html
+
+    governorLimits:
+      enforced: true
+      description: |
+        Salesforce enforces governor limits on API calls, DML operations,
+        SOQL queries, heap size, and CPU time to ensure multi-tenant performance.
+      documentation: https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/
+
+    contentSecurityPolicy:
+      enforced: true
+      description: |
+        Strict CSP prevents inline scripts and unsafe-eval. All JavaScript
+        must be in component bundles or secure static resources.
+
+renderingEngines:
+  lwc:
+    type: webComponents
+    name: Lightning Web Components
+    description: |
+      LWC uses native Web Components standards (Custom Elements, Shadow DOM,
+      ES Modules) with a thin performance-optimized framework layer.
+    sandboxing:
+      shadowDOM: true
+      lockerService: true
+      restrictedGlobals: true
+      secureWrappers: true
+
+  aura:
+    type: legacy
+    name: Aura Components (Legacy)
+    description: |
+      Legacy Aura framework. Can interoperate with LWC but new development
+      should use LWC. Aura components can contain LWC components.
+    deprecated: false
+    interoperability:
+      canContainLWC: true
+      canBeContainedByLWC: false
+
+extensionType: codedComponents
+
+compliance:
+  appExchangeSecurity:
+    required: true
+    level: mandatory
+    description: |
+      AppExchange Security Review is mandatory for all listings. Includes:
+      - Automated security scans (Checkmarx)
+      - Manual code review
+      - Penetration testing
+      - Privacy and data handling review
+      - Third-party library assessment
+    documentation: https://developer.salesforce.com/docs/atlas.en-us.packagingGuide.meta/packagingGuide/security_review.htm
+    requirements:
+      - No critical or high severity vulnerabilities
+      - Proper input validation and output encoding
+      - Secure authentication and authorization
+      - Encrypted data transmission
+      - Compliance with Salesforce security best practices
+      - OWASP Top 10 mitigation
+
+  accessibility:
+    required: true
+    standard: WCAG 2.1 AA
+    description: |
+      Accessibility is required for AppExchange and strongly recommended
+      for all Salesforce applications. SLDS components include built-in
+      accessibility features.
+    documentation: https://www.lightningdesignsystem.com/accessibility/overview/
+    requirements:
+      - Keyboard navigation support
+      - Screen reader compatibility
+      - Proper ARIA labels and roles
+      - Sufficient color contrast
+      - Focus management
+      - Semantic HTML structure
+
+  soc2:
+    applicable: true
+    description: |
+      Salesforce Platform maintains SOC 2 Type II certification.
+      Apps on the platform benefit from this certified infrastructure.
+    documentation: https://compliance.salesforce.com/
+
+  gdpr:
+    applicable: true
+    description: |
+      Apps must comply with GDPR when handling EU personal data.
+      Salesforce provides tools for data privacy compliance.
+    documentation: https://www.salesforce.com/gdpr/
+
+  hipaa:
+    applicable: true
+    notes: |
+      HIPAA compliance available for Salesforce orgs with signed BAA.
+      Apps handling PHI must follow additional security requirements.
+    documentation: https://www.salesforce.com/solutions/industries/healthcare/hipaa-compliance/
+
+i18n:
+  supported: true
+  framework: Translation Workbench
+  description: |
+    Salesforce provides comprehensive internationalization support through
+    Translation Workbench, Custom Labels, and automatic locale detection.
+  features:
+    customLabels:
+      supported: true
+      description: |
+        Custom Labels are text values stored centrally and translated
+        into multiple languages. Accessible in LWC via @salesforce/label.
+      documentation: https://developer.salesforce.com/docs/platform/lwc/guide/create-labels.html
+
+    translationWorkbench:
+      supported: true
+      description: |
+        Translation Workbench manages translations for custom labels,
+        field labels, picklist values, and more.
+      documentation: https://help.salesforce.com/s/articleView?id=sf.workbench_overview.htm
+
+    localeDetection:
+      automatic: true
+      description: |
+        User locale automatically detected from user preferences.
+        Components can access via $i18n wire adapter.
+
+    supportedLocales:
+      - en_US
+      - de
+      - es
+      - fr
+      - it
+      - ja
+      - ko
+      - pt_BR
+      - zh_CN
+      - zh_TW
+      - many more...
+
+    dateTimeFormatting:
+      automatic: true
+      description: |
+        lightning-formatted-date-time automatically formats dates
+        according to user locale.
+
+    numberFormatting:
+      automatic: true
+      description: |
+        lightning-formatted-number automatically formats numbers
+        and currency according to user locale.
+
+    rightToLeft:
+      supported: true
+      description: SLDS includes RTL support for Arabic, Hebrew, etc.
+
+jsonFormsIntegration:
+  supported: false
+  notes: |
+    Salesforce uses lightning-record-form and lightning-*-input components
+    rather than JSON Forms. Dynamic forms can be built with dynamic field
+    rendering.
+
+mcpAppsIntegration:
+  supported: false
+  notes: Not yet integrated with MCP Apps specification
+
+notes: |
+  Additional Salesforce LWC Considerations:
+
+  1. Development Environment:
+     - Salesforce CLI (sf) for project creation and deployment
+     - VS Code with Salesforce Extensions recommended
+     - Local Development Server available (API 58.0+)
+
+  2. Testing:
+     - Jest for unit testing
+     - Lightning Testing Service (LTS) for integration tests
+     - Salesforce DX scratch orgs for testing
+
+  3. Deployment:
+     - Metadata API
+     - Change Sets
+     - Salesforce DX / Source-Driven Development
+     - CI/CD pipelines with Salesforce CLI
+
+  4. Performance:
+     - Components lazy-loaded by default
+     - Wire service provides automatic caching
+     - Governor limits enforce efficient code
+
+  5. Versioning:
+     - Components versioned by Salesforce API version
+     - Backward compatibility maintained
+     - API versions updated three times per year

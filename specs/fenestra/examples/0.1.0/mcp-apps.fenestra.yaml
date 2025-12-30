@@ -1,0 +1,633 @@
+# MCP Apps Host - Fenestra Example
+#
+# This example describes an MCP-compatible AI assistant host that implements
+# the MCP Apps specification for agent-driven UI.
+#
+# MCP Apps enables AI agents to present UI to users through:
+# 1. Pre-declared templates (forms, confirmations, progress, etc.)
+# 2. Custom iframe fallback for complex UI needs
+#
+# Reference: https://blog.modelcontextprotocol.io/posts/2025-11-21-mcp-apps/
+
+fenestra: "0.1.0"
+
+info:
+  title: MCP Apps Host UI Ecosystem
+  version: "1.0.0"
+  description: |
+    Describes the UI capabilities of an MCP Apps-compatible host application.
+
+    MCP Apps extends the Model Context Protocol to enable AI-driven UI through
+    a hybrid model of pre-declared templates and custom iframe fallback.
+
+platform:
+  name: MCP Apps Host
+  vendor: Model Context Protocol
+  documentation: https://modelcontextprotocol.io/docs
+
+# =============================================================================
+# COMPONENT CATALOG
+# =============================================================================
+
+componentCatalog:
+  categories:
+    templates:
+      name: Agent UI Templates
+      description: Pre-declared templates agents can invoke
+      components:
+        - FormTemplate
+        - ConfirmationTemplate
+        - ProgressTemplate
+        - ResultTemplate
+        - ErrorTemplate
+        - ListTemplate
+        - DetailTemplate
+        - MediaTemplate
+
+  components:
+    FormTemplate:
+      name: Form Template
+      description: |
+        Structured form for collecting user input.
+        Rendered using JSON Forms from a JSON Schema definition.
+      category: templates
+      webStandardMapping:
+        htmlElement: form
+        ariaRole: form
+        semanticType: input
+      props:
+        type: object
+        properties:
+          title:
+            type: string
+            description: Form title
+          description:
+            type: string
+            description: Form description/instructions
+          schema:
+            type: object
+            description: JSON Schema defining form fields
+          uiSchema:
+            type: object
+            description: Optional JSON Forms UI Schema for layout
+          submitLabel:
+            type: string
+            default: Submit
+          cancelLabel:
+            type: string
+            default: Cancel
+        required:
+          - title
+          - schema
+
+    ConfirmationTemplate:
+      name: Confirmation Template
+      description: Yes/No or custom action confirmation dialog
+      category: templates
+      webStandardMapping:
+        htmlElement: dialog
+        ariaRole: alertdialog
+        semanticType: feedback
+      props:
+        type: object
+        properties:
+          title:
+            type: string
+          message:
+            type: string
+          confirmLabel:
+            type: string
+            default: Confirm
+          cancelLabel:
+            type: string
+            default: Cancel
+          variant:
+            type: string
+            enum: [info, warning, danger]
+            default: info
+        required:
+          - title
+          - message
+
+    ProgressTemplate:
+      name: Progress Template
+      description: Shows operation progress with optional status messages
+      category: templates
+      webStandardMapping:
+        htmlElement: progress
+        ariaRole: progressbar
+        semanticType: feedback
+      props:
+        type: object
+        properties:
+          title:
+            type: string
+          message:
+            type: string
+          progress:
+            type: number
+            minimum: 0
+            maximum: 100
+            description: Progress percentage (0-100), omit for indeterminate
+          steps:
+            type: array
+            items:
+              type: object
+              properties:
+                label:
+                  type: string
+                status:
+                  type: string
+                  enum: [pending, active, completed, error]
+        required:
+          - title
+
+    ResultTemplate:
+      name: Result Template
+      description: Displays operation result/outcome
+      category: templates
+      webStandardMapping:
+        htmlElement: article
+        ariaRole: status
+        semanticType: display
+      props:
+        type: object
+        properties:
+          title:
+            type: string
+          message:
+            type: string
+          variant:
+            type: string
+            enum: [success, warning, error, info]
+            default: success
+          data:
+            type: object
+            description: Structured result data to display
+          actions:
+            type: array
+            items:
+              type: object
+              properties:
+                label:
+                  type: string
+                actionId:
+                  type: string
+        required:
+          - title
+
+    ErrorTemplate:
+      name: Error Template
+      description: Displays error information with optional retry
+      category: templates
+      webStandardMapping:
+        htmlElement: div
+        ariaRole: alert
+        semanticType: feedback
+      props:
+        type: object
+        properties:
+          title:
+            type: string
+            default: Something went wrong
+          message:
+            type: string
+          code:
+            type: string
+            description: Error code for debugging
+          retryable:
+            type: boolean
+            default: false
+          retryLabel:
+            type: string
+            default: Try Again
+        required:
+          - message
+
+    ListTemplate:
+      name: List Template
+      description: Displays a list of items with optional selection
+      category: templates
+      webStandardMapping:
+        htmlElement: ul
+        ariaRole: listbox
+        semanticType: display
+      props:
+        type: object
+        properties:
+          title:
+            type: string
+          items:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                icon:
+                  type: string
+                metadata:
+                  type: object
+          selectable:
+            type: boolean
+            default: false
+          multiSelect:
+            type: boolean
+            default: false
+        required:
+          - items
+
+    DetailTemplate:
+      name: Detail Template
+      description: Shows detailed information about an entity
+      category: templates
+      webStandardMapping:
+        htmlElement: article
+        ariaRole: article
+        semanticType: display
+      props:
+        type: object
+        properties:
+          title:
+            type: string
+          subtitle:
+            type: string
+          sections:
+            type: array
+            items:
+              type: object
+              properties:
+                heading:
+                  type: string
+                fields:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      label:
+                        type: string
+                      value:
+                        type: string
+                      type:
+                        type: string
+                        enum: [text, link, code, date, currency]
+          actions:
+            type: array
+            items:
+              type: object
+              properties:
+                label:
+                  type: string
+                actionId:
+                  type: string
+                variant:
+                  type: string
+                  enum: [primary, secondary, danger]
+        required:
+          - title
+
+    MediaTemplate:
+      name: Media Template
+      description: Displays media content (images, videos, documents)
+      category: templates
+      webStandardMapping:
+        htmlElement: figure
+        ariaRole: img
+        semanticType: display
+      props:
+        type: object
+        properties:
+          title:
+            type: string
+          mediaType:
+            type: string
+            enum: [image, video, audio, document, embed]
+          src:
+            type: string
+            format: uri
+          alt:
+            type: string
+          caption:
+            type: string
+        required:
+          - mediaType
+          - src
+
+# =============================================================================
+# EXTENSION POINTS
+# =============================================================================
+
+extensionPoints:
+  - id: agent-sidebar
+    name: Agent Sidebar Panel
+    type: sidebar
+    extensionType: agentUI
+    description: |
+      Sidebar panel where AI agent displays interactive UI.
+      Agent invokes templates or opens custom iframe as needed.
+    extensionTypeConfig:
+      templates:
+        supported:
+          - form
+          - confirmation
+          - progress
+          - result
+          - error
+          - list
+          - detail
+          - media
+        definitions:
+          form:
+            name: Form Template
+            description: Collect structured user input
+            inputSchema:
+              type: object
+              properties:
+                title:
+                  type: string
+                schema:
+                  type: object
+              required:
+                - title
+                - schema
+            outputSchema:
+              type: object
+              properties:
+                submitted:
+                  type: boolean
+                data:
+                  type: object
+            rendering:
+              type: jsonForms
+            interactivity:
+              submitButton: true
+              cancelButton: true
+              events:
+                - submit
+                - cancel
+                - fieldChange
+
+          confirmation:
+            name: Confirmation Template
+            description: Confirm user action
+            inputSchema:
+              type: object
+              properties:
+                title:
+                  type: string
+                message:
+                  type: string
+              required:
+                - title
+                - message
+            outputSchema:
+              type: object
+              properties:
+                confirmed:
+                  type: boolean
+            rendering:
+              type: platform
+              component: ConfirmationDialog
+            interactivity:
+              submitButton: true
+              cancelButton: true
+              events:
+                - confirm
+                - cancel
+
+          progress:
+            name: Progress Template
+            description: Show operation progress
+            inputSchema:
+              type: object
+              properties:
+                title:
+                  type: string
+                progress:
+                  type: number
+            outputSchema:
+              type: object
+              properties:
+                cancelled:
+                  type: boolean
+            rendering:
+              type: platform
+              component: ProgressIndicator
+            interactivity:
+              submitButton: false
+              cancelButton: true
+              events:
+                - cancel
+
+      customUI:
+        allowed: true
+        sandboxAttributes:
+          - allow-scripts
+          - allow-forms
+        sizeConstraints:
+          maxWidth: 400
+          maxHeight: 600
+          resizable: true
+
+      communication:
+        protocol: jsonRpc
+        channels:
+          - templates
+          - customUI
+          - events
+          - actions
+
+      agentCapabilities:
+        invokeTemplates: true
+        openCustomUI: true
+        receiveEvents: true
+        closeUI: true
+        chainInteractions: true
+
+    constraints:
+      maxWidth: 400
+      maxHeight: 800
+      responsive: true
+
+    context:
+      provides:
+        - conversation
+        - user
+        - recentMessages
+      actions:
+        - sendMessage
+        - executeToolCall
+        - requestPermission
+
+  - id: agent-modal
+    name: Agent Modal Dialog
+    type: modal
+    extensionType: agentUI
+    description: |
+      Full-screen modal for complex agent interactions.
+      Supports all templates plus custom iframe.
+    extensionTypeConfig:
+      templates:
+        supported:
+          - form
+          - confirmation
+          - progress
+          - result
+          - error
+          - list
+          - detail
+          - media
+      customUI:
+        allowed: true
+        sandboxAttributes:
+          - allow-scripts
+          - allow-forms
+          - allow-same-origin
+        sizeConstraints:
+          maxWidth: 800
+          maxHeight: 600
+          resizable: false
+      communication:
+        protocol: jsonRpc
+        channels:
+          - templates
+          - customUI
+          - events
+      agentCapabilities:
+        invokeTemplates: true
+        openCustomUI: true
+        receiveEvents: true
+        closeUI: true
+        chainInteractions: true
+
+    constraints:
+      maxWidth: 800
+      maxHeight: 600
+      responsive: true
+
+    context:
+      provides:
+        - conversation
+        - user
+        - selectedContent
+      actions:
+        - sendMessage
+        - close
+
+  - id: inline-card
+    name: Inline Card
+    type: card
+    extensionType: agentUI
+    description: |
+      Inline card within conversation for quick interactions.
+      Limited to simpler templates (no custom iframe).
+    extensionTypeConfig:
+      templates:
+        supported:
+          - result
+          - error
+          - list
+      customUI:
+        allowed: false
+      communication:
+        protocol: jsonRpc
+        channels:
+          - templates
+          - events
+      agentCapabilities:
+        invokeTemplates: true
+        openCustomUI: false
+        receiveEvents: true
+        closeUI: false
+        chainInteractions: false
+
+    constraints:
+      maxWidth: 600
+      maxHeight: 300
+      responsive: true
+
+    context:
+      provides:
+        - message
+        - toolCallId
+      actions:
+        - expandToModal
+
+# =============================================================================
+# POLICIES
+# =============================================================================
+
+policies:
+  componentRequirement:
+    level: required
+    scope: all
+    rationale: |
+      MCP Apps hosts require use of pre-declared templates to ensure
+      consistent, secure, and accessible UI across all agents.
+
+  customComponents:
+    allowed: true
+    constraints:
+      - sandboxOnly
+    registrationRequired: false
+    approvalRequired: false
+    documentation: https://modelcontextprotocol.io/docs/mcp-apps/custom-ui
+
+  publishing:
+    privateApps:
+      componentRequirement: optional
+      customComponentsAllowed: true
+      reviewRequired: false
+      notes: |
+        Private/development MCP servers have full flexibility.
+
+    publicApps:
+      componentRequirement: recommended
+      customComponentsAllowed: true
+      reviewRequired: true
+      notes: |
+        Published MCP servers should prefer templates for consistency,
+        but can use custom UI when needed.
+
+# =============================================================================
+# RENDERING ENGINES
+# =============================================================================
+
+renderingEngines:
+  templates:
+    type: mcpApps
+    name: MCP Apps Template Renderer
+    description: |
+      Renders pre-declared templates based on MCP Apps specification.
+      Uses JSON Forms for form templates, platform components for others.
+    schemaSupport:
+      dataSchema: jsonSchema
+      uiSchema: mcpAppsTemplate
+      customRenderers: false
+
+  forms:
+    type: jsonForms
+    name: JSON Forms Renderer
+    description: |
+      Renders form templates using JSON Forms specification.
+      Automatically generates UI from JSON Schema.
+    schemaSupport:
+      dataSchema: jsonSchema
+      uiSchema: jsonFormsUISchema
+      customRenderers: true
+
+  customUI:
+    type: custom
+    name: Custom Iframe Renderer
+    description: |
+      Renders custom UI in sandboxed iframe for complex interactions.
+    sandboxing:
+      iframeSandbox: true
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+      cspPolicy: "default-src 'self'; script-src 'self'"

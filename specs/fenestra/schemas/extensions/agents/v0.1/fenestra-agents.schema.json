@@ -1,0 +1,448 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://spec.openapis.org/fenestra/extensions/agents/v0.1/schema.json",
+  "title": "Fenestra Agents Extension Schema",
+  "description": "JSON Schema for validating Fenestra Agent Interaction extension documents describing how AI agents interact with platform UI",
+  "type": "object",
+  "$ref": "#/$defs/AgentInteraction",
+  "$defs": {
+    "AgentInteraction": {
+      "type": "object",
+      "properties": {
+        "capabilities": {
+          "$ref": "#/$defs/AgentCapabilitiesSummary"
+        },
+        "protocols": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentProtocol"
+          }
+        },
+        "discovery": {
+          "$ref": "#/$defs/AgentDiscovery"
+        },
+        "context": {
+          "$ref": "#/$defs/AgentContext"
+        },
+        "uiInvocation": {
+          "$ref": "#/$defs/UIInvocation"
+        },
+        "events": {
+          "$ref": "#/$defs/AgentEvents"
+        },
+        "permissions": {
+          "$ref": "#/$defs/AgentPermissions"
+        }
+      },
+      "patternProperties": {
+        "^x-": {
+          "description": "Specification extension"
+        }
+      }
+    },
+    "AgentCapabilitiesSummary": {
+      "type": "object",
+      "description": "High-level agent interaction capabilities",
+      "properties": {
+        "templateInvocation": {
+          "type": "boolean",
+          "description": "Agent can invoke pre-defined UI templates"
+        },
+        "customUISupport": {
+          "type": "boolean",
+          "description": "Agent can open custom UI (iframe)"
+        },
+        "eventCallbacks": {
+          "type": "boolean",
+          "description": "Agent can receive UI events"
+        },
+        "actionChaining": {
+          "type": "boolean",
+          "description": "Agent can chain multiple UI interactions"
+        }
+      },
+      "patternProperties": {
+        "^x-": {
+          "description": "Specification extension"
+        }
+      }
+    },
+    "AgentProtocol": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "description": "A supported agent protocol",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Protocol name (e.g., mcp, openai-functions, anthropic-tools, langchain-tools, custom)"
+        },
+        "version": {
+          "type": "string",
+          "description": "Protocol version"
+        },
+        "package": {
+          "type": "string",
+          "description": "Package providing the protocol implementation"
+        },
+        "schemaFormat": {
+          "type": "string",
+          "enum": [
+            "openapi",
+            "jsonSchema",
+            "custom"
+          ],
+          "description": "Schema format for function/tool definitions"
+        },
+        "documentation": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI to protocol documentation"
+        }
+      },
+      "patternProperties": {
+        "^x-": {
+          "description": "Specification extension"
+        }
+      }
+    },
+    "AgentDiscovery": {
+      "type": "object",
+      "description": "How agents discover UI capabilities",
+      "properties": {
+        "templateDiscovery": {
+          "type": "boolean",
+          "description": "Agent can query available UI templates"
+        },
+        "actionDiscovery": {
+          "type": "boolean",
+          "description": "Agent can query available actions"
+        },
+        "manifest": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI to agent UI manifest/schema"
+        }
+      },
+      "patternProperties": {
+        "^x-": {
+          "description": "Specification extension"
+        }
+      }
+    },
+    "AgentContext": {
+      "type": "object",
+      "description": "Context passing to agents",
+      "properties": {
+        "available": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Available context types (e.g., conversationHistory, userIdentity, currentDocument)"
+        },
+        "format": {
+          "type": "string",
+          "default": "json",
+          "description": "Serialization format"
+        },
+        "piiFiltering": {
+          "type": "string",
+          "enum": [
+            "automatic",
+            "manual",
+            "none"
+          ],
+          "description": "PII filtering mode"
+        }
+      },
+      "patternProperties": {
+        "^x-": {
+          "description": "Specification extension"
+        }
+      }
+    },
+    "UIInvocation": {
+      "type": "object",
+      "description": "How agents invoke UI",
+      "properties": {
+        "methods": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Available invocation methods (e.g., templates, customIframe, deepLinks)"
+        },
+        "chainingSupported": {
+          "type": "boolean",
+          "description": "Whether chaining multiple interactions is supported"
+        },
+        "interactionTimeout": {
+          "type": "integer",
+          "description": "Timeout for interactions in seconds"
+        },
+        "cancellationSupported": {
+          "type": "boolean",
+          "description": "Whether interactions can be cancelled"
+        }
+      },
+      "patternProperties": {
+        "^x-": {
+          "description": "Specification extension"
+        }
+      }
+    },
+    "AgentEvents": {
+      "type": "object",
+      "description": "Events sent back to agents",
+      "properties": {
+        "supported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Supported event types (e.g., formSubmitted, actionClicked, uiDismissed, errorOccurred)"
+        },
+        "delivery": {
+          "type": "string",
+          "enum": [
+            "callback",
+            "webhook",
+            "polling"
+          ],
+          "description": "Event delivery method"
+        }
+      },
+      "patternProperties": {
+        "^x-": {
+          "description": "Specification extension"
+        }
+      }
+    },
+    "AgentPermissions": {
+      "type": "object",
+      "description": "Agent permission model",
+      "properties": {
+        "canInvokeTemplates": {
+          "type": "boolean",
+          "description": "Agent can invoke UI templates"
+        },
+        "canOpenCustomUI": {
+          "type": "boolean",
+          "description": "Agent can open custom UI"
+        },
+        "canAccessUserData": {
+          "type": "boolean",
+          "description": "Agent can access user data"
+        },
+        "canPerformActions": {
+          "type": "boolean",
+          "description": "Agent can perform actions (not just show UI)"
+        },
+        "userApprovalRequired": {
+          "$ref": "#/$defs/UserApproval"
+        }
+      },
+      "patternProperties": {
+        "^x-": {
+          "description": "Specification extension"
+        }
+      }
+    },
+    "UserApproval": {
+      "type": "object",
+      "description": "When user approval is required",
+      "properties": {
+        "forActions": {
+          "type": "boolean",
+          "description": "User must approve actions"
+        },
+        "forDataAccess": {
+          "type": "boolean",
+          "description": "User must approve data access"
+        }
+      },
+      "patternProperties": {
+        "^x-": {
+          "description": "Specification extension"
+        }
+      }
+    },
+    "AgentTemplates": {
+      "type": "object",
+      "properties": {
+        "supported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "definitions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/AgentUITemplate"
+          }
+        }
+      }
+    },
+    "AgentUITemplate": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "inputSchema": {
+          "type": "object"
+        },
+        "outputSchema": {
+          "type": "object"
+        },
+        "rendering": {
+          "$ref": "#/$defs/TemplateRendering"
+        },
+        "interactivity": {
+          "$ref": "#/$defs/TemplateInteractivity"
+        }
+      }
+    },
+    "TemplateRendering": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "platform",
+            "jsonForms",
+            "custom"
+          ]
+        },
+        "component": {
+          "type": "string"
+        }
+      }
+    },
+    "TemplateInteractivity": {
+      "type": "object",
+      "properties": {
+        "submitButton": {
+          "type": "boolean"
+        },
+        "cancelButton": {
+          "type": "boolean"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "CustomUI": {
+      "type": "object",
+      "properties": {
+        "allowed": {
+          "type": "boolean",
+          "default": true
+        },
+        "sandboxAttributes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sizeConstraints": {
+          "$ref": "#/$defs/SizeConstraints"
+        }
+      }
+    },
+    "SizeConstraints": {
+      "type": "object",
+      "properties": {
+        "minWidth": {
+          "type": "integer"
+        },
+        "maxWidth": {
+          "type": "integer"
+        },
+        "minHeight": {
+          "type": "integer"
+        },
+        "maxHeight": {
+          "type": "integer"
+        },
+        "resizable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "AgentCommunication": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "jsonRpc",
+            "postMessage",
+            "mcp"
+          ],
+          "default": "jsonRpc"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "AgentCapabilities": {
+      "type": "object",
+      "properties": {
+        "invokeTemplates": {
+          "type": "boolean",
+          "default": true
+        },
+        "openCustomUI": {
+          "type": "boolean",
+          "default": true
+        },
+        "receiveEvents": {
+          "type": "boolean",
+          "default": true
+        },
+        "closeUI": {
+          "type": "boolean",
+          "default": true
+        },
+        "chainInteractions": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "AgentUIConfig": {
+      "type": "object",
+      "description": "Configuration for agentUI extension type",
+      "additionalProperties": false,
+      "properties": {
+        "templates": {
+          "$ref": "#/$defs/AgentTemplates"
+        },
+        "customUI": {
+          "$ref": "#/$defs/CustomUI"
+        },
+        "communication": {
+          "$ref": "#/$defs/AgentCommunication"
+        },
+        "agentCapabilities": {
+          "$ref": "#/$defs/AgentCapabilities"
+        }
+      }
+    }
+  }
+}

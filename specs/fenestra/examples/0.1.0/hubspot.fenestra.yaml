@@ -1,0 +1,354 @@
+# Fenestra Document: HubSpot UI Extensions
+#
+# HubSpot represents the "required components" end of the spectrum.
+# Developers MUST use the provided SDK components exclusively.
+
+fenestra: "0.1.0"
+
+info:
+  title: HubSpot UI Extensions Ecosystem
+  version: "1.0.0"
+  description: |
+    HubSpot's UI Extensions SDK provides React-based components for building
+    CRM cards, custom tabs, and sidebar extensions within HubSpot.
+
+    Key characteristic: Component usage is REQUIRED - you can only use
+    components provided through the UI Extensions SDK.
+
+platform:
+  name: HubSpot
+  vendor: HubSpot, Inc.
+  documentation: https://developers.hubspot.com/docs/platform/ui-extensions-overview
+  appMarketplace: https://ecosystem.hubspot.com/marketplace/apps
+
+sdks:
+  hubspot-ui-extensions:
+    name: HubSpot UI Extensions SDK
+    packageManager: npm
+    package: "@hubspot/ui-extensions"
+    version: "^0.11.2"
+    repository: https://github.com/HubSpot/ui-extensions-examples
+    documentation: https://developers.hubspot.com/docs/platform/ui-extensions-sdk
+    exports:
+      # Layout Components
+      Flex:
+        type: component
+        description: Flexbox layout container
+      Box:
+        type: component
+        description: Generic box container
+      Divider:
+        type: component
+        description: Visual separator
+      Tile:
+        type: component
+        description: Card-like container
+
+      # Action Components
+      Button:
+        type: component
+        description: Primary action button
+      ButtonRow:
+        type: component
+        description: Row of action buttons
+      Link:
+        type: component
+        description: Navigation link
+
+      # Input Components
+      Input:
+        type: component
+        description: Text input field
+      TextArea:
+        type: component
+        description: Multi-line text input
+      Select:
+        type: component
+        description: Dropdown selection
+      DateInput:
+        type: component
+        description: Date picker
+      NumberInput:
+        type: component
+        description: Numeric input
+      Toggle:
+        type: component
+        description: Boolean toggle switch
+      Checkbox:
+        type: component
+        description: Checkbox input
+
+      # Display Components
+      Text:
+        type: component
+        description: Text display
+      Heading:
+        type: component
+        description: Section heading
+      Alert:
+        type: component
+        description: Alert/notification message
+      Badge:
+        type: component
+        description: Status badge
+      Tag:
+        type: component
+        description: Label tag
+      Image:
+        type: component
+        description: Image display
+      Table:
+        type: component
+        description: Data table
+      DescriptionList:
+        type: component
+        description: Key-value list
+      ProgressBar:
+        type: component
+        description: Progress indicator
+      LoadingSpinner:
+        type: component
+        description: Loading state indicator
+      EmptyState:
+        type: component
+        description: Empty state placeholder
+      ErrorState:
+        type: component
+        description: Error state display
+
+      # Overlay Components
+      Modal:
+        type: component
+        description: Modal dialog
+        since: "0.10.0"
+      Panel:
+        type: component
+        description: Slide-out panel
+        since: "0.10.0"
+
+      # Form Components
+      Form:
+        type: component
+        description: Form container with validation
+
+    subpackages:
+      crm:
+        package: "@hubspot/ui-extensions/crm"
+        description: CRM-specific components that fetch data from records
+        exports:
+          CrmAssociationTable:
+            type: component
+            description: Table of associated CRM records
+          CrmPropertyList:
+            type: component
+            description: List of CRM record properties
+          CrmActionButton:
+            type: component
+            description: Button that performs CRM actions
+          CrmCardActions:
+            type: component
+            description: Card action buttons
+
+componentCatalog:
+  categories:
+    layout:
+      name: Layout
+      description: Components for organizing content
+      components: [Flex, Box, Divider, Tile]
+
+    action:
+      name: Actions
+      description: Interactive elements for user actions
+      components: [Button, ButtonRow, Link]
+
+    input:
+      name: Inputs
+      description: Form input components
+      components: [Input, TextArea, Select, DateInput, NumberInput, Toggle, Checkbox]
+
+    display:
+      name: Display
+      description: Components for showing information
+      components: [Text, Heading, Alert, Badge, Tag, Image, Table, DescriptionList]
+
+    feedback:
+      name: Feedback
+      description: Loading and state indicators
+      components: [ProgressBar, LoadingSpinner, EmptyState, ErrorState]
+
+    overlay:
+      name: Overlays
+      description: Modal and panel components
+      components: [Modal, Panel]
+
+  components:
+    Button:
+      name: Button
+      description: Primary action button with variants
+      category: action
+      sdkBinding:
+        sdk: hubspot-ui-extensions
+        export: Button
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+      props:
+        variant:
+          type: string
+          enum: [primary, secondary, destructive]
+          default: primary
+        onClick:
+          type: function
+          description: Click handler
+        disabled:
+          type: boolean
+          default: false
+        type:
+          type: string
+          enum: [button, submit, reset]
+      variants:
+        - primary
+        - secondary
+        - destructive
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+
+    Modal:
+      name: Modal
+      description: Pop-up dialog for confirmations and short forms
+      category: overlay
+      sdkBinding:
+        sdk: hubspot-ui-extensions
+        export: Modal
+      webStandardMapping:
+        htmlElement: dialog
+        ariaRole: dialog
+        semanticType: container
+      props:
+        title:
+          type: string
+          description: Modal title
+        variant:
+          type: string
+          enum: [default, danger]
+          description: Use danger for destructive action confirmations
+      slots:
+        default:
+          description: Modal content
+          required: true
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        focusManagement: "Focus trapped within modal"
+
+    Panel:
+      name: Panel
+      description: Slide-out sidebar for complex tasks
+      category: overlay
+      sdkBinding:
+        sdk: hubspot-ui-extensions
+        export: Panel
+      webStandardMapping:
+        htmlElement: aside
+        ariaRole: complementary
+        semanticType: container
+      props:
+        title:
+          type: string
+          description: Panel header title
+      slots:
+        default:
+          description: Panel content
+          required: true
+
+policies:
+  componentRequirement:
+    level: required
+    scope: all
+    rationale: |
+      HubSpot enforces exclusive use of SDK components to ensure
+      consistent user experience and security across all extensions.
+
+  customComponents:
+    allowed: false
+    documentation: https://developers.hubspot.com/docs/platform/ui-extension-components
+    constraints: []
+
+  publishing:
+    privateApps:
+      componentRequirement: required
+      customComponentsAllowed: false
+      reviewRequired: false
+      notes: "Private apps still require SDK components"
+
+    publicApps:
+      componentRequirement: required
+      customComponentsAllowed: false
+      reviewRequired: true
+      designReviewRequired: true
+      notes: "Public apps undergo review before marketplace listing"
+
+    marketplaceApps:
+      componentRequirement: required
+      customComponentsAllowed: false
+      certificationRequired: true
+      notes: "Marketplace apps require full certification"
+
+  designGuidelines:
+    required: true
+    designSystem: "HubSpot Canvas"
+    designSystemUrl: https://canvas.hubspot.com/
+    designTokensProvided: false
+
+extensionPoints:
+  - id: crm-card
+    name: CRM Record Card
+    type: card
+    extensionType: codedComponents
+    description: Card displayed on CRM record pages
+    supportedComponents:
+      - all
+    constraints:
+      responsive: true
+    context:
+      provides:
+        - currentRecord
+        - user
+      actions:
+        - addNote
+        - createTask
+        - updateProperty
+
+  - id: crm-sidebar
+    name: CRM Sidebar Panel
+    type: sidebar
+    extensionType: codedComponents
+    description: Panel in the right sidebar of CRM records
+    supportedComponents:
+      - all
+    context:
+      provides:
+        - currentRecord
+        - associations
+        - user
+
+renderingEngines:
+  react:
+    type: react
+    name: React Rendering
+    description: All extensions render as React components
+    sandboxing:
+      iframeSandbox: true
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+
+jsonFormsIntegration:
+  supported: false
+  notes: "HubSpot uses its own Form component, not JSON Forms"
+
+mcpAppsIntegration:
+  supported: false
+  notes: "Not yet integrated with MCP Apps specification"

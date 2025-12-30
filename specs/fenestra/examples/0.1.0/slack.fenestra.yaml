@@ -1,0 +1,1839 @@
+# Fenestra Document: Slack Block Kit
+#
+# Slack Block Kit represents a declarative, JSON-based UI framework.
+# Apps MUST use Block Kit blocks and elements - no custom components allowed.
+
+fenestra: "0.1.0"
+
+info:
+  title: Slack Block Kit UI Framework
+  version: "2.0.0"
+  description: |
+    Block Kit is Slack's UI framework for building rich, interactive app experiences.
+    It provides a declarative JSON structure for creating messages, modals, and
+    app home interfaces.
+
+    Key characteristic: Block Kit is REQUIRED - apps must use the provided blocks
+    and interactive elements exclusively. All UI is defined as JSON structures,
+    not coded components.
+
+  contact:
+    name: Slack Platform Team
+    url: https://api.slack.com/support
+    email: developers@slack.com
+
+platform:
+  name: Slack
+  vendor: Slack Technologies, LLC (Salesforce)
+  documentation: https://api.slack.com/block-kit
+  builderTool: https://app.slack.com/block-kit-builder
+  appMarketplace: https://slack.com/apps
+  changelog: https://api.slack.com/changelog
+
+sdks:
+  slack-bolt:
+    name: Slack Bolt Framework
+    packageManager: npm
+    package: "@slack/bolt"
+    version: "^3.17.0"
+    repository: https://github.com/slackapi/bolt-js
+    documentation: https://slack.dev/bolt-js/
+    description: |
+      The Bolt framework for JavaScript provides a simple, modern interface
+      for building Slack apps with Block Kit UI.
+    exports:
+      App:
+        type: class
+        description: Main application class for Slack apps
+      BlockAction:
+        type: type
+        description: Type for block action events
+      ViewSubmitAction:
+        type: type
+        description: Type for modal view submissions
+      ViewClosedAction:
+        type: type
+        description: Type for modal view closures
+
+  slack-web-api:
+    name: Slack Web API Client
+    packageManager: npm
+    package: "@slack/web-api"
+    version: "^6.11.0"
+    repository: https://github.com/slackapi/node-slack-sdk
+    documentation: https://slack.dev/node-slack-sdk/web-api
+    description: |
+      Official Web API client for Node.js, used to call Slack APIs
+      including posting messages and opening modals with Block Kit.
+    exports:
+      WebClient:
+        type: class
+        description: Client for calling Slack Web API methods
+      ChatPostMessageArguments:
+        type: interface
+        description: Arguments for posting messages with blocks
+      ViewsOpenArguments:
+        type: interface
+        description: Arguments for opening modals with blocks
+      ViewsUpdateArguments:
+        type: interface
+        description: Arguments for updating modal views
+      ViewsPushArguments:
+        type: interface
+        description: Arguments for pushing new modal views
+
+componentCatalog:
+  categories:
+    blocks:
+      name: Layout Blocks
+      description: Container blocks that structure your app's layout
+      components:
+        - section
+        - divider
+        - image
+        - actions
+        - context
+        - input
+        - header
+        - video
+        - file
+        - rich_text
+
+    elements:
+      name: Interactive Elements
+      description: Interactive components for user input and actions
+      components:
+        - button
+        - static_select
+        - external_select
+        - users_select
+        - conversations_select
+        - channels_select
+        - multi_static_select
+        - multi_external_select
+        - multi_users_select
+        - multi_conversations_select
+        - multi_channels_select
+        - overflow
+        - datepicker
+        - timepicker
+        - datetimepicker
+        - plain_text_input
+        - email_text_input
+        - url_text_input
+        - number_input
+        - checkboxes
+        - radio_buttons
+        - rich_text_input
+        - file_input
+
+    composition:
+      name: Composition Objects
+      description: Reusable objects used within blocks and elements
+      components:
+        - text
+        - option
+        - option_group
+        - confirm
+        - conversation_filter
+        - dispatch_action_config
+        - filter
+        - trigger
+
+  components:
+    # LAYOUT BLOCKS
+
+    section:
+      name: Section Block
+      description: |
+        A section block displays text, possibly with an accessory element
+        like a button or image to the side.
+      category: blocks
+      sdkBinding:
+        type: jsonSchema
+        blockType: section
+      webStandardMapping:
+        htmlElement: section
+        ariaRole: region
+        semanticType: container
+      schema:
+        type: object
+        required: [type]
+        properties:
+          type:
+            type: string
+            const: section
+          text:
+            $ref: "#/composition/text"
+            description: Text content (markdown or plain_text)
+          block_id:
+            type: string
+            description: Unique identifier for the block
+            maxLength: 255
+          fields:
+            type: array
+            description: Array of text objects displayed in 2-column layout
+            maxItems: 10
+            items:
+              $ref: "#/composition/text"
+          accessory:
+            description: Interactive element or image shown to the right
+            oneOf:
+              - $ref: "#/elements/button"
+              - $ref: "#/elements/static_select"
+              - $ref: "#/elements/image"
+              - $ref: "#/elements/datepicker"
+              - $ref: "#/elements/overflow"
+      constraints:
+        maxTextLength: 3000
+        maxFieldsLength: 2000
+      accessibility:
+        screenReaderSupport: true
+        keyboardSupport: true
+
+    divider:
+      name: Divider Block
+      description: Visual separator between blocks
+      category: blocks
+      sdkBinding:
+        type: jsonSchema
+        blockType: divider
+      webStandardMapping:
+        htmlElement: hr
+        semanticType: separator
+      schema:
+        type: object
+        required: [type]
+        properties:
+          type:
+            type: string
+            const: divider
+          block_id:
+            type: string
+            maxLength: 255
+
+    image:
+      name: Image Block
+      description: Display an image with optional title
+      category: blocks
+      sdkBinding:
+        type: jsonSchema
+        blockType: image
+      webStandardMapping:
+        htmlElement: img
+        ariaRole: img
+        semanticType: media
+      schema:
+        type: object
+        required: [type, image_url, alt_text]
+        properties:
+          type:
+            type: string
+            const: image
+          image_url:
+            type: string
+            format: uri
+            description: URL of the image
+            maxLength: 3000
+          alt_text:
+            type: string
+            description: Alt text for accessibility
+            maxLength: 2000
+          title:
+            $ref: "#/composition/text"
+            description: Optional title (plain_text only)
+          block_id:
+            type: string
+            maxLength: 255
+      accessibility:
+        altTextRequired: true
+        screenReaderSupport: true
+
+    actions:
+      name: Actions Block
+      description: Container for interactive elements (buttons, selects, etc.)
+      category: blocks
+      sdkBinding:
+        type: jsonSchema
+        blockType: actions
+      webStandardMapping:
+        htmlElement: div
+        ariaRole: group
+        semanticType: container
+      schema:
+        type: object
+        required: [type, elements]
+        properties:
+          type:
+            type: string
+            const: actions
+          elements:
+            type: array
+            description: Interactive elements
+            minItems: 1
+            maxItems: 25
+            items:
+              oneOf:
+                - $ref: "#/elements/button"
+                - $ref: "#/elements/static_select"
+                - $ref: "#/elements/datepicker"
+                - $ref: "#/elements/timepicker"
+                - $ref: "#/elements/overflow"
+                - $ref: "#/elements/checkboxes"
+                - $ref: "#/elements/radio_buttons"
+          block_id:
+            type: string
+            maxLength: 255
+      constraints:
+        maxElements: 25
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+
+    context:
+      name: Context Block
+      description: Display contextual info with text and/or images
+      category: blocks
+      sdkBinding:
+        type: jsonSchema
+        blockType: context
+      webStandardMapping:
+        htmlElement: aside
+        ariaRole: complementary
+        semanticType: metadata
+      schema:
+        type: object
+        required: [type, elements]
+        properties:
+          type:
+            type: string
+            const: context
+          elements:
+            type: array
+            description: Text objects or images
+            minItems: 1
+            maxItems: 10
+            items:
+              oneOf:
+                - $ref: "#/composition/text"
+                - type: object
+                  properties:
+                    type:
+                      const: image
+                    image_url:
+                      type: string
+                    alt_text:
+                      type: string
+          block_id:
+            type: string
+            maxLength: 255
+
+    input:
+      name: Input Block
+      description: Form input container for modals
+      category: blocks
+      sdkBinding:
+        type: jsonSchema
+        blockType: input
+      webStandardMapping:
+        htmlElement: div
+        ariaRole: group
+        semanticType: form_field
+      schema:
+        type: object
+        required: [type, label, element]
+        properties:
+          type:
+            type: string
+            const: input
+          label:
+            $ref: "#/composition/text"
+            description: Label for the input (plain_text only)
+          element:
+            description: Input element
+            oneOf:
+              - $ref: "#/elements/plain_text_input"
+              - $ref: "#/elements/email_text_input"
+              - $ref: "#/elements/url_text_input"
+              - $ref: "#/elements/number_input"
+              - $ref: "#/elements/static_select"
+              - $ref: "#/elements/datepicker"
+              - $ref: "#/elements/timepicker"
+              - $ref: "#/elements/checkboxes"
+              - $ref: "#/elements/radio_buttons"
+              - $ref: "#/elements/rich_text_input"
+          dispatch_action:
+            type: boolean
+            description: Dispatch payload on input change
+          block_id:
+            type: string
+            maxLength: 255
+          hint:
+            $ref: "#/composition/text"
+            description: Helpful text below the input
+          optional:
+            type: boolean
+            description: Whether input is optional
+            default: false
+      accessibility:
+        labelRequired: true
+        screenReaderSupport: true
+
+    header:
+      name: Header Block
+      description: Large header text
+      category: blocks
+      sdkBinding:
+        type: jsonSchema
+        blockType: header
+      webStandardMapping:
+        htmlElement: h1
+        ariaRole: heading
+        semanticType: heading
+      schema:
+        type: object
+        required: [type, text]
+        properties:
+          type:
+            type: string
+            const: header
+          text:
+            $ref: "#/composition/text"
+            description: Header text (plain_text only, max 150 chars)
+          block_id:
+            type: string
+            maxLength: 255
+      constraints:
+        maxTextLength: 150
+
+    video:
+      name: Video Block
+      description: Embed videos from YouTube, Vimeo, etc.
+      category: blocks
+      sdkBinding:
+        type: jsonSchema
+        blockType: video
+      webStandardMapping:
+        htmlElement: video
+        ariaRole: region
+        semanticType: media
+      schema:
+        type: object
+        required: [type, video_url, thumbnail_url, alt_text, title]
+        properties:
+          type:
+            type: string
+            const: video
+          video_url:
+            type: string
+            format: uri
+            description: Video URL
+          thumbnail_url:
+            type: string
+            format: uri
+            description: Thumbnail image URL
+          alt_text:
+            type: string
+            description: Alt text for accessibility
+            maxLength: 200
+          title:
+            $ref: "#/composition/text"
+            description: Video title (plain_text only)
+          title_url:
+            type: string
+            format: uri
+            description: Hyperlinked title URL
+          author_name:
+            type: string
+            description: Author name
+          provider_name:
+            type: string
+            description: Provider name (e.g., YouTube)
+          provider_icon_url:
+            type: string
+            format: uri
+          description:
+            $ref: "#/composition/text"
+          block_id:
+            type: string
+            maxLength: 255
+
+    file:
+      name: File Block
+      description: Display a remote file
+      category: blocks
+      sdkBinding:
+        type: jsonSchema
+        blockType: file
+      schema:
+        type: object
+        required: [type, external_id, source]
+        properties:
+          type:
+            type: string
+            const: file
+          external_id:
+            type: string
+            description: ID of the file
+          source:
+            type: string
+            description: File source (e.g., "remote")
+          block_id:
+            type: string
+            maxLength: 255
+
+    rich_text:
+      name: Rich Text Block
+      description: Display rich formatted text
+      category: blocks
+      sdkBinding:
+        type: jsonSchema
+        blockType: rich_text
+      schema:
+        type: object
+        required: [type, elements]
+        properties:
+          type:
+            type: string
+            const: rich_text
+          elements:
+            type: array
+            description: Rich text elements (sections, lists, etc.)
+          block_id:
+            type: string
+            maxLength: 255
+
+    # INTERACTIVE ELEMENTS
+
+    button:
+      name: Button Element
+      description: Interactive button for actions
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: button
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+      schema:
+        type: object
+        required: [type, text, action_id]
+        properties:
+          type:
+            type: string
+            const: button
+          text:
+            $ref: "#/composition/text"
+            description: Button text (plain_text only, max 75 chars)
+          action_id:
+            type: string
+            description: Identifier for the action
+            maxLength: 255
+          url:
+            type: string
+            format: uri
+            description: URL to open when clicked
+            maxLength: 3000
+          value:
+            type: string
+            description: Value sent with interaction payload
+            maxLength: 2000
+          style:
+            type: string
+            enum: [primary, danger]
+            description: Button style (primary=green, danger=red)
+          confirm:
+            $ref: "#/composition/confirm"
+            description: Confirmation dialog before action
+          accessibility_label:
+            type: string
+            description: Label for screen readers
+      variants:
+        - default
+        - primary
+        - danger
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+        labelRequired: true
+
+    static_select:
+      name: Static Select Menu
+      description: Drop-down menu with static options
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: static_select
+      webStandardMapping:
+        htmlElement: select
+        ariaRole: listbox
+        semanticType: input
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: static_select
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+            description: Placeholder text (plain_text only)
+          options:
+            type: array
+            description: List of options
+            maxItems: 100
+            items:
+              $ref: "#/composition/option"
+          option_groups:
+            type: array
+            description: Grouped options
+            maxItems: 100
+            items:
+              $ref: "#/composition/option_group"
+          initial_option:
+            $ref: "#/composition/option"
+          confirm:
+            $ref: "#/composition/confirm"
+          focus_on_load:
+            type: boolean
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+
+    external_select:
+      name: External Data Select Menu
+      description: Select menu with options loaded from external source
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: external_select
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: external_select
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          initial_option:
+            $ref: "#/composition/option"
+          min_query_length:
+            type: integer
+            description: Min characters before querying
+          confirm:
+            $ref: "#/composition/confirm"
+          focus_on_load:
+            type: boolean
+
+    users_select:
+      name: User Select Menu
+      description: Select menu for choosing Slack users
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: users_select
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: users_select
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          initial_user:
+            type: string
+            description: Initially selected user ID
+          confirm:
+            $ref: "#/composition/confirm"
+          focus_on_load:
+            type: boolean
+
+    conversations_select:
+      name: Conversation Select Menu
+      description: Select menu for choosing conversations
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: conversations_select
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: conversations_select
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          initial_conversation:
+            type: string
+          default_to_current_conversation:
+            type: boolean
+          confirm:
+            $ref: "#/composition/confirm"
+          response_url_enabled:
+            type: boolean
+          filter:
+            $ref: "#/composition/conversation_filter"
+          focus_on_load:
+            type: boolean
+
+    channels_select:
+      name: Channel Select Menu
+      description: Select menu for choosing channels
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: channels_select
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: channels_select
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          initial_channel:
+            type: string
+          confirm:
+            $ref: "#/composition/confirm"
+          response_url_enabled:
+            type: boolean
+          focus_on_load:
+            type: boolean
+
+    multi_static_select:
+      name: Multi-Select Static Menu
+      description: Multi-select menu with static options
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: multi_static_select
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: multi_static_select
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          options:
+            type: array
+            maxItems: 100
+            items:
+              $ref: "#/composition/option"
+          option_groups:
+            type: array
+            items:
+              $ref: "#/composition/option_group"
+          initial_options:
+            type: array
+            items:
+              $ref: "#/composition/option"
+          confirm:
+            $ref: "#/composition/confirm"
+          max_selected_items:
+            type: integer
+          focus_on_load:
+            type: boolean
+
+    multi_external_select:
+      name: Multi-Select External Menu
+      description: Multi-select with external data source
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: multi_external_select
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: multi_external_select
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          min_query_length:
+            type: integer
+          initial_options:
+            type: array
+            items:
+              $ref: "#/composition/option"
+          confirm:
+            $ref: "#/composition/confirm"
+          max_selected_items:
+            type: integer
+          focus_on_load:
+            type: boolean
+
+    multi_users_select:
+      name: Multi-User Select Menu
+      description: Multi-select for Slack users
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: multi_users_select
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: multi_users_select
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          initial_users:
+            type: array
+            items:
+              type: string
+          confirm:
+            $ref: "#/composition/confirm"
+          max_selected_items:
+            type: integer
+          focus_on_load:
+            type: boolean
+
+    multi_conversations_select:
+      name: Multi-Conversation Select Menu
+      description: Multi-select for conversations
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: multi_conversations_select
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: multi_conversations_select
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          initial_conversations:
+            type: array
+            items:
+              type: string
+          default_to_current_conversation:
+            type: boolean
+          confirm:
+            $ref: "#/composition/confirm"
+          max_selected_items:
+            type: integer
+          filter:
+            $ref: "#/composition/conversation_filter"
+          focus_on_load:
+            type: boolean
+
+    multi_channels_select:
+      name: Multi-Channel Select Menu
+      description: Multi-select for channels
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: multi_channels_select
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: multi_channels_select
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          initial_channels:
+            type: array
+            items:
+              type: string
+          confirm:
+            $ref: "#/composition/confirm"
+          max_selected_items:
+            type: integer
+          focus_on_load:
+            type: boolean
+
+    overflow:
+      name: Overflow Menu
+      description: Menu with overflow options (ellipsis menu)
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: overflow
+      webStandardMapping:
+        ariaRole: menu
+        semanticType: action
+      schema:
+        type: object
+        required: [type, action_id, options]
+        properties:
+          type:
+            type: string
+            const: overflow
+          action_id:
+            type: string
+            maxLength: 255
+          options:
+            type: array
+            description: Menu options
+            minItems: 1
+            maxItems: 5
+            items:
+              $ref: "#/composition/option"
+          confirm:
+            $ref: "#/composition/confirm"
+
+    datepicker:
+      name: Date Picker
+      description: Calendar-based date selection
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: datepicker
+      webStandardMapping:
+        htmlElement: input
+        inputType: date
+        semanticType: input
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: datepicker
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          initial_date:
+            type: string
+            format: date
+            description: Initial date in YYYY-MM-DD format
+          confirm:
+            $ref: "#/composition/confirm"
+          focus_on_load:
+            type: boolean
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+
+    timepicker:
+      name: Time Picker
+      description: Time selection input
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: timepicker
+      webStandardMapping:
+        htmlElement: input
+        inputType: time
+        semanticType: input
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: timepicker
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          initial_time:
+            type: string
+            description: Initial time in HH:mm format
+          confirm:
+            $ref: "#/composition/confirm"
+          focus_on_load:
+            type: boolean
+          timezone:
+            type: string
+            description: IANA timezone
+
+    datetimepicker:
+      name: Date Time Picker
+      description: Combined date and time selection
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: datetimepicker
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: datetimepicker
+          action_id:
+            type: string
+            maxLength: 255
+          initial_date_time:
+            type: integer
+            description: Unix timestamp
+          confirm:
+            $ref: "#/composition/confirm"
+          focus_on_load:
+            type: boolean
+
+    plain_text_input:
+      name: Plain Text Input
+      description: Single or multi-line text input
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: plain_text_input
+      webStandardMapping:
+        htmlElement: input
+        inputType: text
+        semanticType: input
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: plain_text_input
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          initial_value:
+            type: string
+          multiline:
+            type: boolean
+            description: Enable multi-line input
+          min_length:
+            type: integer
+            description: Minimum length
+          max_length:
+            type: integer
+            description: Maximum length
+          dispatch_action_config:
+            $ref: "#/composition/dispatch_action_config"
+          focus_on_load:
+            type: boolean
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+
+    email_text_input:
+      name: Email Text Input
+      description: Email address input with validation
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: email_text_input
+      webStandardMapping:
+        htmlElement: input
+        inputType: email
+        semanticType: input
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: email_text_input
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          initial_value:
+            type: string
+            format: email
+          dispatch_action_config:
+            $ref: "#/composition/dispatch_action_config"
+          focus_on_load:
+            type: boolean
+
+    url_text_input:
+      name: URL Text Input
+      description: URL input with validation
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: url_text_input
+      webStandardMapping:
+        htmlElement: input
+        inputType: url
+        semanticType: input
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: url_text_input
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          initial_value:
+            type: string
+            format: uri
+          dispatch_action_config:
+            $ref: "#/composition/dispatch_action_config"
+          focus_on_load:
+            type: boolean
+
+    number_input:
+      name: Number Input
+      description: Numeric input with validation
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: number_input
+      webStandardMapping:
+        htmlElement: input
+        inputType: number
+        semanticType: input
+      schema:
+        type: object
+        required: [type, action_id, is_decimal_allowed]
+        properties:
+          type:
+            type: string
+            const: number_input
+          action_id:
+            type: string
+            maxLength: 255
+          is_decimal_allowed:
+            type: boolean
+            description: Allow decimal numbers
+          placeholder:
+            $ref: "#/composition/text"
+          initial_value:
+            type: string
+            description: Initial numeric value as string
+          min_value:
+            type: string
+            description: Minimum value
+          max_value:
+            type: string
+            description: Maximum value
+          dispatch_action_config:
+            $ref: "#/composition/dispatch_action_config"
+          focus_on_load:
+            type: boolean
+
+    checkboxes:
+      name: Checkboxes
+      description: Checkbox group for multiple selections
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: checkboxes
+      webStandardMapping:
+        htmlElement: input
+        inputType: checkbox
+        ariaRole: group
+        semanticType: input
+      schema:
+        type: object
+        required: [type, action_id, options]
+        properties:
+          type:
+            type: string
+            const: checkboxes
+          action_id:
+            type: string
+            maxLength: 255
+          options:
+            type: array
+            description: Checkbox options
+            minItems: 1
+            maxItems: 10
+            items:
+              $ref: "#/composition/option"
+          initial_options:
+            type: array
+            description: Pre-selected options
+            items:
+              $ref: "#/composition/option"
+          confirm:
+            $ref: "#/composition/confirm"
+          focus_on_load:
+            type: boolean
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+
+    radio_buttons:
+      name: Radio Buttons
+      description: Radio button group for single selection
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: radio_buttons
+      webStandardMapping:
+        htmlElement: input
+        inputType: radio
+        ariaRole: radiogroup
+        semanticType: input
+      schema:
+        type: object
+        required: [type, action_id, options]
+        properties:
+          type:
+            type: string
+            const: radio_buttons
+          action_id:
+            type: string
+            maxLength: 255
+          options:
+            type: array
+            description: Radio options
+            minItems: 1
+            maxItems: 10
+            items:
+              $ref: "#/composition/option"
+          initial_option:
+            $ref: "#/composition/option"
+          confirm:
+            $ref: "#/composition/confirm"
+          focus_on_load:
+            type: boolean
+      accessibility:
+        keyboardSupport: true
+        screenReaderSupport: true
+
+    rich_text_input:
+      name: Rich Text Input
+      description: Rich text editor with formatting
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: rich_text_input
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: rich_text_input
+          action_id:
+            type: string
+            maxLength: 255
+          placeholder:
+            $ref: "#/composition/text"
+          initial_value:
+            type: object
+            description: Initial rich text value
+          dispatch_action_config:
+            $ref: "#/composition/dispatch_action_config"
+          focus_on_load:
+            type: boolean
+
+    file_input:
+      name: File Input
+      description: File upload input
+      category: elements
+      sdkBinding:
+        type: jsonSchema
+        elementType: file_input
+      schema:
+        type: object
+        required: [type, action_id]
+        properties:
+          type:
+            type: string
+            const: file_input
+          action_id:
+            type: string
+            maxLength: 255
+          filetypes:
+            type: array
+            description: Allowed file extensions
+            items:
+              type: string
+          max_files:
+            type: integer
+            description: Maximum number of files
+            minimum: 1
+            maximum: 10
+
+    # COMPOSITION OBJECTS
+
+    text:
+      name: Text Object
+      description: Text with plain_text or mrkdwn formatting
+      category: composition
+      schema:
+        type: object
+        required: [type, text]
+        properties:
+          type:
+            type: string
+            enum: [plain_text, mrkdwn]
+          text:
+            type: string
+            maxLength: 3000
+          emoji:
+            type: boolean
+            description: Escape emoji codes (plain_text only)
+          verbatim:
+            type: boolean
+            description: Disable auto-linking (mrkdwn only)
+
+    option:
+      name: Option Object
+      description: Single option for select menus and overflow menus
+      category: composition
+      schema:
+        type: object
+        required: [text, value]
+        properties:
+          text:
+            $ref: "#/composition/text"
+            description: Option text (plain_text only, max 75 chars)
+          value:
+            type: string
+            description: Option value
+            maxLength: 75
+          description:
+            $ref: "#/composition/text"
+            description: Detailed description (plain_text, max 75 chars)
+          url:
+            type: string
+            format: uri
+            description: URL loaded when option selected
+
+    option_group:
+      name: Option Group
+      description: Group of options with a label
+      category: composition
+      schema:
+        type: object
+        required: [label, options]
+        properties:
+          label:
+            $ref: "#/composition/text"
+            description: Group label (plain_text only, max 75 chars)
+          options:
+            type: array
+            description: Options in the group
+            maxItems: 100
+            items:
+              $ref: "#/composition/option"
+
+    confirm:
+      name: Confirmation Dialog
+      description: Confirmation prompt before destructive actions
+      category: composition
+      schema:
+        type: object
+        required: [title, text, confirm, deny]
+        properties:
+          title:
+            $ref: "#/composition/text"
+            description: Dialog title (plain_text only, max 100 chars)
+          text:
+            $ref: "#/composition/text"
+            description: Confirmation message (max 300 chars)
+          confirm:
+            $ref: "#/composition/text"
+            description: Confirm button text (plain_text, max 30 chars)
+          deny:
+            $ref: "#/composition/text"
+            description: Deny button text (plain_text, max 30 chars)
+          style:
+            type: string
+            enum: [primary, danger]
+            description: Confirm button style
+
+    conversation_filter:
+      name: Conversation Filter
+      description: Filter for conversation lists
+      category: composition
+      schema:
+        type: object
+        properties:
+          include:
+            type: array
+            description: Conversation types to include
+            items:
+              type: string
+              enum: [im, mpim, private, public]
+          exclude_external_shared_channels:
+            type: boolean
+          exclude_bot_users:
+            type: boolean
+
+    dispatch_action_config:
+      name: Dispatch Action Config
+      description: Configuration for dispatching actions on input change
+      category: composition
+      schema:
+        type: object
+        properties:
+          trigger_actions_on:
+            type: array
+            description: When to trigger actions
+            items:
+              type: string
+              enum: [on_enter_pressed, on_character_entered]
+
+policies:
+  componentRequirement:
+    level: required
+    scope: all
+    rationale: |
+      Slack enforces exclusive use of Block Kit blocks and elements.
+      No custom UI components are allowed - all interfaces must be
+      built using the provided Block Kit JSON structure.
+
+  customComponents:
+    allowed: false
+    documentation: https://api.slack.com/block-kit
+    constraints:
+      - All UI must be defined using Block Kit JSON
+      - No custom HTML, CSS, or JavaScript
+      - Apps execute server-side; UI is rendered by Slack client
+    rationale: |
+      Block Kit ensures consistent user experience, accessibility,
+      security, and cross-platform compatibility across all Slack clients.
+
+  publishing:
+    workspace:
+      name: Workspace Apps
+      componentRequirement: required
+      customComponentsAllowed: false
+      reviewRequired: false
+      notes: |
+        Apps installed to a single workspace. Block Kit required
+        but no review process for private installations.
+
+    publicDistribution:
+      name: Public Distribution
+      componentRequirement: required
+      customComponentsAllowed: false
+      reviewRequired: true
+      securityReviewRequired: true
+      notes: |
+        Apps distributed publicly undergo App Directory review
+        including security, functionality, and UX assessment.
+
+    appDirectory:
+      name: Slack App Directory
+      componentRequirement: required
+      customComponentsAllowed: false
+      certificationRequired: false
+      reviewRequired: true
+      securityReviewRequired: true
+      notes: |
+        Listing in App Directory requires passing review.
+        Featured apps undergo additional vetting.
+
+  designGuidelines:
+    required: true
+    designSystem: Block Kit
+    designSystemUrl: https://api.slack.com/block-kit
+    builderUrl: https://app.slack.com/block-kit-builder
+    designTokensProvided: false
+    guidelines:
+      - Use Block Kit Builder to design and validate layouts
+      - Follow text length limits for each block type
+      - Provide clear, concise labels and placeholder text
+      - Use confirmation dialogs for destructive actions
+      - Ensure accessibility with alt text and labels
+
+  performance:
+    messageBlockLimit: 50
+    modalBlockLimit: 100
+    homeTabBlockLimit: 100
+    interactionTimeout: 3000
+    notes: |
+      Interactions must respond within 3 seconds. Long-running
+      operations should use response URLs for async updates.
+
+extensionPoints:
+  - id: message
+    name: Messages
+    type: surface
+    extensionType: jsonResponse
+    description: |
+      Block Kit messages in channels, DMs, or threads. The primary
+      surface for rich app interactions in conversations.
+    supportedBlocks:
+      - section
+      - divider
+      - image
+      - actions
+      - context
+      - header
+      - video
+      - file
+      - rich_text
+    constraints:
+      maxBlocks: 50
+      maxTextLength: 3000
+      supportsMarkdown: true
+    context:
+      provides:
+        - channel_id
+        - user_id
+        - team_id
+        - message_ts
+        - thread_ts
+      actions:
+        - postMessage
+        - updateMessage
+        - postEphemeral
+    documentation: https://api.slack.com/surfaces/messages
+
+  - id: modal
+    name: Modals
+    type: surface
+    extensionType: jsonResponse
+    description: |
+      Focused surfaces for data collection, confirmations, and
+      workflows. Opened via views.open API call.
+    supportedBlocks:
+      - section
+      - divider
+      - image
+      - actions
+      - context
+      - input
+      - header
+      - video
+      - rich_text
+    constraints:
+      maxBlocks: 100
+      maxInputBlocks: 100
+      canStack: true
+      maxStackDepth: 3
+    context:
+      provides:
+        - trigger_id
+        - user_id
+        - team_id
+        - view_id
+      actions:
+        - viewsOpen
+        - viewsUpdate
+        - viewsPush
+      callbacks:
+        - view_submission
+        - view_closed
+    documentation: https://api.slack.com/surfaces/modals
+
+  - id: home-tab
+    name: App Home Tab
+    type: surface
+    extensionType: jsonResponse
+    description: |
+      Personal space for users to interact with your app.
+      Accessed via the app's Home tab.
+    supportedBlocks:
+      - section
+      - divider
+      - image
+      - actions
+      - context
+      - header
+      - video
+      - rich_text
+    constraints:
+      maxBlocks: 100
+      noInputBlocks: true
+      refreshable: true
+    context:
+      provides:
+        - user_id
+        - team_id
+        - view_id
+      actions:
+        - viewsPublish
+      callbacks:
+        - app_home_opened
+    documentation: https://api.slack.com/surfaces/app-home
+
+  - id: workflow-step
+    name: Workflow Steps
+    type: surface
+    extensionType: jsonResponse
+    description: |
+      Custom steps in Workflow Builder. Includes configuration
+      modal and execution logic.
+    supportedBlocks:
+      - section
+      - divider
+      - actions
+      - context
+      - input
+      - header
+    constraints:
+      configurationRequired: true
+      executionAsync: true
+    context:
+      provides:
+        - workflow_step_id
+        - inputs
+        - outputs
+      actions:
+        - workflowStepEdit
+        - workflowsUpdateStep
+      callbacks:
+        - workflow_step_edit
+        - workflow_step_execute
+    documentation: https://api.slack.com/workflows/steps
+
+renderingEngines:
+  slack-native:
+    type: native
+    name: Slack Native Rendering
+    description: |
+      Block Kit is rendered natively by Slack clients (desktop, mobile, web).
+      Apps define UI as JSON; Slack handles all rendering and interactions.
+    sandboxing:
+      serverSideExecution: true
+      clientSideExecution: false
+      notes: |
+        App logic runs on developer servers. Slack clients send
+        interaction payloads to registered endpoints.
+    platforms:
+      - Slack Desktop (Windows, macOS, Linux)
+      - Slack Mobile (iOS, Android)
+      - Slack Web
+
+jsonFormsIntegration:
+  supported: false
+  notes: |
+    Block Kit has its own input/form system with the input block
+    and various input elements. Not compatible with JSON Forms.
+
+mcpAppsIntegration:
+  supported: false
+  notes: Not yet integrated with MCP Apps specification
+
+extensionType: jsonResponse
+
+extensions:
+  declarativeSchemas:
+    enabled: true
+    schemaFormat: json
+    description: |
+      Block Kit is entirely JSON-based. Apps construct blocks and
+      elements as JSON objects conforming to Block Kit schemas.
+    validation:
+      builderTool: https://app.slack.com/block-kit-builder
+      sdkValidation: true
+      runtimeValidation: true
+    schemaDocumentation: https://api.slack.com/reference/block-kit/blocks
+
+  i18n:
+    enabled: true
+    localeDetection: automatic
+    description: |
+      Slack provides user locale information. Apps can localize
+      Block Kit text content based on user preferences.
+    implementation:
+      clientProvides:
+        - user_locale
+        - team_locale
+      developerResponsibility:
+        - Translate text objects
+        - Handle RTL languages
+        - Format dates/times appropriately
+    supportedLocales:
+      - en-US
+      - en-GB
+      - de-DE
+      - es-ES
+      - es-LA
+      - fr-FR
+      - it-IT
+      - ja-JP
+      - ko-KR
+      - pt-BR
+      - ru-RU
+      - zh-CN
+      - zh-TW
+    documentation: https://api.slack.com/reference/internationalization
+
+  compliance:
+    enabled: true
+    description: |
+      Apps distributed publicly must comply with Slack's App
+      Directory Review requirements and security standards.
+    requirements:
+      securityReview:
+        required: true
+        scope: publicDistribution
+        includes:
+          - Data handling and privacy review
+          - OAuth implementation verification
+          - Secure API usage patterns
+          - Permission scope audit
+      functionalReview:
+        required: true
+        scope: appDirectory
+        includes:
+          - App functionality testing
+          - Error handling validation
+          - User experience assessment
+      contentReview:
+        required: true
+        scope: appDirectory
+        includes:
+          - App listing content
+          - Screenshots and media
+          - Privacy policy and terms
+    certifications:
+      dataResidency:
+        available: true
+        description: Data Residency certification for regulated industries
+      enterpriseKeyManagement:
+        available: true
+        description: EKM support for enterprise customers
+    documentation: https://api.slack.com/start/distributing/directory
+    privacyPolicy: https://slack.com/privacy-policy
+
+  analytics:
+    enabled: true
+    description: |
+      Slack provides analytics for app usage, installations,
+      and user engagement within the Slack platform.
+    metrics:
+      - Daily/Monthly Active Users
+      - Message interactions
+      - Modal opens and submissions
+      - App Home views
+      - Installation/uninstallation rates
+    dashboard: https://api.slack.com/apps (App Management)
+
+  testing:
+    enabled: true
+    description: Tools and methods for testing Block Kit interfaces
+    tools:
+      blockKitBuilder:
+        url: https://app.slack.com/block-kit-builder
+        description: Visual builder with live preview and validation
+        features:
+          - Visual block composition
+          - JSON export/import
+          - Sample payload generation
+          - Validation errors
+      slackPlatformSimulator:
+        description: Test apps in development workspace
+        features:
+          - Real-time interaction testing
+          - Event simulation
+          - Permission testing
+    documentation: https://api.slack.com/block-kit/building
+
+  accessibilityFeatures:
+    keyboardNavigation: true
+    screenReaderSupport: true
+    highContrastMode: true
+    description: |
+      Block Kit is designed with accessibility built-in. Slack
+      clients handle keyboard navigation, screen reader support,
+      and high contrast modes automatically.
+    guidelines:
+      - Provide alt text for all images
+      - Use descriptive button labels
+      - Include accessibility_label for complex elements
+      - Ensure logical focus order in modals
+    documentation: https://api.slack.com/block-kit/accessibility
+
+  rateLimits:
+    description: Rate limits for Slack API methods
+    limits:
+      chatPostMessage:
+        tier1: 1 per second
+        tier2: 20 per minute
+        tier3: 50+ per minute (varies by workspace)
+      viewsOpen:
+        rate: 3 per second per user
+      viewsUpdate:
+        rate: 3 per second per view
+      viewsPublish:
+        rate: 5 per minute per user
+    documentation: https://api.slack.com/docs/rate-limits
+
+  securityFeatures:
+    oauthRequired: true
+    scopedPermissions: true
+    requestSigning: true
+    description: |
+      Slack apps use OAuth 2.0 for authentication with granular
+      permission scopes. All requests are signed and verified.
+    features:
+      - Request signature verification
+      - Token rotation support
+      - App-level tokens
+      - User tokens vs bot tokens
+      - Workspace app management
+    documentation: https://api.slack.com/authentication
+
+notes: |
+  Slack Block Kit is a comprehensive, JSON-based UI framework that enforces
+  a strict component model. Apps cannot use custom UI components - all
+  interfaces must be built using Block Kit's declarative structure.
+
+  Key characteristics:
+  - Fully declarative: UI defined as JSON, not code
+  - Server-side execution: App logic runs on developer servers
+  - Native rendering: Slack clients render Block Kit natively
+  - Cross-platform: Consistent across desktop, mobile, and web
+  - Accessibility built-in: Keyboard, screen reader support automatic
+  - Interactive: Rich interactions via action handlers
+
+  Block Kit is used across all Slack surfaces: messages, modals, Home tabs,
+  and workflow steps. The Block Kit Builder provides visual design and
+  validation tools for developers.
+
+metadata:
+  fenestra:
+    createdAt: "2025-12-30"
+    author: "Fenestra Specification Team"
+    category: "Communication Platform"
+    tags:
+      - messaging
+      - collaboration
+      - json-ui
+      - declarative
+      - block-kit
+    relatedPlatforms:
+      - Microsoft Teams (Adaptive Cards)
+      - Discord (Embeds)
+      - Webex (Cards)

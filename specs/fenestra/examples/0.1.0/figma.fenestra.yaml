@@ -1,0 +1,727 @@
+# Fenestra Document: Figma Plugin Platform
+#
+# Figma represents an iframe-based execution model with dual-context architecture.
+# Plugins run in two separate contexts: main thread (Figma API access) and UI thread (sandboxed iframe).
+
+fenestra: "0.1.0"
+
+info:
+  title: Figma Plugin Platform UI Ecosystem
+  version: "1.0.0"
+  description: |
+    Figma's Plugin Platform enables developers to extend Figma and FigJam
+    with custom functionality through a dual-context architecture.
+
+    Key characteristics:
+    - Two execution contexts: Main thread (Figma API) + UI thread (iframe)
+    - Communication via postMessage between contexts
+    - Sandboxed iframe for all UI rendering
+    - Component libraries are OPTIONAL (developers can use figma-plugin-ds or custom HTML/CSS)
+    - Widget API for on-canvas interactive elements
+    - Separate FigJam plugin capabilities
+
+platform:
+  name: Figma
+  vendor: Figma, Inc.
+  documentation: https://www.figma.com/plugin-docs/
+  appMarketplace: https://www.figma.com/community/plugins
+
+sdks:
+  figma-plugin-api:
+    name: Figma Plugin API
+    packageManager: npm
+    package: "@figma/plugin-typings"
+    documentation: https://www.figma.com/plugin-docs/api/api-overview/
+    description: |
+      TypeScript type definitions for the Figma Plugin API.
+      Provides types for the global 'figma' object available in the main thread.
+    exports:
+      figma:
+        type: utility
+        description: Global figma object for document manipulation and API access
+      PluginAPI:
+        type: type
+        description: TypeScript interface for the Figma Plugin API
+      SceneNode:
+        type: type
+        description: Base type for all nodes in the Figma document
+      FrameNode:
+        type: type
+        description: Frame node type
+      TextNode:
+        type: type
+        description: Text node type
+      RectangleNode:
+        type: type
+        description: Rectangle node type
+
+  figma-plugin-ds:
+    name: Figma Plugin DS (Community)
+    packageManager: npm
+    package: "figma-plugin-ds"
+    repository: https://github.com/thomas-lowry/figma-plugin-ds
+    documentation: https://github.com/thomas-lowry/figma-plugin-ds
+    description: |
+      Community-created design system that provides CSS styles matching
+      Figma's UI. Not officially maintained by Figma but widely used.
+      Works with plain HTML similar to Mirotone for Miro.
+    exports:
+      button:
+        type: component
+        description: ".button CSS class for buttons"
+      input:
+        type: component
+        description: ".input CSS class for text inputs"
+      select:
+        type: component
+        description: ".select-menu CSS class for dropdowns"
+      checkbox:
+        type: component
+        description: ".checkbox CSS class for checkboxes"
+      radio:
+        type: component
+        description: ".radio CSS class for radio buttons"
+      switch:
+        type: component
+        description: ".switch CSS class for toggle switches"
+      textarea:
+        type: component
+        description: ".textarea CSS class for text areas"
+      icon:
+        type: component
+        description: ".icon CSS class for icons"
+      disclosure:
+        type: component
+        description: ".disclosure CSS class for collapsible sections"
+      label:
+        type: component
+        description: ".label CSS class for form labels"
+      section:
+        type: component
+        description: ".section CSS class for content sections"
+
+  figma-widget-api:
+    name: Figma Widget API
+    packageManager: npm
+    package: "@figma/plugin-typings"
+    documentation: https://www.figma.com/widget-docs/
+    description: |
+      API for creating interactive on-canvas widgets in Figma.
+      Widgets use a React-like declarative syntax and run directly on the canvas.
+    exports:
+      widget:
+        type: utility
+        description: Global widget namespace for creating on-canvas widgets
+      AutoLayout:
+        type: component
+        description: Auto layout container for widgets
+      Frame:
+        type: component
+        description: Frame container for widgets
+      Text:
+        type: component
+        description: Text display for widgets
+      Rectangle:
+        type: component
+        description: Rectangle shape for widgets
+      SVG:
+        type: component
+        description: SVG display for widgets
+      Input:
+        type: component
+        description: Text input for widgets
+      useSyncedState:
+        type: hook
+        description: Hook for synced state across widget instances
+
+componentCatalog:
+  categories:
+    action:
+      name: Actions
+      description: Interactive elements
+      components: [button, iconButton]
+
+    input:
+      name: Inputs
+      description: Form controls
+      components: [input, textarea, select, checkbox, radio, switch]
+
+    layout:
+      name: Layout
+      description: Layout components
+      components: [section, disclosure, divider]
+
+    display:
+      name: Display
+      description: Display components
+      components: [label, icon]
+
+    widget:
+      name: Widgets
+      description: On-canvas widget components
+      components: [widgetAutoLayout, widgetText, widgetInput, widgetFrame]
+
+  components:
+    button:
+      name: Button
+      description: Figma-styled button component
+      category: action
+      sdkBinding:
+        sdk: figma-plugin-ds
+        export: button
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+      props:
+        class:
+          type: string
+          description: "CSS classes: .button, .button--primary, .button--secondary, .button--tertiary"
+      variants:
+        - primary
+        - secondary
+        - tertiary
+        - destructive
+      examples:
+        - title: Primary Button
+          code: |
+            <button class="button button--primary">Create</button>
+          language: html
+        - title: Icon Button
+          code: |
+            <button class="button button--primary-icon">
+              <div class="icon icon--adjust"></div>
+            </button>
+          language: html
+
+    input:
+      name: Input
+      description: Text input field styled to match Figma
+      category: input
+      sdkBinding:
+        sdk: figma-plugin-ds
+        export: input
+      webStandardMapping:
+        htmlElement: input
+        ariaRole: textbox
+        semanticType: input
+      props:
+        class:
+          type: string
+          description: "CSS class: .input"
+        placeholder:
+          type: string
+      examples:
+        - title: Text Input
+          code: |
+            <input class="input" type="text" placeholder="Enter text">
+          language: html
+
+    select:
+      name: Select Menu
+      description: Dropdown menu styled to match Figma
+      category: input
+      sdkBinding:
+        sdk: figma-plugin-ds
+        export: select
+      webStandardMapping:
+        htmlElement: select
+        ariaRole: listbox
+        semanticType: input
+      examples:
+        - title: Select Menu
+          code: |
+            <div class="select-menu">
+              <select class="select-menu__menu">
+                <option>Option 1</option>
+                <option>Option 2</option>
+              </select>
+              <div class="select-menu__caret"></div>
+            </div>
+          language: html
+
+    checkbox:
+      name: Checkbox
+      description: Checkbox styled to match Figma
+      category: input
+      sdkBinding:
+        sdk: figma-plugin-ds
+        export: checkbox
+      webStandardMapping:
+        htmlElement: input[type="checkbox"]
+        ariaRole: checkbox
+        semanticType: input
+      examples:
+        - title: Checkbox
+          code: |
+            <label class="checkbox">
+              <input type="checkbox" class="checkbox__box">
+              <span class="checkbox__label">Enable feature</span>
+            </label>
+          language: html
+
+    switch:
+      name: Switch
+      description: Toggle switch styled to match Figma
+      category: input
+      sdkBinding:
+        sdk: figma-plugin-ds
+        export: switch
+      webStandardMapping:
+        htmlElement: input[type="checkbox"]
+        ariaRole: switch
+        semanticType: input
+      examples:
+        - title: Switch
+          code: |
+            <label class="switch">
+              <input type="checkbox" class="switch__toggle">
+              <div class="switch__label">Dark mode</div>
+            </label>
+          language: html
+
+    section:
+      name: Section
+      description: Content section container
+      category: layout
+      sdkBinding:
+        sdk: figma-plugin-ds
+        export: section
+      webStandardMapping:
+        htmlElement: section
+        ariaRole: region
+        semanticType: container
+      examples:
+        - title: Section
+          code: |
+            <div class="section">
+              <div class="section__title">Section Title</div>
+              <div class="section__content">
+                Content goes here
+              </div>
+            </div>
+          language: html
+
+    disclosure:
+      name: Disclosure
+      description: Collapsible section with expand/collapse
+      category: layout
+      sdkBinding:
+        sdk: figma-plugin-ds
+        export: disclosure
+      webStandardMapping:
+        htmlElement: details
+        ariaRole: group
+        semanticType: container
+      examples:
+        - title: Disclosure
+          code: |
+            <div class="disclosure">
+              <div class="disclosure__title">
+                <div class="disclosure__toggle">▶</div>
+                Advanced Options
+              </div>
+              <div class="disclosure__content">
+                Hidden content
+              </div>
+            </div>
+          language: html
+
+    widgetAutoLayout:
+      name: Widget AutoLayout
+      description: Auto layout container for on-canvas widgets
+      category: widget
+      sdkBinding:
+        sdk: figma-widget-api
+        export: AutoLayout
+      webStandardMapping:
+        htmlElement: div
+        semanticType: layout
+      examples:
+        - title: Widget AutoLayout
+          code: |
+            const { widget } = figma;
+            const { AutoLayout, Text } = widget;
+
+            function Widget() {
+              return (
+                <AutoLayout direction="vertical" spacing={8}>
+                  <Text>Hello World</Text>
+                </AutoLayout>
+              );
+            }
+          language: jsx
+
+    widgetText:
+      name: Widget Text
+      description: Text display for on-canvas widgets
+      category: widget
+      sdkBinding:
+        sdk: figma-widget-api
+        export: Text
+      webStandardMapping:
+        htmlElement: span
+        semanticType: display
+      examples:
+        - title: Widget Text
+          code: |
+            <Text fontSize={16} fill="#000000">
+              Widget text content
+            </Text>
+          language: jsx
+
+    widgetInput:
+      name: Widget Input
+      description: Text input field for on-canvas widgets
+      category: widget
+      sdkBinding:
+        sdk: figma-widget-api
+        export: Input
+      webStandardMapping:
+        htmlElement: input
+        semanticType: input
+      examples:
+        - title: Widget Input
+          code: |
+            const [value, setValue] = useSyncedState('text', '');
+            return (
+              <Input
+                value={value}
+                onTextEditEnd={(e) => setValue(e.characters)}
+                placeholder="Enter text"
+              />
+            );
+          language: jsx
+
+policies:
+  componentRequirement:
+    level: optional
+    scope: all
+    rationale: |
+      Figma provides no official component library. The community-maintained
+      figma-plugin-ds is popular but entirely optional. Developers have
+      complete freedom to build UIs with any HTML/CSS/JS approach.
+
+  customComponents:
+    allowed: true
+    constraints:
+      - sandboxOnly
+    registrationRequired: false
+    approvalRequired: false
+    documentation: https://www.figma.com/plugin-docs/creating-ui/
+
+  publishing:
+    privateApps:
+      componentRequirement: optional
+      customComponentsAllowed: true
+      reviewRequired: false
+      notes: "Private plugins have complete freedom"
+
+    publicApps:
+      componentRequirement: optional
+      customComponentsAllowed: true
+      reviewRequired: true
+      notes: "Community plugins undergo review for security and quality"
+
+    marketplaceApps:
+      componentRequirement: optional
+      customComponentsAllowed: true
+      certificationRequired: false
+      notes: "All community plugins follow same review process"
+
+  designGuidelines:
+    required: false
+    designSystem: "figma-plugin-ds (community)"
+    designSystemUrl: https://github.com/thomas-lowry/figma-plugin-ds
+    designTokensProvided: false
+
+  security:
+    sandbox: true
+    sandboxDescription: |
+      All plugin UI runs in a sandboxed iframe. The main plugin code
+      runs in a separate JavaScript context with access to the Figma API
+      but no DOM access. Communication between contexts uses postMessage.
+    cspPolicy: "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src https:"
+
+extensionPoints:
+  - id: plugin-ui
+    name: Plugin UI
+    type: modal
+    extensionType: iframe
+    description: |
+      Sandboxed iframe UI that can be shown as a modal or panel.
+      Communicates with main plugin code via postMessage.
+    supportedComponents:
+      - all
+    constraints:
+      resizable: true
+      responsive: true
+    context:
+      provides:
+        - selection
+        - currentPage
+        - document
+        - user
+      actions:
+        - createNode
+        - modifyNode
+        - deleteNode
+        - showUI
+        - closePlugin
+    extensionTypeConfig:
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+      communication:
+        globalObject: "parent"
+        initialization:
+          method: "postMessage to parent"
+          async: true
+        asyncPattern: promises
+        capabilities:
+          context: true
+          uiActions: true
+          dataActions: true
+          events: true
+
+  - id: widget-canvas
+    name: Canvas Widget (Figma)
+    type: canvas
+    extensionType: codedComponents
+    description: |
+      Interactive on-canvas widget that lives in the Figma document.
+      Uses a React-like declarative API with limited component set.
+      Available in Figma files (not FigJam).
+    supportedComponents:
+      - widgetAutoLayout
+      - widgetText
+      - widgetInput
+      - widgetFrame
+    constraints:
+      responsive: true
+    context:
+      provides:
+        - widgetNode
+        - syncedState
+        - document
+      actions:
+        - updateWidget
+        - openUI
+    extensionTypeConfig:
+      sdk: figma-widget-api
+      framework: react
+      runtime:
+        type: directExecution
+        bundling: platformBuild
+
+  - id: figjam-widget
+    name: FigJam Widget
+    type: canvas
+    extensionType: codedComponents
+    description: |
+      Interactive widget for FigJam collaborative whiteboard.
+      Similar to Figma widgets but with FigJam-specific features.
+      Can include stickers, voting, and collaboration features.
+    supportedComponents:
+      - widgetAutoLayout
+      - widgetText
+      - widgetInput
+      - widgetFrame
+    constraints:
+      responsive: true
+    context:
+      provides:
+        - widgetNode
+        - syncedState
+        - figjamDocument
+      actions:
+        - updateWidget
+        - openUI
+        - createSticky
+    extensionTypeConfig:
+      sdk: figma-widget-api
+      framework: react
+      runtime:
+        type: directExecution
+        bundling: platformBuild
+
+  - id: plugin-menu
+    name: Plugin Menu Command
+    type: contextMenu
+    extensionType: codedComponents
+    description: |
+      Command in the Figma plugins menu that executes code without showing UI.
+      Can optionally open UI after execution.
+    supportedComponents: []
+    context:
+      provides:
+        - selection
+        - currentPage
+        - document
+      actions:
+        - createNode
+        - modifyNode
+        - showUI
+
+renderingEngines:
+  iframe-html:
+    type: custom
+    name: HTML + CSS in Iframe
+    description: |
+      Plugin UI is plain HTML/CSS/JavaScript rendered in a sandboxed iframe.
+      Developers can use figma-plugin-ds CSS library or custom styling.
+    sandboxing:
+      iframeSandbox: true
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+      cspPolicy: "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+
+  widget-declarative:
+    type: custom
+    name: Widget Declarative API
+    description: |
+      On-canvas widgets use a React-like declarative syntax with a limited
+      set of built-in components (AutoLayout, Text, Input, etc.)
+    sandboxing:
+      iframeSandbox: false
+
+architecture:
+  executionModel: dual-context
+  description: |
+    Figma plugins use a dual-context architecture:
+
+    1. Main Thread: Runs plugin code with access to Figma API (figma.*)
+       - No DOM access
+       - Can read/write document nodes
+       - Can trigger UI display
+
+    2. UI Thread: Sandboxed iframe with HTML/CSS/JS
+       - Full DOM access for rendering UI
+       - No direct Figma API access
+       - Communicates with main thread via postMessage
+
+    This separation ensures security while allowing rich custom UIs.
+
+  communication:
+    protocol: postMessage
+    description: |
+      Main thread and UI thread communicate via window.postMessage API.
+
+      Main -> UI: figma.ui.postMessage(data)
+      UI -> Main: parent.postMessage({ pluginMessage: data }, '*')
+
+      Main thread listens: figma.ui.onmessage = (msg) => { ... }
+      UI thread listens: window.onmessage = (event) => { ... }
+
+jsonFormsIntegration:
+  supported: true
+  rendererSet: custom
+  customRenderersAllowed: true
+  notes: |
+    Developers can integrate JSON Forms with custom renderers using
+    figma-plugin-ds or their own components in the UI iframe.
+
+mcpAppsIntegration:
+  supported: false
+  notes: |
+    Not currently integrated with MCP Apps specification, but the iframe
+    architecture could potentially support MCP Apps UI resources in the future.
+
+extensions:
+  compliance:
+    communityGuidelines:
+      url: https://www.figma.com/community/plugin-guidelines/
+      description: |
+        Figma Community Guidelines govern what plugins can be published.
+        Key requirements:
+        - No malicious code or data harvesting
+        - Must respect user privacy
+        - Clear description of functionality
+        - Appropriate content only
+        - No trademark/copyright violations
+
+    reviewProcess:
+      required: true
+      scope: public
+      description: |
+        All community plugins undergo review before publication:
+        1. Automated security checks
+        2. Manual review of code and functionality
+        3. Testing for performance and stability
+        4. Verification of description accuracy
+      timeline: "1-2 weeks typical review time"
+
+    securityRequirements:
+      - name: Sandboxing
+        description: All UI must run in sandboxed iframe
+        required: true
+      - name: API Access
+        description: Only access Figma API from main thread
+        required: true
+      - name: Network Requests
+        description: Declare all network requests in manifest
+        required: true
+      - name: Data Privacy
+        description: No unauthorized data collection or transmission
+        required: true
+
+  manifest:
+    file: manifest.json
+    description: |
+      Every plugin requires a manifest.json file defining:
+      - Plugin metadata (name, id, version)
+      - Main code file path
+      - UI file path (if using UI)
+      - Permissions and capabilities
+      - Menu commands
+      - Network access requirements
+    schema:
+      name:
+        type: string
+        required: true
+      id:
+        type: string
+        required: true
+        description: Unique plugin ID assigned by Figma
+      api:
+        type: string
+        required: true
+        description: Figma API version (e.g., "1.0.0")
+      main:
+        type: string
+        required: true
+        description: Path to main plugin code file
+      ui:
+        type: string
+        required: false
+        description: Path to UI HTML file
+      capabilities:
+        type: array
+        required: false
+        description: Special capabilities (e.g., "codegen", "inspect")
+      networkAccess:
+        type: object
+        required: false
+        description: Allowed network domains
+
+  developmentTools:
+    - name: Figma Plugin API Typings
+      description: TypeScript definitions for Figma Plugin API
+      package: "@figma/plugin-typings"
+
+    - name: Create Figma Plugin
+      description: CLI tool for scaffolding new plugins
+      package: "create-figma-plugin"
+      command: "npm init figma-plugin"
+      url: https://github.com/yuanqing/create-figma-plugin
+
+    - name: Figma Plugin DS
+      description: Community design system matching Figma's UI
+      package: "figma-plugin-ds"
+      url: https://github.com/thomas-lowry/figma-plugin-ds
+
+    - name: Hot Reload
+      description: Built-in hot reload during development
+      builtin: true
+      description: "Figma supports hot reload in development mode"

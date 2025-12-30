@@ -1,0 +1,1317 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://spec.openapis.org/fenestra/core/v0.1/schema.json",
+  "title": "Fenestra Core Specification Schema",
+  "description": "JSON Schema for validating Fenestra Core Description documents",
+  "type": "object",
+  "required": [
+    "fenestra",
+    "info"
+  ],
+  "properties": {
+    "fenestra": {
+      "type": "string",
+      "description": "Fenestra specification version",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9]+)?$"
+    },
+    "info": {
+      "$ref": "#/$defs/Info"
+    },
+    "platform": {
+      "$ref": "#/$defs/Platform"
+    },
+    "sdks": {
+      "type": "object",
+      "description": "SDK ecosystem definitions indexed by SDK identifier",
+      "additionalProperties": {
+        "$ref": "#/$defs/SDK"
+      }
+    },
+    "componentCatalog": {
+      "$ref": "#/$defs/ComponentCatalog"
+    },
+    "renderingEngines": {
+      "type": "object",
+      "description": "Supported rendering engine configurations",
+      "additionalProperties": {
+        "$ref": "#/$defs/RenderingEngine"
+      }
+    },
+    "policies": {
+      "$ref": "#/$defs/Policies"
+    },
+    "extensionPoints": {
+      "type": "array",
+      "description": "Where UI can be injected in the host platform",
+      "items": {
+        "$ref": "#/$defs/ExtensionPoint"
+      }
+    }
+  },
+  "patternProperties": {
+    "^x-": {
+      "description": "Specification extension"
+    }
+  },
+  "$defs": {
+    "Info": {
+      "type": "object",
+      "required": [
+        "title",
+        "version"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Human-readable title for the Fenestra Description"
+        },
+        "summary": {
+          "type": "string",
+          "description": "A short summary of the platform's UI capabilities"
+        },
+        "description": {
+          "type": "string",
+          "description": "Extended description (CommonMark supported)"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of this Fenestra Description document"
+        },
+        "termsOfService": {
+          "type": "string",
+          "format": "uri"
+        },
+        "contact": {
+          "$ref": "#/$defs/Contact"
+        },
+        "license": {
+          "$ref": "#/$defs/License"
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      }
+    },
+    "Contact": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      }
+    },
+    "License": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "identifier": {
+          "type": "string",
+          "description": "SPDX license expression"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      }
+    },
+    "Platform": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Platform name"
+        },
+        "vendor": {
+          "type": "string",
+          "description": "Platform vendor/company name"
+        },
+        "documentation": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to platform developer documentation"
+        },
+        "appMarketplace": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the platform's app marketplace"
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      }
+    },
+    "SDK": {
+      "type": "object",
+      "required": [
+        "name",
+        "packageManager",
+        "package"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Human-readable SDK name"
+        },
+        "packageManager": {
+          "type": "string",
+          "enum": [
+            "npm",
+            "yarn",
+            "pip",
+            "maven",
+            "gradle",
+            "nuget",
+            "cargo",
+            "go",
+            "composer",
+            "cocoapods",
+            "carthage",
+            "swift-package-manager"
+          ]
+        },
+        "package": {
+          "type": "string",
+          "description": "Package identifier"
+        },
+        "version": {
+          "type": "string",
+          "description": "Recommended or minimum version"
+        },
+        "platform": {
+          "type": "string",
+          "enum": [
+            "web",
+            "ios",
+            "android",
+            "react-native",
+            "flutter",
+            "electron"
+          ],
+          "default": "web",
+          "description": "Target platform"
+        },
+        "mobile": {
+          "$ref": "#/$defs/MobileSDK"
+        },
+        "repository": {
+          "type": "string",
+          "format": "uri"
+        },
+        "documentation": {
+          "type": "string",
+          "format": "uri"
+        },
+        "installCommand": {
+          "type": "string",
+          "description": "Full install command for quick setup"
+        },
+        "cdn": {
+          "type": "string",
+          "format": "uri",
+          "description": "CDN URL for script tag loading"
+        },
+        "cdnRequired": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether SDK must be loaded from CDN"
+        },
+        "typesPackage": {
+          "type": "string",
+          "description": "TypeScript types package if separate"
+        },
+        "starterTemplate": {
+          "$ref": "#/$defs/StarterTemplate"
+        },
+        "cliTool": {
+          "$ref": "#/$defs/CliTool"
+        },
+        "exports": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/SDKExport"
+          }
+        },
+        "subpackages": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Subpackage"
+          }
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      }
+    },
+    "StarterTemplate": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string",
+          "format": "uri"
+        },
+        "documentation": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "CliTool": {
+      "type": "object",
+      "properties": {
+        "package": {
+          "type": "string"
+        },
+        "installCommand": {
+          "type": "string"
+        },
+        "commands": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "SDKExport": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "component",
+            "hook",
+            "utility",
+            "icon",
+            "token",
+            "context",
+            "type"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "deprecated": {
+          "type": "boolean",
+          "default": false
+        },
+        "since": {
+          "type": "string"
+        }
+      }
+    },
+    "Subpackage": {
+      "type": "object",
+      "properties": {
+        "package": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "exports": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/SDKExport"
+          }
+        }
+      }
+    },
+    "MobileSDK": {
+      "type": "object",
+      "description": "Mobile-specific SDK requirements",
+      "properties": {
+        "minOsVersion": {
+          "type": "string"
+        },
+        "targetOsVersion": {
+          "type": "string"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "permissions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "architectures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "frameworks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "appStoreGuidelines": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "ComponentCatalog": {
+      "type": "object",
+      "properties": {
+        "categories": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ComponentCategory"
+          }
+        },
+        "components": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Component"
+          }
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      }
+    },
+    "ComponentCategory": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Component": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "sdkBinding": {
+          "$ref": "#/$defs/SDKBinding"
+        },
+        "webStandardMapping": {
+          "$ref": "#/$defs/WebStandardMapping"
+        },
+        "props": {
+          "type": "object",
+          "description": "Component properties (JSON Schema format)"
+        },
+        "slots": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Slot"
+          }
+        },
+        "events": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ComponentEvent"
+          }
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accessibility": {
+          "$ref": "#/$defs/Accessibility"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComponentExample"
+          }
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      }
+    },
+    "SDKBinding": {
+      "type": "object",
+      "required": [
+        "sdk",
+        "export"
+      ],
+      "properties": {
+        "sdk": {
+          "type": "string"
+        },
+        "subpackage": {
+          "type": "string"
+        },
+        "export": {
+          "type": "string"
+        },
+        "importPath": {
+          "type": "string"
+        }
+      }
+    },
+    "WebStandardMapping": {
+      "type": "object",
+      "properties": {
+        "htmlElement": {
+          "type": "string"
+        },
+        "ariaRole": {
+          "type": "string"
+        },
+        "webComponent": {
+          "type": "string"
+        },
+        "semanticType": {
+          "type": "string",
+          "enum": [
+            "action",
+            "input",
+            "display",
+            "layout",
+            "navigation",
+            "feedback",
+            "container"
+          ]
+        }
+      }
+    },
+    "Slot": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean",
+          "default": false
+        },
+        "accepts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ComponentEvent": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "payload": {
+          "type": "object"
+        }
+      }
+    },
+    "Accessibility": {
+      "type": "object",
+      "properties": {
+        "keyboardSupport": {
+          "type": "boolean"
+        },
+        "screenReaderSupport": {
+          "type": "boolean"
+        },
+        "focusManagement": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "ComponentExample": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string",
+          "default": "jsx"
+        }
+      }
+    },
+    "RenderingEngine": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "jsonForms",
+            "jsonSchema",
+            "mcpApps",
+            "react",
+            "webComponents",
+            "lwc",
+            "custom"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "schemaSupport": {
+          "$ref": "#/$defs/SchemaSupport"
+        },
+        "sandboxing": {
+          "$ref": "#/$defs/SandboxConfig"
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      }
+    },
+    "SchemaSupport": {
+      "type": "object",
+      "properties": {
+        "dataSchema": {
+          "type": "string",
+          "enum": [
+            "jsonSchema",
+            "custom"
+          ]
+        },
+        "uiSchema": {
+          "type": "string",
+          "enum": [
+            "jsonFormsUISchema",
+            "mcpAppsTemplate",
+            "custom"
+          ]
+        },
+        "customRenderers": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "SandboxConfig": {
+      "type": "object",
+      "properties": {
+        "iframeSandbox": {
+          "type": "boolean"
+        },
+        "sandboxAttributes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cspPolicy": {
+          "type": "string"
+        }
+      }
+    },
+    "Policies": {
+      "type": "object",
+      "properties": {
+        "componentRequirement": {
+          "$ref": "#/$defs/ComponentRequirementPolicy"
+        },
+        "customComponents": {
+          "$ref": "#/$defs/CustomComponentPolicy"
+        },
+        "publishing": {
+          "$ref": "#/$defs/PublishingPolicy"
+        },
+        "designGuidelines": {
+          "$ref": "#/$defs/DesignGuidelinesPolicy"
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      }
+    },
+    "ComponentRequirementPolicy": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": [
+            "required",
+            "recommended",
+            "optional"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "all",
+            "publicApps",
+            "marketplaceApps"
+          ]
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "exceptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "CustomComponentPolicy": {
+      "type": "object",
+      "properties": {
+        "allowed": {
+          "type": "boolean"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "mustWrapPlatformPrimitives",
+              "mustFollowDesignSystem",
+              "mustPassAccessibilityAudit",
+              "requiresReview",
+              "sandboxOnly"
+            ]
+          }
+        },
+        "registrationRequired": {
+          "type": "boolean",
+          "default": false
+        },
+        "approvalRequired": {
+          "type": "boolean",
+          "default": false
+        },
+        "documentation": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "PublishingPolicy": {
+      "type": "object",
+      "properties": {
+        "privateApps": {
+          "$ref": "#/$defs/AppPolicy"
+        },
+        "publicApps": {
+          "$ref": "#/$defs/AppPolicy"
+        },
+        "marketplaceApps": {
+          "$ref": "#/$defs/AppPolicy"
+        }
+      }
+    },
+    "AppPolicy": {
+      "type": "object",
+      "properties": {
+        "componentRequirement": {
+          "type": "string",
+          "enum": [
+            "required",
+            "recommended",
+            "optional"
+          ]
+        },
+        "customComponentsAllowed": {
+          "type": "boolean"
+        },
+        "reviewRequired": {
+          "type": "boolean"
+        },
+        "designReviewRequired": {
+          "type": "boolean"
+        },
+        "accessibilityAuditRequired": {
+          "type": "boolean"
+        },
+        "certificationRequired": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "DesignGuidelinesPolicy": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "designSystem": {
+          "type": "string"
+        },
+        "designSystemUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "designTokensProvided": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ExtensionPoint": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "type",
+        "extensionType"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "sidebar",
+            "modal",
+            "panel",
+            "card",
+            "toolbar",
+            "contextMenu",
+            "canvas",
+            "composer",
+            "fullPage",
+            "embedded"
+          ]
+        },
+        "extensionType": {
+          "type": "string",
+          "enum": [
+            "jsonResponse",
+            "codedComponents",
+            "iframe",
+            "embeddedSdk"
+          ]
+        },
+        "extensionTypeConfig": {
+          "type": "object",
+          "description": "Configuration specific to the extension type. Schema varies based on extensionType value."
+        },
+        "description": {
+          "type": "string"
+        },
+        "supportedComponents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "constraints": {
+          "$ref": "#/$defs/Constraints"
+        },
+        "context": {
+          "$ref": "#/$defs/Context"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "extensionType": {
+                "const": "jsonResponse"
+              }
+            },
+            "required": [
+              "extensionType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "extensionTypeConfig": {
+                "$ref": "#/$defs/JsonResponseConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "extensionType": {
+                "const": "codedComponents"
+              }
+            },
+            "required": [
+              "extensionType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "extensionTypeConfig": {
+                "$ref": "#/$defs/CodedComponentsConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "extensionType": {
+                "const": "iframe"
+              }
+            },
+            "required": [
+              "extensionType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "extensionTypeConfig": {
+                "$ref": "#/$defs/IframeConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "extensionType": {
+                "const": "embeddedSdk"
+              }
+            },
+            "required": [
+              "extensionType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "extensionTypeConfig": {
+                "$ref": "#/$defs/EmbeddedSdkConfig"
+              }
+            }
+          }
+        }
+      ],
+      "patternProperties": {
+        "^x-": {}
+      }
+    },
+    "Constraints": {
+      "type": "object",
+      "properties": {
+        "maxWidth": {
+          "type": "integer"
+        },
+        "maxHeight": {
+          "type": "integer"
+        },
+        "responsive": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Context": {
+      "type": "object",
+      "properties": {
+        "provides": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "JsonResponseConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/ResponseSchema"
+        },
+        "endpoint": {
+          "$ref": "#/$defs/Endpoint"
+        },
+        "interactivity": {
+          "$ref": "#/$defs/Interactivity"
+        }
+      }
+    },
+    "ResponseSchema": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "schemaUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "encoding": {
+          "type": "string",
+          "default": "UTF-8"
+        }
+      }
+    },
+    "Endpoint": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "GET",
+            "POST"
+          ],
+          "default": "POST"
+        },
+        "contentType": {
+          "type": "string",
+          "default": "application/json"
+        },
+        "timeout": {
+          "type": "integer",
+          "default": 10
+        },
+        "authentication": {
+          "type": "string",
+          "enum": [
+            "none",
+            "oauth",
+            "jwt",
+            "signedRequest",
+            "apiKey"
+          ]
+        },
+        "contextProvided": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Interactivity": {
+      "type": "object",
+      "properties": {
+        "callbackUrl": {
+          "type": "boolean"
+        },
+        "payloadTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "CodedComponentsConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sdk": {
+          "type": "string"
+        },
+        "framework": {
+          "type": "string",
+          "enum": [
+            "react",
+            "vue",
+            "lwc",
+            "webComponents",
+            "agnostic"
+          ]
+        },
+        "runtime": {
+          "$ref": "#/$defs/Runtime"
+        },
+        "hostInteraction": {
+          "$ref": "#/$defs/JsSdkConfig"
+        }
+      }
+    },
+    "Runtime": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "sandboxedIframe",
+            "webWorker",
+            "directExecution"
+          ]
+        },
+        "bundling": {
+          "type": "string",
+          "enum": [
+            "platformBuild",
+            "developerBuild",
+            "cdn"
+          ]
+        }
+      }
+    },
+    "IframeConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sandboxAttributes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cspRequirements": {
+          "type": "string"
+        },
+        "sizeConstraints": {
+          "$ref": "#/$defs/SizeConstraints"
+        },
+        "communication": {
+          "$ref": "#/$defs/JsSdkConfig"
+        }
+      }
+    },
+    "SizeConstraints": {
+      "type": "object",
+      "properties": {
+        "minWidth": {
+          "type": "integer"
+        },
+        "maxWidth": {
+          "type": "integer"
+        },
+        "minHeight": {
+          "type": "integer"
+        },
+        "maxHeight": {
+          "type": "integer"
+        },
+        "resizable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "EmbeddedSdkConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sdk": {
+          "$ref": "#/$defs/EmbeddedSdkDetails"
+        },
+        "mountPattern": {
+          "type": "string",
+          "enum": [
+            "domSelector",
+            "reactComponent",
+            "webComponent",
+            "function"
+          ]
+        },
+        "theming": {
+          "$ref": "#/$defs/Theming"
+        },
+        "communication": {
+          "$ref": "#/$defs/Communication"
+        }
+      }
+    },
+    "EmbeddedSdkDetails": {
+      "type": "object",
+      "properties": {
+        "package": {
+          "type": "string"
+        },
+        "cdn": {
+          "type": "string",
+          "format": "uri"
+        },
+        "cdnRequired": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "Theming": {
+      "type": "object",
+      "properties": {
+        "system": {
+          "type": "string"
+        },
+        "prebuiltThemes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "customizable": {
+          "type": "boolean"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Communication": {
+      "type": "object",
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "enum": [
+            "callbacks",
+            "events",
+            "promises",
+            "observables"
+          ]
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "JsSdkConfig": {
+      "type": "object",
+      "properties": {
+        "globalObject": {
+          "type": "string"
+        },
+        "package": {
+          "type": "string"
+        },
+        "cdn": {
+          "type": "string",
+          "format": "uri"
+        },
+        "initialization": {
+          "$ref": "#/$defs/Initialization"
+        },
+        "namespaces": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Namespace"
+          }
+        },
+        "capabilities": {
+          "$ref": "#/$defs/SdkCapabilities"
+        },
+        "asyncPattern": {
+          "type": "string",
+          "enum": [
+            "promises",
+            "callbacks",
+            "observables",
+            "sync"
+          ]
+        }
+      }
+    },
+    "Initialization": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string"
+        },
+        "async": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Namespace": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "methods": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "SdkCapabilities": {
+      "type": "object",
+      "properties": {
+        "context": {
+          "type": "boolean"
+        },
+        "uiActions": {
+          "type": "boolean"
+        },
+        "dataActions": {
+          "type": "boolean"
+        },
+        "events": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

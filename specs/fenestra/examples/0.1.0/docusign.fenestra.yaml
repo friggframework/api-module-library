@@ -1,0 +1,958 @@
+# Fenestra Document: DocuSign Platform
+#
+# DocuSign represents a unique hybrid extension model combining:
+# 1. Embedded SDK - Embed signing experiences directly in your app (iframe-based)
+# 2. Extension Apps - Extend DocuSign workflows with custom logic
+# 3. Agent UI (MCP) - AI agents can interact with DocuSign via Model Context Protocol
+#
+# This makes DocuSign one of the few platforms supporting both traditional embedded
+# experiences AND cutting-edge AI agent interactions.
+
+fenestra: "0.1.0"
+
+info:
+  title: DocuSign Platform UI Ecosystem
+  version: "1.0.0"
+  description: |
+    DocuSign's Intelligent Agreement Management (IAM) platform enables developers
+    to embed eSignature experiences, build extension apps, and integrate with
+    AI agents through the Model Context Protocol.
+
+    Key characteristics:
+    - Embedded Signing: Embed signature workflows directly in your application
+    - Focused View: Modern, minimalist embedded signing experience
+    - Extension Apps: Custom functionality at designated points in agreement workflows
+    - MCP Server: First-class support for AI agents via Model Context Protocol
+    - Enterprise Compliance: SOC 2, GDPR, FedRAMP, eIDAS certified
+    - Legal-grade Security: Built for legally binding electronic signatures
+
+platform:
+  name: DocuSign
+  vendor: DocuSign, Inc.
+  documentation: https://developers.docusign.com/
+  appMarketplace: https://www.docusign.com/app-center
+  changelog: https://www.docusign.com/blog/developers
+
+sdks:
+  docusign-esign:
+    name: DocuSign eSignature Node SDK
+    packageManager: npm
+    package: "docusign-esign"
+    version: "^7.0.0"
+    repository: https://github.com/docusign/docusign-esign-node-client
+    documentation: https://developers.docusign.com/docs/esign-rest-api/sdks/node/
+    description: |
+      Official Node.js SDK for the DocuSign eSignature REST API.
+      Enables requesting signatures, automating forms, and tracking documents
+      directly from your application.
+    installCommand: "npm install docusign-esign"
+    exports:
+      ApiClient:
+        type: utility
+        description: API client for DocuSign eSignature REST API
+      EnvelopesApi:
+        type: utility
+        description: API for creating and managing envelopes (document packages)
+      RecipientViewRequest:
+        type: type
+        description: Request object for generating embedded signing URLs
+      EnvelopeDefinition:
+        type: type
+        description: Defines an envelope with documents and recipients
+      Signer:
+        type: type
+        description: Recipient who needs to sign the document
+      Document:
+        type: type
+        description: Document to be signed
+      SignHere:
+        type: type
+        description: Signature tab placement on document
+      DateSigned:
+        type: type
+        description: Date signed tab placement
+      Text:
+        type: type
+        description: Text input tab for recipients
+
+  docusign-extension-sdk:
+    name: DocuSign Extension App SDK
+    packageManager: npm
+    package: "@docusign/extension-app-sdk"
+    documentation: https://developers.docusign.com/extension-apps/
+    description: |
+      SDK for building DocuSign Extension Apps that extend agreement workflows
+      with custom functionality. Extension apps can validate data, move files
+      across systems, and add custom logic to workflows.
+    exports:
+      ExtensionClient:
+        type: utility
+        description: Client for communicating with DocuSign from extension apps
+      FileInputAction:
+        type: type
+        description: Handle file input in extensions
+      FileOutputAction:
+        type: type
+        description: Output files from extensions
+      ConnectedFieldsApi:
+        type: utility
+        description: Validate data in real-time with Connected Fields
+      ExtensionContext:
+        type: context
+        description: Context provided to extension apps
+
+  docusign-mcp-server:
+    name: DocuSign MCP Server
+    packageManager: npm
+    package: "docusign-mcp-server"
+    repository: https://github.com/docusign/docusign-mcp-server
+    documentation: https://developers.docusign.com/docs/mcp/
+    description: |
+      DocuSign's Model Context Protocol (MCP) server enables AI agents to
+      interact with DocuSign's agreement capabilities using natural language.
+
+      Agents can:
+      - Get summaries of active agreements
+      - Send documents for signature
+      - Check signing status
+      - Manage templates and workflows
+      - Access user information
+    exports:
+      DocuSignMCPServer:
+        type: utility
+        description: MCP server for AI agent integration
+      AgreementTools:
+        type: utility
+        description: Tools for managing agreements via natural language
+      TemplateTools:
+        type: utility
+        description: Tools for working with DocuSign templates
+      AuthTools:
+        type: utility
+        description: Authentication and authorization tools
+
+componentCatalog:
+  categories:
+    embeddedSigning:
+      name: Embedded Signing Components
+      description: Components for embedding signature experiences
+      components:
+        - RecipientView
+        - FocusedView
+        - ClassicView
+
+    extensionUI:
+      name: Extension App UI
+      description: Custom UI components for extension apps
+      components:
+        - ExtensionPanel
+        - ValidationForm
+        - FileSelector
+        - ProgressIndicator
+
+    agentTemplates:
+      name: Agent UI Templates
+      description: Templates for AI agent interactions via MCP
+      components:
+        - SignatureRequest
+        - AgreementStatus
+        - TemplateSelector
+        - RecipientForm
+
+  components:
+    RecipientView:
+      name: Recipient View
+      description: |
+        Embedded signing session that displays the DocuSign signing experience
+        within your application. Generated via the eSignature API using a
+        clientUserId to create a unique, one-time URL for the signing session.
+      category: embeddedSigning
+      sdkBinding:
+        sdk: docusign-esign
+        export: RecipientViewRequest
+      webStandardMapping:
+        htmlElement: iframe
+        ariaRole: document
+        semanticType: embedded_document
+      props:
+        type: object
+        properties:
+          returnUrl:
+            type: string
+            format: uri
+            description: URL to redirect to after signing completes
+          authenticationMethod:
+            type: string
+            default: none
+            description: Authentication method (none for embedded)
+          clientUserId:
+            type: string
+            description: Unique identifier linking envelope recipient to your app user
+          frameAncestors:
+            type: array
+            description: Allowed parent domains for iframe embedding (CSP)
+            items:
+              type: string
+        required:
+          - returnUrl
+          - clientUserId
+      examples:
+        - title: Generate Embedded Signing URL
+          code: |
+            const envelopesApi = new docusign.EnvelopesApi(apiClient);
+            const viewRequest = new docusign.RecipientViewRequest();
+            viewRequest.returnUrl = 'https://myapp.com/signing-complete';
+            viewRequest.authenticationMethod = 'none';
+            viewRequest.clientUserId = 'user123';
+
+            const results = await envelopesApi.createRecipientView(
+              accountId,
+              envelopeId,
+              { recipientViewRequest: viewRequest }
+            );
+            const signingUrl = results.url;
+          language: javascript
+
+    FocusedView:
+      name: Focused View
+      description: |
+        Clean, minimalist embedded signing experience with no DocuSign chrome.
+        Shows only the agreement and navigation, fully branded to your application.
+        Requires additional security configuration with frameAncestors.
+      category: embeddedSigning
+      sdkBinding:
+        sdk: docusign-esign
+        export: RecipientViewRequest
+      webStandardMapping:
+        htmlElement: iframe
+        ariaRole: document
+        semanticType: embedded_document
+      props:
+        type: object
+        properties:
+          returnUrl:
+            type: string
+            format: uri
+          clientUserId:
+            type: string
+          frameAncestors:
+            type: array
+            description: |
+              Required for Focused View. Must include your site's URL and
+              DocuSign's apps domain (apps-d.docusign.com for demo,
+              apps.docusign.com for production)
+            items:
+              type: string
+            minItems: 2
+        required:
+          - returnUrl
+          - clientUserId
+          - frameAncestors
+      constraints:
+        requiresHTTPS: true
+        noIdentityVerification: true
+        noAdvancedSignatures: true
+      examples:
+        - title: Focused View Integration
+          code: |
+            // Server-side: Generate signing URL
+            viewRequest.frameAncestors = [
+              'https://myapp.com',
+              'https://apps.docusign.com'
+            ];
+
+            // Client-side: Embed with postMessage
+            const iframe = document.getElementById('docusign-iframe');
+            iframe.src = signingUrl;
+
+            window.addEventListener('message', (event) => {
+              if (event.data.event === 'signing_complete') {
+                // Handle completion
+              }
+            });
+          language: javascript
+
+    ClassicView:
+      name: Classic View
+      description: |
+        Traditional embedded signing experience with full DocuSign UI chrome.
+        Supports all features including identity verification and advanced
+        signature types. Redirects back to your app after completion.
+      category: embeddedSigning
+      sdkBinding:
+        sdk: docusign-esign
+        export: RecipientViewRequest
+      webStandardMapping:
+        htmlElement: iframe
+        ariaRole: document
+        semanticType: embedded_document
+      props:
+        type: object
+        properties:
+          returnUrl:
+            type: string
+            format: uri
+          clientUserId:
+            type: string
+          authenticationMethod:
+            type: string
+        required:
+          - returnUrl
+          - clientUserId
+
+    ExtensionPanel:
+      name: Extension App Panel
+      description: |
+        Custom UI panel displayed in DocuSign at designated extension points
+        during agreement workflows. Communicates with your backend via
+        the Extension App SDK.
+      category: extensionUI
+      sdkBinding:
+        sdk: docusign-extension-sdk
+        export: ExtensionClient
+      webStandardMapping:
+        htmlElement: iframe
+        semanticType: embedded_app
+      props:
+        type: object
+        properties:
+          extensionId:
+            type: string
+            description: Unique identifier for your extension
+          actionType:
+            type: string
+            enum: [fileInput, fileOutput, dataValidation, connectedFields]
+          context:
+            type: object
+            description: DocuSign context (envelope, user, workflow step)
+
+    SignatureRequest:
+      name: Signature Request Template
+      description: |
+        Agent UI template for AI agents to request signatures via MCP.
+        Agent specifies recipients, documents, and signing options using
+        natural language, which maps to DocuSign API calls.
+      category: agentTemplates
+      sdkBinding:
+        sdk: docusign-mcp-server
+        export: AgreementTools
+      webStandardMapping:
+        semanticType: agent_action
+      props:
+        type: object
+        properties:
+          recipients:
+            type: array
+            items:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+          documents:
+            type: array
+            items:
+              type: object
+              properties:
+                name:
+                  type: string
+                url:
+                  type: string
+          message:
+            type: string
+            description: Email message to recipients
+
+    AgreementStatus:
+      name: Agreement Status Template
+      description: |
+        Agent UI template for displaying agreement status and history.
+        Agent can query agreement state, view audit trail, and check
+        recipient progress.
+      category: agentTemplates
+      sdkBinding:
+        sdk: docusign-mcp-server
+        export: AgreementTools
+      webStandardMapping:
+        semanticType: agent_display
+      props:
+        type: object
+        properties:
+          envelopeId:
+            type: string
+          includeAuditTrail:
+            type: boolean
+          includeRecipientStatus:
+            type: boolean
+
+extensionPoints:
+  - id: embedded-signing
+    name: Embedded Signing
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Embed the DocuSign signing experience directly within your application.
+      Users can review and sign documents without leaving your app.
+
+      Supports two rendering modes:
+      - Focused View: Minimal UI, fully branded experience
+      - Classic View: Full DocuSign UI with all features
+    supportedComponents:
+      - RecipientView
+      - FocusedView
+      - ClassicView
+    extensionTypeConfig:
+      rendering: iframe
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+        - allow-same-origin
+        - allow-popups
+      communication:
+        method: postMessage
+        events:
+          - signing_complete
+          - sessionEnd
+          - ttl_expired
+          - cancel
+          - decline
+          - exception
+      security:
+        requiresClientUserId: true
+        oneTimeUrl: true
+        cspRequired: true
+        httpsRequired: true
+    constraints:
+      maxSessionDuration: 300
+      sessionTimeoutMinutes: 5
+      requiresHTTPS: true
+    context:
+      provides:
+        - envelopeId
+        - recipientId
+        - signingComplete
+        - declineReason
+      actions:
+        - createRecipientView
+        - handleSigningComplete
+        - refreshSession
+    documentation: https://developers.docusign.com/docs/esign-rest-api/esign101/concepts/embedding/
+
+  - id: extension-app
+    name: Extension Apps
+    type: workflow
+    extensionType: codedComponents
+    description: |
+      Extend DocuSign agreement workflows with custom functionality activated
+      at specific points in the process. Extension apps can:
+      - Validate data in real-time (Connected Fields)
+      - Move files between systems (File I/O)
+      - Add custom business logic to workflows
+      - Integrate with external APIs
+    supportedComponents:
+      - ExtensionPanel
+      - ValidationForm
+      - FileSelector
+      - ProgressIndicator
+    extensionTypeConfig:
+      runtime:
+        type: serverSide
+        hosting: developer
+      communication:
+        method: https
+        protocol: rest
+      triggers:
+        - agreementCreated
+        - beforeSending
+        - afterSigning
+        - statusChanged
+        - fieldValidation
+    constraints:
+      privateAppsSupported: true
+      publicAppsRequireReview: true
+    context:
+      provides:
+        - envelopeId
+        - workflowStepId
+        - accountId
+        - userId
+        - documentData
+      actions:
+        - validateField
+        - fetchFileInput
+        - sendFileOutput
+        - updateWorkflowData
+    documentation: https://developers.docusign.com/extension-apps/
+
+  - id: mcp-agent-ui
+    name: AI Agent Integration (MCP)
+    type: agent
+    extensionType: agentUI
+    description: |
+      Model Context Protocol integration enabling AI agents to interact with
+      DocuSign's agreement management capabilities using natural language.
+
+      Agents can:
+      - Send documents for signature
+      - Check agreement status
+      - Manage templates
+      - Query recipient progress
+      - Access audit trails
+
+      This positions DocuSign at the forefront of AI-native document workflows.
+    extensionTypeConfig:
+      protocol: mcp
+      version: "1.0.0"
+      transport: stdio
+      templates:
+        supported:
+          - signatureRequest
+          - agreementStatus
+          - templateSelector
+          - recipientForm
+        definitions:
+          signatureRequest:
+            name: Signature Request
+            description: Request signatures on documents
+            inputSchema:
+              type: object
+              properties:
+                recipients:
+                  type: array
+                documents:
+                  type: array
+                emailSubject:
+                  type: string
+              required:
+                - recipients
+                - documents
+            outputSchema:
+              type: object
+              properties:
+                envelopeId:
+                  type: string
+                status:
+                  type: string
+                signingUrl:
+                  type: string
+
+          agreementStatus:
+            name: Agreement Status
+            description: Get status of agreement
+            inputSchema:
+              type: object
+              properties:
+                envelopeId:
+                  type: string
+              required:
+                - envelopeId
+            outputSchema:
+              type: object
+              properties:
+                status:
+                  type: string
+                recipients:
+                  type: array
+                auditTrail:
+                  type: object
+
+      tools:
+        - name: sendEnvelope
+          description: Send documents for signature
+        - name: getEnvelopeStatus
+          description: Get status of envelope
+        - name: listTemplates
+          description: List available templates
+        - name: createEnvelopeFromTemplate
+          description: Create envelope from template
+        - name: getAccountInfo
+          description: Get account information
+
+      agentCapabilities:
+        invokeTemplates: true
+        executeTools: true
+        receiveContext: true
+        chainOperations: true
+
+    context:
+      provides:
+        - accountId
+        - accessToken
+        - baseUrl
+        - userInfo
+      actions:
+        - sendDocument
+        - checkStatus
+        - useTemplate
+        - getAuditTrail
+
+    documentation: https://developers.docusign.com/docs/mcp/
+
+policies:
+  componentRequirement:
+    level: required
+    scope: embeddedSigning
+    rationale: |
+      Embedded signing experiences must use DocuSign's provided recipient
+      view API and iframe rendering. This ensures security, legal compliance,
+      and audit trail integrity for legally binding signatures.
+
+  customComponents:
+    allowed: true
+    constraints:
+      - scope: extensionApps
+      - sandboxOnly: true
+      - reviewRequired: true
+    registrationRequired: true
+    approvalRequired: true
+    documentation: https://developers.docusign.com/extension-apps/build-an-extension-app/
+    rationale: |
+      Extension Apps can include custom UI rendered in sandboxed iframes.
+      Public extension apps undergo security review. Private apps have
+      more flexibility but still must follow security guidelines.
+
+  publishing:
+    privateApps:
+      name: Private Extensions
+      componentRequirement: optional
+      customComponentsAllowed: true
+      reviewRequired: false
+      notes: |
+        Private extension apps for internal use have flexibility in
+        UI implementation. Still must follow security best practices.
+
+    publicApps:
+      name: DocuSign App Center
+      componentRequirement: required
+      customComponentsAllowed: true
+      reviewRequired: true
+      securityReviewRequired: true
+      certificationRequired: false
+      notes: |
+        Public extension apps listed in App Center undergo:
+        - Security review
+        - Functionality testing
+        - UX assessment
+        - Data handling audit
+      reviewTimeline: "2-4 weeks typical"
+
+  designGuidelines:
+    required: true
+    designSystem: "DocuSign Design System"
+    designSystemUrl: https://developers.docusign.com/design/
+    guidelines:
+      - Maintain DocuSign brand consistency in embedded experiences
+      - Follow accessibility guidelines (WCAG 2.1 AA)
+      - Provide clear user feedback during signing
+      - Handle errors gracefully with user-friendly messages
+      - Support responsive layouts for mobile signing
+
+  security:
+    sandbox: true
+    sandboxDescription: |
+      All embedded signing and extension app UI runs in sandboxed iframes
+      with strict CSP policies. Communication uses postMessage or HTTPS.
+    requirements:
+      - HTTPS required for all embedded signing
+      - CSP frameAncestors must be explicitly declared
+      - One-time signing URLs with TTL expiration
+      - Client user ID required to prevent URL reuse
+      - Request signature verification for extension apps
+      - OAuth 2.0 with JWT for API authentication
+    certifications:
+      - SOC 2 Type 2
+      - ISO 27001
+      - GDPR compliant
+      - FedRAMP authorized
+      - eIDAS qualified (EU)
+      - PCI DSS compliant (payment tabs)
+    auditTrail:
+      enabled: true
+      tamperEvident: true
+      description: |
+        Every signing event is logged with timestamps and IP addresses.
+        Completed documents are sealed with tamper-evident technology.
+
+renderingEngines:
+  docusign-native:
+    type: native
+    name: DocuSign Native Rendering
+    description: |
+      DocuSign's signing experience is rendered natively by DocuSign's
+      platform and embedded in your application via iframe. This ensures
+      legal compliance, consistent UX, and security.
+    sandboxing:
+      iframeSandbox: true
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+        - allow-same-origin
+        - allow-popups
+      cspPolicy: "frame-ancestors 'self' https://*.docusign.com https://*.docusign.net"
+    platforms:
+      - Web (Desktop)
+      - Web (Mobile)
+      - iOS (WebView)
+      - Android (WebView)
+
+  extension-iframe:
+    type: custom
+    name: Extension App Iframe
+    description: |
+      Extension apps render custom UI in sandboxed iframes within
+      DocuSign workflows. Apps communicate with DocuSign via Extension SDK.
+    sandboxing:
+      iframeSandbox: true
+      sandboxAttributes:
+        - allow-scripts
+        - allow-forms
+      communication: postMessage
+
+  mcp-agent:
+    type: agent
+    name: MCP Agent Renderer
+    description: |
+      AI agents interact with DocuSign through Model Context Protocol.
+      No traditional UI rendering - agents use natural language to invoke
+      tools and receive structured responses.
+    protocol: mcp
+    transport: stdio
+    schemaSupport:
+      inputSchema: jsonSchema
+      outputSchema: jsonSchema
+
+architecture:
+  executionModel: hybrid
+  description: |
+    DocuSign supports multiple execution models:
+
+    1. Embedded Signing: Client-side iframe rendering of DocuSign UI
+    2. Extension Apps: Server-side execution with iframe UI rendering
+    3. MCP Agents: Server-to-server protocol communication
+
+    This hybrid approach enables everything from traditional embedded UX
+    to cutting-edge AI agent workflows.
+
+  communication:
+    embeddedSigning:
+      protocol: postMessage
+      description: |
+        Signing iframe communicates with parent application via postMessage.
+        Events include signing_complete, sessionEnd, ttl_expired, etc.
+
+    extensionApps:
+      protocol: https
+      description: |
+        Extension apps communicate with DocuSign via HTTPS webhooks and
+        REST API calls. Extension SDK handles authentication and routing.
+
+    mcpAgents:
+      protocol: mcp
+      transport: stdio
+      description: |
+        AI agents communicate with DocuSign MCP server via standard I/O
+        using JSON-RPC 2.0 messages over stdio transport.
+
+jsonFormsIntegration:
+  supported: false
+  notes: |
+    DocuSign uses proprietary tab definitions for form fields on documents.
+    Not compatible with JSON Forms, but provides similar schema-driven
+    field placement through the eSignature API.
+
+mcpAppsIntegration:
+  supported: true
+  implementation: docusign-mcp-server
+  notes: |
+    DocuSign is one of the first enterprise platforms to provide native
+    MCP server support, enabling AI agents to manage agreements through
+    natural language interactions.
+  version: "1.0.0"
+  transport: stdio
+  capabilities:
+    - tools
+    - resources
+    - prompts
+
+extensions:
+  agentInteraction:
+    enabled: true
+    protocol: mcp
+    serverPackage: docusign-mcp-server
+    description: |
+      DocuSign's MCP server enables AI agents to:
+      - Send documents for signature using natural language
+      - Check agreement status and recipient progress
+      - Use templates to streamline document creation
+      - Access audit trails and signing history
+      - Manage account settings and users
+
+    useCases:
+      - Automated contract generation and signing
+      - Agreement status monitoring and reporting
+      - Template-based document workflows
+      - Integration with AI assistants (Claude, ChatGPT, etc.)
+      - Conversational agreement management
+
+    chatGPTIntegration:
+      available: true
+      url: https://chatgpt.com/
+      description: |
+        DocuSign IAM will be available in ChatGPT, enabling users and
+        AI agents to create, sign, and manage contracts through natural
+        conversation.
+
+  compliance:
+    enabled: true
+    legalCompliance:
+      eSignatureAct: true
+      description: |
+        DocuSign complies with the U.S. ESIGN Act and UETA, making
+        signatures legally binding in the United States.
+      jurisdictions:
+        - United States (ESIGN, UETA)
+        - European Union (eIDAS)
+        - United Kingdom (eIDAS UK)
+        - Canada (PIPEDA)
+        - Australia (Electronic Transactions Act)
+        - Global (180+ countries)
+
+    certifications:
+      - name: SOC 2 Type 2
+        description: Annual audits of security, availability, and confidentiality
+        scope: all
+
+      - name: ISO 27001:2013
+        description: Information security management system certification
+        scope: all
+
+      - name: GDPR
+        description: EU General Data Protection Regulation compliance
+        scope: eu
+        features:
+          - Binding Corporate Rules (BCRs)
+          - Data processing agreements
+          - Right to erasure
+          - Data portability
+
+      - name: FedRAMP
+        description: Federal Risk and Authorization Management Program
+        scope: government
+        level: Agency Authorization
+
+      - name: eIDAS
+        description: Electronic Identification and Trust Services (EU)
+        scope: eu
+        capabilities:
+          - Qualified Electronic Signatures (QES)
+          - Advanced Electronic Signatures (AES)
+          - Qualified Time Stamps
+          - Trust Service Provider status
+
+      - name: PCI DSS v4.0
+        description: Payment Card Industry Data Security Standard
+        scope: paymentTabs
+
+    dataResidency:
+      available: true
+      regions:
+        - United States
+        - European Union
+        - Canada
+        - Australia
+        - United Kingdom
+        - Japan
+      description: |
+        DocuSign offers data residency options for customers with
+        regulatory requirements to store data in specific geographic regions.
+
+    auditTrail:
+      type: tamperEvident
+      description: |
+        Every action is logged with cryptographic sealing:
+        - Document access (views, prints)
+        - Signature events with timestamps
+        - IP addresses and authentication methods
+        - Changes to envelope status
+        - Certificate of completion with tamper-evident seal
+
+  webhooks:
+    enabled: true
+    description: |
+      DocuSign Connect webhooks notify your application of envelope events
+      in real-time. Useful for tracking signing progress and triggering
+      downstream workflows.
+    events:
+      - envelope_sent
+      - envelope_delivered
+      - envelope_completed
+      - envelope_declined
+      - envelope_voided
+      - recipient_sent
+      - recipient_delivered
+      - recipient_completed
+      - recipient_declined
+    delivery:
+      protocol: https
+      method: POST
+      retryPolicy: exponential_backoff
+      signature: HMAC-SHA256
+    configuration:
+      url: https://developers.docusign.com/platform/webhooks/connect/
+      setup: "Configure in DocuSign Admin Console or via API"
+
+  analytics:
+    enabled: true
+    description: |
+      DocuSign provides analytics on agreement activity, completion rates,
+      and user engagement through the Admin Console.
+    metrics:
+      - Envelopes sent/completed
+      - Average time to complete
+      - Recipient engagement
+      - Template usage
+      - API usage statistics
+    dashboard: "DocuSign Admin Console - Reports"
+
+notes: |
+  DocuSign represents a pioneering approach to document agreement platforms
+  by supporting BOTH traditional embedded SDK experiences AND modern AI agent
+  interactions through the Model Context Protocol.
+
+  Key differentiators:
+  - Legal-grade eSignature compliance (180+ countries)
+  - Enterprise security (SOC 2, ISO 27001, FedRAMP, eIDAS)
+  - Embedded Signing: Seamless signature workflows in your app
+  - Focused View: Modern, branded signing experience
+  - Extension Apps: Custom workflow logic and integrations
+  - MCP Server: First-class AI agent support
+  - Global reach: Legally binding signatures worldwide
+
+  DocuSign's MCP integration positions it as a leader in AI-native document
+  workflows, enabling natural language interactions for agreement management
+  while maintaining the highest standards of security and legal compliance.
+
+metadata:
+  fenestra:
+    createdAt: "2025-12-30"
+    author: "Fenestra Specification Team"
+    category: "Document Management & eSignature"
+    tags:
+      - esignature
+      - document-management
+      - embedded-signing
+      - mcp
+      - ai-agents
+      - compliance
+      - legal-tech
+      - enterprise
+    relatedPlatforms:
+      - Adobe Sign
+      - HelloSign
+      - SignNow
+      - PandaDoc
+    extensionTypes:
+      - embeddedSdk
+      - agentUI
+      - codedComponents

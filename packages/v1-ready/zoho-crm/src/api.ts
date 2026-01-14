@@ -55,7 +55,10 @@ export class Api extends OAuth2Requester {
         super(params);
 
         this.location = get(params, 'location', DEFAULT_LOCATION) as ZohoLocation;
-        const locationConfig = LOCATION_CONFIG[this.location] || LOCATION_CONFIG[DEFAULT_LOCATION];
+        if (!LOCATION_CONFIG[this.location]) {
+            this.location = DEFAULT_LOCATION;
+        }
+        const locationConfig = LOCATION_CONFIG[this.location];
 
         this.baseUrl = `${locationConfig.api}/crm/v8`;
         this.tokenUri = `${locationConfig.accounts}/oauth/v2/token`;

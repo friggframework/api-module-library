@@ -110,27 +110,6 @@ export class Api extends OAuth2Requester {
         );
     }
 
-    /**
-     * Derives location from accounts-server URL returned in OAuth callback.
-     * Falls back to US if URL is invalid or unrecognized.
-     */
-    static deriveLocationFromAccountsServer(accountsServer: string): ZohoLocation {
-        try {
-            const url = new URL(accountsServer);
-            const hostname = url.hostname;
-
-            for (const [location, config] of Object.entries(LOCATION_CONFIG)) {
-                const configUrl = new URL(config.accounts);
-                if (configUrl.hostname === hostname) {
-                    return location as ZohoLocation;
-                }
-            }
-        } catch {
-            // Invalid URL, return default
-        }
-        return DEFAULT_LOCATION;
-    }
-
     async getTokenFromCode(code: string): Promise<TokenResponse> {
         const formData = new FormData();
         formData.append('grant_type', 'authorization_code');

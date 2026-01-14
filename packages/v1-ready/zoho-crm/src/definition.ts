@@ -15,17 +15,9 @@ export const Definition = {
         getToken: async function(api: Api, params: any): Promise<void> {
             const code = get(params, 'code');
             const location = get(params, 'location', null) as ZohoLocation | null;
-            const accountsServer = get(params, 'accounts-server', null) as string | null;
 
             if (location) {
-                try {
-                    api.setLocation(location);
-                } catch {
-                    // Invalid location, fall through to accounts-server
-                }
-            } else if (accountsServer) {
-                const derivedLocation = Api.deriveLocationFromAccountsServer(accountsServer);
-                api.setLocation(derivedLocation);
+                api.setLocation(location);
             }
 
             await api.getTokenFromCode(code);

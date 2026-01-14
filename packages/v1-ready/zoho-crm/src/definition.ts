@@ -3,6 +3,7 @@ dotenv.config();
 import {Api} from './api';
 import {get} from '@friggframework/core';
 import * as config from './defaultConfig.json';
+import {ZohoLocation} from './types';
 
 export const Definition = {
     API: Api,
@@ -13,11 +14,25 @@ export const Definition = {
     requiredAuthMethods: {
         getToken: async function(api: Api, params: any): Promise<void> {
             const code = get(params, 'code');
+            const location = get(params, 'location', null) as ZohoLocation | null;
+            const accountsServer = get(params, 'accounts-server', null) as string | null;
+
+            if (location) {
+                try {
+                    api.setLocation(location);
+                } catch {
+                    // Invalid location, fall through to accounts-server
+                }
+            } else if (accountsServer) {
+                const derivedLocation = Api.deriveLocationFromAccountsServer(accountsServer);
+                api.setLocation(derivedLocation);
+            }
+
             await api.getTokenFromCode(code);
         },
         apiPropertiesToPersist: {
             credential: ['access_token', 'refresh_token'],
-            entity: [],
+            entity: ['location'],
         },
         getCredentialDetails: async function (api: Api, userId: string): Promise<any> {
             const response = await api.listUsers({type: 'CurrentUser'});
@@ -33,7 +48,8 @@ export const Definition = {
             return {
                 identifiers: {externalId: currentUser.id, user: userId},
                 details: {
-                    name: currentUser.email
+                    name: currentUser.email,
+                    location: api.location,
                 },
             };
         },

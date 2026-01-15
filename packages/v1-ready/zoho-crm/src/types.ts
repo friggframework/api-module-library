@@ -1,3 +1,9 @@
+/**
+ * Zoho datacenter locations
+ * @see https://www.zoho.com/crm/developer/docs/api/v8/multi-dc.html
+ */
+export type ZohoLocation = 'us' | 'eu' | 'in' | 'au' | 'cn' | 'ca' | 'jp' | 'sa';
+
 export interface ZohoConfig {
     client_id: string;
     client_secret: string;
@@ -5,6 +11,8 @@ export interface ZohoConfig {
     redirect_uri: string;
     access_token?: string | null;
     refresh_token?: string | null;
+    location?: ZohoLocation;
+    accountsServer?: string | null;
 }
 
 export interface PaginationInfo {

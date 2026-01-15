@@ -200,9 +200,6 @@ export class Api extends OAuth2Requester {
   }
 
   async createActivity(params: ActivityParams): Promise<PipedriveResponse> {
-    const dealId = get(params, "dealId", null);
-    const subject = get(params, "subject");
-    const type = get(params, "type");
     const options: RequestOptions = {
       url: this.baseUrl + this.URLs.activities,
       body: { ...params },

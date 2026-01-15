@@ -192,6 +192,9 @@ export class Api extends OAuth2Requester {
     const options: RequestOptions = {
       url: this.baseUrl + this.URLs.activityById(activityId),
       body: task,
+      headers: {
+        "Content-Type": "application/json",
+      },
     };
     return this._patch(options);
   }

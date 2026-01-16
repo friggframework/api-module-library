@@ -36,7 +36,7 @@ const Definition = {
             const orgDetails = orgResponse[0];
             const { Username: connectedUsername } = await api.getUserInfo();
             return {
-                identifiers: { externalId: orgDetails.Id, user: userId },
+                identifiers: { externalId: orgDetails.Id, userId },
                 details: { name: orgDetails.Name, connectedUsername },
             };
         },
@@ -48,7 +48,7 @@ const Definition = {
         },
         getCredentialDetails: async function (api, userId) {
             return {
-                identifiers: { instanceUrl: api.instanceUrl, user: userId },
+                identifiers: { instanceUrl: api.instanceUrl, userId },
                 details: {}
             };
         },

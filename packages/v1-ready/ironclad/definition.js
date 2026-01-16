@@ -24,7 +24,7 @@ const Definition = {
             }
             const user = await api.getUserDetails();
             return {
-                identifiers: { externalId: user.id, user: userId },
+                identifiers: { externalId: user.id, userId },
                 details: { name: user.displayName, email: user.email },
             };
         },
@@ -42,7 +42,7 @@ const Definition = {
             }
             const userDetails = await api.getUserDetails();
             return {
-                identifiers: { externalId: userDetails.portalId, user: userId },
+                identifiers: { externalId: userDetails.portalId, userId },
                 details: {},
             };
         },

@@ -38,13 +38,13 @@ const Definition = {
         getEntityDetails: async function (api, callbackParams, tokenResponse, userId) {
             const externalId = api.customer_id;
             return {
-                identifiers: {externalId, user: userId},
+                identifiers: {externalId, userId},
                 details: {name: api.username}
             }
         },
         getCredentialDetails: async function (api, userId) {
             return {
-                identifiers: {externalId: api.customer_id, user: userId},
+                identifiers: {externalId: api.customer_id, userId},
                 details: {}
             };
         },

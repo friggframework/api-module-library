@@ -78,7 +78,7 @@ class Manager extends ModuleManager {
         const name = get(params, 'name');
 
         const search = await Entity.find({
-            user: this.userId,
+            userId: this.userId,
             externalId: identifier,
         });
         if (search.length === 0) {
@@ -86,7 +86,7 @@ class Manager extends ModuleManager {
             // create entity
             const createObj = {
                 credential: this.credential.id,
-                user: this.userId,
+                userId: this.userId,
                 name,
                 externalId: identifier,
             };
@@ -114,7 +114,7 @@ class Manager extends ModuleManager {
     async updateOrCreateCredential() {
         const userDetails = await this.api.getTokenIdentity();
         const updatedToken = {
-            user: this.userId.toString(),
+            userId: this.userId.toString(),
             auth_is_valid: true,
         };
         if (this.access_token) {
@@ -133,7 +133,7 @@ class Manager extends ModuleManager {
             if (credentialSearch.length > 1) {
                 debug(`Multiple credentials found with same identifier: ${userDetails.identifier}`);
                 this.throwException(`Multiple credentials found with same identifier: ${userDetails.identifier}`);
-            } else if (credentialSearch === 1 && credentialSearch[0].user !== this.userId) {
+            } else if (credentialSearch === 1 && credentialSearch[0].userId !== this.userId) {
                 debug(`A credential already exists with this identifier: ${userDetails.identifier}`);
                 this.throwException(`A credential already exists with this identifier: ${userDetails.identifier}`);
             } else if (credentialSearch === 1) {

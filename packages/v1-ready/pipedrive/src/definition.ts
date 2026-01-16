@@ -36,7 +36,7 @@ const Definition: FriggModuleAuthDefinition = {
         return {
           identifiers: {
             externalId: String(userProfile.data.company_id),
-            user: userId,
+            userId,
           },
           details: {
             name: userProfile.data.company_name || "Unknown Company",
@@ -68,7 +68,7 @@ const Definition: FriggModuleAuthDefinition = {
         return {
           identifiers: {
             externalId: String(userProfile.data.id),
-            user: userId,
+            userId,
           },
           details: {},
         };

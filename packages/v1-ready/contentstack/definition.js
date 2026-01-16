@@ -29,13 +29,13 @@ const Definition = {
             const externalId = api.api_key;
             const name = roles[0].stack.name;
             return {
-                identifiers: {externalId, user: userId},
+                identifiers: {externalId, userId},
                 details: {name}
             }
         },
         getCredentialDetails: async function (api, userId) {
             return {
-                identifiers: {externalId: api.api_key, user: userId},
+                identifiers: {externalId: api.api_key, userId},
                 details: {}
             };
         },

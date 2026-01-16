@@ -18,7 +18,7 @@ const Definition = {
         getEntityDetails: async function (api, callbackParams, tokenResponse, userId) {
             const tokenDetails = await api.getTokenIdentity();
             return {
-                identifiers: {externalId: tokenDetails.id, user: userId},
+                identifiers: {externalId: tokenDetails.id, userId},
                 details: {name: tokenDetails.name},
             }
         },

@@ -20,7 +20,7 @@ const Definition = {
             const accountDetails = await api.getAccountDetails();
             if (userId.userId) userId = userId.userId;
             return {
-                identifiers: { externalId: accountDetails.id, user: userId },
+                identifiers: { externalId: accountDetails.id, userId },
                 details: {
                     name: accountDetails.business_profile?.name,
                     email: accountDetails.email,
@@ -37,7 +37,7 @@ const Definition = {
             const accountDetails = await api.getAccountDetails();
             if (userId.userId) userId = userId.userId;
             return {
-                identifiers: { externalId: accountDetails.id, user: userId },
+                identifiers: { externalId: accountDetails.id, userId },
                 details: {},
             };
         },

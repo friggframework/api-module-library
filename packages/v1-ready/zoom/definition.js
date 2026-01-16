@@ -23,7 +23,7 @@ const Definition = {
     ) {
       const userDetails = await api.getUserDetails();
       return {
-        identifiers: { externalId: userDetails.id, user: userId },
+        identifiers: { externalId: userDetails.id, userId },
         details: { name: userDetails.display_name },
       };
     },
@@ -34,7 +34,7 @@ const Definition = {
     getCredentialDetails: async function (api, userId) {
       const userDetails = await api.getUserDetails();
       return {
-        identifiers: { externalId: userDetails.id, user: userId },
+        identifiers: { externalId: userDetails.id, userId },
         details: {},
       };
     },

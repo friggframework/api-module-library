@@ -15,7 +15,7 @@ const Definition = {
         },
         getEntityDetails: async function (api, callbackParams, tokenResponse, userId) {
             return {
-                identifiers: {externalId: md5(api.access_token), user: userId},
+                identifiers: {externalId: md5(api.access_token), userId},
                 details: {},
             }
         },
@@ -25,7 +25,7 @@ const Definition = {
         },
         getCredentialDetails: async function (api, userId) {
             return {
-                identifiers: {externalId: md5(api.access_token), user: userId},
+                identifiers: {externalId: md5(api.access_token), userId},
                 details: {}
             };
         },

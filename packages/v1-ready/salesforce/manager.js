@@ -113,7 +113,7 @@ class Manager extends ModuleManager {
 
         const createObj = {
             credential: this.credential.id,
-            user: this.userId,
+            userId: this.userId,
             name,
             externalId,
             isSandbox,
@@ -121,7 +121,7 @@ class Manager extends ModuleManager {
         };
         this.entity = await Entity.findOneAndUpdate(
             {
-                user: this.userId,
+                userId: this.userId,
                 externalId,
                 isSandbox,
             },
@@ -170,7 +170,7 @@ class Manager extends ModuleManager {
                     };
                     this.credential = await Credential.findOneAndUpdate(
                         {
-                            user: this.userId,
+                            userId: this.userId,
                             instanceUrl: this.api.instanceUrl,
                         },
                         updatedToken,

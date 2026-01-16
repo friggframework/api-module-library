@@ -78,7 +78,7 @@ class Manager extends ModuleManager {
         const name = get(params, 'name');
 
         const search = await Entity.find({
-            user: this.userId,
+            userId: this.userId,
             externalId: identifier,
         });
         if (search.length === 0) {
@@ -86,7 +86,7 @@ class Manager extends ModuleManager {
             // create entity
             const createObj = {
                 credential: this.credential.id,
-                user: this.userId,
+                userId: this.userId,
                 name,
                 externalId: identifier,
             };
@@ -114,7 +114,7 @@ class Manager extends ModuleManager {
     async updateOrCreateCredential() {
         const userDetails = await this.api.getTokenIdentity();
         const updatedToken = {
-            user: this.userId.toString(),
+            userId: this.userId.toString(),
             auth_is_valid: true,
         };
         if (this.access_token) {

@@ -24,7 +24,7 @@ const Definition = {
             }
 
             return {
-                identifiers: {externalId: tokenInfo.workspace_id, user: userId},
+                identifiers: {externalId: tokenInfo.workspace_id, userId},
                 details: {name: tokenInfo.workspace_name || tokenInfo.workspace_slug},
             }
         },
@@ -45,7 +45,7 @@ const Definition = {
             }
 
             return {
-                identifiers: {externalId: tokenInfo.workspace_id, user: userId},
+                identifiers: {externalId: tokenInfo.workspace_id, userId},
                 details: {}
             };
         },

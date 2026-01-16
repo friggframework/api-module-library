@@ -12,14 +12,14 @@ declare module '@friggframework/core' {
         tokenResponse: any,
         userId: string
       ) => Promise<{
-        identifiers: { externalId: string; user: string };
+        identifiers: { externalId: string; userId: string };
         details: Record<string, any>;
       }>;
       getCredentialDetails?: (
         api: any,
         userId: string
       ) => Promise<{
-        identifiers: { externalId: string; user: string };
+        identifiers: { externalId: string; userId: string };
         details: Record<string, any>;
       }>;
       apiPropertiesToPersist?: {

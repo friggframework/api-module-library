@@ -64,7 +64,7 @@ const definition: FriggModuleAuthDefinition = {
       return {
         identifiers: {
           externalId: "scale-test-account",
-          user: userId,
+          userId,
         },
         details: {
           name: "Scale Test Account",
@@ -80,7 +80,7 @@ const definition: FriggModuleAuthDefinition = {
       return {
         identifiers: {
           externalId: "scale-test-account",
-          user: userId,
+          userId,
         },
         details: {},
       };

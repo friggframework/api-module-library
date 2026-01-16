@@ -40,7 +40,7 @@ const Definition = {
                 api.authed_user.id : api.teamId;
 
             return {
-                identifiers: {externalId, user: userId},
+                identifiers: {externalId, userId},
                 details: {name: api.team_name}
             }
         },

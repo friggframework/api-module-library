@@ -34,7 +34,7 @@ export const Definition = {
             const response = await api.listUsers({type: 'CurrentUser'});
             const currentUser = response.users[0];
             return {
-                identifiers: {externalId: currentUser.id, user: userId},
+                identifiers: {externalId: currentUser.id, userId},
                 details: {},
             };
         },
@@ -42,7 +42,7 @@ export const Definition = {
             const response = await api.listUsers({type: 'CurrentUser'});
             const currentUser = response.users[0];
             return {
-                identifiers: {externalId: currentUser.id, user: userId},
+                identifiers: {externalId: currentUser.id, userId},
                 details: {
                     name: currentUser.email,
                     location: api.location,

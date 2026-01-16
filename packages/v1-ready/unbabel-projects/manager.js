@@ -133,7 +133,7 @@ class Manager extends ModuleManager {
             if (credentialSearch.length > 1) {
                 debug(`Multiple credentials found with same identifier: ${userDetails.identifier}`);
                 this.throwException(`Multiple credentials found with same identifier: ${userDetails.identifier}`);
-            } else if (credentialSearch === 1 && credentialSearch[0].user !== this.userId) {
+            } else if (credentialSearch === 1 && credentialSearch[0].userId !== this.userId) {
                 debug(`A credential already exists with this identifier: ${userDetails.identifier}`);
                 this.throwException(`A credential already exists with this identifier: ${userDetails.identifier}`);
             } else if (credentialSearch === 1) {

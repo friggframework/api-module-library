@@ -31,7 +31,7 @@ const Definition = {
         getCredentialDetails: async function (api, userId) {
             const userDetails = await api.getUserDetails();
             return {
-                identifiers: {externalId: userDetails.portalId, userId},
+                identifiers: {externalId: userDetails.sub, userId},
                 details: {}
             };
         },

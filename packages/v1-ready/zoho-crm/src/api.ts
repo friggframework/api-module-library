@@ -619,6 +619,44 @@ export class Api extends OAuth2Requester {
     }
 
     /**
+     * Update/renew notification channel configuration
+     * Use this to extend the channel_expiry before it expires (max 7 days from now)
+     * @param body - Notification configuration with watch items to update
+     * @returns Promise<NotificationResponse> Response with updated channel details
+     * @see https://www.zoho.com/crm/developer/docs/api/v8/notifications/update.html
+     */
+    async updateNotification(body: NotificationWatchConfig): Promise<NotificationResponse> {
+        if (!body || !body.watch || !Array.isArray(body.watch)) {
+            throw new Error('Body must contain watch array');
+        }
+
+        // Validate each watch item
+        body.watch.forEach((item, index) => {
+            if (!item.channel_id) {
+                throw new Error(`watch[${index}].channel_id is required`);
+            }
+            if (!item.events || !Array.isArray(item.events) || item.events.length === 0) {
+                throw new Error(`watch[${index}].events must be a non-empty array`);
+            }
+            if (!item.notify_url) {
+                throw new Error(`watch[${index}].notify_url is required`);
+            }
+            if (item.token && item.token.length > 50) {
+                throw new Error(`watch[${index}].token must be 50 characters or less`);
+            }
+        });
+
+        try {
+            return await this._patch({
+                url: this.baseUrl + this.URLs.notificationsWatch,
+                body: body,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
      * Disable notification channels
      * @param channelIds - Array of channel IDs to disable
      * @returns Promise<NotificationResponse> Response confirming deletion

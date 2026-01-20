@@ -16,6 +16,7 @@ declare module '@friggframework/core' {
         parsedBody(response: any): Promise<any>;
         _get(options: any, stringify?: boolean): Promise<any>;
         _post(options: any, stringify?: boolean): Promise<any>;
+        _patch(options: any): Promise<any>;
         _put(options: any, stringify?: boolean): Promise<any>;
         _delete(options: any): Promise<any>;
     }

@@ -12,7 +12,8 @@ export const Definition = {
     },
     moduleName: config.name,
     requiredAuthMethods: {
-        getToken: async function(api: Api, params: any): Promise<void> {
+        getToken: async function (api: Api, params: any): Promise<void> {
+            console.log("[zoho]: Auth params received:", JSON.stringify(params));
             const code = get(params, 'code');
             const location = get(params, 'location', null) as ZohoLocation | null;
             const accountsServer = get(params, 'accounts-server', null) as string | null;

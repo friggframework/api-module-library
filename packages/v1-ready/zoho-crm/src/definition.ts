@@ -13,6 +13,7 @@ export const Definition = {
     moduleName: config.name,
     requiredAuthMethods: {
         getToken: async function(api: Api, params: any): Promise<void> {
+            console.log('GET_TOKEN PARAMS=========', params);
             const code = get(params, 'code');
             const location = get(params, 'location', null) as ZohoLocation | null;
             const accountsServer = get(params, 'accounts-server', null) as string | null;
@@ -31,6 +32,7 @@ export const Definition = {
             entity: ['location', 'accountsServer'],
         },
         getCredentialDetails: async function (api: Api, userId: string): Promise<any> {
+            console.log('GET_CREDENTIALDETAILS============');
             const response = await api.listUsers({type: 'CurrentUser'});
             const currentUser = response.users[0];
             return {
@@ -39,6 +41,7 @@ export const Definition = {
             };
         },
         getEntityDetails: async function (api: Api, callbackParams: any, tokenResponse: any, userId: string): Promise<any> {
+            console.log('GET_ENTITY_DETAILS CALLBACKPARAMS=========', callbackParams);
             const response = await api.listUsers({type: 'CurrentUser'});
             const currentUser = response.users[0];
             return {

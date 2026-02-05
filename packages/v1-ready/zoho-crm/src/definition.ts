@@ -15,20 +15,16 @@ export const Definition = {
         getToken: async function(api: Api, params: any): Promise<void> {
             const code = get(params, 'code');
             const location = get(params, 'location', null) as ZohoLocation | null;
-            const accountsServer = get(params, 'accounts-server', null) as string | null;
 
             if (location) {
                 api.setLocation(location);
-            }
-            if (accountsServer) {
-                api.setAccountsServer(accountsServer);
             }
 
             await api.getTokenFromCode(code);
         },
         apiPropertiesToPersist: {
             credential: ['access_token', 'refresh_token'],
-            entity: ['location', 'accountsServer'],
+            entity: ['location'],
         },
         getCredentialDetails: async function (api: Api, userId: string): Promise<any> {
             const response = await api.listUsers({type: 'CurrentUser'});
@@ -46,7 +42,6 @@ export const Definition = {
                 details: {
                     name: currentUser.email,
                     location: api.location,
-                    accountsServer: api.accountsServer,
                 },
             };
         },

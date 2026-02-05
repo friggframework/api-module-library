@@ -12,7 +12,6 @@ export interface ZohoConfig {
     access_token?: string | null;
     refresh_token?: string | null;
     location?: ZohoLocation;
-    accountsServer?: string | null;
 }
 
 export interface PaginationInfo {

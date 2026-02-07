@@ -36,7 +36,7 @@ const LOCATION_CONFIG: Record<ZohoLocation, { accounts: string; api: string }> =
     in: { accounts: 'https://accounts.zoho.in', api: 'https://www.zohoapis.in' },
     au: { accounts: 'https://accounts.zoho.com.au', api: 'https://www.zohoapis.com.au' },
     cn: { accounts: 'https://accounts.zoho.com.cn', api: 'https://www.zohoapis.com.cn' },
-    ca: { accounts: 'https://accounts.zoho.ca', api: 'https://www.zohoapis.ca' },
+    ca: { accounts: 'https://accounts.zohocloud.ca', api: 'https://www.zohoapis.ca' },
     jp: { accounts: 'https://accounts.zoho.jp', api: 'https://www.zohoapis.jp' },
     sa: { accounts: 'https://accounts.zoho.sa', api: 'https://www.zohoapis.sa' },
 };
@@ -46,7 +46,6 @@ const DEFAULT_LOCATION: ZohoLocation = 'us';
 export class Api extends OAuth2Requester {
     public URLs: Record<string, string | ((id: string) => string)>;
     public location: ZohoLocation;
-    public accountsServer: string | null;
 
     private static readonly CONTACTS_DEFAULT_FIELDS = 'id,First_Name,Last_Name,Email,Phone,Mobile,Account_Name,Company,Owner,Lead_Source,Created_Time,Modified_Time';
     private static readonly LEADS_DEFAULT_FIELDS = 'id,First_Name,Last_Name,Email,Phone,Mobile,Company,Industry,Lead_Source,Lead_Status,Owner,Created_Time,Modified_Time,Converted__s,Converted_Date_Time';
@@ -55,7 +54,6 @@ export class Api extends OAuth2Requester {
     constructor(params: ZohoConfig) {
         super(params);
 
-        this.accountsServer = get(params, 'accountsServer', null) as string | null;
         this.location = get(params, 'location', DEFAULT_LOCATION) as ZohoLocation;
         if (!LOCATION_CONFIG[this.location]) {
             this.location = DEFAULT_LOCATION;
@@ -63,9 +61,7 @@ export class Api extends OAuth2Requester {
         const locationConfig = LOCATION_CONFIG[this.location];
 
         this.baseUrl = `${locationConfig.api}/crm/v8`;
-        this.tokenUri = this.accountsServer
-            ? `${this.accountsServer}/oauth/v2/token`
-            : `${locationConfig.accounts}/oauth/v2/token`;
+        this.tokenUri = `${locationConfig.accounts}/oauth/v2/token`;
         this.authorizationUri = encodeURI(
             `${locationConfig.accounts}/oauth/v2/auth?scope=${this.scope}&client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&response_type=code&access_type=offline`
         );
@@ -97,10 +93,6 @@ export class Api extends OAuth2Requester {
         return this.authorizationUri;
     }
 
-    /**
-     * Sets the datacenter location and updates URLs accordingly.
-     * Note: tokenUri is only updated if accountsServer is not set.
-     */
     setLocation(location: ZohoLocation): void {
         if (!LOCATION_CONFIG[location]) {
             throw new Error(
@@ -111,21 +103,10 @@ export class Api extends OAuth2Requester {
         this.location = location;
         const locationConfig = LOCATION_CONFIG[location];
         this.baseUrl = `${locationConfig.api}/crm/v8`;
-        if (!this.accountsServer) {
-            this.tokenUri = `${locationConfig.accounts}/oauth/v2/token`;
-        }
+        this.tokenUri = `${locationConfig.accounts}/oauth/v2/token`;
         this.authorizationUri = encodeURI(
             `${locationConfig.accounts}/oauth/v2/auth?scope=${this.scope}&client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&response_type=code&access_type=offline`
         );
-    }
-
-    /**
-     * Sets the accounts server URL for token operations.
-     * Call this when accounts-server is provided in OAuth callback.
-     */
-    setAccountsServer(accountsServer: string): void {
-        this.accountsServer = accountsServer;
-        this.tokenUri = `${accountsServer}/oauth/v2/token`;
     }
 
     async getTokenFromCode(code: string): Promise<TokenResponse> {
@@ -141,6 +122,7 @@ export class Api extends OAuth2Requester {
             headers: (formData as any).getHeaders(),
             url: this.tokenUri,
         };
+        
         const response = await this._post(options, false);
         await this.setTokens(response);
         return response;

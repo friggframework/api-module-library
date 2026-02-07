@@ -122,13 +122,8 @@ export class Api extends OAuth2Requester {
             headers: (formData as any).getHeaders(),
             url: this.tokenUri,
         };
-        //log client_id and secret
-        console.log("[zoho]: client_id is: ", this.client_id);
-        console.log("[zoho]: client_secret is: ", this.client_secret);
-        console.log("[zoho]: token URL is: ", this.tokenUri);
         
         const response = await this._post(options, false);
-        console.log("[zoho]: Token response from getTokenFromCode:", JSON.stringify(response));
         await this.setTokens(response);
         return response;
     }

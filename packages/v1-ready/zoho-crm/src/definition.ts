@@ -15,7 +15,6 @@ export const Definition = {
         getToken: async function(api: Api, params: any): Promise<void> {
             const code = get(params, 'code');
             const location = get(params, 'location', null) as ZohoLocation | null;
-            console.log('[zoho]: Received params in getToken:', JSON.stringify(params));
 
             if (location) {
                 api.setLocation(location);

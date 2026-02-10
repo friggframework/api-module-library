@@ -72,7 +72,7 @@ export class Api extends OAuth2Requester {
         this.baseUrl = `${locationConfig.api}/crm/v8`;
         this.tokenUri = `${locationConfig.accounts}/oauth/v2/token`;
         this.authorizationUri = encodeURI(
-            `${locationConfig.accounts}/oauth/v2/auth?scope=${this.scope}&client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&response_type=code&access_type=offline`
+            `${locationConfig.accounts}/oauth/v2/auth?scope=${this.scope}&client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&response_type=code&access_type=offline&prompt=consent`
         );
         this.access_token = get(params, 'access_token', null);
         this.refresh_token = get(params, 'refresh_token', null);
@@ -114,7 +114,7 @@ export class Api extends OAuth2Requester {
         this.baseUrl = `${locationConfig.api}/crm/v8`;
         this.tokenUri = `${locationConfig.accounts}/oauth/v2/token`;
         this.authorizationUri = encodeURI(
-            `${locationConfig.accounts}/oauth/v2/auth?scope=${this.scope}&client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&response_type=code&access_type=offline`
+            `${locationConfig.accounts}/oauth/v2/auth?scope=${this.scope}&client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&response_type=code&access_type=offline&prompt=consent`
         );
     }
 

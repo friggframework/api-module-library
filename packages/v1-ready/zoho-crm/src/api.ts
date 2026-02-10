@@ -133,6 +133,7 @@ export class Api extends OAuth2Requester {
         };
         
         const response = await this._post(options, false);
+        console.log('[Zoho API] Token response:', JSON.stringify(response));
         await this.setTokens(response);
         return response;
     }

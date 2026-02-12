@@ -133,6 +133,11 @@ export class Api extends OAuth2Requester {
         };
         
         const response = await this._post(options, false);
+
+        if (response.error) {
+            throw new Error(`[Zoho API] Zoho token exchange failed: ${response.error}`);
+        }
+
         await this.setTokens(response);
         return response;
     }

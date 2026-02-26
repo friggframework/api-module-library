@@ -415,6 +415,19 @@ export interface ZohoCallData {
     [key: string]: any;
 }
 
+export interface ZohoOrg {
+    id: string;
+    company_name: string;
+    domain_name: string;
+    time_zone: string;
+    currency: string;
+    [key: string]: any;
+}
+
+export interface OrgResponse {
+    org: ZohoOrg[];
+}
+
 /**
  * Response from Calls module operations
  */

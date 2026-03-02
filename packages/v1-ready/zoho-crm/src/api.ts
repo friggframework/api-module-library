@@ -24,21 +24,22 @@ import {
     NotificationDetailsResponse,
     ZohoCallData,
     CallsResponse,
+    OrgResponse,
 } from './types';
 
 /**
  * Zoho datacenter URL configuration
  * @see https://www.zoho.com/crm/developer/docs/api/v8/multi-dc.html
  */
-const LOCATION_CONFIG: Record<ZohoLocation, { accounts: string; api: string }> = {
-    us: { accounts: 'https://accounts.zoho.com', api: 'https://www.zohoapis.com' },
-    eu: { accounts: 'https://accounts.zoho.eu', api: 'https://www.zohoapis.eu' },
-    in: { accounts: 'https://accounts.zoho.in', api: 'https://www.zohoapis.in' },
-    au: { accounts: 'https://accounts.zoho.com.au', api: 'https://www.zohoapis.com.au' },
-    cn: { accounts: 'https://accounts.zoho.com.cn', api: 'https://www.zohoapis.com.cn' },
-    ca: { accounts: 'https://accounts.zohocloud.ca', api: 'https://www.zohoapis.ca' },
-    jp: { accounts: 'https://accounts.zoho.jp', api: 'https://www.zohoapis.jp' },
-    sa: { accounts: 'https://accounts.zoho.sa', api: 'https://www.zohoapis.sa' },
+const LOCATION_CONFIG: Record<ZohoLocation, { accounts: string; api: string; crm: string }> = {
+    us: { accounts: 'https://accounts.zoho.com', api: 'https://www.zohoapis.com', crm: 'https://crm.zoho.com' },
+    eu: { accounts: 'https://accounts.zoho.eu', api: 'https://www.zohoapis.eu', crm: 'https://crm.zoho.eu' },
+    in: { accounts: 'https://accounts.zoho.in', api: 'https://www.zohoapis.in', crm: 'https://crm.zoho.in' },
+    au: { accounts: 'https://accounts.zoho.com.au', api: 'https://www.zohoapis.com.au', crm: 'https://crm.zoho.com.au' },
+    cn: { accounts: 'https://accounts.zoho.com.cn', api: 'https://www.zohoapis.com.cn', crm: 'https://crm.zoho.com.cn' },
+    ca: { accounts: 'https://accounts.zohocloud.ca', api: 'https://www.zohoapis.ca', crm: 'https://crm.zohocloud.ca' },
+    jp: { accounts: 'https://accounts.zoho.jp', api: 'https://www.zohoapis.jp', crm: 'https://crm.zoho.jp' },
+    sa: { accounts: 'https://accounts.zoho.sa', api: 'https://www.zohoapis.sa', crm: 'https://crm.zoho.sa' },
 };
 
 const DEFAULT_LOCATION: ZohoLocation = 'us';
@@ -95,11 +96,20 @@ export class Api extends OAuth2Requester {
             calls: '/Calls',
             call: (callId: string) => `/Calls/${callId}`,
             notificationsWatch: '/actions/watch',
+            org: '/org',
         };
     }
 
     getAuthUri(): string {
         return this.authorizationUri;
+    }
+
+    getCrmBaseUrl(): string {
+        return LOCATION_CONFIG[this.location].crm;
+    }
+
+    async getOrg(): Promise<OrgResponse> {
+        return this._get({ url: this.baseUrl + this.URLs.org });
     }
 
     setLocation(location: ZohoLocation): void {

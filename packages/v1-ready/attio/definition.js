@@ -30,7 +30,7 @@ const Definition = {
         },
         apiPropertiesToPersist: {
             credential: [
-                'access_token', 'refresh_token'
+                'access_token'
             ],
             entity: [],
         },

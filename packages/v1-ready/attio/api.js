@@ -10,6 +10,8 @@ class Api extends OAuth2Requester {
             `https://app.attio.com/authorize?client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&response_type=code&scope=${this.scope}&state=${this.state}`
         );
         this.tokenUri = 'https://app.attio.com/oauth/token';
+        this.tokenDetailsUri = 'https://app.attio.com/oauth/introspect';
+        this.isRefreshable = false;
 
         this.URLs = {
             userDetails: '/self',
@@ -32,6 +34,13 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.userDetails,
         };
         return this._get(options);
+    }
+
+    async getTokenDetails() {
+        const options = {
+            url: this.tokenDetailsUri,
+        };
+        return this._post(options);
     }
 
     async listObjects() {

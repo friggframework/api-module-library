@@ -1,4 +1,4 @@
-const { flushDebugLog, get, OAuth2Requester } = require('@friggframework/core');
+const { get, OAuth2Requester } = require('@friggframework/core');
 const jsforce = require('jsforce');
 
 class Api extends OAuth2Requester {
@@ -19,6 +19,7 @@ class Api extends OAuth2Requester {
             clientSecret: this.client_secret,
             redirectUri: this.redirect_uri,
             loginUrl: this.loginUrl,
+            useVerifier: true,
         });
         this.conn = new jsforce.Connection({
             oauth2: this.oauth2,
@@ -47,6 +48,7 @@ class Api extends OAuth2Requester {
             clientSecret: this.client_secret,
             redirectUri: this.redirect_uri,
             loginUrl: 'https://test.salesforce.com',
+            useVerifier: true,
         });
 
         this.conn = new jsforce.Connection({

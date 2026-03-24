@@ -2467,4 +2467,44 @@ describe(`${Config.label} API Tests`, () => {
             expect(refreshScope.isDone()).toBe(true);
         });
     });
+
+    describe('assertResponse auth error statusCode', () => {
+        it('should set statusCode 401 on auth identity errors', async () => {
+            const api = new Api({ domain: 'domain-mine' });
+
+            nock(baseUrl)
+                .post('')
+                .reply(200, {
+                    errors: [{ message: 'UserId not set in identity.' }],
+                    data: null,
+                });
+
+            try {
+                await api.listBrands();
+                fail('Expected error to be thrown');
+            } catch (error) {
+                expect(error.message).toBe('UserId not set in identity.');
+                expect(error.statusCode).toBe(401);
+            }
+        });
+
+        it('should not set statusCode on non-auth GraphQL errors', async () => {
+            const api = new Api({ domain: 'domain-mine' });
+
+            nock(baseUrl)
+                .post('')
+                .reply(200, {
+                    errors: [{ message: 'Some other GraphQL error' }],
+                    data: null,
+                });
+
+            try {
+                await api.listBrands();
+                fail('Expected error to be thrown');
+            } catch (error) {
+                expect(error.message).toBe('Some other GraphQL error');
+                expect(error.statusCode).toBeUndefined();
+            }
+        });
+    });
 });

@@ -160,7 +160,11 @@ class Api extends OAuth2Requester {
     assertResponse(response) {
         if (response.errors) {
             const {errors} = response;
-            throw new Error(errors[0].message);
+            const error = new Error(errors[0].message);
+            if (errors[0].message?.includes(Api.GRAPHQL_AUTH_ERROR_PATTERN)) {
+                error.statusCode = 401;
+            }
+            throw error;
         }
     }
 

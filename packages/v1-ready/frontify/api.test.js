@@ -2359,4 +2359,112 @@ describe(`${Config.label} API Tests`, () => {
             });
         });
     });
+
+    describe('GraphQL auth error token refresh', () => {
+        afterEach(() => {
+            nock.cleanAll();
+        });
+
+        it('should refresh token and retry on auth error', async () => {
+            const api = new Api({
+                domain: 'domain-mine',
+                access_token: 'expired_token',
+                refresh_token: 'valid_refresh',
+                client_id: 'test_client',
+            });
+
+            // First call returns auth error
+            const authErrorScope = nock(baseUrl)
+                .post('')
+                .reply(200, {
+                    errors: [{ message: 'UserId not set in identity.' }],
+                    data: null,
+                });
+
+            // Refresh returns new token
+            const refreshScope = nock('https://domain-mine')
+                .post('/api/oauth/refresh')
+                .reply(200, {
+                    access_token: 'new_token',
+                    refresh_token: 'new_refresh',
+                    expires_in: 3600,
+                });
+
+            // Retry succeeds
+            const retryScope = nock(baseUrl)
+                .post('')
+                .reply(200, {
+                    data: { brands: [{ id: '1', name: 'Brand' }] },
+                });
+
+            const result = await api.listBrands();
+
+            expect(result).toEqual({ brands: [{ id: '1', name: 'Brand' }] });
+            expect(authErrorScope.isDone()).toBe(true);
+            expect(refreshScope.isDone()).toBe(true);
+            expect(retryScope.isDone()).toBe(true);
+        });
+
+        it('should not retry on non-auth GraphQL errors', async () => {
+            const api = new Api({
+                domain: 'domain-mine',
+                access_token: 'valid_token',
+                refresh_token: 'valid_refresh',
+            });
+
+            const errorScope = nock(baseUrl)
+                .post('')
+                .reply(200, {
+                    errors: [{ message: 'Some other GraphQL error' }],
+                    data: null,
+                });
+
+            await expect(api.listBrands()).rejects.toThrow('Some other GraphQL error');
+            expect(errorScope.isDone()).toBe(true);
+        });
+
+        it('should throw original error when refresh fails', async () => {
+            const api = new Api({
+                domain: 'domain-mine',
+                access_token: 'expired_token',
+                refresh_token: 'bad_refresh',
+                client_id: 'test_client',
+            });
+
+            const authErrorScope = nock(baseUrl)
+                .post('')
+                .reply(200, {
+                    errors: [{ message: 'UserId not set in identity.' }],
+                    data: null,
+                });
+
+            // Refresh fails
+            const refreshScope = nock('https://domain-mine')
+                .post('/api/oauth/refresh')
+                .reply(401, { error: 'invalid_grant' });
+
+            await expect(api.listBrands()).rejects.toThrow('UserId not set in identity.');
+            expect(authErrorScope.isDone()).toBe(true);
+            expect(refreshScope.isDone()).toBe(true);
+        });
+
+        it('should not intercept token refresh requests', async () => {
+            const api = new Api({
+                domain: 'domain-mine',
+                access_token: 'token',
+                refresh_token: 'refresh',
+                client_id: 'test_client',
+            });
+
+            // Token refresh endpoint returns an error (stringify=false path)
+            const refreshScope = nock('https://domain-mine')
+                .post('/api/oauth/refresh')
+                .reply(401, { error: 'invalid_grant' });
+
+            await expect(
+                api.refreshAccessToken({ refresh_token: 'refresh' })
+            ).rejects.toBeTruthy();
+            expect(refreshScope.isDone()).toBe(true);
+        });
+    });
 });

@@ -118,6 +118,39 @@ class Api extends OAuth2Requester {
         };
     }
 
+    static GRAPHQL_AUTH_ERROR_PATTERN = 'not set in identity';
+
+    /**
+     * Override _post to handle Frontify's GraphQL auth errors.
+     * Frontify returns HTTP 200 with GraphQL errors for expired tokens,
+     * bypassing the framework's HTTP 401-based automatic token refresh.
+     * The stringify parameter distinguishes GraphQL requests (true) from
+     * token refresh requests (false), preventing infinite retry loops.
+     */
+    async _post(options, stringify = true) {
+        const response = await super._post(options, stringify);
+
+        if (!stringify || !response?.errors) return response;
+
+        const hasAuthError = response.errors.some(
+            (e) => e.message?.includes(Api.GRAPHQL_AUTH_ERROR_PATTERN),
+        );
+
+        if (hasAuthError && this.isRefreshable && this.refreshCount === 0) {
+            this.refreshCount++;
+            try {
+                await this.refreshAuth();
+            } catch {
+                return response;
+            }
+            if (this.access_token) {
+                return super._post(options, stringify);
+            }
+        }
+
+        return response;
+    }
+
     /**
      * Asserts that a GraphQL response is valid
      * @private

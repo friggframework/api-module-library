@@ -29,6 +29,7 @@ export class Api extends OAuth2Requester {
     activityById: (activityId: string | number) => string;
     getUser: string;
     users: string;
+    usersFind: string;
     deals: string;
     persons: string;
     personById: (personId: string | number) => string;
@@ -57,6 +58,7 @@ export class Api extends OAuth2Requester {
         `/v2/activities/${activityId}`,
       getUser: "/v1/users/me",
       users: "/v1/users",
+      usersFind: "/v1/users/find",
       deals: "/v2/deals",
       persons: "/v2/persons",
       personById: (personId: string | number) => `/v2/persons/${personId}`,
@@ -221,6 +223,14 @@ export class Api extends OAuth2Requester {
   async listUsers(): Promise<PipedriveResponse> {
     const options: RequestOptions = {
       url: this.baseUrl + this.URLs.users,
+    };
+    return this._get(options);
+  }
+
+  async findUsers(params: { term: string; search_by_email?: 0 | 1 }): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.usersFind,
+      query: params,
     };
     return this._get(options);
   }

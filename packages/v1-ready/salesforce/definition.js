@@ -11,14 +11,14 @@ const Definition = {
     moduleName: config.name,
     modelName: 'Salesforce',
     requiredAuthMethods: {
-        getAuthorizationRequirements: async function (params) {
+        getAuthorizationRequirements: function (params) {
             return {
-                url: await this.api.getAuthorizationUri(),
+                url: this.api.getAuthorizationUri(),
                 type: 'oauth2',
             };
         },
         getToken: async function (api, params) {
-            const code = get(params.data, 'code');
+            const code = get(params, 'code');
             let tokenResponse;
             try {
                 tokenResponse = await api.getAccessToken(code);
@@ -48,7 +48,7 @@ const Definition = {
         },
         getCredentialDetails: async function (api, userId) {
             return {
-                identifiers: { instanceUrl: api.instanceUrl, userId },
+                identifiers: { externalId: api.instanceUrl, userId },
                 details: {}
             };
         },

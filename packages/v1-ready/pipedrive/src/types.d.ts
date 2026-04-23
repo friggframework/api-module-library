@@ -93,6 +93,18 @@ export interface ListDealsParams {
   custom_fields?: string; // Comma-separated keys, max 15
 }
 
+export interface ListLeadsParams {
+  limit?: number; // Default 100, max 500
+  cursor?: string;
+  archived_status?: 'archived' | 'not_archived' | 'all';
+  owner_id?: number;
+  person_id?: number;
+  org_id?: number;
+  filter_id?: number;
+  sort_by?: 'id' | 'update_time' | 'add_time' | 'next_activity_time' | 'value';
+  sort_direction?: 'asc' | 'desc';
+}
+
 export interface ListActivitiesParams {
   cursor?: string;
   limit?: number; // Default 100, max 500

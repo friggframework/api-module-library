@@ -19,6 +19,7 @@ import {
   CreateCallLogParams,
   UpdateCallLogParams,
   ListCallLogsParams,
+  ListLeadsParams,
 } from "./types";
 
 export class Api extends OAuth2Requester {
@@ -42,6 +43,8 @@ export class Api extends OAuth2Requester {
     search: string;
     callLogs: string;
     callLogById: (callLogId: string) => string;
+    leads: string;
+    leadById: (leadId: string) => string;
   };
 
   constructor(params: OAuth2RequesterOptions) {
@@ -71,6 +74,8 @@ export class Api extends OAuth2Requester {
       search: "/v1/search",
       callLogs: "/v1/callLogs",
       callLogById: (callLogId: string) => `/v1/callLogs/${callLogId}`,
+      leads: "/v1/leads",
+      leadById: (leadId: string) => `/v1/leads/${leadId}`,
     };
 
     this.authorizationUri = encodeURI(
@@ -512,5 +517,42 @@ export class Api extends OAuth2Requester {
       url: this.baseUrl + this.URLs.callLogById(callLogId),
     };
     return this._delete(options);
+  }
+
+  // **************************   Leads   **********************************
+  /**
+   * List leads with optional filtering
+   * @param params - Query parameters for filtering and pagination
+   * @param params.limit - Number of leads to return (default 100, max 500)
+   * @param params.cursor - Pagination cursor from previous response
+   * @param params.archived_status - Filter by archived status: 'archived' | 'not_archived' | 'all' (default: 'not_archived')
+   * @param params.owner_id - Filter by owner user ID
+   * @param params.person_id - Filter by associated person ID
+   * @param params.org_id - Filter by associated organization ID
+   * @param params.filter_id - Filter by saved filter ID
+   * @param params.sort_by - Field to sort by
+   * @param params.sort_direction - Sort direction: 'asc' | 'desc'
+   * @returns Response with lead data array and pagination cursor
+   */
+  async listLeads(params?: ListLeadsParams): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.leads,
+    };
+    if (params && Object.keys(params).length > 0) {
+      options.query = params;
+    }
+    return this._get(options);
+  }
+
+  /**
+   * Get a single lead by ID
+   * @param leadId - The UUID of the lead to retrieve
+   * @returns Response with lead data
+   */
+  async getLead(leadId: string): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.leadById(leadId),
+    };
+    return this._get(options);
   }
 }

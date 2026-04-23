@@ -523,16 +523,15 @@ export class Api extends OAuth2Requester {
   /**
    * List leads with optional filtering
    * @param params - Query parameters for filtering and pagination
-   * @param params.limit - Number of leads to return (default 100, max 500)
-   * @param params.cursor - Pagination cursor from previous response
-   * @param params.archived_status - Filter by archived status: 'archived' | 'not_archived' | 'all' (default: 'not_archived')
+   * @param params.limit - Number of leads to return (default 100)
+   * @param params.start - Pagination start position
    * @param params.owner_id - Filter by owner user ID
    * @param params.person_id - Filter by associated person ID
-   * @param params.org_id - Filter by associated organization ID
+   * @param params.organization_id - Filter by associated organization ID
    * @param params.filter_id - Filter by saved filter ID
-   * @param params.sort_by - Field to sort by
-   * @param params.sort_direction - Sort direction: 'asc' | 'desc'
-   * @returns Response with lead data array and pagination cursor
+   * @param params.updated_since - Return leads updated at or after this time (ISO 8601)
+   * @param params.sort - Field and direction e.g. "update_time DESC"
+   * @returns Response with lead data array
    */
   async listLeads(params?: ListLeadsParams): Promise<PipedriveResponse> {
     const options: RequestOptions = {

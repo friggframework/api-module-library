@@ -93,6 +93,17 @@ export interface ListDealsParams {
   custom_fields?: string; // Comma-separated keys, max 15
 }
 
+export interface ListLeadsParams {
+  limit?: number; // Default 100
+  start?: number; // Pagination start position
+  owner_id?: number;
+  person_id?: number;
+  organization_id?: number;
+  filter_id?: number;
+  updated_since?: string; // ISO 8601 format
+  sort?: string; // Field and direction e.g. "update_time DESC", supports: id, title, owner_id, creator_id, was_seen, expected_close_date, next_activity_id, add_time, update_time
+}
+
 export interface ListActivitiesParams {
   cursor?: string;
   limit?: number; // Default 100, max 500

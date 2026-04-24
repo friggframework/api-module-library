@@ -37,19 +37,15 @@ class Api extends OAuth2Requester {
         });
     }
 
-    async getAuthorizationUri() {
-        try {
-            return this.oauth2.getAuthorizationUrl({});
-        } catch (error) {
-            return error;
-        }
+    getAuthorizationUri() {
+        return this.oauth2.getAuthorizationUrl({ scope: this.scope });
     }
 
     resetToSandbox() {
         this.oauth2 = new jsforce.OAuth2({
             clientId: this.client_id,
             clientSecret: this.client_secret,
-            redirectUri: this.redirectUri,
+            redirectUri: this.redirect_uri,
             loginUrl: 'https://test.salesforce.com',
         });
 
@@ -66,9 +62,9 @@ class Api extends OAuth2Requester {
         try {
             await this.conn.authorize(code);
         } catch (e) {
-            console.log('Error authing with the code. Trying to auth sandbox.');
+            console.log('Error authing with the code. Trying to auth sandbox.', e?.message || e);
             throw new Error(
-                `Error Authing with Code, try Sandbox. ${JSON.stringify(e)}`
+                `Error Authing with Code, try Sandbox. ${e?.message || JSON.stringify(e)}`
             );
         }
         const OAuthDetails = {

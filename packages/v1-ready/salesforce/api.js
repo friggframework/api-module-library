@@ -38,7 +38,7 @@ class Api extends OAuth2Requester {
     }
 
     getAuthorizationUri() {
-        return this.oauth2.getAuthorizationUrl({ scope: 'full refresh_token' });
+        return this.oauth2.getAuthorizationUrl({ scope: this.scope });
     }
 
     resetToSandbox() {

@@ -39,7 +39,20 @@ class Api extends OAuth2Requester {
     }
 
     getAuthorizationUri() {
-        return this.oauth2.getAuthorizationUrl({ scope: this.scope });
+        const url = this.oauth2.getAuthorizationUrl({ scope: this.scope });
+        // Encode the PKCE code_verifier in state so it survives the stateless redirect
+        const verifier = this.oauth2._codeVerifier;
+        if (verifier) {
+            const urlObj = new URL(url);
+            urlObj.searchParams.set('state', verifier);
+            return urlObj.toString();
+        }
+        return url;
+    }
+
+    setCodeVerifier(verifier) {
+        this.oauth2._codeVerifier = verifier;
+        this.conn.oauth2._codeVerifier = verifier;
     }
 
     resetToSandbox() {

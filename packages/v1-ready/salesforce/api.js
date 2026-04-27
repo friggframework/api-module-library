@@ -1,5 +1,6 @@
 const { get, OAuth2Requester } = require('@friggframework/core');
 const jsforce = require('jsforce');
+const crypto = require('crypto');
 
 class Api extends OAuth2Requester {
     constructor(params) {
@@ -40,19 +41,39 @@ class Api extends OAuth2Requester {
 
     getAuthorizationUri() {
         const url = this.oauth2.getAuthorizationUrl({ scope: this.scope });
-        // Encode the PKCE code_verifier in state so it survives the stateless redirect
         const verifier = this.oauth2._codeVerifier;
         if (verifier) {
             const urlObj = new URL(url);
-            urlObj.searchParams.set('state', verifier);
+            urlObj.searchParams.set('state', this._encryptVerifier(verifier));
             return urlObj.toString();
         }
         return url;
     }
 
-    setCodeVerifier(verifier) {
+    restoreVerifierFromState(encryptedState) {
+        const verifier = this._decryptVerifier(encryptedState);
         this.oauth2._codeVerifier = verifier;
         this.conn.oauth2._codeVerifier = verifier;
+    }
+
+    _encryptVerifier(verifier) {
+        const key = crypto.createHash('sha256').update(this.client_secret).digest();
+        const iv = crypto.randomBytes(12);
+        const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+        const encrypted = Buffer.concat([cipher.update(verifier, 'utf8'), cipher.final()]);
+        const tag = cipher.getAuthTag();
+        return `${iv.toString('base64url')}.${encrypted.toString('base64url')}.${tag.toString('base64url')}`;
+    }
+
+    _decryptVerifier(encryptedState) {
+        const [ivB64, encB64, tagB64] = encryptedState.split('.');
+        const key = crypto.createHash('sha256').update(this.client_secret).digest();
+        const iv = Buffer.from(ivB64, 'base64url');
+        const encryptedBuf = Buffer.from(encB64, 'base64url');
+        const tag = Buffer.from(tagB64, 'base64url');
+        const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+        decipher.setAuthTag(tag);
+        return Buffer.concat([decipher.update(encryptedBuf), decipher.final()]).toString('utf8');
     }
 
     resetToSandbox() {

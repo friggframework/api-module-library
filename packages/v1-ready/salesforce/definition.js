@@ -19,6 +19,8 @@ const Definition = {
         },
         getToken: async function (api, params) {
             const code = get(params, 'code');
+            const state = get(params, 'state', null);
+            if (state) api.restoreVerifierFromState(state);
             let tokenResponse;
             try {
                 tokenResponse = await api.getAccessToken(code);
@@ -27,6 +29,7 @@ const Definition = {
                 // Then try again
                 console.log(e);
                 api.resetToSandbox();
+                if (state) api.restoreVerifierFromState(state);
                 tokenResponse = await api.getAccessToken(code);
             }
             return tokenResponse;

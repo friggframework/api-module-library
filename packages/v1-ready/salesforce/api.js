@@ -41,7 +41,7 @@ class Api extends OAuth2Requester {
 
     getAuthorizationUri() {
         const url = this.oauth2.getAuthorizationUrl({ scope: this.scope });
-        const verifier = this.oauth2._codeVerifier;
+        const verifier = this.oauth2.codeVerifier;
         if (verifier) {
             const urlObj = new URL(url);
             urlObj.searchParams.set('state', this._encryptVerifier(verifier));
@@ -52,8 +52,8 @@ class Api extends OAuth2Requester {
 
     restoreVerifierFromState(encryptedState) {
         const verifier = this._decryptVerifier(encryptedState);
-        this.oauth2._codeVerifier = verifier;
-        this.conn.oauth2._codeVerifier = verifier;
+        this.oauth2.codeVerifier = verifier;
+        this.conn.oauth2.codeVerifier = verifier;
     }
 
     _encryptVerifier(verifier) {

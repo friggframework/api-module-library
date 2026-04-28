@@ -19,7 +19,7 @@ const Definition = {
         },
         getToken: async function (api, params) {
             const code = get(params, 'code');
-            const state = get(params, 'state');
+            const state = get(params, 'state', null);
             if (state) api.restoreVerifierFromState(state);
             let tokenResponse;
             try {

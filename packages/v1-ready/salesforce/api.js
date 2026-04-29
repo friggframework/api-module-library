@@ -20,7 +20,6 @@ class Api extends OAuth2Requester {
             clientSecret: this.client_secret,
             redirectUri: this.redirect_uri,
             loginUrl: this.loginUrl,
-            useVerifier: true,
         });
         this.conn = new jsforce.Connection({
             oauth2: this.oauth2,
@@ -40,6 +39,18 @@ class Api extends OAuth2Requester {
     }
 
     getAuthorizationUri() {
+        // Recreate oauth2 with a fresh PKCE verifier for this auth flow only.
+        // We don't keep useVerifier: true on the long-lived instance because
+        // jsforce would send the stale verifier on every token refresh, which
+        // Salesforce rejects with "unexpected code verifier".
+        this.oauth2 = new jsforce.OAuth2({
+            clientId: this.client_id,
+            clientSecret: this.client_secret,
+            redirectUri: this.redirect_uri,
+            loginUrl: this.loginUrl,
+            useVerifier: true,
+        });
+        this.conn.oauth2 = this.oauth2;
         const url = this.oauth2.getAuthorizationUrl({ scope: this.scope });
         const verifier = this.oauth2.codeVerifier;
         if (verifier) {
@@ -82,7 +93,6 @@ class Api extends OAuth2Requester {
             clientSecret: this.client_secret,
             redirectUri: this.redirect_uri,
             loginUrl: 'https://test.salesforce.com',
-            useVerifier: true,
         });
 
         this.conn = new jsforce.Connection({
@@ -114,6 +124,9 @@ class Api extends OAuth2Requester {
         //   automatically re-set the access token for future requests of the instance of the class and tells the
         //   delegate to update the DB for future requests.
         this.instanceUrl = this.conn.instanceUrl;
+        // Clear verifier so it is not sent on future token refreshes
+        this.oauth2.codeVerifier = null;
+        this.conn.oauth2.codeVerifier = null;
         await this.setTokens(OAuthDetails);
         return this.conn.accessToken;
     }

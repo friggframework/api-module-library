@@ -87,9 +87,7 @@ describe('HubSpot Webhook Subscriptions', () => {
                 status: 201,
                 body: {
                     id: 7,
-                    subscriptionDetails: {
-                        subscriptionType: 'contact.creation',
-                    },
+                    eventType: 'contact.creation',
                     active: true,
                 },
             })
@@ -98,7 +96,7 @@ describe('HubSpot Webhook Subscriptions', () => {
         const result = await api.createWebhookSubscription({
             appId: APP_ID,
             developerApiKey: DEVELOPER_API_KEY,
-            subscriptionType: 'contact.creation',
+            eventType: 'contact.creation',
         });
 
         const [url, opts] = fetchMock.mock.calls[0];
@@ -107,8 +105,8 @@ describe('HubSpot Webhook Subscriptions', () => {
         expect(opts.headers.Authorization).toBe(`Bearer ${DEVELOPER_API_KEY}`);
         expect(opts.headers['Content-Type']).toBe('application/json');
         expect(JSON.parse(opts.body)).toEqual({
-            subscriptionDetails: { subscriptionType: 'contact.creation' },
-            enabled: true,
+            eventType: 'contact.creation',
+            active: true,
         });
         expect(result.status).toBe(201);
         expect(result.data.id).toBe(7);
@@ -122,14 +120,15 @@ describe('HubSpot Webhook Subscriptions', () => {
         await api.createWebhookSubscription({
             appId: APP_ID,
             developerApiKey: DEVELOPER_API_KEY,
-            subscriptionType: 'contact.propertyChange',
+            eventType: 'contact.propertyChange',
             propertyName: 'email',
         });
 
         const [, opts] = fetchMock.mock.calls[0];
-        expect(JSON.parse(opts.body).subscriptionDetails).toEqual({
-            subscriptionType: 'contact.propertyChange',
+        expect(JSON.parse(opts.body)).toEqual({
+            eventType: 'contact.propertyChange',
             propertyName: 'email',
+            active: true,
         });
     });
 
@@ -145,7 +144,7 @@ describe('HubSpot Webhook Subscriptions', () => {
         const result = await api.createWebhookSubscription({
             appId: APP_ID,
             developerApiKey: DEVELOPER_API_KEY,
-            subscriptionType: 'contact.creation',
+            eventType: 'contact.creation',
         });
 
         expect(result.status).toBe(409);
@@ -161,7 +160,7 @@ describe('HubSpot Webhook Subscriptions', () => {
             api.createWebhookSubscription({
                 appId: APP_ID,
                 developerApiKey: DEVELOPER_API_KEY,
-                subscriptionType: 'contact.creation',
+                eventType: 'contact.creation',
             })
         ).rejects.toThrow(/400/);
     });

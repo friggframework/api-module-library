@@ -71,7 +71,9 @@ class Api extends OAuth2Requester {
             listMembershipsAddRemove: (listId) => `/crm/v3/lists/${listId}/memberships/add-and-remove`,
             associations: (fromObject, toObject) => `/crm/v4/associations/${fromObject}/${toObject}`,
             associationLabels: (fromObject, toObject) => `/crm/v4/associations/${fromObject}/${toObject}/labels`,
-
+            webhookSubscriptions: (appId) => `/webhooks/v3/${appId}/subscriptions`,
+            webhookSubscriptionById: (appId, subscriptionId) =>
+                `/webhooks/v3/${appId}/subscriptions/${subscriptionId}`,
         };
 
         this.authorizationUri = encodeURI(
@@ -1007,7 +1009,87 @@ class Api extends OAuth2Requester {
         return this.addAndRemoveFromList(listId, [], recordIds);
     }
 
+    // **************************   Webhook Subscriptions   **********************************
+    //
+    // App-level Webhooks v3 Subscriptions API. Auth is the developer-account
+    // API key (Bearer), distinct from the per-portal OAuth flow the rest of
+    // this Api class uses. Endpoints accept { appId, developerApiKey } so
+    // callers control identity per-call without mutating Api instance state.
 
+    async listWebhookSubscriptions({ appId, developerApiKey }) {
+        const response = await this._developerFetch(
+            this.baseUrl + this.URLs.webhookSubscriptions(appId),
+            { method: 'GET' },
+            developerApiKey
+        );
+        await this._requireOk(response, 'listWebhookSubscriptions');
+        const body = await response.json();
+        return body.results ?? [];
+    }
+
+    async createWebhookSubscription({ appId, developerApiKey, subscriptionType, propertyName }) {
+        const subscriptionDetails = propertyName
+            ? { subscriptionType, propertyName }
+            : { subscriptionType };
+        const response = await this._developerFetch(
+            this.baseUrl + this.URLs.webhookSubscriptions(appId),
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subscriptionDetails, enabled: true }),
+            },
+            developerApiKey
+        );
+        if (response.status === 409) {
+            return { status: 409, data: await this._safeJson(response) };
+        }
+        await this._requireOk(response, 'createWebhookSubscription');
+        return { status: response.status, data: await response.json() };
+    }
+
+    async deleteWebhookSubscription({ appId, developerApiKey, subscriptionId }) {
+        const response = await this._developerFetch(
+            this.baseUrl + this.URLs.webhookSubscriptionById(appId, subscriptionId),
+            { method: 'DELETE' },
+            developerApiKey
+        );
+        if (response.status === 404) return;
+        await this._requireOk(response, 'deleteWebhookSubscription');
+    }
+
+    async _developerFetch(url, init, developerApiKey) {
+        return fetch(url, {
+            ...init,
+            headers: {
+                ...init.headers,
+                Authorization: `Bearer ${developerApiKey}`,
+            },
+        });
+    }
+
+    async _requireOk(response, operation) {
+        if (response.ok) return;
+        const detail = await this._safeText(response);
+        throw new Error(
+            `HubSpot ${operation} failed: ${response.status} ${detail}`
+        );
+    }
+
+    async _safeJson(response) {
+        try {
+            return await response.json();
+        } catch {
+            return {};
+        }
+    }
+
+    async _safeText(response) {
+        try {
+            return await response.text();
+        } catch {
+            return '';
+        }
+    }
 }
 
 module.exports = {Api};

@@ -1027,16 +1027,16 @@ class Api extends OAuth2Requester {
         return body.results ?? [];
     }
 
-    async createWebhookSubscription({ appId, developerApiKey, subscriptionType, propertyName }) {
-        const subscriptionDetails = propertyName
-            ? { subscriptionType, propertyName }
-            : { subscriptionType };
+    async createWebhookSubscription({ appId, developerApiKey, eventType, propertyName }) {
+        const body = propertyName
+            ? { eventType, propertyName, active: true }
+            : { eventType, active: true };
         const response = await this._developerFetch(
             this.baseUrl + this.URLs.webhookSubscriptions(appId),
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ subscriptionDetails, enabled: true }),
+                body: JSON.stringify(body),
             },
             developerApiKey
         );

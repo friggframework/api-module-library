@@ -18,7 +18,7 @@ const Definition = {
         getEntityDetails: async function (api, callbackParams, tokenResponse, userId) {
             const userDetails = await api.getUserDetails();
             return {
-                identifiers: {externalId: userDetails.portalId, userId},
+                identifiers: {externalId: String(userDetails.portalId), userId},
                 details: {name: userDetails.hub_domain},
             }
         },
@@ -31,7 +31,7 @@ const Definition = {
         getCredentialDetails: async function (api, userId) {
             const userDetails = await api.getUserDetails();
             return {
-                identifiers: {externalId: userDetails.portalId, userId},
+                identifiers: {externalId: String(userDetails.portalId), userId},
                 details: {}
             };
         },

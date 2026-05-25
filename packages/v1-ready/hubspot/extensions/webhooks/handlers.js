@@ -41,40 +41,50 @@ async function onHubSpotWebhookReceived({ req, res }) {
         return;
     }
 
-    let queued = 0;
-    let skipped = 0;
-    for (let i = 0; i < events.length; i++) {
-        const evt = events[i];
-        const portalId = evt && evt.portalId;
-        const subscriptionType = evt && evt.subscriptionType;
-        if (portalId === undefined || portalId === null) {
-            console.warn(
-                `[hubspot-webhooks] event[${i}] missing portalId (subscriptionType=${subscriptionType}); skipping`
+    // Phase 1 — resolve every portalId in parallel before queueing anything.
+    // Two reasons for two-phase: (a) HubSpot batches can be large and each
+    // lookup is an independent DB round-trip; running them serially blows
+    // the HubSpot response budget; (b) if any lookup is ambiguous, the core
+    // command throws by design — we want that throw to land BEFORE any
+    // queueWebhook fires so we never leave the batch in a partial-enqueue
+    // state that HubSpot's retry would then duplicate.
+    const resolutions = await Promise.all(
+        events.map(async (evt, i) => {
+            const portalId = evt && evt.portalId;
+            if (portalId === undefined || portalId === null) {
+                console.warn(
+                    `[hubspot-webhooks] event[${i}] missing portalId ` +
+                        `(subscriptionType=${evt && evt.subscriptionType}); skipping`
+                );
+                return null;
+            }
+            const integrationId = await findIntegrationByPortalId(
+                this,
+                portalId
             );
-            skipped++;
-            continue;
-        }
+            if (!integrationId) return null;
+            return { integrationId, evt };
+        })
+    );
 
-        // Intentionally do not catch — ambiguous resolution is a cross-tenant
-        // routing risk and the core helper throws by design.
-        const integrationId = await findIntegrationByPortalId(this, portalId);
-        if (!integrationId) {
-            skipped++;
-            continue;
-        }
-
-        await this.queueWebhook({
-            integrationId,
-            body: evt,
-            event: 'HUBSPOT_WEBHOOK',
-        });
-        queued++;
-    }
+    // Phase 2 — enqueue matched events in parallel. Every match resolved
+    // cleanly above, so any failure here is genuinely SQS-side and should
+    // surface to HubSpot for retry.
+    const matches = resolutions.filter(Boolean);
+    await Promise.all(
+        matches.map(({ integrationId, evt }) =>
+            this.queueWebhook({
+                integrationId,
+                body: evt,
+                event: 'HUBSPOT_WEBHOOK',
+            })
+        )
+    );
 
     res.status(200).json({
         received: events.length,
-        queued,
-        skipped,
+        queued: matches.length,
+        skipped: events.length - matches.length,
     });
 }
 

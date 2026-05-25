@@ -489,6 +489,82 @@ describe('onHubSpotWebhookReceived (default receiver handler)', () => {
         expect(integration.queueWebhook).not.toHaveBeenCalled();
     });
 
+    it('queues zero events when any one resolution is ambiguous (all-or-nothing)', async () => {
+        // Multi-event batch where event[1] resolves ambiguous. With the
+        // two-phase implementation, NO queueWebhook calls should fire for
+        // any event — including event[0] which would have resolved cleanly.
+        // Prevents partial-enqueue + HubSpot-retry-duplication.
+        const integration = makeIntegration({
+            commands: {
+                findIntegrationByEntityExternalId: jest.fn(async (portalId) => {
+                    if (portalId === 222)
+                        throw new Error('ambiguous resolution');
+                    return `integration-for-portal-${portalId}`;
+                }),
+            },
+        });
+        const req = buildSignedRequest({
+            body: [
+                { portalId: 111, subscriptionType: 'contact.creation' },
+                { portalId: 222, subscriptionType: 'contact.creation' },
+                { portalId: 333, subscriptionType: 'contact.creation' },
+            ],
+        });
+        const res = makeRes();
+        await expect(
+            onHubSpotWebhookReceived.call(integration, { req, res })
+        ).rejects.toThrow(/ambiguous/);
+        expect(integration.queueWebhook).not.toHaveBeenCalled();
+    });
+
+    it('resolves and queues events in parallel rather than serially', async () => {
+        // Each lookup takes a tick; if dispatch were sequential, the second
+        // lookup would only start after the first lookup AND the first
+        // queueWebhook had resolved. We assert all three lookups have begun
+        // before any of them complete.
+        const inFlightLookups = jest.fn();
+        const inFlightQueueWrites = jest.fn();
+        let outstandingLookups = 0;
+        let outstandingQueueWrites = 0;
+        const integration = makeIntegration({
+            commands: {
+                findIntegrationByEntityExternalId: jest.fn(async (portalId) => {
+                    outstandingLookups += 1;
+                    inFlightLookups(outstandingLookups);
+                    await new Promise((resolve) => setImmediate(resolve));
+                    outstandingLookups -= 1;
+                    return `integration-for-portal-${portalId}`;
+                }),
+            },
+            queueWebhook: jest.fn(async () => {
+                outstandingQueueWrites += 1;
+                inFlightQueueWrites(outstandingQueueWrites);
+                await new Promise((resolve) => setImmediate(resolve));
+                outstandingQueueWrites -= 1;
+            }),
+        });
+        const req = buildSignedRequest({
+            body: [
+                { portalId: 111, subscriptionType: 'contact.creation' },
+                { portalId: 222, subscriptionType: 'contact.creation' },
+                { portalId: 333, subscriptionType: 'contact.creation' },
+            ],
+        });
+        const res = makeRes();
+        await onHubSpotWebhookReceived.call(integration, { req, res });
+
+        // At some point all three lookups (and all three queue writes)
+        // should have been in flight simultaneously — that's what
+        // distinguishes parallel from serial dispatch.
+        expect(Math.max(...inFlightLookups.mock.calls.map((c) => c[0]))).toBe(
+            3
+        );
+        expect(
+            Math.max(...inFlightQueueWrites.mock.calls.map((c) => c[0]))
+        ).toBe(3);
+        expect(res.body).toEqual({ received: 3, queued: 3, skipped: 0 });
+    });
+
     it('rejects with 401 when HUBSPOT_CLIENT_SECRET is not set', async () => {
         const saved = process.env.HUBSPOT_CLIENT_SECRET;
         delete process.env.HUBSPOT_CLIENT_SECRET;

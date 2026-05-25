@@ -36,10 +36,6 @@ async function onHubSpotWebhookReceived({ req, res }) {
     }
 
     const events = Array.isArray(req.body) ? req.body : [];
-    if (events.length === 0) {
-        res.status(200).json({ received: 0, queued: 0 });
-        return;
-    }
 
     // Phase 1 — resolve every portalId in parallel before queueing anything.
     // Two reasons for two-phase: (a) HubSpot batches can be large and each

@@ -469,7 +469,7 @@ describe('onHubSpotWebhookReceived (default receiver handler)', () => {
         const res = makeRes();
         await onHubSpotWebhookReceived.call(integration, { req, res });
         expect(res.statusCode).toBe(200);
-        expect(res.body).toEqual({ received: 0, queued: 0 });
+        expect(res.body).toEqual({ received: 0, queued: 0, skipped: 0 });
         expect(integration.queueWebhook).not.toHaveBeenCalled();
     });
 

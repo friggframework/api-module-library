@@ -14,7 +14,8 @@ const {
  *   HUBSPOT_WEBHOOK           — default no-op; integrations override via
  *                                `binding.handlers.HUBSPOT_WEBHOOK`.
  *
- * See `EXTENSIONS.md` in the framework repo for the binding contract.
+ * See the binding contract at:
+ * https://github.com/friggframework/frigg/blob/next/packages/core/integrations/EXTENSIONS.md
  */
 module.exports = {
     name: 'hubspot-webhooks',

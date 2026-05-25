@@ -294,24 +294,28 @@ describe('signature-verifier helpers', () => {
 });
 
 describe('findIntegrationByPortalId wrapper', () => {
-    it('delegates to findIntegrationByEntityExternalId with module="hubspot"', async () => {
+    it('delegates to commands.findIntegrationByEntityExternalId with the module name from definition.js', async () => {
         const integration = {
-            findIntegrationByEntityExternalId: jest
-                .fn()
-                .mockResolvedValue('integration-abc'),
+            commands: {
+                findIntegrationByEntityExternalId: jest
+                    .fn()
+                    .mockResolvedValue('integration-abc'),
+            },
         };
         const result = await findIntegrationByPortalId(integration, 42);
-        expect(integration.findIntegrationByEntityExternalId).toHaveBeenCalledWith(
-            42,
-            'hubspot'
-        );
+        expect(
+            integration.commands.findIntegrationByEntityExternalId
+        ).toHaveBeenCalledWith(42, 'hubspot');
         expect(result).toBe('integration-abc');
     });
 
-    it('throws when the integration does not expose the helper', async () => {
+    it('throws when the integration does not expose commands.findIntegrationByEntityExternalId', async () => {
         await expect(findIntegrationByPortalId({}, 42)).rejects.toThrow(
-            /findIntegrationByEntityExternalId/
+            /commands\.findIntegrationByEntityExternalId/
         );
+        await expect(
+            findIntegrationByPortalId({ commands: {} }, 42)
+        ).rejects.toThrow(/commands\.findIntegrationByEntityExternalId/);
     });
 
     it('propagates ambiguous-resolution errors instead of swallowing them', async () => {
@@ -319,21 +323,30 @@ describe('findIntegrationByPortalId wrapper', () => {
             'ambiguous resolution — externalId=42 matched 2 entities'
         );
         const integration = {
-            findIntegrationByEntityExternalId: jest.fn().mockRejectedValue(ambiguous),
+            commands: {
+                findIntegrationByEntityExternalId: jest
+                    .fn()
+                    .mockRejectedValue(ambiguous),
+            },
         };
-        await expect(findIntegrationByPortalId(integration, 42)).rejects.toThrow(
-            /ambiguous/
-        );
+        await expect(
+            findIntegrationByPortalId(integration, 42)
+        ).rejects.toThrow(/ambiguous/);
     });
 });
 
 describe('onHubSpotWebhookReceived (default receiver handler)', () => {
     const makeIntegration = (overrides = {}) => {
+        const commandsOverride = overrides.commands;
+        delete overrides.commands;
         const integration = {
-            findIntegrationByEntityExternalId: jest.fn(async (portalId) => {
-                if (portalId === 999) return null; // simulate unknown portal
-                return `integration-for-portal-${portalId}`;
-            }),
+            commands: {
+                findIntegrationByEntityExternalId: jest.fn(async (portalId) => {
+                    if (portalId === 999) return null; // simulate unknown portal
+                    return `integration-for-portal-${portalId}`;
+                }),
+                ...commandsOverride,
+            },
             queueWebhook: jest.fn().mockResolvedValue(undefined),
             constructor: {
                 Definition: {
@@ -381,14 +394,14 @@ describe('onHubSpotWebhookReceived (default receiver handler)', () => {
 
         await onHubSpotWebhookReceived.call(integration, { req, res });
 
-        expect(integration.findIntegrationByEntityExternalId).toHaveBeenCalledTimes(
+        expect(integration.commands.findIntegrationByEntityExternalId).toHaveBeenCalledTimes(
             2
         );
-        expect(integration.findIntegrationByEntityExternalId).toHaveBeenCalledWith(
+        expect(integration.commands.findIntegrationByEntityExternalId).toHaveBeenCalledWith(
             111,
             'hubspot'
         );
-        expect(integration.findIntegrationByEntityExternalId).toHaveBeenCalledWith(
+        expect(integration.commands.findIntegrationByEntityExternalId).toHaveBeenCalledWith(
             222,
             'hubspot'
         );
@@ -439,7 +452,7 @@ describe('onHubSpotWebhookReceived (default receiver handler)', () => {
 
         await onHubSpotWebhookReceived.call(integration, { req, res });
 
-        expect(integration.findIntegrationByEntityExternalId).toHaveBeenCalledTimes(
+        expect(integration.commands.findIntegrationByEntityExternalId).toHaveBeenCalledTimes(
             1
         );
         expect(integration.queueWebhook).toHaveBeenCalledTimes(1);
@@ -459,9 +472,11 @@ describe('onHubSpotWebhookReceived (default receiver handler)', () => {
 
     it('propagates ambiguous-resolution errors instead of catching them', async () => {
         const integration = makeIntegration({
-            findIntegrationByEntityExternalId: jest
-                .fn()
-                .mockRejectedValue(new Error('ambiguous resolution')),
+            commands: {
+                findIntegrationByEntityExternalId: jest
+                    .fn()
+                    .mockRejectedValue(new Error('ambiguous resolution')),
+            },
         });
         const req = buildSignedRequest({ body: [{ portalId: 111 }] });
         const res = makeRes();
@@ -475,9 +490,11 @@ describe('onHubSpotWebhookReceived (default receiver handler)', () => {
         const previous = process.env.HUBSPOT_CLIENT_SECRET;
         process.env.HUBSPOT_CLIENT_SECRET = CLIENT_SECRET;
         const integration = {
-            findIntegrationByEntityExternalId: jest
-                .fn()
-                .mockResolvedValue('integration-fallback'),
+            commands: {
+                findIntegrationByEntityExternalId: jest
+                    .fn()
+                    .mockResolvedValue('integration-fallback'),
+            },
             queueWebhook: jest.fn().mockResolvedValue(undefined),
             constructor: { Definition: { name: 'hubspot' } },
         };

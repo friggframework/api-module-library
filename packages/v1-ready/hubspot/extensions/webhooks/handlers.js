@@ -1,8 +1,6 @@
 const { verifyHubSpotSignature } = require('./signature-verifier');
 const { findIntegrationByPortalId } = require('./lookup');
 
-const EVENT_NAME_DISPATCH = 'HUBSPOT_WEBHOOK';
-
 /**
  * Resolve the HubSpot app client secret used to sign webhook payloads.
  *
@@ -88,7 +86,7 @@ async function onHubSpotWebhookReceived({ req, res }) {
         await this.queueWebhook({
             integrationId,
             body: evt,
-            event: EVENT_NAME_DISPATCH,
+            event: 'HUBSPOT_WEBHOOK',
         });
         queued++;
     }
@@ -119,5 +117,4 @@ module.exports = {
     onHubSpotWebhookReceived,
     onHubSpotWebhook,
     resolveClientSecret,
-    EVENT_NAME_DISPATCH,
 };

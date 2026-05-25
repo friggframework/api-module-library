@@ -2,41 +2,19 @@ const { verifyHubSpotSignature } = require('./signature-verifier');
 const { findIntegrationByPortalId } = require('./lookup');
 
 /**
- * Resolve the HubSpot app client secret used to sign webhook payloads.
- *
- * Precedence:
- *   1. Definition.env.client_secret on the integration class (preferred — same
- *      env block the api-module already reads for OAuth)
- *   2. process.env.HUBSPOT_CLIENT_SECRET (escape hatch when extensions are
- *      used outside a full integration class context, e.g. tests)
- *
- * @param {Object} integration - The IntegrationBase instance running the handler.
- * @returns {string|undefined} The client secret, or undefined if neither source has it.
- */
-function resolveClientSecret(integration) {
-    const fromDefinition =
-        integration &&
-        integration.constructor &&
-        integration.constructor.Definition &&
-        integration.constructor.Definition.modules &&
-        Object.values(integration.constructor.Definition.modules)
-            .map((m) => m && m.definition && m.definition.env)
-            .find((env) => env && env.client_secret);
-    return fromDefinition?.client_secret || process.env.HUBSPOT_CLIENT_SECRET;
-}
-
-/**
  * Receiver handler for `POST /webhooks`.
  *
- * Verifies HubSpot's v3 signature, iterates the inbound batch, resolves each
- * event's `portalId` to a Frigg integration via the platform-neutral reverse
- * lookup, and enqueues a per-event `HUBSPOT_WEBHOOK` job for the matched
- * integration. Events whose portal does not map to any integration are
- * silently skipped (HubSpot sends events for the whole app, not per-account).
+ * Verifies HubSpot's v3 signature using `process.env.HUBSPOT_CLIENT_SECRET`
+ * (the same env var the api-module already reads for OAuth), iterates the
+ * inbound batch, resolves each event's `portalId` to a Frigg integration via
+ * the platform-neutral reverse lookup, and enqueues a per-event
+ * `HUBSPOT_WEBHOOK` job for the matched integration. Events whose portal
+ * does not map to any integration are silently skipped (HubSpot sends events
+ * for the whole app, not per-account).
  *
  * Per the Tier 3 contract, this function is bound as a plain function on the
  * integration instance — `this` is the IntegrationBase instance and exposes
- * `findIntegrationByEntityExternalId` and `queueWebhook`.
+ * `commands.findIntegrationByEntityExternalId` and `queueWebhook`.
  *
  * @this {import('@friggframework/core').IntegrationBase}
  * @param {Object} args
@@ -45,8 +23,10 @@ function resolveClientSecret(integration) {
  * @returns {Promise<void>}
  */
 async function onHubSpotWebhookReceived({ req, res }) {
-    const clientSecret = resolveClientSecret(this);
-    const verification = verifyHubSpotSignature({ req, clientSecret });
+    const verification = verifyHubSpotSignature({
+        req,
+        clientSecret: process.env.HUBSPOT_CLIENT_SECRET,
+    });
     if (!verification.valid) {
         console.warn(
             `[hubspot-webhooks] rejecting webhook: ${verification.reason}`
@@ -116,5 +96,4 @@ async function onHubSpotWebhook({ data }) {
 module.exports = {
     onHubSpotWebhookReceived,
     onHubSpotWebhook,
-    resolveClientSecret,
 };

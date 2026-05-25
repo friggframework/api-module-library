@@ -336,6 +336,21 @@ describe('findIntegrationByPortalId wrapper', () => {
 });
 
 describe('onHubSpotWebhookReceived (default receiver handler)', () => {
+    let previousClientSecret;
+
+    beforeAll(() => {
+        previousClientSecret = process.env.HUBSPOT_CLIENT_SECRET;
+        process.env.HUBSPOT_CLIENT_SECRET = CLIENT_SECRET;
+    });
+
+    afterAll(() => {
+        if (previousClientSecret === undefined) {
+            delete process.env.HUBSPOT_CLIENT_SECRET;
+        } else {
+            process.env.HUBSPOT_CLIENT_SECRET = previousClientSecret;
+        }
+    });
+
     const makeIntegration = (overrides = {}) => {
         const commandsOverride = overrides.commands;
         delete overrides.commands;
@@ -348,18 +363,6 @@ describe('onHubSpotWebhookReceived (default receiver handler)', () => {
                 ...commandsOverride,
             },
             queueWebhook: jest.fn().mockResolvedValue(undefined),
-            constructor: {
-                Definition: {
-                    name: 'hubspot',
-                    modules: {
-                        hubspot: {
-                            definition: {
-                                env: { client_secret: CLIENT_SECRET },
-                            },
-                        },
-                    },
-                },
-            },
             ...overrides,
         };
         return integration;
@@ -486,28 +489,18 @@ describe('onHubSpotWebhookReceived (default receiver handler)', () => {
         expect(integration.queueWebhook).not.toHaveBeenCalled();
     });
 
-    it('falls back to process.env.HUBSPOT_CLIENT_SECRET when Definition.env is absent', async () => {
-        const previous = process.env.HUBSPOT_CLIENT_SECRET;
-        process.env.HUBSPOT_CLIENT_SECRET = CLIENT_SECRET;
-        const integration = {
-            commands: {
-                findIntegrationByEntityExternalId: jest
-                    .fn()
-                    .mockResolvedValue('integration-fallback'),
-            },
-            queueWebhook: jest.fn().mockResolvedValue(undefined),
-            constructor: { Definition: { name: 'hubspot' } },
-        };
-        const req = buildSignedRequest({ body: [{ portalId: 111 }] });
-        const res = makeRes();
-        await onHubSpotWebhookReceived.call(integration, { req, res });
-        expect(res.statusCode).toBe(200);
-        expect(integration.queueWebhook).toHaveBeenCalledTimes(1);
-
-        if (previous === undefined) {
-            delete process.env.HUBSPOT_CLIENT_SECRET;
-        } else {
-            process.env.HUBSPOT_CLIENT_SECRET = previous;
+    it('rejects with 401 when HUBSPOT_CLIENT_SECRET is not set', async () => {
+        const saved = process.env.HUBSPOT_CLIENT_SECRET;
+        delete process.env.HUBSPOT_CLIENT_SECRET;
+        try {
+            const integration = makeIntegration();
+            const req = buildSignedRequest();
+            const res = makeRes();
+            await onHubSpotWebhookReceived.call(integration, { req, res });
+            expect(res.statusCode).toBe(401);
+            expect(integration.queueWebhook).not.toHaveBeenCalled();
+        } finally {
+            process.env.HUBSPOT_CLIENT_SECRET = saved;
         }
     });
 });

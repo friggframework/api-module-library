@@ -20,6 +20,6 @@
     "prettier": "^2.7.1"
   },
   "dependencies": {
-    "@friggframework/core": "^1.1.2"
+    "@friggframework/core": "2.0.0--canary.590.b2cd5e2.0"
   }
 }

@@ -1,6 +1,6 @@
 require('dotenv').config();
-const {Api} = require('./api');
-const {get} = require("@friggframework/core");
+const { Api } = require('./api');
+const { get } = require("@friggframework/core");
 const config = require('./defaultConfig.json')
 
 const Definition = {
@@ -9,24 +9,27 @@ const Definition = {
         return config.name
     },
     moduleName: config.name,
-    modelName: 'HubSpot',
+    modelName: 'Salesforce',
     requiredAuthMethods: {
-        getAuthorizationRequirements: async function (params) {
+        getAuthorizationRequirements: function (params) {
             return {
-                url: await this.api.getAuthorizationUri(),
+                url: this.api.getAuthorizationUri(),
                 type: 'oauth2',
             };
         },
         getToken: async function (api, params) {
-            const code = get(params.data, 'code');
+            const code = get(params, 'code');
+            const state = get(params, 'state', null);
+            if (state) api.restoreVerifierFromState(state);
             let tokenResponse;
             try {
-                tokenResponse =await api.getAccessToken(code);
+                tokenResponse = await api.getAccessToken(code);
             } catch (e) {
                 // If that fails, re-set API class as sandbox
                 // Then try again
                 console.log(e);
                 api.resetToSandbox();
+                if (state) api.restoreVerifierFromState(state);
                 tokenResponse = await api.getAccessToken(code);
             }
             return tokenResponse;
@@ -34,10 +37,10 @@ const Definition = {
         getEntityDetails: async function (api, callbackParams, tokenResponse, userId) {
             const orgResponse = await api.find('Organization');
             const orgDetails = orgResponse[0];
-            const {Username: connectedUsername} = await api.getUserInfo();
+            const { Username: connectedUsername } = await api.getUserInfo();
             return {
-                identifiers: {externalId: orgDetails.Id, user: userId},
-                details: {name: orgDetails.Name, connectedUsername},
+                identifiers: { externalId: orgDetails.Id, userId },
+                details: { name: orgDetails.Name, connectedUsername },
             };
         },
         apiPropertiesToPersist: {
@@ -48,7 +51,7 @@ const Definition = {
         },
         getCredentialDetails: async function (api, userId) {
             return {
-                identifiers: {instanceUrl: api.instanceUrl, user: userId},
+                identifiers: { externalId: api.instanceUrl, userId },
                 details: {}
             };
         },
@@ -64,4 +67,4 @@ const Definition = {
     }
 };
 
-module.exports = {Definition};
+module.exports = { Definition };

@@ -1,4 +1,5 @@
-const {OAuth2Requester, get} = require('@friggframework/core');
+const { OAuth2Requester, get } = require('@friggframework/core');
+const FormData = require('form-data');
 
 // core objects
 // - https://developers.asana.com/reference/projects
@@ -37,6 +38,9 @@ class Api extends OAuth2Requester {
             // Workspaces
             workspaces: '/workspaces',
             workspaceById: (workspaceId) => `/workspaces/${workspaceId}`,
+
+            // Attachments
+            attachments: '/attachments',
         };
 
         this.authorizationUri = encodeURI(
@@ -58,6 +62,29 @@ class Api extends OAuth2Requester {
         delete this.access_token;
         return super.getTokenFromCode(code);
     }
+
+    async setTokens(params) {
+        this.access_token = get(params, 'access_token');
+        const newRefreshToken = get(params, 'refresh_token', null);
+
+        // Asana provides only one long lived refresh token, so we don't need to replace it.
+        if (newRefreshToken) {
+            this.refresh_token = newRefreshToken;
+        }
+
+        const accessExpiresIn = get(params, 'expires_in', null);
+        const refreshExpiresIn = get(params, 'x_refresh_token_expires_in', null);
+
+        if (accessExpiresIn) {
+            this.accessTokenExpire = new Date(Date.now() + accessExpiresIn * 1000);
+        }
+        if (refreshExpiresIn) {
+            this.refreshTokenExpire = new Date(Date.now() + refreshExpiresIn * 1000);
+        }
+
+        await this.notify(this.DLGT_TOKEN_UPDATE);
+    }
+
 
     addJsonHeaders(options) {
         const jsonHeaders = {
@@ -97,14 +124,14 @@ class Api extends OAuth2Requester {
     // **************************   Projects   **********************************
 
     async createProject(body) {
-      const options = {
-          url: this.baseUrl + this.URLs.projects,
-          body: {
-              data: body,
-          },
-      };
+        const options = {
+            url: this.baseUrl + this.URLs.projects,
+            body: {
+                data: body,
+            },
+        };
 
-      return this._post(options);
+        return this._post(options);
     }
 
     async listProjects(params) {
@@ -202,13 +229,13 @@ class Api extends OAuth2Requester {
 
     async listTasks(params) {
         const workspaceId = get(params, 'workspaceId');
-        const assigneeId = get(params, 'assigneeId');  
+        const assigneeId = get(params, 'assigneeId');
 
         const options = {
             url: this.baseUrl + this.URLs.tasks,
             query: {
-              workspace: workspaceId,
-              assignee: assigneeId,
+                workspace: workspaceId,
+                assignee: assigneeId,
             }
         };
 
@@ -235,6 +262,74 @@ class Api extends OAuth2Requester {
     async getTaskById(id) {
         const options = {
             url: this.baseUrl + this.URLs.taskById(id),
+        };
+        return this._get(options);
+    }
+
+    async attachToTask(taskId, resource, options = {}) {
+        try {
+            const formData = new FormData();
+            formData.append('parent', taskId);
+
+            if (typeof resource === 'string') {
+                // Handle external URL attachment
+                const fileName = resource.split('/').pop();
+                formData.append('url', resource);
+                formData.append('name', fileName);
+                formData.append('connect_to_app', 'true');
+                formData.append('resource_subtype', 'external');
+            } else if (Buffer.isBuffer(resource) || resource instanceof Uint8Array) {
+                // Handle file upload from buffer
+                const fileName = options.fileName || 'attachment';
+                formData.append('file', resource, {
+                    filename: fileName,
+                    contentType: options.contentType || 'application/octet-stream'
+                });
+            } else {
+                throw new Error('Resource must be either a URL string or a Buffer/Uint8Array');
+            }
+
+            const requestOptions = {
+                method: 'POST',
+                url: this.baseUrl + this.URLs.attachments,
+                body: formData,
+                headers: {
+                    'Authorization': `Bearer ${this.access_token}`
+                }
+            };
+
+            let response = await super._post(requestOptions, false);
+
+            if (!response?.data) {
+                throw new Error('Failed to attach file to task: No response data received');
+            }
+
+            response = {
+                ...response.data,
+                resource_name: response.data.name,
+                resource_url: typeof resource === 'string' ? resource : null,
+            };
+
+            return response;
+        } catch (err) {
+            console.log(err);
+            throw err;
+        }
+    }
+
+    async listAttachments(taskId) {
+        const options = {
+            url: this.baseUrl + this.URLs.attachments,
+            query: {
+                parent: taskId,
+            },
+        };
+        return this._get(options);
+    }
+
+    async getAttachmentById(id) {
+        const options = {
+            url: `${this.baseUrl}${this.URLs.attachments}/${id}`,
         };
         return this._get(options);
     }
@@ -313,4 +408,4 @@ class Api extends OAuth2Requester {
 
 }
 
-module.exports = {Api};
+module.exports = { Api };

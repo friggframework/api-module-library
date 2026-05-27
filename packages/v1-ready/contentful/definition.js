@@ -22,7 +22,7 @@ const Definition = {
                 name: space.name
             }));
             return {
-                identifiers: {externalId: entityDetails.identifier, user: userId},
+                identifiers: {externalId: entityDetails.identifier, userId},
                 details: {
                     name: entityDetails.name,
                     spaces,
@@ -39,7 +39,7 @@ const Definition = {
         getCredentialDetails: async function (api, userId) {
             const userDetails = await api.getTokenIdentity();
             return {
-                identifiers: {externalId: userDetails.identifier, user: userId},
+                identifiers: {externalId: userDetails.identifier, userId},
                 details: {}
             };
         },

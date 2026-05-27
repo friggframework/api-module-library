@@ -1,12 +1,13 @@
-const {flushDebugLog, get, OAuth2Requester} = require('@friggframework/core');
+const { get, OAuth2Requester } = require('@friggframework/core');
 const jsforce = require('jsforce');
+const crypto = require('crypto');
 
 class Api extends OAuth2Requester {
     constructor(params) {
         super(params);
         this.jsforce = jsforce;
-        this.key = get(params, 'client_id');
-        this.secret = get(params, 'client_secret');
+        this.key = get(params, 'client_id', null);
+        this.secret = get(params, 'client_secret', null);
         this.instanceUrl = get(params, 'instanceUrl', null);
         this.isSandbox = get(params, 'isSandbox', false);
         if (this.isSandbox) {
@@ -37,19 +38,60 @@ class Api extends OAuth2Requester {
         });
     }
 
-    async getAuthorizationUri() {
-        try {
-            return this.oauth2.getAuthorizationUrl({});
-        } catch (error) {
-            return error;
+    getAuthorizationUri() {
+        // Recreate oauth2 with a fresh PKCE verifier for this auth flow only.
+        // We don't keep useVerifier: true on the long-lived instance because
+        // jsforce would send the stale verifier on every token refresh, which
+        // Salesforce rejects with "unexpected code verifier".
+        this.oauth2 = new jsforce.OAuth2({
+            clientId: this.client_id,
+            clientSecret: this.client_secret,
+            redirectUri: this.redirect_uri,
+            loginUrl: this.loginUrl,
+            useVerifier: true,
+        });
+        this.conn.oauth2 = this.oauth2;
+        const url = this.oauth2.getAuthorizationUrl({ scope: this.scope });
+        const verifier = this.oauth2.codeVerifier;
+        if (verifier) {
+            const urlObj = new URL(url);
+            urlObj.searchParams.set('state', this._encryptVerifier(verifier));
+            return urlObj.toString();
         }
+        return url;
+    }
+
+    restoreVerifierFromState(encryptedState) {
+        const verifier = this._decryptVerifier(encryptedState);
+        this.oauth2.codeVerifier = verifier;
+        this.conn.oauth2.codeVerifier = verifier;
+    }
+
+    _encryptVerifier(verifier) {
+        const key = crypto.createHash('sha256').update(this.client_secret).digest();
+        const iv = crypto.randomBytes(12);
+        const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+        const encrypted = Buffer.concat([cipher.update(verifier, 'utf8'), cipher.final()]);
+        const tag = cipher.getAuthTag();
+        return `${iv.toString('base64url')}.${encrypted.toString('base64url')}.${tag.toString('base64url')}`;
+    }
+
+    _decryptVerifier(encryptedState) {
+        const [ivB64, encB64, tagB64] = encryptedState.split('.');
+        const key = crypto.createHash('sha256').update(this.client_secret).digest();
+        const iv = Buffer.from(ivB64, 'base64url');
+        const encryptedBuf = Buffer.from(encB64, 'base64url');
+        const tag = Buffer.from(tagB64, 'base64url');
+        const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+        decipher.setAuthTag(tag);
+        return Buffer.concat([decipher.update(encryptedBuf), decipher.final()]).toString('utf8');
     }
 
     resetToSandbox() {
         this.oauth2 = new jsforce.OAuth2({
             clientId: this.client_id,
             clientSecret: this.client_secret,
-            redirectUri: this.redirectUri,
+            redirectUri: this.redirect_uri,
             loginUrl: 'https://test.salesforce.com',
         });
 
@@ -66,9 +108,9 @@ class Api extends OAuth2Requester {
         try {
             await this.conn.authorize(code);
         } catch (e) {
-            console.log('Error authing with the code. Trying to auth sandbox.');
+            console.log('Error authing with the code. Trying to auth sandbox.', e?.message || e);
             throw new Error(
-                `Error Authing with Code, try Sandbox. ${JSON.stringify(e)}`
+                `Error Authing with Code, try Sandbox. ${e?.message || JSON.stringify(e)}`
             );
         }
         const OAuthDetails = {
@@ -82,6 +124,9 @@ class Api extends OAuth2Requester {
         //   automatically re-set the access token for future requests of the instance of the class and tells the
         //   delegate to update the DB for future requests.
         this.instanceUrl = this.conn.instanceUrl;
+        // Clear verifier so it is not sent on future token refreshes
+        this.oauth2.codeVerifier = null;
+        this.conn.oauth2.codeVerifier = null;
         await this.setTokens(OAuthDetails);
         return this.conn.accessToken;
     }
@@ -113,7 +158,7 @@ class Api extends OAuth2Requester {
     async find(
         object,
         findFilter = {},
-        returnFields = {'*': 1},
+        returnFields = { '*': 1 },
         options = {}
     ) {
         const response = await this.conn
@@ -151,4 +196,4 @@ class Api extends OAuth2Requester {
     }
 }
 
-module.exports = {Api};
+module.exports = { Api };

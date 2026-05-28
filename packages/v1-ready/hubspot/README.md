@@ -28,10 +28,13 @@ for the full Tier 3 contract.
 | Portal → integration routing | `findIntegrationByEntityExternalId` via friggCommands | Inbound `portalId` from the payload |
 | Per-account business logic | Your bound `HUBSPOT_WEBHOOK` handler | Per-portal OAuth credentials (loaded by the worker) |
 
-At request time HubSpot POSTs the whole app's events to the receiver. The receiver
-verifies the v3 signature, then resolves each event's `portalId` to the owning Frigg
-integration and enqueues a per-event `HUBSPOT_WEBHOOK` job. The queue worker hydrates
-that integration with its own per-portal credentials and runs your handler.
+At request time HubSpot POSTs the whole app's events to the receiver. The receiver is
+**DB-free** (`useDatabase: false`): it verifies the v3 signature and enqueues one
+`HUBSPOT_WEBHOOK_RESOLVE` job per event — no database access. In the queue worker (which
+has the database), the resolve step looks up each event's `portalId` → owning integration
+and re-enqueues a `HUBSPOT_WEBHOOK` job bound to that integration id. The worker hydrates
+that integration with its own per-portal credentials and runs your handler. Keeping the
+lookup in the worker is what lets the public receiver endpoint stay DB-free.
 
 ### Enabling it on an integration
 
@@ -71,9 +74,19 @@ class HubSpotIntegration extends IntegrationBase {
 }
 ```
 
-The framework auto-mounts the receiver route at the integration's base path
-(`POST /<integration-base>/webhooks`) — register that URL as the app's webhook target
-in your HubSpot app settings.
+The framework mounts the receiver route **under your binding key**, on its own
+DB-free Lambda function:
+
+```
+POST /api/<integration-name>-integration/<bindingKey>/webhooks
+```
+
+So the binding `hubspotWebhooks` above yields
+`POST /api/hubspot-integration/hubspotWebhooks/webhooks`. Pick a clean binding key
+(e.g. `hubspot` → `.../hubspot/webhooks`) and register that URL as the app's webhook
+target in your HubSpot app settings. Namespacing by the binding key means a second
+module's webhooks extension (e.g. Clockwork) can live on the same integration without
+colliding.
 
 ### Configuration
 
@@ -83,12 +96,15 @@ in your HubSpot app settings.
 
 ### What the bundle contributes
 
-- **Route:** `POST /webhooks` → `HUBSPOT_WEBHOOK_RECEIVED`
-- **`HUBSPOT_WEBHOOK_RECEIVED`** — default receiver: verifies the signature, resolves
-  each event's `portalId`, and queues matched events. Events whose portal does not map
-  to any integration are skipped (HubSpot broadcasts every portal's events to the app).
-  Events are resolved and enqueued in parallel; if a `portalId` resolves ambiguously
-  (one external ID owned by multiple integrations) the whole batch is rejected rather
-  than risk cross-tenant routing.
-- **`HUBSPOT_WEBHOOK`** — default no-op; override it via `binding.handlers.HUBSPOT_WEBHOOK`
-  to run your per-event logic.
+- `useDatabase: false` — the receiver route runs without a DB connection.
+- **Route:** `POST /webhooks` (namespaced to `/{bindingKey}/webhooks`) → `HUBSPOT_WEBHOOK_RECEIVED`.
+- **`HUBSPOT_WEBHOOK_RECEIVED`** — DB-free receiver: verifies the v3 signature and
+  enqueues one `HUBSPOT_WEBHOOK_RESOLVE` per event (in parallel). Events missing a
+  `portalId` are skipped. No database access.
+- **`HUBSPOT_WEBHOOK_RESOLVE`** — queue event (worker, DB): reverse-looks up
+  `portalId` → integration id and re-enqueues a `HUBSPOT_WEBHOOK` bound to it. Events
+  whose portal maps to no integration are skipped; an ambiguous resolution (one external
+  id owned by multiple integrations) throws rather than risk cross-tenant routing.
+- **`HUBSPOT_WEBHOOK`** — queue event (worker, hydrated integration): default no-op;
+  override via `binding.handlers.HUBSPOT_WEBHOOK` to run your per-event logic with the
+  correct per-account context.

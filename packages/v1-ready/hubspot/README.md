@@ -36,6 +36,11 @@ and re-enqueues a `HUBSPOT_WEBHOOK` job bound to that integration id. The worker
 that integration with its own per-portal credentials and runs your handler. Keeping the
 lookup in the worker is what lets the public receiver endpoint stay DB-free.
 
+> **Make your `HUBSPOT_WEBHOOK` handler idempotent.** Delivery is at-least-once: the
+> two SQS hops (resolve → webhook) and HubSpot's own retry-on-non-2xx mean a given
+> event can be delivered more than once. Key your processing on a stable identifier
+> (e.g. `objectId` + `subscriptionType` + `occurredAt`) so duplicates are no-ops.
+
 ### Enabling it on an integration
 
 Bind the extension on your integration's `static Definition.extensions` and map the

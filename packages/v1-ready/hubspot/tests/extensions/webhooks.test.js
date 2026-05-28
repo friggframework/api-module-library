@@ -522,6 +522,16 @@ describe('onHubSpotWebhookResolve (queue worker, DB)', () => {
         ).rejects.toThrow(/ambiguous/);
         expect(integration.queueWebhook).not.toHaveBeenCalled();
     });
+
+    it('throws a clear error when the integration has no commands wired (createFriggCommands missing)', async () => {
+        const integration = { queueWebhook: jest.fn() }; // no `commands`
+        await expect(
+            onHubSpotWebhookResolve.call(integration, {
+                data: { body: { portalId: 111 } },
+            })
+        ).rejects.toThrow(/commands\.findIntegrationByEntityExternalId/);
+        expect(integration.queueWebhook).not.toHaveBeenCalled();
+    });
 });
 
 describe('onHubSpotWebhook (default per-event handler)', () => {

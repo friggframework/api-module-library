@@ -11,6 +11,7 @@ const {
 } = require('../../extensions/webhooks/lookup');
 const {
     onHubSpotWebhookReceived,
+    onHubSpotWebhookResolve,
     onHubSpotWebhook,
 } = require('../../extensions/webhooks/handlers');
 
@@ -86,16 +87,23 @@ describe('hubspot-webhooks extension bundle shape', () => {
         });
     });
 
+    it('declares useDatabase: false so the receiver route is DB-free', () => {
+        expect(webhooksExtension.useDatabase).toBe(false);
+    });
+
     it('every route event references a declared event', () => {
         for (const route of webhooksExtension.routes) {
             expect(webhooksExtension.events).toHaveProperty(route.event);
         }
     });
 
-    it('declares both HUBSPOT_WEBHOOK_RECEIVED and HUBSPOT_WEBHOOK with function handlers', () => {
-        expect(typeof webhooksExtension.events.HUBSPOT_WEBHOOK_RECEIVED.handler).toBe(
-            'function'
-        );
+    it('declares the receiver, resolve, and webhook events with function handlers', () => {
+        expect(
+            typeof webhooksExtension.events.HUBSPOT_WEBHOOK_RECEIVED.handler
+        ).toBe('function');
+        expect(
+            typeof webhooksExtension.events.HUBSPOT_WEBHOOK_RESOLVE.handler
+        ).toBe('function');
         expect(typeof webhooksExtension.events.HUBSPOT_WEBHOOK.handler).toBe(
             'function'
         );
@@ -335,7 +343,7 @@ describe('findIntegrationByPortalId wrapper', () => {
     });
 });
 
-describe('onHubSpotWebhookReceived (default receiver handler)', () => {
+describe('onHubSpotWebhookReceived (DB-free receiver)', () => {
     let previousClientSecret;
 
     beforeAll(() => {
@@ -351,24 +359,16 @@ describe('onHubSpotWebhookReceived (default receiver handler)', () => {
         }
     });
 
-    const makeIntegration = (overrides = {}) => {
-        const commandsOverride = overrides.commands;
-        delete overrides.commands;
-        const integration = {
-            commands: {
-                findIntegrationByEntityExternalId: jest.fn(async (portalId) => {
-                    if (portalId === 999) return null; // simulate unknown portal
-                    return `integration-for-portal-${portalId}`;
-                }),
-                ...commandsOverride,
-            },
-            queueWebhook: jest.fn().mockResolvedValue(undefined),
-            ...overrides,
-        };
-        return integration;
-    };
+    // The receiver must NOT touch the database. We give it a commands spy so we
+    // can assert it is never called, plus a queueWebhook spy.
+    const makeIntegration = () => ({
+        commands: {
+            findIntegrationByEntityExternalId: jest.fn(),
+        },
+        queueWebhook: jest.fn().mockResolvedValue(undefined),
+    });
 
-    it('returns 401 on invalid signature', async () => {
+    it('returns 401 on invalid signature and enqueues nothing', async () => {
         const integration = makeIntegration();
         const req = buildSignedRequest({ overrideSignature: 'AAAA' });
         const res = makeRes();
@@ -377,195 +377,17 @@ describe('onHubSpotWebhookReceived (default receiver handler)', () => {
         expect(integration.queueWebhook).not.toHaveBeenCalled();
     });
 
-    it('returns 401 on missing signature header', async () => {
+    it('returns 401 when the signature header is missing', async () => {
         const integration = makeIntegration();
         const req = buildSignedRequest();
         delete req.headers['x-hubspot-signature-v3'];
         const res = makeRes();
         await onHubSpotWebhookReceived.call(integration, { req, res });
         expect(res.statusCode).toBe(401);
-    });
-
-    it('iterates events, queues each matched event, and returns 200 with counts', async () => {
-        const integration = makeIntegration();
-        const body = [
-            { portalId: 111, subscriptionType: 'contact.creation', objectId: 1 },
-            { portalId: 222, subscriptionType: 'deal.creation', objectId: 2 },
-        ];
-        const req = buildSignedRequest({ body });
-        const res = makeRes();
-
-        await onHubSpotWebhookReceived.call(integration, { req, res });
-
-        expect(integration.commands.findIntegrationByEntityExternalId).toHaveBeenCalledTimes(
-            2
-        );
-        expect(integration.commands.findIntegrationByEntityExternalId).toHaveBeenCalledWith(
-            111,
-            'hubspot'
-        );
-        expect(integration.commands.findIntegrationByEntityExternalId).toHaveBeenCalledWith(
-            222,
-            'hubspot'
-        );
-        expect(integration.queueWebhook).toHaveBeenCalledTimes(2);
-        expect(integration.queueWebhook).toHaveBeenCalledWith({
-            integrationId: 'integration-for-portal-111',
-            body: body[0],
-            event: 'HUBSPOT_WEBHOOK',
-        });
-        expect(integration.queueWebhook).toHaveBeenCalledWith({
-            integrationId: 'integration-for-portal-222',
-            body: body[1],
-            event: 'HUBSPOT_WEBHOOK',
-        });
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toEqual({ received: 2, queued: 2, skipped: 0 });
-    });
-
-    it('skips events whose portalId does not resolve to an integration', async () => {
-        const integration = makeIntegration();
-        const body = [
-            { portalId: 111, subscriptionType: 'contact.creation', objectId: 1 },
-            { portalId: 999, subscriptionType: 'contact.creation', objectId: 2 }, // null lookup
-        ];
-        const req = buildSignedRequest({ body });
-        const res = makeRes();
-
-        await onHubSpotWebhookReceived.call(integration, { req, res });
-
-        expect(integration.queueWebhook).toHaveBeenCalledTimes(1);
-        expect(integration.queueWebhook).toHaveBeenCalledWith({
-            integrationId: 'integration-for-portal-111',
-            body: body[0],
-            event: 'HUBSPOT_WEBHOOK',
-        });
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toEqual({ received: 2, queued: 1, skipped: 1 });
-    });
-
-    it('skips events missing a portalId entirely', async () => {
-        const integration = makeIntegration();
-        const body = [
-            { subscriptionType: 'contact.creation', objectId: 1 }, // no portalId
-            { portalId: 222, subscriptionType: 'deal.creation', objectId: 2 },
-        ];
-        const req = buildSignedRequest({ body });
-        const res = makeRes();
-
-        await onHubSpotWebhookReceived.call(integration, { req, res });
-
-        expect(integration.commands.findIntegrationByEntityExternalId).toHaveBeenCalledTimes(
-            1
-        );
-        expect(integration.queueWebhook).toHaveBeenCalledTimes(1);
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toEqual({ received: 2, queued: 1, skipped: 1 });
-    });
-
-    it('returns 200 with zero counts on an empty event array', async () => {
-        const integration = makeIntegration();
-        const req = buildSignedRequest({ body: [] });
-        const res = makeRes();
-        await onHubSpotWebhookReceived.call(integration, { req, res });
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toEqual({ received: 0, queued: 0, skipped: 0 });
         expect(integration.queueWebhook).not.toHaveBeenCalled();
     });
 
-    it('propagates ambiguous-resolution errors instead of catching them', async () => {
-        const integration = makeIntegration({
-            commands: {
-                findIntegrationByEntityExternalId: jest
-                    .fn()
-                    .mockRejectedValue(new Error('ambiguous resolution')),
-            },
-        });
-        const req = buildSignedRequest({ body: [{ portalId: 111 }] });
-        const res = makeRes();
-        await expect(
-            onHubSpotWebhookReceived.call(integration, { req, res })
-        ).rejects.toThrow(/ambiguous/);
-        expect(integration.queueWebhook).not.toHaveBeenCalled();
-    });
-
-    it('queues zero events when any one resolution is ambiguous (all-or-nothing)', async () => {
-        // Multi-event batch where event[1] resolves ambiguous. With the
-        // two-phase implementation, NO queueWebhook calls should fire for
-        // any event — including event[0] which would have resolved cleanly.
-        // Prevents partial-enqueue + HubSpot-retry-duplication.
-        const integration = makeIntegration({
-            commands: {
-                findIntegrationByEntityExternalId: jest.fn(async (portalId) => {
-                    if (portalId === 222)
-                        throw new Error('ambiguous resolution');
-                    return `integration-for-portal-${portalId}`;
-                }),
-            },
-        });
-        const req = buildSignedRequest({
-            body: [
-                { portalId: 111, subscriptionType: 'contact.creation' },
-                { portalId: 222, subscriptionType: 'contact.creation' },
-                { portalId: 333, subscriptionType: 'contact.creation' },
-            ],
-        });
-        const res = makeRes();
-        await expect(
-            onHubSpotWebhookReceived.call(integration, { req, res })
-        ).rejects.toThrow(/ambiguous/);
-        expect(integration.queueWebhook).not.toHaveBeenCalled();
-    });
-
-    it('resolves and queues events in parallel rather than serially', async () => {
-        // Each lookup takes a tick; if dispatch were sequential, the second
-        // lookup would only start after the first lookup AND the first
-        // queueWebhook had resolved. We assert all three lookups have begun
-        // before any of them complete.
-        const inFlightLookups = jest.fn();
-        const inFlightQueueWrites = jest.fn();
-        let outstandingLookups = 0;
-        let outstandingQueueWrites = 0;
-        const integration = makeIntegration({
-            commands: {
-                findIntegrationByEntityExternalId: jest.fn(async (portalId) => {
-                    outstandingLookups += 1;
-                    inFlightLookups(outstandingLookups);
-                    await new Promise((resolve) => setImmediate(resolve));
-                    outstandingLookups -= 1;
-                    return `integration-for-portal-${portalId}`;
-                }),
-            },
-            queueWebhook: jest.fn(async () => {
-                outstandingQueueWrites += 1;
-                inFlightQueueWrites(outstandingQueueWrites);
-                await new Promise((resolve) => setImmediate(resolve));
-                outstandingQueueWrites -= 1;
-            }),
-        });
-        const req = buildSignedRequest({
-            body: [
-                { portalId: 111, subscriptionType: 'contact.creation' },
-                { portalId: 222, subscriptionType: 'contact.creation' },
-                { portalId: 333, subscriptionType: 'contact.creation' },
-            ],
-        });
-        const res = makeRes();
-        await onHubSpotWebhookReceived.call(integration, { req, res });
-
-        // At some point all three lookups (and all three queue writes)
-        // should have been in flight simultaneously — that's what
-        // distinguishes parallel from serial dispatch.
-        expect(Math.max(...inFlightLookups.mock.calls.map((c) => c[0]))).toBe(
-            3
-        );
-        expect(
-            Math.max(...inFlightQueueWrites.mock.calls.map((c) => c[0]))
-        ).toBe(3);
-        expect(res.body).toEqual({ received: 3, queued: 3, skipped: 0 });
-    });
-
-    it('rejects with 401 when HUBSPOT_CLIENT_SECRET is not set', async () => {
+    it('returns 401 when HUBSPOT_CLIENT_SECRET is not set', async () => {
         const saved = process.env.HUBSPOT_CLIENT_SECRET;
         delete process.env.HUBSPOT_CLIENT_SECRET;
         try {
@@ -578,6 +400,137 @@ describe('onHubSpotWebhookReceived (default receiver handler)', () => {
         } finally {
             process.env.HUBSPOT_CLIENT_SECRET = saved;
         }
+    });
+
+    it('enqueues one HUBSPOT_WEBHOOK_RESOLVE per event WITHOUT any DB lookup', async () => {
+        const integration = makeIntegration();
+        const body = [
+            { portalId: 111, subscriptionType: 'contact.creation', objectId: 1 },
+            { portalId: 222, subscriptionType: 'deal.creation', objectId: 2 },
+        ];
+        const req = buildSignedRequest({ body });
+        const res = makeRes();
+
+        await onHubSpotWebhookReceived.call(integration, { req, res });
+
+        // The receiver is DB-free: it must never perform the portal lookup.
+        expect(
+            integration.commands.findIntegrationByEntityExternalId
+        ).not.toHaveBeenCalled();
+
+        expect(integration.queueWebhook).toHaveBeenCalledTimes(2);
+        expect(integration.queueWebhook).toHaveBeenCalledWith({
+            event: 'HUBSPOT_WEBHOOK_RESOLVE',
+            body: body[0],
+        });
+        expect(integration.queueWebhook).toHaveBeenCalledWith({
+            event: 'HUBSPOT_WEBHOOK_RESOLVE',
+            body: body[1],
+        });
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toEqual({ received: 2, queued: 2, skipped: 0 });
+    });
+
+    it('skips events missing a portalId (nothing to resolve later)', async () => {
+        const integration = makeIntegration();
+        const body = [
+            { subscriptionType: 'contact.creation', objectId: 1 }, // no portalId
+            { portalId: 222, subscriptionType: 'deal.creation', objectId: 2 },
+        ];
+        const req = buildSignedRequest({ body });
+        const res = makeRes();
+
+        await onHubSpotWebhookReceived.call(integration, { req, res });
+
+        expect(integration.queueWebhook).toHaveBeenCalledTimes(1);
+        expect(integration.queueWebhook).toHaveBeenCalledWith({
+            event: 'HUBSPOT_WEBHOOK_RESOLVE',
+            body: body[1],
+        });
+        expect(res.body).toEqual({ received: 2, queued: 1, skipped: 1 });
+    });
+
+    it('returns 200 with zero counts on an empty event array', async () => {
+        const integration = makeIntegration();
+        const req = buildSignedRequest({ body: [] });
+        const res = makeRes();
+        await onHubSpotWebhookReceived.call(integration, { req, res });
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toEqual({ received: 0, queued: 0, skipped: 0 });
+        expect(integration.queueWebhook).not.toHaveBeenCalled();
+    });
+});
+
+describe('onHubSpotWebhookResolve (queue worker, DB)', () => {
+    const makeIntegration = (lookupImpl) => ({
+        commands: {
+            findIntegrationByEntityExternalId: jest.fn(
+                lookupImpl ||
+                    (async (portalId) =>
+                        portalId === 999
+                            ? null
+                            : `integration-for-portal-${portalId}`)
+            ),
+        },
+        queueWebhook: jest.fn().mockResolvedValue(undefined),
+    });
+
+    it('resolves portalId → integrationId and re-enqueues HUBSPOT_WEBHOOK bound to it', async () => {
+        const integration = makeIntegration();
+        const body = { portalId: 111, subscriptionType: 'contact.creation' };
+
+        await onHubSpotWebhookResolve.call(integration, { data: { body } });
+
+        expect(
+            integration.commands.findIntegrationByEntityExternalId
+        ).toHaveBeenCalledWith(111, 'hubspot');
+        expect(integration.queueWebhook).toHaveBeenCalledTimes(1);
+        expect(integration.queueWebhook).toHaveBeenCalledWith({
+            event: 'HUBSPOT_WEBHOOK',
+            integrationId: 'integration-for-portal-111',
+            body,
+        });
+    });
+
+    it('skips (does not re-enqueue) when no integration owns the portal', async () => {
+        const integration = makeIntegration();
+        await onHubSpotWebhookResolve.call(integration, {
+            data: { body: { portalId: 999 } },
+        });
+        expect(integration.queueWebhook).not.toHaveBeenCalled();
+    });
+
+    it('skips when the queued body has no portalId', async () => {
+        const integration = makeIntegration();
+        await onHubSpotWebhookResolve.call(integration, {
+            data: { body: { subscriptionType: 'contact.creation' } },
+        });
+        expect(
+            integration.commands.findIntegrationByEntityExternalId
+        ).not.toHaveBeenCalled();
+        expect(integration.queueWebhook).not.toHaveBeenCalled();
+    });
+
+    it('propagates ambiguous-resolution errors instead of swallowing them', async () => {
+        const integration = makeIntegration(async () => {
+            throw new Error('ambiguous resolution');
+        });
+        await expect(
+            onHubSpotWebhookResolve.call(integration, {
+                data: { body: { portalId: 111 } },
+            })
+        ).rejects.toThrow(/ambiguous/);
+        expect(integration.queueWebhook).not.toHaveBeenCalled();
+    });
+
+    it('throws a clear error when the integration has no commands wired (createFriggCommands missing)', async () => {
+        const integration = { queueWebhook: jest.fn() }; // no `commands`
+        await expect(
+            onHubSpotWebhookResolve.call(integration, {
+                data: { body: { portalId: 111 } },
+            })
+        ).rejects.toThrow(/commands\.findIntegrationByEntityExternalId/);
+        expect(integration.queueWebhook).not.toHaveBeenCalled();
     });
 });
 

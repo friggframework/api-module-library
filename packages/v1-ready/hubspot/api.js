@@ -213,13 +213,19 @@ class Api extends OAuth2Requester {
             properties = await this._propertiesList('contact');
         }
 
+        const query = { limit, properties };
+        // HubSpot rejects `after=null`/`after=` with a 400, so only send the
+        // paging cursor once we actually have one (i.e. from the second page
+        // onward). Without this guard, paging past the first page is impossible
+        // and callers are forced onto the search endpoint, which is hard-capped
+        // at 10,000 results.
+        if (after !== null && after !== undefined && after !== '') {
+            query.after = after;
+        }
+
         const options = {
             url: this.baseUrl + this.URLs.contacts,
-            query: {
-                limit,
-                after,
-                properties,
-            }
+            query,
         };
 
         return this._get(options);

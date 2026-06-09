@@ -12,13 +12,13 @@ const Definition = {
     modelName: 'HubSpot',
     requiredAuthMethods: {
         getToken: async function (api, params) {
-            const code = get(params.data, 'code');
+            const code = get(params, 'code');
             return api.getTokenFromCode(code);
         },
         getEntityDetails: async function (api, callbackParams, tokenResponse, userId) {
             const userDetails = await api.getUserDetails();
             return {
-                identifiers: {externalId: String(userDetails.portalId), userId},
+                identifiers: {externalId: String(userDetails.portalId), user: userId},
                 details: {name: userDetails.hub_domain},
             }
         },

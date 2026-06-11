@@ -31,4 +31,6 @@ In the Connected App's OAuth policies, set **Refresh Token Policy** to **"Refres
 
 The Salesforce user who authorizes the OAuth connection must be marked as a **Marketing User**. This grants the integration permission to create and manage Campaigns in Salesforce — without it, campaign creation will fail.
 
-To enable it: **Setup → Users → [user] → Edit → Advanced User Details → Marketing User ✓**
+**For production / customer orgs:** create a dedicated API user for the integration and enable Marketing User on that account (**Setup → Users → [user] → Edit → Advanced User Details → Marketing User ✓**). Using a dedicated user isolates the integration's permissions and avoids the connection breaking if a real user's account is deactivated.
+
+**For development / testing:** enable Marketing User on your own Salesforce account before going through the OAuth flow.

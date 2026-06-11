@@ -27,10 +27,19 @@ When configuring the Connected App, add both of the following scopes:
 
 In the Connected App's OAuth policies, set **Refresh Token Policy** to **"Refresh token is valid until revoked"**. This prevents the refresh token from expiring on a schedule and breaking the integration unexpectedly.
 
-### Marketing User requirement
+### Integration user
 
-The Salesforce user who authorizes the OAuth connection must be marked as a **Marketing User**. This grants the integration permission to create and manage Campaigns in Salesforce — without it, campaign creation will fail.
+For production and customer orgs, create a **dedicated integration user** in Salesforce rather than authorizing as a real person. This isolates the integration's permissions and prevents the connection from breaking if an employee's account is deactivated.
 
-**For production / customer orgs:** create a dedicated API user for the integration and enable Marketing User on that account (**Setup → Users → [user] → Edit → Advanced User Details → Marketing User ✓**). Using a dedicated user isolates the integration's permissions and avoids the connection breaking if a real user's account is deactivated.
+For development and testing, you can authorize with your own Salesforce account.
 
-**For development / testing:** enable Marketing User on your own Salesforce account before going through the OAuth flow.
+### Conditional permissions
+
+The integration user needs additional permissions depending on which Salesforce objects your integration touches. Grant only what applies:
+
+| Salesforce objects | Required permission |
+| --- | --- |
+| **Campaigns, CampaignMembers** | Enable the **Marketing User** checkbox on the user record (**Setup → Users → [user] → Edit → Advanced User Details → Marketing User ✓**). This is a feature gate separate from object-level CRUD — even a user with full Edit on Campaigns cannot insert a Campaign without it. |
+| **Contacts, Accounts, Leads, Opportunities** | Standard API access is sufficient. No additional flags needed beyond the base integration user profile. |
+
+> **Open question — license compatibility:** The Marketing User flag historically consumes a Marketing User feature license. It is currently unconfirmed whether this flag can be assigned to a Salesforce Integration User license (which is stripped-down and cheaper). If your integration creates Campaigns and you plan to use an Integration license, verify this in a Developer org before advising customers — it may require a full Salesforce seat instead.

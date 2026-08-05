@@ -49,7 +49,15 @@ const Definition = {
                 details: {}
             };
         },
-        testAuthRequest: async (api) => api.getUserDetails(),
+        testAuthRequest: async (api) => {
+            const self = await api.getUserDetails();
+
+            if (!self?.active) {
+                throw new Error('Attio token is not active');
+            }
+
+            return self;
+        },
     },
     env: {
         client_id: process.env.ATTIO_CLIENT_ID,

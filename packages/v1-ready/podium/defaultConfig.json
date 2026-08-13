@@ -1,0 +1,14 @@
+{
+  "name": "podium",
+  "label": "Podium",
+  "productUrl": "https://www.podium.com",
+  "apiDocs": "https://docs.podium.com/docs/getting-started",
+  "logoUrl": "https://friggframework.org/assets/img/podium-icon.jpeg",
+  "categories": [
+    "Messaging",
+    "Reviews",
+    "Reputation Management",
+    "Payments"
+  ],
+  "description": "Podium is a messaging, reviews, and payments platform for local businesses."
+}

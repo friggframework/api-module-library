@@ -1,0 +1,14 @@
+{
+  "name": "servicetitan",
+  "label": "ServiceTitan",
+  "productUrl": "https://www.servicetitan.com",
+  "apiDocs": "https://developer.servicetitan.io/docs/overview/",
+  "logoUrl": "https://friggframework.org/assets/img/servicetitan-icon.jpeg",
+  "categories": [
+    "Field Service Management",
+    "CRM",
+    "Scheduling",
+    "Accounting"
+  ],
+  "description": "ServiceTitan is the field service management platform for the trades, covering CRM, dispatch, job management, and accounting."
+}

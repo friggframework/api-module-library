@@ -1,0 +1,494 @@
+openapi: 3.0.3
+info:
+  title: Reevo Public API
+  version: "1.0.0"
+  description: >-
+    Reevo is an AI-native Revenue OS (CRM). This is the public REST API surface
+    documented at
+    https://help.reevo.ai/Data-management-and-migration/Integrations-With-Other-Tools.
+    Reevo does not publish its own OpenAPI document; this spec was authored by
+    Left Hook from Reevo's help-docs reference as the canonical machine-readable
+    contract for the @friggframework/api-module-reevo module. It is the source
+    of truth the hand-written client in api.js mirrors.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.reevo.ai/api/v1/public
+    description: Reevo public API
+security:
+  - ApiKeyAuth: []
+tags:
+  - name: Accounts
+  - name: Contacts
+  - name: Opportunities
+  - name: Tasks
+  - name: Activities
+  - name: Users
+  - name: Sequences
+  - name: Retrieval
+paths:
+  /account_contact:
+    post:
+      tags: [Accounts, Contacts]
+      operationId: upsertAccountContact
+      summary: Upsert an account and contact together
+      parameters:
+        - in: query
+          name: payload_type
+          required: true
+          schema: { type: string, enum: [json], default: json }
+          description: Reevo requires this to be `json` for JSON request bodies.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccountContactUpsert" }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /accounts:
+    post:
+      tags: [Accounts]
+      operationId: createAccount
+      summary: Create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccountCreate" }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /accounts/{account_id}:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    get:
+      tags: [Accounts]
+      operationId: getAccount
+      summary: Get an account by id
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Accounts]
+      operationId: updateAccount
+      summary: Update an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccountUpdate" }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /accounts/search:
+    post:
+      tags: [Accounts]
+      operationId: searchAccounts
+      summary: Search accounts by domain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [domain_name]
+              properties:
+                domain_name: { type: string }
+                limit: { type: integer, default: 100 }
+                offset: { type: integer, default: 0 }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /contacts/{contact_id}:
+    parameters:
+      - $ref: "#/components/parameters/ContactId"
+    get:
+      tags: [Contacts]
+      operationId: getContact
+      summary: Get a contact by id
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /contacts/search:
+    post:
+      tags: [Contacts]
+      operationId: searchContacts
+      summary: Search contacts (requires contact_email or owner_email)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: At least one of contact_email or owner_email is required.
+              properties:
+                contact_email: { type: string, format: email }
+                owner_email: { type: string, format: email }
+                limit: { type: integer, default: 50 }
+                offset: { type: integer, default: 0 }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /opportunities:
+    post:
+      tags: [Opportunities]
+      operationId: createOpportunity
+      summary: Create an opportunity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OpportunityCreate" }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /opportunities/{opportunity_id}:
+    parameters:
+      - $ref: "#/components/parameters/OpportunityId"
+    get:
+      tags: [Opportunities]
+      operationId: getOpportunity
+      summary: Get an opportunity by id
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Opportunities]
+      operationId: updateOpportunity
+      summary: Update an opportunity (stage changes use shift_stage)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OpportunityUpdate" }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /opportunities/search:
+    post:
+      tags: [Opportunities]
+      operationId: searchOpportunities
+      summary: Search opportunities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                display_name: { type: string }
+                account_id: { type: string, format: uuid }
+                owner_email: { type: string, format: email }
+                status: { type: string, enum: [PROSPECT, DEAL] }
+                stage_name: { type: string }
+                limit: { type: integer, default: 50 }
+                offset: { type: integer, default: 0 }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /opportunities/{opportunity_id}/shift_stage:
+    parameters:
+      - $ref: "#/components/parameters/OpportunityId"
+    post:
+      tags: [Opportunities]
+      operationId: shiftOpportunityStage
+      summary: Move an opportunity to a new stage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [target_stage_name]
+              properties:
+                target_stage_name: { type: string }
+                closed_reason_names:
+                  type: array
+                  items: { type: string }
+                  description: Required when moving to a closed stage.
+                closed_reason_custom_detail: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /tasks:
+    post:
+      tags: [Tasks]
+      operationId: createTask
+      summary: Create a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TaskCreate" }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /manual_activities:
+    post:
+      tags: [Activities]
+      operationId: createManualActivity
+      summary: Log a manual activity (call, meeting-intelligence summary, note)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ManualActivityCreate" }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /users/search:
+    post:
+      tags: [Users]
+      operationId: searchUsers
+      summary: Look up a Reevo user by email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /mailboxes/search:
+    post:
+      tags: [Users]
+      operationId: searchMailboxes
+      summary: Look up a user's mailbox
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [owner_user_email]
+              properties:
+                owner_user_email: { type: string, format: email }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /sequence_enrollments:
+    post:
+      tags: [Sequences]
+      operationId: createSequenceEnrollment
+      summary: Enroll a contact in a sequence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contact_email, sequence_id]
+              properties:
+                contact_email: { type: string, format: email }
+                sequence_id: { type: string, format: uuid }
+                mailbox_email: { type: string, format: email }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /account_and_contact_retrieval:
+    get:
+      tags: [Retrieval]
+      operationId: retrieveAccountAndContact
+      summary: Retrieve an account and its contact by exactly one identifier
+      description: >-
+        Provide exactly one of contact_email, account_domain, or
+        contact_phone_number. Phone numbers must be URL-encoded (`+` becomes
+        `%2B`).
+      parameters:
+        - in: query
+          name: contact_email
+          schema: { type: string, format: email }
+        - in: query
+          name: account_domain
+          schema: { type: string }
+        - in: query
+          name: contact_phone_number
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  parameters:
+    AccountId:
+      in: path
+      name: account_id
+      required: true
+      schema: { type: string, format: uuid }
+    ContactId:
+      in: path
+      name: contact_id
+      required: true
+      schema: { type: string, format: uuid }
+    OpportunityId:
+      in: path
+      name: opportunity_id
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    ObjectResponse:
+      description: A single object.
+      content:
+        application/json:
+          schema: { type: object, additionalProperties: true }
+    ListResponse:
+      description: A list of matching objects.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+    Unauthorized:
+      description: Missing or invalid API key.
+    NotFound:
+      description: Object not found.
+  schemas:
+    CustomFields:
+      type: object
+      additionalProperties: true
+      description: Arbitrary key/value custom fields defined in the Reevo workspace.
+    AccountContactUpsert:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+        first_name: { type: string }
+        last_name: { type: string }
+        middle_name: { type: string }
+        phone_number: { type: string }
+        company: { type: string }
+        title: { type: string }
+        department: { type: string }
+        contact_linkedin_url: { type: string }
+        contact_facebook_url: { type: string }
+        contact_zoominfo_url: { type: string }
+        contact_x_url: { type: string }
+        contact_owner_email: { type: string, format: email }
+        account_linkedin_url: { type: string }
+        account_facebook_url: { type: string }
+        account_zoominfo_url: { type: string }
+        account_x_url: { type: string }
+        account_owner_email: { type: string, format: email }
+        account_website: { type: string }
+        account_custom_fields: { $ref: "#/components/schemas/CustomFields" }
+        contact_custom_fields: { $ref: "#/components/schemas/CustomFields" }
+    AccountCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        owner_email: { type: string, format: email }
+        official_website: { type: string }
+        domain_name: { type: string }
+        linkedin_url: { type: string }
+        facebook_url: { type: string }
+        zoominfo_url: { type: string }
+        x_url: { type: string }
+        custom_fields: { $ref: "#/components/schemas/CustomFields" }
+    AccountUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        owner_email: { type: string, format: email }
+        official_website: { type: string }
+        linkedin_url: { type: string }
+        facebook_url: { type: string }
+        zoominfo_url: { type: string }
+        x_url: { type: string }
+        custom_fields: { $ref: "#/components/schemas/CustomFields" }
+    OpportunityCreate:
+      type: object
+      required: [display_name, account_id]
+      properties:
+        display_name: { type: string }
+        account_id: { type: string, format: uuid }
+        owner_email: { type: string, format: email }
+        primary_contact_email: { type: string, format: email }
+        amount: { type: number }
+        pipeline_name: { type: string }
+        custom_fields: { $ref: "#/components/schemas/CustomFields" }
+    OpportunityUpdate:
+      type: object
+      properties:
+        display_name: { type: string }
+        account_id: { type: string, format: uuid }
+        owner_email: { type: string, format: email }
+        primary_contact_email: { type: string, format: email }
+        additional_contact_emails:
+          type: array
+          items: { type: string, format: email }
+        amount: { type: number }
+        next_step_details: { type: string }
+        next_step_due_at: { type: string, format: date-time }
+        custom_fields: { $ref: "#/components/schemas/CustomFields" }
+    TaskCreate:
+      type: object
+      required: [title, owner_email]
+      properties:
+        title: { type: string }
+        owner_email: { type: string, format: email }
+        status:
+          type: string
+          enum: [OPEN, IN_PROGRESS, BLOCKED, COMPLETED, CLOSED]
+        priority: { type: string, enum: [URGENT, HIGH, MEDIUM, LOW] }
+        type:
+          type: string
+          enum:
+            [
+              ACTION_ITEM,
+              LINKEDIN_MESSAGE,
+              REMINDER,
+              SCHEDULING,
+              EMAIL,
+              VOICE_CALL,
+              LINKEDIN_CONNECT_REQUEST,
+              SMS_MESSAGE,
+              CUSTOM_TASK,
+            ]
+        due_at: { type: string, format: date-time }
+        note: { type: string }
+        account_id: { type: string, format: uuid }
+        contact_emails:
+          type: array
+          items: { type: string, format: email }
+        opportunity_name: { type: string }
+    ManualActivityCreate:
+      type: object
+      required: [metadata]
+      properties:
+        metadata:
+          type: object
+          required: [activity_time, subject, description]
+          properties:
+            activity_time: { type: string, format: date-time }
+            subject: { type: string }
+            description: { type: string }
+            category:
+              type: string
+              enum:
+                [
+                  TEXT,
+                  LINKEDIN,
+                  SOCIAL_MEDIA,
+                  EVENT,
+                  CONFERENCE,
+                  WEBINAR,
+                  CALL,
+                  OTHER,
+                ]
+        account_id: { type: string, format: uuid }
+        contact_ids:
+          type: array
+          items: { type: string, format: uuid }
+        pipeline_id: { type: string, format: uuid }
+        sequence_id: { type: string, format: uuid }

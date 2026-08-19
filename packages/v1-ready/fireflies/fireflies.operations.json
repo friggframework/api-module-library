@@ -1,0 +1,183 @@
+{
+    "info": {
+        "title": "Fireflies.ai GraphQL API",
+        "version": "1.0.0",
+        "description": "Canonical machine-readable manifest of the GraphQL operations the hand-written client in api.js sends. Fireflies exposes a SINGLE GraphQL endpoint, so there is no REST path surface to describe with OpenAPI; this manifest is the GraphQL-native equivalent of the reevo.openapi.yaml used elsewhere in this library. Every operation, its variables, and its selected fields were verified 1:1 against the public Fireflies GraphQL docs (see `docs` on each operation and `sources` below) and against what api.js actually transmits. It is the source of truth the client mirrors; tests/spec-sync.test.js asserts client and manifest agree.",
+        "contact": { "name": "Left Hook", "url": "https://lefthook.com" }
+    },
+    "endpoint": "https://api.fireflies.ai/graphql",
+    "transport": {
+        "method": "POST",
+        "contentType": "application/json",
+        "accept": "application/json",
+        "bodyShape": "{ query, variables }",
+        "note": "GraphQL: one endpoint, one HTTP method (POST). The operation is selected by the query text in the request body, not by URL path or HTTP verb."
+    },
+    "auth": {
+        "type": "bearer",
+        "header": "Authorization",
+        "valueFormat": "Bearer <api_key>",
+        "credential": "Fireflies API key (Settings > Developer Settings / Integrations > Fireflies API)",
+        "note": "The stored credential is the bare key; api.js's addAuthHeaders() adds the 'Bearer ' prefix at request time so it never lives in the DB.",
+        "docs": "https://docs.fireflies.ai/fundamentals/authorization"
+    },
+    "sources": [
+        "https://docs.fireflies.ai/fundamentals/authorization",
+        "https://docs.fireflies.ai/graphql-api/query/user",
+        "https://docs.fireflies.ai/graphql-api/query/transcripts",
+        "https://docs.fireflies.ai/graphql-api/query/transcript"
+    ],
+    "operations": [
+        {
+            "operationId": "getUser",
+            "clientMethod": "getUser",
+            "type": "query",
+            "graphqlOperation": "user",
+            "summary": "Fetch the authenticated user (owner of the API key). Used by the module's auth-test / entity / credential flow.",
+            "docs": "https://docs.fireflies.ai/graphql-api/query/user",
+            "variables": [],
+            "argsSentToServer": {},
+            "selectedFields": ["user_id", "name", "email", "is_admin"],
+            "query": "query { user { user_id name email is_admin } }",
+            "returns": "data.user",
+            "grounding": "Docs confirm the User type exposes user_id, name, email, is_admin (schema listing: user_id, recent_transcript, recent_meeting, num_transcripts, name, minutes_consumed, is_admin, integrations, email, user_groups). `user` with no id argument returns the API-key owner."
+        },
+        {
+            "operationId": "listTranscripts",
+            "clientMethod": "listTranscripts",
+            "type": "query",
+            "graphqlOperation": "transcripts",
+            "summary": "List meeting transcripts, newest first. All arguments optional.",
+            "docs": "https://docs.fireflies.ai/graphql-api/query/transcripts",
+            "variables": [
+                { "name": "limit", "type": "Int" },
+                { "name": "skip", "type": "Int" },
+                { "name": "fromDate", "type": "DateTime" },
+                { "name": "toDate", "type": "DateTime" },
+                { "name": "organizers", "type": "[String]" },
+                { "name": "participants", "type": "[String]" },
+                { "name": "keyword", "type": "String" },
+                { "name": "mine", "type": "Boolean" }
+            ],
+            "argsSentToServer": {
+                "limit": "$limit",
+                "skip": "$skip",
+                "fromDate": "$fromDate",
+                "toDate": "$toDate",
+                "organizers": "$organizers",
+                "participants": "$participants",
+                "keyword": "$keyword",
+                "mine": "$mine"
+            },
+            "selectedFields": [
+                "id",
+                "title",
+                "date",
+                "dateString",
+                "duration",
+                "host_email",
+                "organizer_email",
+                "participants",
+                "meeting_link",
+                "transcript_url",
+                "meeting_attendees { displayName email name phoneNumber location }"
+            ],
+            "query": "query ListTranscripts( $limit: Int $skip: Int $fromDate: DateTime $toDate: DateTime $organizers: [String] $participants: [String] $keyword: String $mine: Boolean ) { transcripts( limit: $limit skip: $skip fromDate: $fromDate toDate: $toDate organizers: $organizers participants: $participants keyword: $keyword mine: $mine ) { id title date dateString duration host_email organizer_email participants meeting_link transcript_url meeting_attendees { displayName email name phoneNumber location } } }",
+            "returns": "data.transcripts",
+            "grounding": "Docs confirm transcripts(...) accepts limit (Int), skip (Int), fromDate (DateTime), toDate (DateTime), organizers ([String]), participants ([String]), keyword (String), mine (Boolean). Fireflies deprecated the scalar organizer_email / participant_email arguments in favor of the array organizers / participants arguments; the client's public methods still accept a single email and wrap it in an array internally. meeting_attendees fields (displayName, email, name, phoneNumber, location) confirmed on the Transcript type."
+        },
+        {
+            "operationId": "getTranscript",
+            "clientMethod": "getTranscript",
+            "type": "query",
+            "graphqlOperation": "transcript",
+            "summary": "A single transcript in full detail: attendees (with emails), speakers, AI summary, and every sentence.",
+            "docs": "https://docs.fireflies.ai/graphql-api/query/transcript",
+            "variables": [{ "name": "id", "type": "String!" }],
+            "argsSentToServer": { "id": "$id" },
+            "selectedFields": [
+                "id",
+                "title",
+                "date",
+                "dateString",
+                "duration",
+                "host_email",
+                "organizer_email",
+                "participants",
+                "meeting_link",
+                "transcript_url",
+                "audio_url",
+                "video_url",
+                "meeting_attendees { displayName email name phoneNumber location }",
+                "speakers { id name }",
+                "summary { overview short_summary keywords action_items bullet_gist gist outline shorthand_bullet topics_discussed }",
+                "sentences { index speaker_name speaker_id text start_time end_time }"
+            ],
+            "query": "query GetTranscript($id: String!) { transcript(id: $id) { id title date dateString duration host_email organizer_email participants meeting_link transcript_url audio_url video_url meeting_attendees { displayName email name phoneNumber location } speakers { id name } summary { overview short_summary keywords action_items bullet_gist gist outline shorthand_bullet topics_discussed } sentences { index speaker_name speaker_id text start_time end_time } } }",
+            "returns": "data.transcript",
+            "grounding": "Docs confirm the query signature is transcript(id: String!). All selected fields verified on the Transcript type: top-level (id, title, date, dateString, duration, host_email, organizer_email, participants, meeting_link, transcript_url, audio_url, video_url); speakers { id name }; meeting_attendees { displayName email name phoneNumber location }; summary { overview short_summary keywords action_items bullet_gist gist outline shorthand_bullet topics_discussed }; sentences { index speaker_name speaker_id text start_time end_time }."
+        },
+        {
+            "operationId": "getTranscriptSummary",
+            "clientMethod": "getTranscriptSummary",
+            "type": "query",
+            "graphqlOperation": "transcript",
+            "summary": "Only the AI summary block for a transcript (subset of the getTranscript selection).",
+            "docs": "https://docs.fireflies.ai/graphql-api/query/transcript",
+            "variables": [{ "name": "id", "type": "String!" }],
+            "argsSentToServer": { "id": "$id" },
+            "selectedFields": [
+                "id",
+                "title",
+                "summary { overview short_summary keywords action_items bullet_gist gist outline shorthand_bullet topics_discussed }"
+            ],
+            "query": "query GetTranscriptSummary($id: String!) { transcript(id: $id) { id title summary { overview short_summary keywords action_items bullet_gist gist outline shorthand_bullet topics_discussed } } }",
+            "returns": "data.transcript",
+            "grounding": "Same transcript(id: String!) query as getTranscript; selects only id, title, and the summary block. All summary fields verified on the Transcript.summary type."
+        },
+        {
+            "operationId": "searchTranscripts",
+            "clientMethod": "searchTranscripts",
+            "type": "query",
+            "graphqlOperation": "transcripts",
+            "summary": "Keyword search across transcripts. Convenience wrapper that presets the `keyword` argument and delegates to the transcripts query (identical wire query to listTranscripts).",
+            "docs": "https://docs.fireflies.ai/graphql-api/query/transcripts",
+            "variables": [
+                { "name": "limit", "type": "Int" },
+                { "name": "skip", "type": "Int" },
+                { "name": "fromDate", "type": "DateTime" },
+                { "name": "toDate", "type": "DateTime" },
+                { "name": "organizers", "type": "[String]" },
+                { "name": "participants", "type": "[String]" },
+                { "name": "keyword", "type": "String" },
+                { "name": "mine", "type": "Boolean" }
+            ],
+            "argsSentToServer": {
+                "limit": "$limit",
+                "skip": "$skip",
+                "fromDate": "$fromDate",
+                "toDate": "$toDate",
+                "organizers": "$organizers",
+                "participants": "$participants",
+                "keyword": "$keyword",
+                "mine": "$mine"
+            },
+            "selectedFields": [
+                "id",
+                "title",
+                "date",
+                "dateString",
+                "duration",
+                "host_email",
+                "organizer_email",
+                "participants",
+                "meeting_link",
+                "transcript_url",
+                "meeting_attendees { displayName email name phoneNumber location }"
+            ],
+            "query": "query ListTranscripts( $limit: Int $skip: Int $fromDate: DateTime $toDate: DateTime $organizers: [String] $participants: [String] $keyword: String $mine: Boolean ) { transcripts( limit: $limit skip: $skip fromDate: $fromDate toDate: $toDate organizers: $organizers participants: $participants keyword: $keyword mine: $mine ) { id title date dateString duration host_email organizer_email participants meeting_link transcript_url meeting_attendees { displayName email name phoneNumber location } } }",
+            "returns": "data.transcripts",
+            "grounding": "Delegates to listTranscripts with keyword preset, so it emits the exact same `transcripts` query. `keyword` is the documented (non-deprecated) search argument."
+        }
+    ]
+}

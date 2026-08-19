@@ -1,0 +1,304 @@
+openapi: 3.0.3
+info:
+  title: Gong Public API (subset)
+  version: "1.0.0"
+  description: >-
+    Gong (gong.io) is a Revenue Intelligence platform. This is the subset of
+    Gong's public REST API used by the @friggframework/api-module-gong module,
+    authored by Left Hook from Gong's published API reference
+    (https://help.gong.io/apidocs/introduction-2). It is the source of truth the
+    hand-written client in api.js mirrors (one method per operationId).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.gong.io/v2
+    description: >-
+      Gong public API default host. Companies also have a dedicated base URL
+      (e.g. https://us-55616.api.gong.io) shown at
+      https://app.gong.io/company/api-authentication.
+security:
+  - BasicAuth: []
+tags:
+  - name: Calls
+  - name: Users
+paths:
+  /calls:
+    get:
+      tags: [Calls]
+      operationId: listCalls
+      summary: List calls in a date range
+      parameters:
+        - in: query
+          name: fromDateTime
+          schema: { type: string, format: date-time }
+          description: ISO-8601 start of the date range.
+        - in: query
+          name: toDateTime
+          schema: { type: string, format: date-time }
+          description: ISO-8601 end of the date range.
+        - in: query
+          name: cursor
+          schema: { type: string }
+          description: Pagination cursor from a prior response's records.cursor.
+        - in: query
+          name: workspaceId
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/CallsList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /calls/{id}:
+    get:
+      tags: [Calls]
+      operationId: getCall
+      summary: Retrieve a single call's metadata
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /calls/extensive:
+    post:
+      tags: [Calls]
+      operationId: listCallsExtensive
+      summary: Retrieve detailed call data by filter (includes attendee emails)
+      description: >-
+        Returns detailed call data. Set contentSelector.exposedFields.parties to
+        true to receive calls[].parties[], each carrying emailAddress, name,
+        affiliation (Internal/External), speakerId, userId, and phoneNumber.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CallsExtensiveRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/CallsExtensiveResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /calls/transcript:
+    post:
+      tags: [Calls]
+      operationId: getTranscripts
+      summary: Retrieve transcripts of calls
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TranscriptRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/TranscriptResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List all users
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: includeAvatars
+          schema: { type: boolean }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /users/{id}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Retrieve a single user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: Base64(accessKey:accessKeySecret) in the Authorization header.
+  schemas:
+    CallsExtensiveRequest:
+      type: object
+      required: [filter]
+      properties:
+        cursor:
+          type: string
+        filter:
+          type: object
+          properties:
+            fromDateTime: { type: string, format: date-time }
+            toDateTime: { type: string, format: date-time }
+            callIds:
+              type: array
+              items: { type: string }
+            primaryUserIds:
+              type: array
+              items: { type: string }
+            workspaceId: { type: string }
+        contentSelector:
+          type: object
+          properties:
+            context:
+              type: string
+              enum: [None, Extended]
+            contextTiming:
+              type: array
+              items: { type: string, enum: [Now, TimeOfCall] }
+            exposedFields:
+              type: object
+              properties:
+                parties: { type: boolean }
+                content:
+                  type: object
+                  properties:
+                    structure: { type: boolean }
+                    topics: { type: boolean }
+                    trackers: { type: boolean }
+                    brief: { type: boolean }
+                    outline: { type: boolean }
+                    highlights: { type: boolean }
+                    callOutcome: { type: boolean }
+                    keyPoints: { type: boolean }
+                interaction:
+                  type: object
+                  properties:
+                    speakers: { type: boolean }
+                    video: { type: boolean }
+                    personInteractionStats: { type: boolean }
+                    questions: { type: boolean }
+                collaboration:
+                  type: object
+                  properties:
+                    publicComments: { type: boolean }
+                media: { type: boolean }
+    Party:
+      type: object
+      properties:
+        id: { type: string }
+        emailAddress:
+          type: string
+          description: The attendee's email address (used to match a CRM contact).
+        name: { type: string }
+        speakerId: { type: string }
+        userId: { type: string }
+        phoneNumber: { type: string }
+        affiliation:
+          type: string
+          enum: [Internal, External, Unknown]
+        methods:
+          type: array
+          items: { type: string }
+    TranscriptRequest:
+      type: object
+      required: [filter]
+      properties:
+        cursor:
+          type: string
+        filter:
+          type: object
+          properties:
+            callIds:
+              type: array
+              items: { type: string }
+            fromDateTime: { type: string, format: date-time }
+            toDateTime: { type: string, format: date-time }
+            workspaceId: { type: string }
+  responses:
+    ObjectResponse:
+      description: A JSON object response.
+      content:
+        application/json:
+          schema: { type: object }
+    CallsList:
+      description: A paged list of call metadata.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              requestId: { type: string }
+              records:
+                type: object
+                properties:
+                  totalRecords: { type: integer }
+                  currentPageSize: { type: integer }
+                  currentPageNumber: { type: integer }
+                  cursor: { type: string }
+              calls:
+                type: array
+                items: { type: object }
+    CallsExtensiveResponse:
+      description: Detailed call data, including parties with attendee emails.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              requestId: { type: string }
+              records:
+                type: object
+                properties:
+                  cursor: { type: string }
+              calls:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    metaData: { type: object }
+                    parties:
+                      type: array
+                      items: { $ref: "#/components/schemas/Party" }
+    TranscriptResponse:
+      description: Transcripts for the requested calls.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              requestId: { type: string }
+              records:
+                type: object
+                properties:
+                  cursor: { type: string }
+              callTranscripts:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    callId: { type: string }
+                    transcript:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          speakerId: { type: string }
+                          topic: { type: string }
+                          sentences:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                start: { type: integer }
+                                end: { type: integer }
+                                text: { type: string }
+    Unauthorized:
+      description: Missing or invalid credentials.
+      content:
+        application/json:
+          schema: { type: object }
+    RateLimited:
+      description: Rate limit exceeded; see the Retry-After header.
+      content:
+        application/json:
+          schema: { type: object }

@@ -1,0 +1,10 @@
+{
+    "name": "gong",
+    "label": "Gong",
+    "authType": "basic",
+    "productUrl": "https://www.gong.io",
+    "apiDocs": "https://help.gong.io/apidocs/introduction-2",
+    "logoUrl": "https://www.gong.io/favicon.ico",
+    "categories": ["Revenue Intelligence", "Sales", "Conversation Intelligence"],
+    "description": "Gong Revenue Intelligence API module — list/retrieve calls, detailed call data with attendee emails, transcripts, and users."
+}

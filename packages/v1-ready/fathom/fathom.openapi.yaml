@@ -1,0 +1,364 @@
+openapi: 3.0.3
+info:
+  title: Fathom Public API
+  version: "1.0.0"
+  description: >-
+    Fathom (fathom.video) is an AI meeting recorder. This is the public REST API
+    surface documented at https://developers.fathom.ai/. Fathom publishes its own
+    OpenAPI document (rendered on the Developer Hub); this file is Left Hook's
+    curated subset covering exactly the endpoints the @friggframework/api-module-fathom
+    client in api.js implements. It is the source of truth the hand-written client
+    mirrors 1:1 (one method per operationId).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.fathom.ai/external/v1
+    description: Fathom public API
+security:
+  - ApiKeyAuth: []
+tags:
+  - name: Meetings
+  - name: Recordings
+  - name: Team Members
+  - name: Webhooks
+paths:
+  /meetings:
+    get:
+      tags: [Meetings]
+      operationId: listMeetings
+      summary: List meetings/recordings
+      description: >-
+        Returns a page of meetings. Paginate by passing the previous response's
+        `next_cursor` as `cursor`. `include_transcript` and `include_summary`
+        are unavailable to OAuth apps.
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+          description: Pagination cursor from a previous response's `next_cursor`.
+        - in: query
+          name: created_after
+          schema: { type: string, format: date-time }
+          description: Only meetings created at/after this ISO 8601 timestamp.
+        - in: query
+          name: created_before
+          schema: { type: string, format: date-time }
+          description: Only meetings created at/before this ISO 8601 timestamp.
+        - in: query
+          name: meeting_type
+          schema: { type: string }
+          description: Filter by meeting type name.
+        - in: query
+          name: include_transcript
+          schema: { type: boolean, default: false }
+        - in: query
+          name: include_summary
+          schema: { type: boolean, default: false }
+        - in: query
+          name: include_action_items
+          schema: { type: boolean, default: false }
+        - in: query
+          name: include_highlights
+          schema: { type: boolean, default: false }
+        - in: query
+          name: include_crm_matches
+          schema: { type: boolean, default: false }
+        - in: query
+          name: calendar_invitees_domains_type
+          schema:
+            type: string
+            enum: [all, only_internal, one_or_more_external]
+        - in: query
+          name: recorded_by
+          description: >-
+            Array filter — emails of recorders. Serialized as the repeated
+            `recorded_by[]` key.
+          schema:
+            type: array
+            items: { type: string, format: email }
+          style: form
+          explode: true
+        - in: query
+          name: teams
+          description: Array filter — team names. Serialized as repeated `teams[]`.
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - in: query
+          name: calendar_invitees_domains
+          description: >-
+            Array filter — company domains. Serialized as repeated
+            `calendar_invitees_domains[]`.
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+      responses:
+        "200": { $ref: "#/components/responses/MeetingListResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /recordings/{recording_id}/transcript:
+    parameters:
+      - $ref: "#/components/parameters/RecordingId"
+    get:
+      tags: [Recordings]
+      operationId: getTranscript
+      summary: Get a recording's transcript
+      description: >-
+        Without `destination_url` the transcript is returned directly. With
+        `destination_url` it is POSTed there asynchronously and the endpoint
+        returns `{ destination_url }`.
+      parameters:
+        - in: query
+          name: destination_url
+          schema: { type: string, format: uri }
+          description: If provided, the transcript is POSTed here instead of returned.
+      responses:
+        "200": { $ref: "#/components/responses/TranscriptResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /recordings/{recording_id}/summary:
+    parameters:
+      - $ref: "#/components/parameters/RecordingId"
+    get:
+      tags: [Recordings]
+      operationId: getSummary
+      summary: Get a recording's summary
+      description: >-
+        Without `destination_url` the summary is returned directly. With
+        `destination_url` it is POSTed there asynchronously and the endpoint
+        returns `{ destination_url }`.
+      parameters:
+        - in: query
+          name: destination_url
+          schema: { type: string, format: uri }
+          description: If provided, the summary is POSTed here instead of returned.
+      responses:
+        "200": { $ref: "#/components/responses/SummaryResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /team_members:
+    get:
+      tags: [Team Members]
+      operationId: listTeamMembers
+      summary: List team members
+      description: People on the Fathom account.
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+          description: Pagination cursor from a previous response's `next_cursor`.
+        - in: query
+          name: team
+          schema: { type: string }
+          description: Filter by team name.
+      responses:
+        "200": { $ref: "#/components/responses/TeamMemberListResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /webhooks:
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a webhook
+      description: >-
+        Register a webhook that fires when new meeting content is ready. At least
+        one of `include_transcript`, `include_summary`, `include_action_items`,
+        or `include_crm_matches` must be true. The response `secret` (whsec_...)
+        verifies delivery signatures (webhook-id / webhook-timestamp /
+        webhook-signature headers, HMAC-SHA256).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/WebhookResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+  parameters:
+    RecordingId:
+      in: path
+      name: recording_id
+      required: true
+      schema: { type: integer }
+      description: The numeric id of the meeting recording.
+  responses:
+    MeetingListResponse:
+      description: A page of meetings.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              limit: { type: integer, nullable: true }
+              next_cursor: { type: string, nullable: true }
+              items:
+                type: array
+                items: { $ref: "#/components/schemas/Meeting" }
+    TranscriptResponse:
+      description: The transcript, or an async-delivery confirmation.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - type: object
+                properties:
+                  transcript:
+                    type: array
+                    items: { $ref: "#/components/schemas/TranscriptSegment" }
+              - $ref: "#/components/schemas/AsyncDelivery"
+    SummaryResponse:
+      description: The summary, or an async-delivery confirmation.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - type: object
+                properties:
+                  summary: { $ref: "#/components/schemas/Summary" }
+              - $ref: "#/components/schemas/AsyncDelivery"
+    TeamMemberListResponse:
+      description: A page of team members.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              limit: { type: integer, nullable: true }
+              next_cursor: { type: string, nullable: true }
+              items:
+                type: array
+                items: { $ref: "#/components/schemas/TeamMember" }
+    WebhookResponse:
+      description: The created webhook.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Webhook" }
+    BadRequest:
+      description: Invalid query parameters or request body.
+    Unauthorized:
+      description: Missing or invalid API key.
+    RateLimited:
+      description: Rate limit exceeded (60 requests/minute per account).
+  schemas:
+    AsyncDelivery:
+      type: object
+      description: Returned when a destination_url was supplied.
+      properties:
+        destination_url: { type: string, format: uri }
+    Invitee:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        email_domain: { type: string }
+        is_external: { type: boolean }
+        matched_speaker_display_name: { type: string, nullable: true }
+    Recorder:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        email_domain: { type: string }
+        team: { type: string, nullable: true }
+    Meeting:
+      type: object
+      properties:
+        recording_id: { type: integer }
+        title: { type: string }
+        meeting_title: { type: string }
+        meeting_type: { type: string }
+        url: { type: string, format: uri }
+        share_url: { type: string, format: uri }
+        created_at: { type: string, format: date-time }
+        scheduled_start_time: { type: string, format: date-time }
+        scheduled_end_time: { type: string, format: date-time }
+        recording_start_time: { type: string, format: date-time }
+        recording_end_time: { type: string, format: date-time }
+        calendar_invitees:
+          type: array
+          items: { $ref: "#/components/schemas/Invitee" }
+        recorded_by: { $ref: "#/components/schemas/Recorder" }
+    TranscriptSegment:
+      type: object
+      properties:
+        speaker:
+          type: object
+          properties:
+            display_name: { type: string }
+            matched_calendar_invitee_email:
+              type: string
+              format: email
+              nullable: true
+        text: { type: string }
+        timestamp:
+          type: string
+          description: Time relative to meeting start, HH:MM:SS.
+    Summary:
+      type: object
+      properties:
+        template_name: { type: string, nullable: true }
+        markdown_formatted: { type: string, nullable: true }
+    TeamMember:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        created_at: { type: string, format: date-time }
+    WebhookCreate:
+      type: object
+      required: [destination_url, triggered_for]
+      description: >-
+        At least one of include_transcript, include_summary,
+        include_action_items, or include_crm_matches must be true.
+      properties:
+        destination_url:
+          type: string
+          format: uri
+          description: The endpoint that will receive webhook deliveries.
+        triggered_for:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum:
+              - my_recordings
+              - shared_external_recordings
+              - my_shared_with_team_recordings
+              - shared_team_recordings
+        include_transcript: { type: boolean, default: false }
+        include_summary: { type: boolean, default: false }
+        include_action_items: { type: boolean, default: false }
+        include_crm_matches: { type: boolean, default: false }
+    Webhook:
+      type: object
+      properties:
+        id: { type: string }
+        url: { type: string, format: uri }
+        secret:
+          type: string
+          description: whsec_... value used to verify delivery signatures.
+        created_at: { type: string, format: date-time }
+        triggered_for:
+          type: array
+          items: { type: string }
+        include_transcript: { type: boolean }
+        include_summary: { type: boolean }
+        include_action_items: { type: boolean }
+        include_crm_matches: { type: boolean }

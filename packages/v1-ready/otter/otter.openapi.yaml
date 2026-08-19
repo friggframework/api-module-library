@@ -1,0 +1,138 @@
+openapi: 3.0.3
+info:
+  title: Otter.ai Public API
+  version: "1.0.0"
+  description: >-
+    Otter.ai is an AI meeting assistant (transcription, summaries, action items,
+    insights). This is the official Public REST API, available for Enterprise
+    workspaces, documented at
+    https://help.otter.ai/hc/en-us/articles/36130822688279-Otter-ai-Public-API
+    and https://help.otter.ai/hc/en-us/articles/35634832371735-Workspace-Webhooks.
+    Otter does not publish its own OpenAPI document; this spec was authored by
+    Left Hook from Otter's help-center reference as the canonical machine-readable
+    contract for the @friggframework/api-module-otter module. It is the source of
+    truth the hand-written client in api.js mirrors — every operationId here is a
+    method on that client, and only the endpoints the client implements appear.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.otter.ai/v1
+    description: Otter.ai public API
+security:
+  - BearerAuth: []
+tags:
+  - name: Workspace
+  - name: Channels
+  - name: Conversations
+paths:
+  /workspace:
+    get:
+      tags: [Workspace]
+      operationId: getWorkspace
+      summary: Get the workspace for the authenticated user
+      description: >-
+        Returns the workspace (id, name, owner, type…) for the authenticated
+        user. Also used as the module's lightweight auth check.
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /channels:
+    get:
+      tags: [Channels]
+      operationId: listChannels
+      summary: List channels for the authenticated user
+      description: >-
+        Lists channels for the authenticated user, returned in alphabetical
+        order by channel name.
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /conversations:
+    get:
+      tags: [Conversations]
+      operationId: listConversations
+      summary: List conversations for the authenticated user
+      description: >-
+        Lists conversations in reverse chronological order (most recent first)
+        with cursor-based pagination. Optional filters may be supplied as query
+        parameters (e.g. channel_id).
+      parameters:
+        - in: query
+          name: cursor
+          required: false
+          schema: { type: string }
+          description: Opaque cursor from a prior page's next_cursor.
+        - in: query
+          name: page_size
+          required: false
+          schema: { type: integer }
+          description: Number of conversations to return per page.
+        - in: query
+          name: channel_id
+          required: false
+          schema: { type: string }
+          description: Restrict results to a single channel.
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /conversations/{conversation_id}:
+    parameters:
+      - $ref: "#/components/parameters/ConversationId"
+    get:
+      tags: [Conversations]
+      operationId: getConversation
+      summary: Get one conversation's summary and details
+      description: >-
+        Returns a single conversation's summary and details. Use `include` to
+        embed related data in the response.
+      parameters:
+        - in: query
+          name: include
+          required: false
+          schema:
+            type: string
+            enum: [transcript, action_items, insights, outline, all]
+          description: >-
+            Comma-separated list of related data to embed — any of transcript,
+            action_items, insights, outline — or `all`.
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+components:
+  securitySchemes:
+    BearerAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >-
+        An API key minted under Integrations → Developer → Create key
+        (Enterprise workspaces only), sent as the value `Bearer <API_KEY>` in the
+        Authorization header. The module builds this on ApiKeyRequester by
+        setting the header name to `Authorization` and the header value to
+        `Bearer <token>`.
+  parameters:
+    ConversationId:
+      in: path
+      name: conversation_id
+      required: true
+      schema: { type: string }
+      description: The Otter conversation id.
+  responses:
+    ObjectResponse:
+      description: A single object.
+      content:
+        application/json:
+          schema: { type: object, additionalProperties: true }
+    ListResponse:
+      description: A list of matching objects (cursor-paginated where applicable).
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+    Unauthorized:
+      description: Missing or invalid API key.
+    NotFound:
+      description: Conversation not found.

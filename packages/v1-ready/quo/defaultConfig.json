@@ -1,0 +1,10 @@
+{
+    "name": "quo",
+    "config": {
+        "apiKey": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

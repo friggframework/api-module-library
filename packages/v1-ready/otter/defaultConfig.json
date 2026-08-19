@@ -1,0 +1,10 @@
+{
+    "name": "otter",
+    "label": "Otter.ai",
+    "authType": "apiKey",
+    "productUrl": "https://otter.ai",
+    "apiDocs": "https://help.otter.ai/hc/en-us/articles/36130822688279-Otter-ai-Public-API",
+    "logoUrl": "https://otter.ai/favicon.ico",
+    "categories": ["Conversation Intelligence", "Meetings", "Transcription"],
+    "description": "Otter.ai Public API module — read workspace, channels, conversations, transcripts, action items, insights, and outlines from an Enterprise Otter workspace."
+}

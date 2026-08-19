@@ -1,0 +1,507 @@
+openapi: 3.0.3
+info:
+  title: Quo (OpenPhone) Public API
+  version: "1.0.0"
+  description: >-
+    Quo (formerly OpenPhone) is a business phone system. This is the public REST
+    API surface documented at https://www.quo.com/docs/api-reference (the
+    OpenPhone docs at https://www.openphone.com/docs/api-reference 301-redirect
+    here). This spec covers exactly the endpoints the
+    @friggframework/api-module-quo client (api.js) implements — calls,
+    recordings, transcripts, summaries, messages, contacts, phone numbers,
+    users, and webhook CRUD — and is the source of truth that hand-written
+    client mirrors.
+
+
+    AUTH QUIRK — NO `Bearer` PREFIX. Quo/OpenPhone sends the API key RAW in the
+    `Authorization` header:
+
+        Authorization: YOUR_API_KEY
+
+    The docs state explicitly: "The Quo API does not use a Bearer token for
+    authentication."
+    (https://www.quo.com/docs/api-reference/authentication). This is why the
+    security scheme below is modeled as an `apiKey` scheme in the `Authorization`
+    header — NOT as `http`/`bearer`. The client sets `api_key_name =
+    'Authorization'` and writes the key verbatim, with no `Bearer ` prefix.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.openphone.com/v1
+    description: Quo/OpenPhone production API
+security:
+  - ApiKeyAuth: []
+tags:
+  - name: Calls
+  - name: Messages
+  - name: Contacts
+  - name: Phone Numbers
+  - name: Users
+  - name: Webhooks
+paths:
+  /calls:
+    get:
+      tags: [Calls]
+      operationId: listCalls
+      summary: List calls
+      description: >-
+        Fetch a paginated list of calls associated with a specific Quo number
+        and another number.
+      parameters:
+        - in: query
+          name: phoneNumberId
+          required: true
+          schema: { type: string, pattern: "^PN(.*)$" }
+          description: The Quo phone number id to scope the calls to.
+        - in: query
+          name: participants
+          schema:
+            type: array
+            maxItems: 1
+            items: { type: string }
+          description: E.164 participant filter (max 1).
+        - in: query
+          name: userId
+          schema: { type: string, pattern: "^US(.*)$" }
+        - in: query
+          name: maxResults
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: pageToken
+          schema: { type: string }
+        - in: query
+          name: createdAfter
+          schema: { type: string, format: date-time }
+        - in: query
+          name: createdBefore
+          schema: { type: string, format: date-time }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /calls/{id}:
+    parameters:
+      - $ref: "#/components/parameters/CallId"
+    get:
+      tags: [Calls]
+      operationId: getCall
+      summary: Get a call by ID
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /call-recordings/{callId}:
+    parameters:
+      - $ref: "#/components/parameters/CallIdPath"
+    get:
+      tags: [Calls]
+      operationId: getCallRecordings
+      summary: Get recordings for a call
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /call-transcripts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/CallId"
+    get:
+      tags: [Calls]
+      operationId: getCallTranscript
+      summary: Get a transcription for a call
+      description: Available on Business/Scale plans.
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /call-summaries/{callId}:
+    parameters:
+      - $ref: "#/components/parameters/CallIdPath"
+    get:
+      tags: [Calls]
+      operationId: getCallSummary
+      summary: Get a summary for a call
+      description: Available on Business/Scale plans.
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /messages:
+    get:
+      tags: [Messages]
+      operationId: listMessages
+      summary: List messages
+      parameters:
+        - in: query
+          name: phoneNumberId
+          required: true
+          schema: { type: string, pattern: "^PN(.*)$" }
+        - in: query
+          name: participants
+          schema:
+            type: array
+            maxItems: 10
+            items: { type: string }
+          description: E.164 participant filter (max 10).
+        - in: query
+          name: userId
+          schema: { type: string, pattern: "^US(.*)$" }
+        - in: query
+          name: maxResults
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: pageToken
+          schema: { type: string }
+        - in: query
+          name: createdAfter
+          schema: { type: string, format: date-time }
+        - in: query
+          name: createdBefore
+          schema: { type: string, format: date-time }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Messages]
+      operationId: sendMessage
+      summary: Send a text message
+      description: Send a text message from your Quo number to a recipient.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MessageSend" }
+      responses:
+        "202": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /messages/{id}:
+    parameters:
+      - $ref: "#/components/parameters/MessageId"
+    get:
+      tags: [Messages]
+      operationId: getMessage
+      summary: Get a message by ID
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /contacts:
+    get:
+      tags: [Contacts]
+      operationId: listContacts
+      summary: List contacts
+      parameters:
+        - in: query
+          name: externalIds
+          schema:
+            type: array
+            items: { type: string }
+        - in: query
+          name: sources
+          schema:
+            type: array
+            items: { type: string }
+        - in: query
+          name: maxResults
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: pageToken
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Contacts]
+      operationId: createContact
+      summary: Create a contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContactCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /contacts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ContactId"
+    get:
+      tags: [Contacts]
+      operationId: getContact
+      summary: Get a contact by ID
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /phone-numbers:
+    get:
+      tags: [Phone Numbers]
+      operationId: listPhoneNumbers
+      summary: List phone numbers
+      description: >-
+        View the Quo phone numbers in the workspace and their associated users.
+        Used by the module's auth test.
+      parameters:
+        - in: query
+          name: userId
+          schema: { type: string, pattern: "^US(.*)$" }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /phone-numbers/{id}:
+    parameters:
+      - $ref: "#/components/parameters/PhoneNumberId"
+    get:
+      tags: [Phone Numbers]
+      operationId: getPhoneNumber
+      summary: Get a phone number by ID
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List users
+      parameters:
+        - in: query
+          name: maxResults
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: pageToken
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /users/{id}:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Get a user by ID
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: Lists all webhooks
+      description: Display all webhooks for a user.
+      parameters:
+        - in: query
+          name: userId
+          schema: { type: string, pattern: "^US(.*)$" }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /webhooks/{id}:
+    parameters:
+      - $ref: "#/components/parameters/WebhookId"
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Get a webhook by ID
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook by ID
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /webhooks/calls:
+    post:
+      tags: [Webhooks]
+      operationId: createCallWebhook
+      summary: Create a new webhook for calls
+      description: Creates a new webhook that triggers on events from calls.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /webhooks/messages:
+    post:
+      tags: [Webhooks]
+      operationId: createMessageWebhook
+      summary: Create a new webhook for messages
+      description: Creates a new webhook that triggers on events from messages.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /webhooks/call-summaries:
+    post:
+      tags: [Webhooks]
+      operationId: createCallSummaryWebhook
+      summary: Create a new webhook for call summaries
+      description: Creates a new webhook that triggers on call summary events.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /webhooks/call-transcripts:
+    post:
+      tags: [Webhooks]
+      operationId: createCallTranscriptWebhook
+      summary: Create a new webhook for call transcripts
+      description: Creates a new webhook that triggers on call transcript events.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+components:
+  securitySchemes:
+    # NO Bearer prefix — the raw API key is the entire Authorization header value.
+    # https://www.quo.com/docs/api-reference/authentication
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >-
+        Raw API key sent as the whole `Authorization` header value, with NO
+        `Bearer ` prefix. e.g. `Authorization: op_live_xxx`.
+  parameters:
+    CallId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, pattern: "^AC(.*)$" }
+      description: The unique identifier of the call.
+    CallIdPath:
+      in: path
+      name: callId
+      required: true
+      schema: { type: string, pattern: "^AC(.*)$" }
+      description: The unique identifier of the call.
+    MessageId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+    ContactId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+    PhoneNumberId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, pattern: "^PN(.*)$" }
+    UserId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, pattern: "^US(.*)$" }
+    WebhookId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+  responses:
+    ObjectResponse:
+      description: A single object, wrapped in a `data` envelope.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+            properties:
+              data: { type: object, additionalProperties: true }
+    ListResponse:
+      description: A paginated list, wrapped in a `data` envelope with pagination cursors.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+            properties:
+              data:
+                type: array
+                items: { type: object, additionalProperties: true }
+              totalItems: { type: integer }
+              nextPageToken: { type: string, nullable: true }
+    Unauthorized:
+      description: Missing or invalid API key.
+    NotFound:
+      description: Object not found.
+  schemas:
+    MessageSend:
+      type: object
+      required: [content, from, to]
+      properties:
+        content: { type: string, description: The text body of the message. }
+        from:
+          type: string
+          description: The sending Quo phone number id (^PN...) or E.164 number.
+        to:
+          type: array
+          items: { type: string }
+          description: Recipient phone numbers in E.164 format.
+        userId: { type: string, pattern: "^US(.*)$" }
+        setInboxStatus:
+          type: string
+          enum: [done]
+    ContactCreate:
+      type: object
+      required: [defaultFields]
+      properties:
+        defaultFields:
+          type: object
+          properties:
+            firstName: { type: string }
+            lastName: { type: string }
+            company: { type: string }
+            role: { type: string }
+            emails:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: { type: string }
+                  value: { type: string, format: email }
+            phoneNumbers:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: { type: string }
+                  value: { type: string }
+        customFields:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        source: { type: string }
+        externalId: { type: string }
+    WebhookCreate:
+      type: object
+      required: [url, events]
+      properties:
+        url: { type: string, format: uri, description: The destination URL for webhook deliveries. }
+        events:
+          type: array
+          items: { type: string }
+          description: The event types to subscribe to.
+        label: { type: string }
+        userId: { type: string, pattern: "^US(.*)$" }
+        resourceIds:
+          type: array
+          items: { type: string }
+          description: Phone number ids (^PN...) or "*" for all.
+        status:
+          type: string
+          enum: [enabled, disabled]

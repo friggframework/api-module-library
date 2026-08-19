@@ -54,8 +54,8 @@
                 { "name": "skip", "type": "Int" },
                 { "name": "fromDate", "type": "DateTime" },
                 { "name": "toDate", "type": "DateTime" },
-                { "name": "organizerEmail", "type": "String" },
-                { "name": "participantEmail", "type": "String" },
+                { "name": "organizers", "type": "[String]" },
+                { "name": "participants", "type": "[String]" },
                 { "name": "keyword", "type": "String" },
                 { "name": "mine", "type": "Boolean" }
             ],
@@ -64,8 +64,8 @@
                 "skip": "$skip",
                 "fromDate": "$fromDate",
                 "toDate": "$toDate",
-                "organizer_email": "$organizerEmail",
-                "participant_email": "$participantEmail",
+                "organizers": "$organizers",
+                "participants": "$participants",
                 "keyword": "$keyword",
                 "mine": "$mine"
             },
@@ -82,9 +82,9 @@
                 "transcript_url",
                 "meeting_attendees { displayName email name phoneNumber location }"
             ],
-            "query": "query ListTranscripts( $limit: Int $skip: Int $fromDate: DateTime $toDate: DateTime $organizerEmail: String $participantEmail: String $keyword: String $mine: Boolean ) { transcripts( limit: $limit skip: $skip fromDate: $fromDate toDate: $toDate organizer_email: $organizerEmail participant_email: $participantEmail keyword: $keyword mine: $mine ) { id title date dateString duration host_email organizer_email participants meeting_link transcript_url meeting_attendees { displayName email name phoneNumber location } } }",
+            "query": "query ListTranscripts( $limit: Int $skip: Int $fromDate: DateTime $toDate: DateTime $organizers: [String] $participants: [String] $keyword: String $mine: Boolean ) { transcripts( limit: $limit skip: $skip fromDate: $fromDate toDate: $toDate organizers: $organizers participants: $participants keyword: $keyword mine: $mine ) { id title date dateString duration host_email organizer_email participants meeting_link transcript_url meeting_attendees { displayName email name phoneNumber location } } }",
             "returns": "data.transcripts",
-            "grounding": "Docs confirm transcripts(...) accepts limit (Int), skip (Int), fromDate (DateTime), toDate (DateTime), organizer_email (String), participant_email (String), keyword (String), mine (Boolean). GraphQL variable aliases ($organizerEmail -> organizer_email, $participantEmail -> participant_email) are client-side names; the wire argument names are the snake_case ones the docs list. meeting_attendees fields (displayName, email, name, phoneNumber, location) confirmed on the Transcript type."
+            "grounding": "Docs confirm transcripts(...) accepts limit (Int), skip (Int), fromDate (DateTime), toDate (DateTime), organizers ([String]), participants ([String]), keyword (String), mine (Boolean). Fireflies deprecated the scalar organizer_email / participant_email arguments in favor of the array organizers / participants arguments; the client's public methods still accept a single email and wrap it in an array internally. meeting_attendees fields (displayName, email, name, phoneNumber, location) confirmed on the Transcript type."
         },
         {
             "operationId": "getTranscript",
@@ -147,8 +147,8 @@
                 { "name": "skip", "type": "Int" },
                 { "name": "fromDate", "type": "DateTime" },
                 { "name": "toDate", "type": "DateTime" },
-                { "name": "organizerEmail", "type": "String" },
-                { "name": "participantEmail", "type": "String" },
+                { "name": "organizers", "type": "[String]" },
+                { "name": "participants", "type": "[String]" },
                 { "name": "keyword", "type": "String" },
                 { "name": "mine", "type": "Boolean" }
             ],
@@ -157,8 +157,8 @@
                 "skip": "$skip",
                 "fromDate": "$fromDate",
                 "toDate": "$toDate",
-                "organizer_email": "$organizerEmail",
-                "participant_email": "$participantEmail",
+                "organizers": "$organizers",
+                "participants": "$participants",
                 "keyword": "$keyword",
                 "mine": "$mine"
             },
@@ -175,7 +175,7 @@
                 "transcript_url",
                 "meeting_attendees { displayName email name phoneNumber location }"
             ],
-            "query": "query ListTranscripts( $limit: Int $skip: Int $fromDate: DateTime $toDate: DateTime $organizerEmail: String $participantEmail: String $keyword: String $mine: Boolean ) { transcripts( limit: $limit skip: $skip fromDate: $fromDate toDate: $toDate organizer_email: $organizerEmail participant_email: $participantEmail keyword: $keyword mine: $mine ) { id title date dateString duration host_email organizer_email participants meeting_link transcript_url meeting_attendees { displayName email name phoneNumber location } } }",
+            "query": "query ListTranscripts( $limit: Int $skip: Int $fromDate: DateTime $toDate: DateTime $organizers: [String] $participants: [String] $keyword: String $mine: Boolean ) { transcripts( limit: $limit skip: $skip fromDate: $fromDate toDate: $toDate organizers: $organizers participants: $participants keyword: $keyword mine: $mine ) { id title date dateString duration host_email organizer_email participants meeting_link transcript_url meeting_attendees { displayName email name phoneNumber location } } }",
             "returns": "data.transcripts",
             "grounding": "Delegates to listTranscripts with keyword preset, so it emits the exact same `transcripts` query. `keyword` is the documented (non-deprecated) search argument."
         }

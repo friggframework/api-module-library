@@ -103,20 +103,14 @@ describe('Otter Api', () => {
             expect(api.sent[0].query).toEqual({ include: 'all' });
         });
 
-        it('getConversationTranscript gets the nested transcript path', async () => {
+        it('getConversationTranscript delegates to getConversation with include=transcript', async () => {
             const api = makeApi();
             await api.getConversationTranscript('conv-1');
+            expect(api.sent[0].method).toBe('GET');
             expect(api.sent[0].url).toBe(
-                'https://api.otter.ai/v1/conversations/conv-1/transcript'
+                'https://api.otter.ai/v1/conversations/conv-1'
             );
-        });
-
-        it('getConversationAudio gets the nested audio path', async () => {
-            const api = makeApi();
-            await api.getConversationAudio('conv-1');
-            expect(api.sent[0].url).toBe(
-                'https://api.otter.ai/v1/conversations/conv-1/audio'
-            );
+            expect(api.sent[0].query).toEqual({ include: 'transcript' });
         });
 
         it('testAuth performs a lightweight workspace fetch', async () => {

@@ -124,8 +124,14 @@ class Api extends ApiKeyRequester {
 
     /**
      * List meeting transcripts, newest first. All args optional.
-     * `transcripts(limit, skip, fromDate, toDate, organizerEmail,
-     *  participantEmail, keyword, mine)`
+     * `transcripts(limit, skip, fromDate, toDate, organizers, participants,
+     *  keyword, mine)`
+     *
+     * Note: the public signature still accepts a single `organizerEmail` /
+     * `participantEmail` string; Fireflies deprecated the scalar
+     * `organizer_email` / `participant_email` args in favor of the array
+     * `organizers: [String]` / `participants: [String]`, so a single email is
+     * wrapped in an array internally.
      */
     async listTranscripts(params = {}) {
         const query = `query ListTranscripts(
@@ -133,8 +139,8 @@ class Api extends ApiKeyRequester {
             $skip: Int
             $fromDate: DateTime
             $toDate: DateTime
-            $organizerEmail: String
-            $participantEmail: String
+            $organizers: [String]
+            $participants: [String]
             $keyword: String
             $mine: Boolean
         ) {
@@ -143,8 +149,8 @@ class Api extends ApiKeyRequester {
                 skip: $skip
                 fromDate: $fromDate
                 toDate: $toDate
-                organizer_email: $organizerEmail
-                participant_email: $participantEmail
+                organizers: $organizers
+                participants: $participants
                 keyword: $keyword
                 mine: $mine
             ) {
@@ -174,9 +180,13 @@ class Api extends ApiKeyRequester {
         if (params.fromDate !== undefined) variables.fromDate = params.fromDate;
         if (params.toDate !== undefined) variables.toDate = params.toDate;
         if (params.organizerEmail !== undefined)
-            variables.organizerEmail = params.organizerEmail;
+            variables.organizers = Array.isArray(params.organizerEmail)
+                ? params.organizerEmail
+                : [params.organizerEmail];
         if (params.participantEmail !== undefined)
-            variables.participantEmail = params.participantEmail;
+            variables.participants = Array.isArray(params.participantEmail)
+                ? params.participantEmail
+                : [params.participantEmail];
         if (params.keyword !== undefined) variables.keyword = params.keyword;
         if (params.mine !== undefined) variables.mine = params.mine;
 

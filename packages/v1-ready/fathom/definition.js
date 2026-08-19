@@ -1,4 +1,5 @@
 require('dotenv').config();
+const crypto = require('crypto');
 const { Api } = require('./api');
 const { get } = require('@friggframework/core');
 const config = require('./defaultConfig.json');
@@ -6,10 +7,19 @@ const config = require('./defaultConfig.json');
 /**
  * Fathom is API-key authenticated (X-Api-Key header). There is no OAuth flow
  * and no dedicated "/me" identity endpoint on the public REST API, so identity
- * is derived from the first meeting's `recorded_by` where available, falling
- * back to a stable label. testAuthRequest simply performs an authenticated
- * list call.
+ * is derived from the first meeting's `recorded_by` where available.
+ *
+ * When no meeting is available (empty list, missing `recorded_by.email`, or an
+ * API error) we fall back to a sha256 fingerprint of the API key itself — a
+ * stable, non-reversible, per-credential identifier that is always available
+ * and never collides across accounts. This mirrors the gong/otter modules.
+ *
+ * There is deliberately NO shared constant fallback: two different customers
+ * must never map to the same entity/credential.
  */
+const keyFingerprint = (apiKey) =>
+    crypto.createHash('sha256').update(String(apiKey)).digest('hex');
+
 async function resolveAccountIdentity(api) {
     try {
         const result = await api.listMeetings({});
@@ -22,9 +32,16 @@ async function resolveAccountIdentity(api) {
             };
         }
     } catch (e) {
-        // fall through to a stable default identity
+        // fall through to the per-credential key fingerprint
     }
-    return { externalId: 'fathom-account', name: 'Fathom' };
+
+    const apiKey = api?.api_key;
+    if (!apiKey) {
+        throw new Error(
+            'Fathom: cannot derive a stable account identity — no meeting identity and no API key to fingerprint.'
+        );
+    }
+    return { externalId: keyFingerprint(apiKey), name: 'Fathom' };
 }
 
 const Definition = {

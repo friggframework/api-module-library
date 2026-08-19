@@ -1,7 +1,24 @@
 require('dotenv').config();
+const crypto = require('crypto');
 const { get } = require('@friggframework/core');
 const { Api } = require('./api');
 const config = require('./defaultConfig.json');
+
+// Quo (OpenPhone) authenticates with a single static API key and returns no
+// stable account/workspace id at auth time. We derive a stable, non-reversible
+// identifier from the API key itself (mirroring the gong/otter modules) so the
+// same credential always maps to the same entity/credential. A phone-number id
+// is NOT stable — reordering or deleting a number would change it and fork a new
+// entity on re-auth — and a shared constant collides across accounts, so
+// neither is acceptable as the externalId.
+const keyFingerprint = (apiKey) => {
+    if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length === 0) {
+        throw new Error(
+            'Quo: cannot derive a stable externalId — no API key present on the api instance.'
+        );
+    }
+    return crypto.createHash('sha256').update(apiKey).digest('hex');
+};
 
 const Definition = {
     API: Api,
@@ -49,21 +66,27 @@ const Definition = {
         testAuthRequest: async (api) => api.listPhoneNumbers(),
 
         getEntityDetails: async (api, callbackParams, tokenResponse, userId) => {
-            const phoneNumbers = await api.listPhoneNumbers();
-            const first = get(phoneNumbers, 'data', [])[0] || {};
-            const externalId = first.id || 'quo-workspace';
+            // externalId is a stable sha256 fingerprint of the API key — unique
+            // per credential and unchanged across phone-number churn. The
+            // workspace's first phone number is still used only for a friendly
+            // display name (best-effort), never for identity.
+            const externalId = keyFingerprint(api.api_key);
+            let name = 'Quo Workspace';
+            try {
+                const phoneNumbers = await api.listPhoneNumbers();
+                const first = get(phoneNumbers, 'data', [])[0] || {};
+                name = first.name || first.number || name;
+            } catch (e) {
+                // Display name is non-critical; identity does not depend on it.
+            }
             return {
                 identifiers: { externalId, user: userId },
-                details: {
-                    name: first.name || first.number || 'Quo Workspace',
-                },
+                details: { name },
             };
         },
 
         getCredentialDetails: async (api, userId) => {
-            const phoneNumbers = await api.listPhoneNumbers();
-            const first = get(phoneNumbers, 'data', [])[0] || {};
-            const externalId = first.id || 'quo-workspace';
+            const externalId = keyFingerprint(api.api_key);
             return {
                 identifiers: { externalId, user: userId },
                 details: {},

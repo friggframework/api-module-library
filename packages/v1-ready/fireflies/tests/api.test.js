@@ -83,6 +83,44 @@ describe('Fireflies Api', () => {
             const body = JSON.parse(captured.options.body);
             expect(body.variables).toEqual({ limit: 10 });
         });
+
+        it('uses the array organizers/participants args (not the deprecated scalar *_email args) and wraps a single email', async () => {
+            const captured = {};
+            const api = makeApi(captured, { transcripts: [] });
+
+            await api.listTranscripts({
+                organizerEmail: 'host@example.com',
+                participantEmail: 'guest@example.com',
+            });
+
+            const body = JSON.parse(captured.options.body);
+            // deprecated scalar args must be gone from the query text
+            expect(body.query).not.toContain('organizer_email:');
+            expect(body.query).not.toContain('participant_email:');
+            expect(body.query).toContain('organizers: $organizers');
+            expect(body.query).toContain('participants: $participants');
+            expect(body.query).toContain('$organizers: [String]');
+            expect(body.query).toContain('$participants: [String]');
+            // a single email is wrapped in an array on the wire
+            expect(body.variables).toEqual({
+                organizers: ['host@example.com'],
+                participants: ['guest@example.com'],
+            });
+        });
+
+        it('passes an array of emails through unchanged', async () => {
+            const captured = {};
+            const api = makeApi(captured, { transcripts: [] });
+
+            await api.listTranscripts({
+                organizerEmail: ['a@example.com', 'b@example.com'],
+            });
+
+            const body = JSON.parse(captured.options.body);
+            expect(body.variables).toEqual({
+                organizers: ['a@example.com', 'b@example.com'],
+            });
+        });
     });
 
     describe('getTranscript()', () => {

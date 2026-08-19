@@ -39,6 +39,34 @@ describe('Fireflies Definition', () => {
         });
     });
 
+    describe('setAuthParams()', () => {
+        it('exists (core calls it on the real non-oauth2 callback)', () => {
+            expect(typeof requiredAuthMethods.setAuthParams).toBe('function');
+        });
+
+        it('sets the api key from api_key', async () => {
+            const api = makeStubApi(validUser);
+            await requiredAuthMethods.setAuthParams(api, {
+                api_key: 'sk_from_callback',
+            });
+            expect(api.api_key).toBe('sk_from_callback');
+        });
+
+        it('falls back to access_token and to nested data', async () => {
+            const a1 = makeStubApi(validUser);
+            await requiredAuthMethods.setAuthParams(a1, {
+                access_token: 'sk_access',
+            });
+            expect(a1.api_key).toBe('sk_access');
+
+            const a2 = makeStubApi(validUser);
+            await requiredAuthMethods.setAuthParams(a2, {
+                data: { api_key: 'sk_nested' },
+            });
+            expect(a2.api_key).toBe('sk_nested');
+        });
+    });
+
     describe('testAuthRequest()', () => {
         it('resolves with the user payload for a valid key', async () => {
             const api = makeStubApi(validUser);

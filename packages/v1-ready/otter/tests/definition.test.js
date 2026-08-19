@@ -57,6 +57,52 @@ describe('Otter Definition', () => {
         });
     });
 
+    describe('setAuthParams', () => {
+        it('rehydrates the api from a form-submitted api_token', async () => {
+            const calls = [];
+            const api = { setApiKey: (v) => calls.push(v) };
+            await requiredAuthMethods.setAuthParams(api, {
+                api_token: 'form-key',
+            });
+            expect(api.api_token).toBe('form-key');
+            expect(calls).toEqual(['Bearer form-key']);
+        });
+
+        it('accepts the token under api_key too', async () => {
+            const api = { setApiKey: jest.fn() };
+            await requiredAuthMethods.setAuthParams(api, { api_key: 'k2' });
+            expect(api.api_token).toBe('k2');
+            expect(api.setApiKey).toHaveBeenCalledWith('Bearer k2');
+        });
+
+        it('strips a pre-existing Bearer prefix so it is never doubled', async () => {
+            const api = { setApiKey: jest.fn() };
+            await requiredAuthMethods.setAuthParams(api, {
+                api_token: 'Bearer k3',
+            });
+            expect(api.api_token).toBe('k3');
+            expect(api.setApiKey).toHaveBeenCalledWith('Bearer k3');
+        });
+
+        it('does nothing when no token is supplied', async () => {
+            const api = { setApiKey: jest.fn() };
+            await requiredAuthMethods.setAuthParams(api, {});
+            expect(api.api_token).toBeUndefined();
+            expect(api.setApiKey).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('getAuthorizationRequirements', () => {
+        it('delegates to the api getAuthorizationRequirements', async () => {
+            const api = {
+                getAuthorizationRequirements: () => ({ type: 'apiKey' }),
+            };
+            await expect(
+                requiredAuthMethods.getAuthorizationRequirements(api)
+            ).resolves.toEqual({ type: 'apiKey' });
+        });
+    });
+
     describe('testAuthRequest', () => {
         it('delegates to the api testAuth check', async () => {
             let called = false;

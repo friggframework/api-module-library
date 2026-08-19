@@ -44,8 +44,6 @@ class Api extends ApiKeyRequester {
             channels: '/channels',
             conversations: '/conversations',
             conversationById: (id) => `/conversations/${id}`,
-            conversationTranscript: (id) => `/conversations/${id}/transcript`,
-            conversationAudio: (id) => `/conversations/${id}/audio`,
         };
     }
 
@@ -118,18 +116,17 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /** Get the full transcript for a conversation. */
+    /**
+     * Get the full transcript for a conversation.
+     *
+     * Otter exposes the transcript as an `include` option on the
+     * conversation-detail endpoint, not as a standalone path — so this
+     * delegates to `getConversation(id, { include: 'transcript' })`. The method
+     * name is preserved because consumers (e.g. the reevo--frigg app's
+     * `get_transcript` tool) call it directly.
+     */
     async getConversationTranscript(conversationId) {
-        return this._get({
-            url: this.baseUrl + this.URLs.conversationTranscript(conversationId),
-        });
-    }
-
-    /** Get the audio (download URL / stream reference) for a conversation. */
-    async getConversationAudio(conversationId) {
-        return this._get({
-            url: this.baseUrl + this.URLs.conversationAudio(conversationId),
-        });
+        return this.getConversation(conversationId, { include: 'transcript' });
     }
 
     // ---- Auth check ---------------------------------------------------------

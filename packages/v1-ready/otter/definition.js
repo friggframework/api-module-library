@@ -1,5 +1,6 @@
 require('dotenv').config();
 const crypto = require('crypto');
+const { get } = require('@friggframework/core');
 const { Api } = require('./api');
 const config = require('./defaultConfig.json');
 
@@ -18,7 +19,24 @@ const Definition = {
     moduleName: config.name,
     modelName: 'Otter',
     requiredAuthMethods: {
-        setAuthParams: async function (api, params) {},
+        setAuthParams: async function (api, params) {
+            // The form submits the user-entered API token; rehydrate the api
+            // client exactly as its constructor does — store the raw token and
+            // set the Authorization header value to `Bearer <token>`, stripping
+            // any pre-existing "Bearer " prefix so it is never doubled.
+            const raw = (
+                get(params, 'api_token', null) ||
+                get(params, 'api_key', null) ||
+                ''
+            ).replace(/^Bearer\s+/i, '');
+            if (raw) {
+                api.api_token = raw;
+                api.setApiKey('Bearer ' + raw);
+            }
+        },
+        getAuthorizationRequirements: async function (api) {
+            return api.getAuthorizationRequirements();
+        },
         getEntityDetails: async function (
             api,
             callbackParams,

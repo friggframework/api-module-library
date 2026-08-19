@@ -87,4 +87,113 @@ describe('Quo Api (offline)', () => {
             });
         });
     });
+
+    // Full request-wiring coverage: every endpoint method asserts the ACTUAL
+    // transport verb (_get / _post / _delete), URL, and (for writes) the body,
+    // so a wrong path/verb/body would fail — not just a missing method.
+    describe('request wiring — every endpoint (mocked transport)', () => {
+        const BASE = 'https://api.openphone.com/v1';
+        const JSON_HEADERS = { 'Content-Type': 'application/json' };
+
+        let api;
+        let getSpy;
+        let postSpy;
+        let deleteSpy;
+
+        beforeEach(() => {
+            api = new Api({ api_key: 'x' });
+            getSpy = jest.spyOn(api, '_get').mockResolvedValue({ data: [] });
+            postSpy = jest.spyOn(api, '_post').mockResolvedValue({ id: 'new' });
+            deleteSpy = jest.spyOn(api, '_delete').mockResolvedValue({});
+        });
+
+        // ---- GET endpoints: [method, args, expected {url, query?}] ----
+        const GET_CASES = [
+            ['getCall', ['AC1'], { url: `${BASE}/calls/AC1` }],
+            ['getCallRecordings', ['AC1'], { url: `${BASE}/call-recordings/AC1` }],
+            ['getCallSummary', ['AC1'], { url: `${BASE}/call-summaries/AC1` }],
+            [
+                'listMessages',
+                [{ phoneNumberId: 'PN1', maxResults: 25 }],
+                { url: `${BASE}/messages`, query: { phoneNumberId: 'PN1', maxResults: 25 } },
+            ],
+            ['getMessage', ['AC9'], { url: `${BASE}/messages/AC9` }],
+            [
+                'listContacts',
+                [{ maxResults: 10 }],
+                { url: `${BASE}/contacts`, query: { maxResults: 10 } },
+            ],
+            ['getContact', ['CT7'], { url: `${BASE}/contacts/CT7` }],
+            [
+                'listPhoneNumbers',
+                [{ userId: 'US1' }],
+                { url: `${BASE}/phone-numbers`, query: { userId: 'US1' } },
+            ],
+            ['getPhoneNumber', ['PN5'], { url: `${BASE}/phone-numbers/PN5` }],
+            [
+                'listUsers',
+                [{ maxResults: 5 }],
+                { url: `${BASE}/users`, query: { maxResults: 5 } },
+            ],
+            ['getUser', ['US3'], { url: `${BASE}/users/US3` }],
+            [
+                'listWebhooks',
+                [{ userId: 'US2' }],
+                { url: `${BASE}/webhooks`, query: { userId: 'US2' } },
+            ],
+            ['getWebhook', ['WH1'], { url: `${BASE}/webhooks/WH1` }],
+        ];
+
+        it.each(GET_CASES)(
+            '%s issues a GET to the correct URL (and query)',
+            async (method, args, expected) => {
+                await api[method](...args);
+                expect(getSpy).toHaveBeenCalledTimes(1);
+                expect(getSpy).toHaveBeenCalledWith(expected);
+                expect(postSpy).not.toHaveBeenCalled();
+                expect(deleteSpy).not.toHaveBeenCalled();
+            }
+        );
+
+        // ---- POST endpoints: [method, bodyArg, expectedUrl] ----
+        const POST_CASES = [
+            ['sendMessage', { content: 'hi', to: ['+15555550100'] }, `${BASE}/messages`],
+            ['createContact', { firstName: 'Ada' }, `${BASE}/contacts`],
+            ['createCallWebhook', { url: 'https://cb/1' }, `${BASE}/webhooks/calls`],
+            ['createMessageWebhook', { url: 'https://cb/2' }, `${BASE}/webhooks/messages`],
+            [
+                'createCallSummaryWebhook',
+                { url: 'https://cb/3' },
+                `${BASE}/webhooks/call-summaries`,
+            ],
+            [
+                'createCallTranscriptWebhook',
+                { url: 'https://cb/4' },
+                `${BASE}/webhooks/call-transcripts`,
+            ],
+        ];
+
+        it.each(POST_CASES)(
+            '%s issues a POST to the correct URL with the JSON body',
+            async (method, body, url) => {
+                await api[method](body);
+                expect(postSpy).toHaveBeenCalledTimes(1);
+                expect(postSpy).toHaveBeenCalledWith({
+                    url,
+                    headers: JSON_HEADERS,
+                    body,
+                });
+                expect(getSpy).not.toHaveBeenCalled();
+                expect(deleteSpy).not.toHaveBeenCalled();
+            }
+        );
+
+        it('deleteWebhook issues a DELETE to /webhooks/{id}', async () => {
+            await api.deleteWebhook('WH9');
+            expect(deleteSpy).toHaveBeenCalledTimes(1);
+            expect(deleteSpy).toHaveBeenCalledWith({ url: `${BASE}/webhooks/WH9` });
+            expect(getSpy).not.toHaveBeenCalled();
+            expect(postSpy).not.toHaveBeenCalled();
+        });
+    });
 });

@@ -11,6 +11,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@aws-sdk/client-scheduler": "^3.967.0",
     "@friggframework/devtools": "^2.0.0-next.68",
     "@friggframework/test": "^2.0.0-next.68",
     "dotenv": "^16.0.3",

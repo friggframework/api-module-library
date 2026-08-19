@@ -1,0 +1,10 @@
+{
+    "name": "reevo",
+    "label": "Reevo",
+    "authType": "apiKey",
+    "productUrl": "https://reevo.ai",
+    "apiDocs": "https://help.reevo.ai/Data-management-and-migration/Integrations-With-Other-Tools",
+    "logoUrl": "https://reevo.ai/favicon.ico",
+    "categories": ["CRM", "Sales", "Revenue Operations"],
+    "description": "Reevo AI-native Revenue OS (CRM) API module — accounts, contacts, opportunities, tasks, activities, and sequence enrollments."
+}

@@ -83,6 +83,15 @@ await reevo.createManualActivity({
 `custom_fields` (dict) is accepted on accounts, contacts, and opportunities.
 Write permissions on a resource automatically include read.
 
+## OpenAPI spec
+
+Reevo does not publish its own OpenAPI document, so `reevo.openapi.yaml` in this
+package is the canonical machine-readable contract — authored from Reevo's
+help-docs reference. The client in `api.js` mirrors it 1:1 (one method per
+`operationId`). Use the spec to generate typed clients, validate requests, or
+drive an `openapi-client-axios` client (see the Marketo module for that
+pattern). A test asserts the spec and client stay in sync.
+
 ## Testing
 
 ```

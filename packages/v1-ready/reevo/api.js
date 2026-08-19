@@ -8,6 +8,9 @@ const { ApiKeyRequester, ModuleConstants, get } = require('@friggframework/core'
  * hits `https://api.reevo.ai/api/v1/public`.
  *
  * Docs: https://help.reevo.ai/Data-management-and-migration/Integrations-With-Other-Tools
+ *
+ * The canonical machine-readable contract lives in ./reevo.openapi.yaml — this
+ * client mirrors it 1:1 (one method per operationId). Keep them in sync.
  */
 class Api extends ApiKeyRequester {
     constructor(params) {

@@ -117,7 +117,7 @@ read via `git show`):
 
 ```
 packages/v1-ready/<name>/
-├── index.js                    # module.exports = { Api, Definition }
+├── index.js                    # module.exports = { Api, Definition, Config } — Config is required by frigg-cli install
 ├── api.js                      # URLs map + one example method (listItems) + TODOs
 ├── definition.js               # requiredAuthMethods for the chosen auth mode
 ├── defaultConfig.json          # name/label/authType/categories/description
@@ -194,7 +194,18 @@ don't default to OAuth2 because it "feels more standard":
 | Base class | `ApiKeyRequester` | `OAuth2Requester` |
 | Auth header | `addAuthHeaders()` injects `headers[api_key_name] = api_key` — you set `api_key_name` in the constructor (Reevo uses `x-api-key`; confirm the vendor's real header) | `addAuthHeaders()` injects `Authorization: Bearer <access_token>` — provided by the base class, no override needed |
 | `externalId` (who is this credential) | **Derive by fingerprinting the key**: `crypto.createHash('sha256').update(apiKey).digest('hex')`. Static API keys often have no "who am I" endpoint that returns an account id, so the fingerprint is the only stable, non-reversible identifier that maps the same key to the same entity every time. Reevo does exactly this. If the vendor **does** expose an identity endpoint, prefer its real id over fingerprinting — see the TODO the scaffolder leaves in `definition.js`. | **Call a real profile endpoint** (hubspot's `getUserDetails()` → `portalId`; deel's `getTokenIdentity()` → `id`) — OAuth2 flows almost always have one, because the authorization step already establishes who granted consent. |
-| `requiredAuthMethods.getToken` | Not applicable — `setAuthParams` is a no-op; there's no code exchange | `api.getTokenFromCode(code)` (or `getTokenFromCodeBasicAuthHeader(code)` if the vendor requires Basic-Auth token exchange — deel does) |
+| `requiredAuthMethods.getToken` | Not applicable — apikey modules keep a no-op `setAuthParams`; there's no code exchange (OAuth2 modules omit the key entirely, matching hubspot/deel) |
+
+> **Two easy-to-misread points on auth methods.** (1) `getAuthorizationRequirements()`
+> lives on the **Api class** (inherited from `OAuth2Requester`/`ApiKeyRequester` in
+> `@friggframework/core` — you usually don't need to define it at all), NOT inside
+> `requiredAuthMethods`. The frigg repo's own `frigg-api-modules` skill (origin/next)
+> shows it inside `requiredAuthMethods`, which contradicts what the framework
+> actually calls (`modules/module.js` invokes `this.api.getAuthorizationRequirements()`)
+> — trust the framework source and the shipped hubspot/deel/reevo modules, not that
+> skill. (2) The generated OAuth2 `api.js` defines no `getAuthorizationRequirements`
+> override — that is correct, it resolves via inheritance; don't add one unless the
+> vendor needs custom auth-requirement fields. `api.getTokenFromCode(code)` (or `getTokenFromCodeBasicAuthHeader(code)` if the vendor requires Basic-Auth token exchange — deel does) |
 | `apiPropertiesToPersist.credential` | `['api_key']` | `['access_token', 'refresh_token']` |
 | `env` block | `{ api_key: process.env.<NAME>_API_KEY }` | `{ client_id, client_secret, redirect_uri: \`${REDIRECT_URI}/<name>\`, scope }` |
 | `.env.example` | one `<NAME>_API_KEY` line | `<NAME>_CLIENT_ID` / `<NAME>_CLIENT_SECRET` / `<NAME>_SCOPE` + shared `REDIRECT_URI` |
@@ -245,6 +256,12 @@ wired here without checking `package.json`'s `auto` block first. The manual
 verified to work and is what Reevo used in practice.
 
 ## 7. Assemble the demo app
+
+> The frigg repo's `.claude/skills/bootstrap-frigg-integration/SKILL.md`
+> (origin/next) documents the same bootstrap options (§0) — if the paths below
+> drift (e.g. `create-frigg-app` gets republished), that skill is the other
+> place to update, and vice versa. What follows keeps only the demo-specific
+> narrative (multi-module pairing, seeded data).
 
 **`create-frigg-app` is unpublished from npm and `frigg init` currently
 crashes (missing templates)** — confirmed by reading the `frigg` repo's own
@@ -378,7 +395,7 @@ npm run dev:server     # frontend (Vite) + backend concurrently
 What it gives you for staging a demo (from `server/api/users/simulation.js`
 and `docs/phase2-integration-guide.md`, both on `origin/next`):
 
-- **Simulated users** — `POST /api/users/dummy` (and `/bulk`) creates
+- **Simulated users** — `POST /api/users` (and `/bulk`) creates
   isolated test users with generated ids; no real end-user account needed for
   a walkthrough.
 - **Simulated auth + actions** — `POST /api/users/simulation/authenticate`

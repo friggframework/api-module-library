@@ -113,12 +113,19 @@ function writeFile(filePath, contents) {
 // ---------------------------------------------------------------------------
 
 function indexJsTemplate() {
+    // Config is required: frigg-cli's install command destructures
+    // `{ Config: { label } }` off the module immediately after install
+    // (frigg/packages/devtools/frigg-cli/install-command/index.js on
+    // origin/next). Reevo's own index.js omits it — a gap, not a
+    // convention; hubspot/deel export it.
     return `const { Api } = require('./api');
 const { Definition } = require('./definition');
+const Config = require('./defaultConfig.json');
 
 module.exports = {
     Api,
     Definition,
+    Config,
 };
 `;
 }
@@ -400,7 +407,6 @@ const Definition = {
     moduleName: config.name,
     modelName: '${modelName}',
     requiredAuthMethods: {
-        setAuthParams: async function (api, params) {},
         getToken: async function (api, params) {
             const code = get(params.data, 'code');
             return api.getTokenFromCode(code);

@@ -3,6 +3,9 @@ const jsforce = require('jsforce');
 const crypto = require('crypto');
 
 class Api extends OAuth2Requester {
+    // URL-unreserved and outside the base64url alphabet.
+    static STATE_VERIFIER_DELIMITER = '~';
+
     constructor(params) {
         super(params);
         this.jsforce = jsforce;
@@ -53,16 +56,29 @@ class Api extends OAuth2Requester {
         this.conn.oauth2 = this.oauth2;
         const url = this.oauth2.getAuthorizationUrl({ scope: this.scope });
         const verifier = this.oauth2.codeVerifier;
-        if (verifier) {
-            const urlObj = new URL(url);
-            urlObj.searchParams.set('state', this._encryptVerifier(verifier));
-            return urlObj.toString();
+        const callerState = this.state || null;
+        if (!verifier) {
+            return callerState ? this._withState(url, callerState) : url;
         }
-        return url;
+        const encoded = this._encryptVerifier(verifier);
+        return this._withState(
+            url,
+            callerState
+                ? `${callerState}${Api.STATE_VERIFIER_DELIMITER}${encoded}`
+                : encoded
+        );
     }
 
-    restoreVerifierFromState(encryptedState) {
-        const verifier = this._decryptVerifier(encryptedState);
+    _withState(url, state) {
+        const urlObj = new URL(url);
+        urlObj.searchParams.set('state', state);
+        return urlObj.toString();
+    }
+
+    restoreVerifierFromState(state) {
+        const at = String(state).lastIndexOf(Api.STATE_VERIFIER_DELIMITER);
+        const encrypted = at === -1 ? state : String(state).slice(at + 1);
+        const verifier = this._decryptVerifier(encrypted);
         this.oauth2.codeVerifier = verifier;
         this.conn.oauth2.codeVerifier = verifier;
     }

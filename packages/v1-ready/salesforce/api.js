@@ -3,10 +3,7 @@ const jsforce = require('jsforce');
 const crypto = require('crypto');
 
 class Api extends OAuth2Requester {
-    // Separates the caller's state from the appended PKCE verifier. `~` is
-    // unreserved per RFC 3986 (so it round-trips through the provider redirect
-    // unescaped) and is not in the base64url alphabet, so it cannot appear
-    // inside the encrypted verifier itself.
+    // URL-unreserved and outside the base64url alphabet.
     static STATE_VERIFIER_DELIMITER = '~';
 
     constructor(params) {
@@ -63,11 +60,6 @@ class Api extends OAuth2Requester {
         if (!verifier) {
             return callerState ? this._withState(url, callerState) : url;
         }
-        // `state` is the caller's: Frigg hands the adopter's value to the
-        // constructor and adopters route the OAuth callback with it. We need the
-        // PKCE verifier back on the return leg too, so APPEND it behind a
-        // delimiter rather than replacing what the caller asked for. Replacing
-        // it left adopters unable to route their own callback.
         const encoded = this._encryptVerifier(verifier);
         return this._withState(
             url,
@@ -84,10 +76,6 @@ class Api extends OAuth2Requester {
     }
 
     restoreVerifierFromState(state) {
-        // The encrypted verifier is the trailing segment. A state with no
-        // delimiter is either an authorization that started before this change
-        // or one where the caller supplied no state of their own — both carry
-        // the verifier alone.
         const at = String(state).lastIndexOf(Api.STATE_VERIFIER_DELIMITER);
         const encrypted = at === -1 ? state : String(state).slice(at + 1);
         const verifier = this._decryptVerifier(encrypted);

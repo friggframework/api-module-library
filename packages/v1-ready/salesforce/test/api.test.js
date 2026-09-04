@@ -14,6 +14,9 @@ jest.mock('jsforce', () => {
     return {
         OAuth2: jest.fn().mockImplementation((params) => ({
             getAuthorizationUrl: mockGetAuthorizationUrl,
+            // Real jsforce populates this whenever useVerifier is set, which is
+            // what getAuthorizationUri does for the auth flow.
+            codeVerifier: params?.useVerifier ? 'test-code-verifier' : undefined,
             _params: params,
         })),
         Connection: jest.fn().mockImplementation(() => mockConnection),
@@ -117,5 +120,54 @@ describe('Salesforce Api', () => {
             expect(lastCall[0].refreshToken).toBe('my-refresh-token');
             expect(lastCall[0].instanceUrl).toBe('https://myorg.salesforce.com');
         });
+    });
+});
+
+// `state` belongs to the caller: Frigg passes the adopter's value into the Api
+// constructor and adopters route the OAuth callback with it — Clockwork resolves
+// the firm from a "<firmHostname>.<nonce>" state at its bounce endpoint. This
+// module also needs its PKCE verifier back on the return leg, so the two have to
+// coexist. Replacing the caller's state (the old behaviour) made the callback
+// unroutable.
+describe('getAuthorizationUri state handling', () => {
+    const stateOf = (url) =>
+        new URL(url).searchParams.get('state');
+
+    it('preserves the caller state and appends the encrypted verifier', () => {
+        const api = new Api({ ...baseParams, state: 'testfirma.NONCE123' });
+        const state = stateOf(api.getAuthorizationUri());
+        expect(state.startsWith('testfirma.NONCE123')).toBe(true);
+        expect(state).not.toBe('testfirma.NONCE123');
+    });
+
+    it('keeps the caller state parseable by a first-dot split', () => {
+        const api = new Api({ ...baseParams, state: 'testfirma.NONCE123' });
+        const state = stateOf(api.getAuthorizationUri());
+        // How Clockwork's bounce resolves the firm.
+        expect(state.split('.', 1)[0]).toBe('testfirma');
+    });
+
+    it('round-trips the verifier out of the composed state', () => {
+        const api = new Api({ ...baseParams, state: 'testfirma.NONCE123' });
+        const state = stateOf(api.getAuthorizationUri());
+        api.restoreVerifierFromState(state);
+        expect(api.oauth2.codeVerifier).toBe('test-code-verifier');
+    });
+
+    it('emits the bare encrypted verifier when the caller supplied no state', () => {
+        const api = new Api(baseParams);
+        const state = stateOf(api.getAuthorizationUri());
+        expect(state).toBeTruthy();
+        api.restoreVerifierFromState(state);
+        expect(api.oauth2.codeVerifier).toBe('test-code-verifier');
+    });
+
+    it('still restores from a legacy state that carries only the verifier', () => {
+        // An authorization already in flight when this change ships comes back
+        // in the old format.
+        const api = new Api(baseParams);
+        const legacy = api._encryptVerifier('test-code-verifier');
+        api.restoreVerifierFromState(legacy);
+        expect(api.oauth2.codeVerifier).toBe('test-code-verifier');
     });
 });

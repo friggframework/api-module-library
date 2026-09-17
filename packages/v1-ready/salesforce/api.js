@@ -6,9 +6,19 @@ class Api extends OAuth2Requester {
     // URL-unreserved and outside the base64url alphabet.
     static STATE_VERIFIER_DELIMITER = '~';
 
+    static DEFINITIVE_TOKEN_ERRORS = new Set([
+        'invalid_grant',
+        'invalid_client',
+        'invalid_client_id',
+        'invalid_app_access',
+        'inactive_user',
+        'inactive_org',
+    ]);
+
     constructor(params) {
         super(params);
         this.jsforce = jsforce;
+        this._refreshRejected = false;
         this.key = get(params, 'client_id', null);
         this.secret = get(params, 'client_secret', null);
         this.instanceUrl = get(params, 'instanceUrl', null);
@@ -24,21 +34,21 @@ class Api extends OAuth2Requester {
             redirectUri: this.redirect_uri,
             loginUrl: this.loginUrl,
         });
-        this.conn = new jsforce.Connection({
+        this.conn = this._buildConnection();
+    }
+
+    _buildConnection() {
+        const conn = new jsforce.Connection({
             oauth2: this.oauth2,
             accessToken: this.access_token,
             refreshToken: this.refresh_token,
             instanceUrl: this.instanceUrl,
+            refreshFn: (_conn, callback) => this._jsforceRefreshFn(callback),
         });
-        this.conn.on('refresh', (accessToken, res) => {
-            console.log(accessToken);
-            this.refreshAccessToken(res).then(() => {
-                console.log('Refreshed');
-            });
-        });
-        this.conn.on('error', (error) => {
+        conn.on('error', (error) => {
             console.log(error);
         });
+        return conn;
     }
 
     getAuthorizationUri() {
@@ -111,12 +121,7 @@ class Api extends OAuth2Requester {
             loginUrl: 'https://test.salesforce.com',
         });
 
-        this.conn = new jsforce.Connection({
-            oauth2: this.oauth2,
-            accessToken: this.access_token,
-            refreshToken: this.refresh_token,
-            instanceUrl: this.instanceUrl,
-        });
+        this.conn = this._buildConnection();
         this.isSandbox = true;
     }
 
@@ -198,17 +203,83 @@ class Api extends OAuth2Requester {
         return response;
     }
 
-    async refreshAccessToken(res) {
-        const OAuthDetails = {
-            access_token: res.access_token,
-            refresh_token: this.conn.refreshToken,
-            instanceUrl: this.conn.instanceUrl,
-        };
-        // Set the instance URL because I'm not sure this gets set... Access and Refresh get set by setTokens,
-        //   which then invokes `notify` to do the token update in the DB. The idea, though, is that auth and refresh
-        //   automatically re-set the access token for future requests of the instance of the class and tells the
-        //   delegate to update the DB for future requests.
-        await this.setTokens(OAuthDetails);
+    async _jsforceRefreshFn(callback) {
+        let refreshed;
+        try {
+            refreshed = this._refreshRejected
+                ? await this._adoptNewerCredential()
+                : await this._refreshAuthOnce();
+        } catch (err) {
+            return callback(err);
+        }
+        if (!refreshed) {
+            this._refreshRejected = true;
+            return callback(new Error('Salesforce rejected the refresh token'));
+        }
+        this._refreshRejected = false;
+        callback(undefined, this.access_token);
+    }
+
+    async _adoptNewerCredential() {
+        const adopted = await super._adoptNewerCredential();
+        if (adopted) {
+            this.conn.accessToken = this.access_token;
+            this.conn.refreshToken = this.refresh_token;
+        }
+        return adopted;
+    }
+
+    async setTokens(params) {
+        await super.setTokens(params);
+        this._refreshRejected = false;
+    }
+
+    async refreshAccessToken(tokenOrResponse) {
+        let res = tokenOrResponse;
+        if (!res.access_token) {
+            if (!res.refresh_token) {
+                throw new Error(
+                    'refreshAccessToken requires an access_token or a refresh_token'
+                );
+            }
+            try {
+                res = await this.oauth2.refreshToken(res.refresh_token);
+            } catch (err) {
+                throw this._normalizeTokenError(err);
+            }
+        }
+        await this._applyTokenResponse(res);
+        return res;
+    }
+
+    _normalizeTokenError(err) {
+        if (!err || typeof err !== 'object' || err.statusCode !== undefined) {
+            return err;
+        }
+        const httpStatus = /^ERROR_HTTP_(\d{3})$/.exec(err.name || '');
+        if (httpStatus) {
+            err.statusCode = Number(httpStatus[1]);
+        } else if (Api.DEFINITIVE_TOKEN_ERRORS.has(err.name)) {
+            err.statusCode = 400;
+        }
+        return err;
+    }
+
+    async _applyTokenResponse(res) {
+        this.conn.accessToken = res.access_token;
+        if (res.refresh_token) this.conn.refreshToken = res.refresh_token;
+        try {
+            await this.setTokens({
+                access_token: res.access_token,
+                refresh_token: res.refresh_token,
+            });
+        } catch (err) {
+            console.error(
+                '[salesforce] rotated refresh token was not persisted; the stored token is now consumed',
+                { message: err?.message }
+            );
+            throw err;
+        }
     }
 }
 

@@ -204,18 +204,11 @@ class Api extends OAuth2Requester {
     }
 
     async _jsforceRefreshFn(callback) {
-        if (this._refreshRejected) {
-            if (!(await this._adoptNewerCredential())) {
-                return callback(
-                    new Error('Salesforce rejected the refresh token')
-                );
-            }
-            this._refreshRejected = false;
-            return callback(undefined, this.access_token);
-        }
         let refreshed;
         try {
-            refreshed = await this._refreshAuthOnce();
+            refreshed = this._refreshRejected
+                ? await this._adoptNewerCredential()
+                : await this._refreshAuthOnce();
         } catch (err) {
             return callback(err);
         }
@@ -223,6 +216,7 @@ class Api extends OAuth2Requester {
             this._refreshRejected = true;
             return callback(new Error('Salesforce rejected the refresh token'));
         }
+        this._refreshRejected = false;
         callback(undefined, this.access_token);
     }
 
@@ -233,6 +227,11 @@ class Api extends OAuth2Requester {
             this.conn.refreshToken = this.refresh_token;
         }
         return adopted;
+    }
+
+    async setTokens(params) {
+        await super.setTokens(params);
+        this._refreshRejected = false;
     }
 
     async refreshAccessToken(tokenOrResponse) {

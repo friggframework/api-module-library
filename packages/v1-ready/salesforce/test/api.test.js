@@ -6,6 +6,8 @@ jest.mock('jsforce', () => {
 
     const mockConnection = {
         on: jest.fn(),
+        authorize: jest.fn(),
+        oauth2: {},
         accessToken: 'test-access-token',
         refreshToken: 'test-refresh-token',
         instanceUrl: 'https://test.salesforce.com',
@@ -490,5 +492,72 @@ describe('Salesforce Api token refresh', () => {
         expect(api.conn.accessToken).toBe('at-new');
         expect(consoleOutput()).toMatch(/not persisted/);
         expect(consoleOutput()).not.toMatch(/at-new|rt-new|at-old|rt-old/);
+    });
+
+    it('clears the rejection memo when fresh tokens are persisted', async () => {
+        const { api, store } = makeApi({
+            stored: { access_token: 'at-old', refresh_token: 'rt-old' },
+        });
+        api.oauth2.refreshToken.mockRejectedValue(invalidGrant());
+        await jsforceRefresh(api);
+
+        await api.refreshAccessToken(rotated);
+        store.current = { access_token: 'at-new', refresh_token: 'rt-new' };
+        api.oauth2.refreshToken.mockReset();
+        api.oauth2.refreshToken.mockResolvedValue({
+            access_token: 'at-newer',
+            refresh_token: 'rt-newer',
+        });
+
+        const { err, accessToken } = await jsforceRefresh(api);
+
+        expect(err).toBeUndefined();
+        expect(accessToken).toBe('at-newer');
+        expect(api.oauth2.refreshToken).toHaveBeenCalledWith('rt-new');
+    });
+
+    it('clears the rejection memo when an authorization code is exchanged', async () => {
+        const { api, store } = makeApi({
+            stored: { access_token: 'at-old', refresh_token: 'rt-old' },
+        });
+        api.oauth2.refreshToken.mockRejectedValue(invalidGrant());
+        await jsforceRefresh(api);
+
+        api.conn.authorize.mockImplementation(async () => {
+            Object.assign(api.conn, {
+                accessToken: 'at-new',
+                refreshToken: 'rt-new',
+            });
+        });
+        await api.getAccessToken('auth-code');
+        store.current = { access_token: 'at-new', refresh_token: 'rt-new' };
+        api.oauth2.refreshToken.mockReset();
+        api.oauth2.refreshToken.mockResolvedValue({
+            access_token: 'at-newer',
+            refresh_token: 'rt-newer',
+        });
+
+        const { err } = await jsforceRefresh(api);
+
+        expect(err).toBeUndefined();
+        expect(api.oauth2.refreshToken).toHaveBeenCalledWith('rt-new');
+    });
+
+    it('reports a failed credential reload through the callback while the memo is set', async () => {
+        const { api } = makeApi({
+            stored: { access_token: 'at-old', refresh_token: 'rt-old' },
+        });
+        api.oauth2.refreshToken.mockRejectedValue(invalidGrant());
+        await jsforceRefresh(api);
+        jest.spyOn(api, '_adoptNewerCredential').mockRejectedValue(
+            new Error('db down')
+        );
+        const { refreshFn } =
+            require('jsforce').Connection.mock.calls.at(-1)[0];
+        const callback = jest.fn();
+
+        await refreshFn(api.conn, callback);
+
+        expect(callback).toHaveBeenCalledWith(expect.any(Error));
     });
 });

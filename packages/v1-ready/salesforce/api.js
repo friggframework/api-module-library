@@ -18,6 +18,7 @@ class Api extends OAuth2Requester {
     constructor(params) {
         super(params);
         this.jsforce = jsforce;
+        this._refreshRejected = false;
         this.key = get(params, 'client_id', null);
         this.secret = get(params, 'client_secret', null);
         this.instanceUrl = get(params, 'instanceUrl', null);
@@ -237,6 +238,11 @@ class Api extends OAuth2Requester {
     async refreshAccessToken(tokenOrResponse) {
         let res = tokenOrResponse;
         if (!res.access_token) {
+            if (!res.refresh_token) {
+                throw new Error(
+                    'refreshAccessToken requires an access_token or a refresh_token'
+                );
+            }
             try {
                 res = await this.oauth2.refreshToken(res.refresh_token);
             } catch (err) {
@@ -263,10 +269,18 @@ class Api extends OAuth2Requester {
     async _applyTokenResponse(res) {
         this.conn.accessToken = res.access_token;
         if (res.refresh_token) this.conn.refreshToken = res.refresh_token;
-        await this.setTokens({
-            access_token: res.access_token,
-            refresh_token: res.refresh_token,
-        });
+        try {
+            await this.setTokens({
+                access_token: res.access_token,
+                refresh_token: res.refresh_token,
+            });
+        } catch (err) {
+            console.error(
+                '[salesforce] rotated refresh token was not persisted; the stored token is now consumed',
+                { message: err?.message }
+            );
+            throw err;
+        }
     }
 }
 

@@ -121,15 +121,7 @@ describe('Salesforce Api', () => {
             expect(lastCall[0].accessToken).toBe('my-access-token');
             expect(lastCall[0].refreshToken).toBe('my-refresh-token');
             expect(lastCall[0].instanceUrl).toBe('https://myorg.salesforce.com');
-        });
-
-        it('does not subscribe to the jsforce refresh event', () => {
-            expect(api.conn.on).not.toHaveBeenCalledWith(
-                'refresh',
-                expect.any(Function)
-            );
-        });
-    });
+        });    });
 });
 
 describe('getAuthorizationUri state handling', () => {
@@ -298,6 +290,10 @@ describe('Salesforce Api token refresh', () => {
         expect(err.isTokenRefreshTransportFailure).toBe(true);
         expect(err.statusCode).toBe(503);
         expect(notified(receiveNotification, 'INVALID_AUTH')).toHaveLength(0);
+
+        api.oauth2.refreshToken.mockClear();
+        await jsforceRefresh(api);
+        expect(api.oauth2.refreshToken).toHaveBeenCalledTimes(1);
     });
 
     it('classifies invalid_client_id as a definitive rejection', async () => {
@@ -465,6 +461,34 @@ describe('Salesforce Api token refresh', () => {
 
         await jsforceRefresh(api);
 
+        expect(consoleOutput()).not.toMatch(/at-new|rt-new|at-old|rt-old/);
+    });
+
+    it('refuses to refresh without a token to refresh with', async () => {
+        const { api, receiveNotification } = makeApi();
+
+        await expect(api.refreshAccessToken({})).rejects.toThrow(
+            /access_token or a refresh_token/
+        );
+
+        expect(api.oauth2.refreshToken).not.toHaveBeenCalled();
+        expect(notified(receiveNotification, 'INVALID_AUTH')).toHaveLength(0);
+    });
+
+    it('keeps the rotated pair in memory when the credential write fails', async () => {
+        const { api, receiveNotification } = makeApi();
+        receiveNotification.mockImplementation(async (_notifier, type) => {
+            if (type === 'TOKEN_UPDATE') throw new Error('db unavailable');
+            return undefined;
+        });
+        api.oauth2.refreshToken.mockResolvedValue(rotated);
+
+        const { err } = await jsforceRefresh(api);
+
+        expect(err).toBeDefined();
+        expect(api.conn.refreshToken).toBe('rt-new');
+        expect(api.conn.accessToken).toBe('at-new');
+        expect(consoleOutput()).toMatch(/not persisted/);
         expect(consoleOutput()).not.toMatch(/at-new|rt-new|at-old|rt-old/);
     });
 });

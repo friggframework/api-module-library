@@ -1,0 +1,9 @@
+{
+    "name": "google-sheets",
+    "label": "Google Sheets",
+    "productUrl": "https://www.google.com/sheets/about/",
+    "apiDocs": "https://developers.google.com/sheets/api/reference/rest",
+    "logoUrl": "https://friggframework.org/assets/img/google-sheets-icon.png",
+    "categories": ["Productivity", "Spreadsheets"],
+    "description": "Read and write Google Sheets spreadsheets"
+}

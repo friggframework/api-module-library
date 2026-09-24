@@ -4,6 +4,11 @@
 
 export type ClioRegion = 'us' | 'eu' | 'ca' | 'au';
 
+export interface ClioClientCredentials {
+    client_id: string;
+    client_secret: string;
+}
+
 export interface ClioOAuth2Options {
     access_token?: string;
     refresh_token?: string;

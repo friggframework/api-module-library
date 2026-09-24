@@ -2,6 +2,7 @@ import { OAuth2Requester, get } from '@friggframework/core';
 import crypto from 'crypto';
 import {
     ClioRegion,
+    ClioClientCredentials,
     ClioOAuth2Options,
     ClioResponse,
     ClioUser,
@@ -30,16 +31,22 @@ import {
     ListMattersParams,
 } from './types';
 
-const REGION_BASE_URLS: Record<ClioRegion, string> = {
-    us: 'https://app.clio.com/api/v4',
-    eu: 'https://eu.app.clio.com/api/v4',
-    ca: 'https://ca.app.clio.com/api/v4',
-    au: 'https://au.app.clio.com/api/v4',
+// Clio runs a separate instance per region: OAuth, the API and the developer
+// app (client id/secret) are all regional, and a token only works in its own region.
+const REGION_HOSTS: Record<ClioRegion, string> = {
+    us: 'https://app.clio.com',
+    eu: 'https://eu.app.clio.com',
+    ca: 'https://ca.app.clio.com',
+    au: 'https://au.app.clio.com',
 };
 
-// OAuth always uses US domain regardless of region
-// Only the API base URL changes per region
-const OAUTH_BASE_URL = 'https://app.clio.com';
+const regionalClient = (
+    params: ClioOAuth2Options,
+    region: Exclude<ClioRegion, 'us'>,
+): ClioClientCredentials => ({
+    client_id: get(params, `${region}_client_id`, ''),
+    client_secret: get(params, `${region}_client_secret`, ''),
+});
 
 const API_VERSION = '4.0.12';
 
@@ -53,7 +60,8 @@ const CLIO_HEADERS_JSON = {
 };
 
 export class Api extends OAuth2Requester {
-    region: ClioRegion;
+    region: ClioRegion = 'us';
+    clients: Record<ClioRegion, ClioClientCredentials>;
     URLs: {
         whoAmI: string;
         contacts: string;
@@ -77,15 +85,16 @@ export class Api extends OAuth2Requester {
     constructor(params: ClioOAuth2Options = {}) {
         super(params);
 
-        // Set region for API calls (defaults to 'us')
-        this.region = get(params, 'region', 'us') as ClioRegion;
-        this.baseUrl = REGION_BASE_URLS[this.region];
-
-        // OAuth URLs - ALWAYS use US domain regardless of region
-        this.authorizationUri = encodeURI(
-            `${OAUTH_BASE_URL}/oauth/authorize?client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&response_type=code`,
-        );
-        this.tokenUri = `${OAUTH_BASE_URL}/oauth/token`;
+        this.clients = {
+            us: {
+                client_id: this.client_id,
+                client_secret: this.client_secret,
+            },
+            eu: regionalClient(params, 'eu'),
+            ca: regionalClient(params, 'ca'),
+            au: regionalClient(params, 'au'),
+        };
+        this.setRegion(get(params, 'region', 'us') as ClioRegion);
 
         this.URLs = {
             whoAmI: '/users/who_am_i.json',
@@ -114,19 +123,22 @@ export class Api extends OAuth2Requester {
         };
     }
 
-    /**
-     * Sets the region and updates the API base URL.
-     * Note: OAuth URLs remain fixed to US domain (app.clio.com).
-     */
     setRegion(region: ClioRegion): void {
-        if (!REGION_BASE_URLS[region]) {
+        const host = REGION_HOSTS[region];
+        if (!host) {
             throw new Error(
                 `Invalid Clio region: ${region}. Must be one of: us, eu, ca, au`,
             );
         }
 
         this.region = region;
-        this.baseUrl = REGION_BASE_URLS[region];
+        this.client_id = this.clients[region].client_id;
+        this.client_secret = this.clients[region].client_secret;
+        this.baseUrl = `${host}/api/v4`;
+        this.tokenUri = `${host}/oauth/token`;
+        this.authorizationUri = encodeURI(
+            `${host}/oauth/authorize?client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&response_type=code`,
+        );
     }
 
     // ==================== User ====================

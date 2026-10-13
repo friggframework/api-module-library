@@ -256,6 +256,49 @@ describe('verifyHubSpotSignature', () => {
         const result = verifyHubSpotSignature({ req, clientSecret: CLIENT_SECRET });
         expect(result.valid).toBe(true);
     });
+
+    it('verifies a hubspot.fetch() GET although body-parser set req.body to {}', () => {
+        const req = buildSignedRequest({
+            method: 'GET',
+            url: '/api/hubspot-integration/card/invoices?portalId=111',
+            body: '',
+        });
+        req.body = {};
+
+        expect(verifyHubSpotSignature({ req, clientSecret: CLIENT_SECRET }).valid).toBe(true);
+    });
+
+    it('decodes the characters HubSpot decodes in the URI before signing', () => {
+        const timestamp = Date.now();
+        const signedPath = "/card?email=a@b.co&note=x:y/z?!$'()*,;";
+        const signature = crypto
+            .createHmac('sha256', CLIENT_SECRET)
+            .update(`GEThttps://app.example.com${signedPath}${timestamp}`, 'utf8')
+            .digest('base64');
+        const req = {
+            method: 'GET',
+            originalUrl: '/card?email=a%40b.co&note=x%3Ay%2Fz%3F%21%24%27%28%29%2A%2C%3b',
+            protocol: 'https',
+            body: {},
+            headers: {
+                host: 'app.example.com',
+                'x-hubspot-signature-v3': signature,
+                'x-hubspot-request-timestamp': String(timestamp),
+            },
+        };
+
+        expect(verifyHubSpotSignature({ req, clientSecret: CLIENT_SECRET }).valid).toBe(true);
+    });
+
+    it('keeps other encoded characters, such as spaces, encoded', () => {
+        expect(
+            reconstructUrl({
+                originalUrl: '/card?companyName=Left%20Hook&email=a%40b.co',
+                protocol: 'https',
+                headers: { host: 'app.example.com' },
+            }),
+        ).toBe('https://app.example.com/card?companyName=Left%20Hook&email=a@b.co');
+    });
 });
 
 describe('signature-verifier helpers', () => {
@@ -285,6 +328,10 @@ describe('signature-verifier helpers', () => {
         expect(
             extractBodyString({ rawBody: Buffer.from('hello'), body: {} })
         ).toBe('hello');
+    });
+
+    it('extractBodyString returns an empty string for a GET', () => {
+        expect(extractBodyString({ method: 'GET', body: {} })).toBe('');
     });
 
     it('extractBodyString JSON-stringifies object bodies', () => {

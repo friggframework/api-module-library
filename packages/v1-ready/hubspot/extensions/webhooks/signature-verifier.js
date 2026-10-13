@@ -4,6 +4,24 @@ const SIGNATURE_HEADER = 'x-hubspot-signature-v3';
 const TIMESTAMP_HEADER = 'x-hubspot-request-timestamp';
 // HubSpot's documented skew window: reject if older than 5 minutes.
 const MAX_TIMESTAMP_SKEW_MS = 5 * 60 * 1000;
+// HubSpot signs the URI with these characters decoded (v3 request validation).
+const SIGNED_URI_DECODINGS = {
+    '%3A': ':',
+    '%2F': '/',
+    '%3F': '?',
+    '%40': '@',
+    '%21': '!',
+    '%24': '$',
+    '%27': "'",
+    '%28': '(',
+    '%29': ')',
+    '%2A': '*',
+    '%2C': ',',
+    '%3B': ';',
+};
+const SIGNED_URI_PATTERN = /%(3A|2F|3F|40|21|24|27|28|29|2A|2C|3B)/gi;
+// Methods whose requests carry no body; body-parser still sets req.body = {}.
+const BODYLESS_METHODS = ['GET', 'HEAD'];
 
 /**
  * Read a header value case-insensitively from a request-like object.
@@ -38,10 +56,26 @@ function getHeader(headers, name) {
 function extractBodyString(req) {
     if (typeof req.rawBody === 'string') return req.rawBody;
     if (Buffer.isBuffer(req.rawBody)) return req.rawBody.toString('utf8');
+    if (BODYLESS_METHODS.includes((req.method || '').toUpperCase())) return '';
     if (req.body === undefined || req.body === null) return '';
     if (typeof req.body === 'string') return req.body;
     if (Buffer.isBuffer(req.body)) return req.body.toString('utf8');
     return JSON.stringify(req.body);
+}
+
+/**
+ * The request path and query as HubSpot signed them: the listed
+ * percent-encoded characters are decoded, everything else stays encoded.
+ *
+ * @param {import('express').Request|Object} req - The Express request.
+ * @returns {string} The path and query string to feed into the HMAC.
+ */
+function signedPath(req) {
+    const path = req.originalUrl || req.url || '';
+    return path.replace(
+        SIGNED_URI_PATTERN,
+        (encoded) => SIGNED_URI_DECODINGS[encoded.toUpperCase()]
+    );
 }
 
 /**
@@ -60,7 +94,7 @@ function reconstructUrl(req) {
     const override = process.env.HUBSPOT_WEBHOOK_BASE_URL;
     if (override) {
         const trimmed = override.replace(/\/$/, '');
-        return `${trimmed}${req.originalUrl || req.url || ''}`;
+        return `${trimmed}${signedPath(req)}`;
     }
     const forwardedProto = getHeader(req.headers, 'x-forwarded-proto');
     const proto =
@@ -72,8 +106,7 @@ function reconstructUrl(req) {
         (forwardedHost && forwardedHost.split(',')[0].trim()) ||
         getHeader(req.headers, 'host') ||
         '';
-    const path = req.originalUrl || req.url || '';
-    return `${proto}://${host}${path}`;
+    return `${proto}://${host}${signedPath(req)}`;
 }
 
 /**

@@ -9,11 +9,20 @@ const Definition: FriggModuleAuthDefinition = {
     moduleName: config.name,
     modelName: 'Clio',
     requiredAuthMethods: {
-        getToken: async (api: Api, params: { code: string }) => {
+        getToken: async (
+            api: Api,
+            params: { code: string; region?: ClioRegion },
+        ) => {
             const code = get(params, 'code');
 
             if (!code) {
                 throw new Error('Authorization code is required');
+            }
+
+            // The code must be exchanged in the region that issued it
+            const region = get(params, 'region', null);
+            if (region) {
+                api.setRegion(region);
             }
 
             try {
@@ -141,6 +150,20 @@ const Definition: FriggModuleAuthDefinition = {
         client_id: process.env.CLIO_CLIENT_ID,
         client_secret: process.env.CLIO_CLIENT_SECRET,
         redirect_uri: `${process.env.REDIRECT_URI}/clio`,
+        regional_credentials: {
+            eu: {
+                client_id: process.env.CLIO_EU_CLIENT_ID,
+                client_secret: process.env.CLIO_EU_CLIENT_SECRET,
+            },
+            ca: {
+                client_id: process.env.CLIO_CA_CLIENT_ID,
+                client_secret: process.env.CLIO_CA_CLIENT_SECRET,
+            },
+            au: {
+                client_id: process.env.CLIO_AU_CLIENT_ID,
+                client_secret: process.env.CLIO_AU_CLIENT_SECRET,
+            },
+        },
         // Note: Clio scopes are configured directly in the Developer Portal, not via OAuth scope.
     },
 };

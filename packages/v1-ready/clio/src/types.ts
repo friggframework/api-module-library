@@ -4,10 +4,20 @@
 
 export type ClioRegion = 'us' | 'eu' | 'ca' | 'au';
 
+export interface ClioClientCredentials {
+    client_id?: string;
+    client_secret?: string;
+}
+
 export interface ClioOAuth2Options {
     access_token?: string;
     refresh_token?: string;
     region?: ClioRegion;
+    client_id?: string;
+    client_secret?: string;
+    redirect_uri?: string;
+    // Per-region developer app credentials; unset regions use client_id/secret
+    regional_credentials?: Partial<Record<ClioRegion, ClioClientCredentials>>;
 }
 
 export interface ClioTokenResponse {

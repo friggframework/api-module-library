@@ -4,5 +4,5 @@
  * Run with: npm run test:unit
  */
 module.exports = {
-    testMatch: ['**/test/api.test.js', '**/test/definition.test.js'],
+    testMatch: ['**/test/api.test.js', '**/test/definition.test.js', '**/test/capability-methods.test.js'],
 };

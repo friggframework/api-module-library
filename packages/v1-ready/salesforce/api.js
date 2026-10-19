@@ -203,6 +203,112 @@ class Api extends OAuth2Requester {
         return response;
     }
 
+    // ---- Capability-manifest methods (salesforce.capabilities.json) ----
+
+    static USER_FIELDS = [
+        'Id',
+        'Username',
+        'Name',
+        'FirstName',
+        'LastName',
+        'Email',
+        'IsActive',
+        'Title',
+    ];
+
+    // SOSL reserved characters must be backslash-escaped inside a FIND {...} term.
+    // https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/sforce_api_calls_sosl_find.htm
+    static escapeSoslTerm(term) {
+        return String(term).replace(/[?&|!{}[\]()^~*:\\"'+-]/g, '\\$&');
+    }
+
+    // PATCH /services/data/vXX.X/sobjects/<Object>/{id}
+    // https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_update_fields.htm
+    async _updateById(object, id, fields) {
+        if (!id) throw new Error(`${object} id is required`);
+        return this.update(object, { ...fields, Id: id });
+    }
+
+    async updateLead(id, fields) {
+        return this._updateById('Lead', id, fields);
+    }
+
+    async updateEvent(id, fields) {
+        return this._updateById('Event', id, fields);
+    }
+
+    async updateOpportunity(id, fields) {
+        return this._updateById('Opportunity', id, fields);
+    }
+
+    // GET /services/data/vXX.X/search?q=FIND {email} IN EMAIL FIELDS RETURNING Lead(...), Contact(...)
+    // https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_search.htm
+    async searchPeopleByEmail(email) {
+        if (!email) throw new Error('email is required');
+        const term = Api.escapeSoslTerm(email);
+        const sosl =
+            `FIND {${term}} IN EMAIL FIELDS RETURNING ` +
+            'Lead(Id, FirstName, LastName, Name, Email, Company, Status), ' +
+            'Contact(Id, FirstName, LastName, Name, Email, AccountId)';
+        const response = await this.conn.search(sosl);
+        const records = response?.searchRecords || [];
+        return {
+            leads: records.filter((r) => r.attributes?.type === 'Lead'),
+            contacts: records.filter((r) => r.attributes?.type === 'Contact'),
+        };
+    }
+
+    // POST /services/data/vXX.X/sobjects/ContentVersion  (VersionData is base64)
+    // https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/sforce_api_objects_contentversion.htm
+    async createContentVersion(
+        title,
+        pathOnClient,
+        versionData,
+        firstPublishLocationId
+    ) {
+        const data = {
+            Title: title,
+            PathOnClient: pathOnClient,
+            VersionData: Buffer.isBuffer(versionData)
+                ? versionData.toString('base64')
+                : versionData,
+        };
+        if (firstPublishLocationId) {
+            data.FirstPublishLocationId = firstPublishLocationId;
+        }
+        return this.create('ContentVersion', data);
+    }
+
+    // POST ContentNote (Content is base64 of the HTML body), then link it with a
+    // ContentDocumentLink (ContentNote.Id is the ContentDocument id).
+    // https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/sforce_api_objects_contentnote.htm
+    // https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/sforce_api_objects_contentdocumentlink.htm
+    async createContentNote(title, content, linkedEntityId) {
+        const html = String(content)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\r?\n/g, '<br>');
+        const note = await this.create('ContentNote', {
+            Title: title,
+            Content: Buffer.from(html, 'utf8').toString('base64'),
+        });
+        if (!note?.success || !linkedEntityId) return note;
+        const link = await this.create('ContentDocumentLink', {
+            ContentDocumentId: note.id,
+            LinkedEntityId: linkedEntityId,
+            ShareType: 'V',
+        });
+        return { ...note, contentDocumentLinkId: link?.id };
+    }
+
+    // SOQL: SELECT ... FROM User [WHERE IsActive = true]
+    // https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_query.htm
+    async listUsers(activeOnly = false) {
+        const filter = activeOnly ? { IsActive: true } : {};
+        return this.find('User', filter, Api.USER_FIELDS, { limit: 2000 });
+    }
+
     async _jsforceRefreshFn(callback) {
         let refreshed;
         try {

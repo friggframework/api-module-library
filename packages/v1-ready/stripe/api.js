@@ -1,9 +1,54 @@
 const { OAuth2Requester, get } = require('@friggframework/core');
 const Stripe = require('stripe');
 
+const crypto = require('crypto');
+
+// ---- webhook signature helpers (used by verifyWebhookSignature) ------------
+function whHeader(headers, name) {
+    if (!headers || typeof headers !== 'object') return undefined;
+    const want = name.toLowerCase();
+    for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === want) {
+            const v = headers[key];
+            return Array.isArray(v) ? v[0] : v;
+        }
+    }
+    return undefined;
+}
+
+/** The bytes the vendor signed: rawBody when given, else the body (JSON-stringified if parsed). */
+function whPayload(rawBody, body) {
+    if (rawBody !== undefined && rawBody !== null) {
+        return Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody), 'utf8');
+    }
+    if (body === undefined || body === null) return Buffer.alloc(0);
+    if (Buffer.isBuffer(body)) return body;
+    if (typeof body === 'string') return Buffer.from(body, 'utf8');
+    return Buffer.from(JSON.stringify(body), 'utf8');
+}
+
+/** Constant-time string comparison; false (not a throw) when the lengths differ. */
+function whSafeEqual(a, b) {
+    const x = Buffer.from(String(a), 'utf8');
+    const y = Buffer.from(String(b), 'utf8');
+    return x.length === y.length && crypto.timingSafeEqual(x, y);
+}
+
+function whNowMs(now) {
+    if (now instanceof Date) return now.getTime();
+    return typeof now === 'number' ? now : Date.now();
+}
+
+function whHmac(key, parts, encoding) {
+    const h = crypto.createHmac('sha256', key);
+    for (const p of parts) h.update(p);
+    return h.digest(encoding);
+}
+
 class Api extends OAuth2Requester {
     constructor(params = {}) {
         super(params);
+        this.webhookSecret = (params && params.webhookSecret) || null;
 
         this.stripeApiSecretKey = get(params, 'stripeApiSecretKey');
         this.stripeClientId = get(params, 'stripeClientId');
@@ -154,6 +199,55 @@ class Api extends OAuth2Requester {
             const error = e instanceof Error ? e.message : JSON.stringify(e);
             console.log('Delete webhook error:', error);
             throw e;
+        }
+    }
+
+    /**
+     * Verify a Stripe webhook delivery (Stripe-Signature).
+     * Docs: https://docs.stripe.com/webhooks#verify-manually
+     *
+     * Header `t=<ts>,v1=<sig>[,v1=<sig2>]`; each v1 is hex HMAC-SHA256 of `${t}.${raw body}` keyed with
+     * the endpoint's whsec_ secret (several when a secret is being rolled: pass an array as
+     * `webhookSecret`). Other schemes (v0) are ignored. Default tolerance is 300s (`tolerance` overrides;
+     * 0 is not accepted because Stripe says it disables the check). Pass `rawBody`.
+     * Never throws; returns true only for a genuine delivery.
+     */
+    async verifyWebhookSignature({ headers, body, rawBody, now, tolerance } = {}) {
+        try {
+            const configured =
+                this.webhookSecret || process.env.STRIPE_WEBHOOK_SECRET;
+            const secrets = (Array.isArray(configured) ? configured : [configured]).filter(
+                Boolean
+            );
+            if (!secrets.length) return false;
+            const header = whHeader(headers, 'stripe-signature');
+            if (!header) return false;
+            let timestamp = null;
+            const sigs = [];
+            for (const item of String(header).split(',')) {
+                const i = item.indexOf('=');
+                if (i < 0) continue;
+                const k = item.slice(0, i).trim();
+                const v = item.slice(i + 1).trim();
+                if (k === 't') timestamp = v;
+                else if (k === 'v1') sigs.push(v);
+            }
+            if (!timestamp || !sigs.length) return false;
+            const ts = Number(timestamp);
+            if (!Number.isFinite(ts)) return false;
+            const tol = Number(tolerance) > 0 ? Number(tolerance) : 300;
+            if (Math.abs(whNowMs(now) / 1000 - ts) > tol) return false;
+            const payload = whPayload(rawBody, body);
+            let ok = false;
+            for (const secret of secrets) {
+                const expected = whHmac(secret, [`${timestamp}.`, payload], 'hex');
+                for (const sig of sigs) {
+                    if (whSafeEqual(expected, sig)) ok = true;
+                }
+            }
+            return ok;
+        } catch (e) {
+            return false;
         }
     }
 }

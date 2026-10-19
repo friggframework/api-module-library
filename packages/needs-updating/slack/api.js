@@ -2,9 +2,54 @@ const {FetchError, get, OAuth2Requester} = require('@friggframework/core');
 const qs = require('qs');
 
 
+const crypto = require('crypto');
+
+// ---- webhook signature helpers (used by verifyWebhookSignature) ------------
+function whHeader(headers, name) {
+    if (!headers || typeof headers !== 'object') return undefined;
+    const want = name.toLowerCase();
+    for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === want) {
+            const v = headers[key];
+            return Array.isArray(v) ? v[0] : v;
+        }
+    }
+    return undefined;
+}
+
+/** The bytes the vendor signed: rawBody when given, else the body (JSON-stringified if parsed). */
+function whPayload(rawBody, body) {
+    if (rawBody !== undefined && rawBody !== null) {
+        return Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody), 'utf8');
+    }
+    if (body === undefined || body === null) return Buffer.alloc(0);
+    if (Buffer.isBuffer(body)) return body;
+    if (typeof body === 'string') return Buffer.from(body, 'utf8');
+    return Buffer.from(JSON.stringify(body), 'utf8');
+}
+
+/** Constant-time string comparison; false (not a throw) when the lengths differ. */
+function whSafeEqual(a, b) {
+    const x = Buffer.from(String(a), 'utf8');
+    const y = Buffer.from(String(b), 'utf8');
+    return x.length === y.length && crypto.timingSafeEqual(x, y);
+}
+
+function whNowMs(now) {
+    if (now instanceof Date) return now.getTime();
+    return typeof now === 'number' ? now : Date.now();
+}
+
+function whHmac(key, parts, encoding) {
+    const h = crypto.createHmac('sha256', key);
+    for (const p of parts) h.update(p);
+    return h.digest(encoding);
+}
+
 class Api extends OAuth2Requester {
     constructor(params) {
         super(params);
+        this.webhookSecret = (params && params.webhookSecret) || null;
 
         this.baseUrl = 'https://slack.com/api';
         this.client_id = process.env.SLACK_CLIENT_ID;
@@ -609,6 +654,33 @@ class Api extends OAuth2Requester {
         };
         const response = await this._post(options);
         return response;
+    }
+
+    /**
+     * Verify a Slack request using the app's signing secret.
+     * Docs: https://docs.slack.dev/authentication/verifying-requests-from-slack
+     *
+     * "v0=" + hex HMAC-SHA256 of `v0:{X-Slack-Request-Timestamp}:{raw body}`; requests more than
+     * 5 minutes from now are rejected. Interactivity payloads are form-encoded, so pass `rawBody`.
+     * Never throws; returns true only for a genuine delivery.
+     */
+    async verifyWebhookSignature({ headers, body, rawBody, now } = {}) {
+        try {
+            const secret = this.webhookSecret || process.env.SLACK_SIGNING_SECRET;
+            if (!secret) return false;
+            const signature = whHeader(headers, 'x-slack-signature');
+            const timestamp = whHeader(headers, 'x-slack-request-timestamp');
+            if (!signature || !timestamp) return false;
+            const ts = Number(timestamp);
+            if (!Number.isFinite(ts)) return false;
+            if (Math.abs(whNowMs(now) / 1000 - ts) > 5 * 60) return false;
+            const expected =
+                'v0=' +
+                whHmac(secret, [`v0:${timestamp}:`, whPayload(rawBody, body)], 'hex');
+            return whSafeEqual(expected, signature);
+        } catch (e) {
+            return false;
+        }
     }
 }
 

@@ -11,9 +11,54 @@ const { ApiKeyRequester, get } = require('@friggframework/core');
  *
  * Docs: https://developers.fathom.ai/
  */
+const crypto = require('crypto');
+
+// ---- webhook signature helpers (used by verifyWebhookSignature) ------------
+function whHeader(headers, name) {
+    if (!headers || typeof headers !== 'object') return undefined;
+    const want = name.toLowerCase();
+    for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === want) {
+            const v = headers[key];
+            return Array.isArray(v) ? v[0] : v;
+        }
+    }
+    return undefined;
+}
+
+/** The bytes the vendor signed: rawBody when given, else the body (JSON-stringified if parsed). */
+function whPayload(rawBody, body) {
+    if (rawBody !== undefined && rawBody !== null) {
+        return Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody), 'utf8');
+    }
+    if (body === undefined || body === null) return Buffer.alloc(0);
+    if (Buffer.isBuffer(body)) return body;
+    if (typeof body === 'string') return Buffer.from(body, 'utf8');
+    return Buffer.from(JSON.stringify(body), 'utf8');
+}
+
+/** Constant-time string comparison; false (not a throw) when the lengths differ. */
+function whSafeEqual(a, b) {
+    const x = Buffer.from(String(a), 'utf8');
+    const y = Buffer.from(String(b), 'utf8');
+    return x.length === y.length && crypto.timingSafeEqual(x, y);
+}
+
+function whNowMs(now) {
+    if (now instanceof Date) return now.getTime();
+    return typeof now === 'number' ? now : Date.now();
+}
+
+function whHmac(key, parts, encoding) {
+    const h = crypto.createHmac('sha256', key);
+    for (const p of parts) h.update(p);
+    return h.digest(encoding);
+}
+
 class Api extends ApiKeyRequester {
     constructor(params = {}) {
         super(params);
+        this.webhookSecret = (params && params.webhookSecret) || null;
 
         // ApiKeyRequester puts `headers[this.api_key_name] = this.api_key`
         this.api_key_name = 'X-Api-Key';
@@ -178,6 +223,44 @@ class Api extends ApiKeyRequester {
             headers: { 'Content-Type': 'application/json' },
             body: data,
         });
+    }
+
+    /**
+     * Verify a Fathom webhook delivery (Standard Webhooks style).
+     * Docs: https://developers.fathom.ai/webhooks
+     *
+     * Headers webhook-id, webhook-timestamp (seconds), webhook-signature (space-separated `v1,<base64>`).
+     * Signed content is `${id}.${timestamp}.${raw body}`; HMAC-SHA256 keyed with the base64-decoded part
+     * of the `whsec_` secret; base64 digest; 5 minute tolerance. Pass `rawBody`.
+     * Never throws; returns true only for a genuine delivery.
+     */
+    async verifyWebhookSignature({ headers, body, rawBody, now } = {}) {
+        try {
+            const secret = this.webhookSecret || process.env.FATHOM_WEBHOOK_SECRET;
+            if (!secret) return false;
+            const id = whHeader(headers, 'webhook-id');
+            const timestamp = whHeader(headers, 'webhook-timestamp');
+            const header = whHeader(headers, 'webhook-signature');
+            if (!id || !timestamp || !header) return false;
+            const ts = Number(timestamp);
+            if (!Number.isFinite(ts)) return false;
+            if (Math.abs(whNowMs(now) / 1000 - ts) > 300) return false;
+            const key = Buffer.from(String(secret).replace(/^whsec_/, ''), 'base64');
+            const expected = whHmac(
+                key,
+                [`${id}.${timestamp}.`, whPayload(rawBody, body)],
+                'base64'
+            );
+            let ok = false;
+            for (const entry of String(header).split(' ')) {
+                const i = entry.indexOf(',');
+                if (i < 0 || entry.slice(0, i) !== 'v1') continue;
+                if (whSafeEqual(expected, entry.slice(i + 1))) ok = true;
+            }
+            return ok;
+        } catch (e) {
+            return false;
+        }
     }
 }
 

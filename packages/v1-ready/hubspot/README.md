@@ -113,3 +113,15 @@ colliding.
 - **`HUBSPOT_WEBHOOK`** — queue event (worker, hydrated integration): default no-op;
   override via `binding.handlers.HUBSPOT_WEBHOOK` to run your per-event logic with the
   correct per-account context.
+
+## Webhook signature verification
+
+`Api#verifyWebhookSignature({ headers, body, rawBody, method, url, now })` checks HubSpot's v3 signature
+([docs](https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/request-validation)):
+base64 HMAC-SHA256 of `METHOD + URI + body + X-HubSpot-Request-Timestamp`, keyed with the **app client secret**;
+deliveries older than 5 minutes are rejected. Returns `true` only for a genuine delivery; never throws.
+
+- Secret: `params.webhookSecret`, else the Api's `client_secret` / `HUBSPOT_CLIENT_SECRET`.
+- URI: HubSpot signs the full public URL it called. The runtime does not pass it, so provide `url` per call or
+  configure `params.webhookUrl` / `HUBSPOT_WEBHOOK_URL`. `method` defaults to `POST`.
+- Pass `rawBody` (the exact bytes received); a re-serialised parsed body will usually not match.

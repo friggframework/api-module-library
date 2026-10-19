@@ -10,3 +10,13 @@ SLACK_CLIENT_SECRET="Slack app client secret"
 SLACK_SCOPE="Slack bot scopes, comma separated"
 SLACK_USER_SCOPE="Slack user scopes, comma separated"
 ```
+
+## Webhook signature verification
+
+`Api#verifyWebhookSignature({ headers, body, rawBody, now })` implements Slack's signing-secret check
+([docs](https://docs.slack.dev/authentication/verifying-requests-from-slack)): `v0=` + hex HMAC-SHA256 of
+`v0:{X-Slack-Request-Timestamp}:{raw body}`, rejecting requests more than 5 minutes from now. Returns `true` only
+for a genuine request; never throws.
+
+- Secret: `params.webhookSecret` or `SLACK_SIGNING_SECRET` (the app's Signing Secret, not the client secret).
+- Pass `rawBody`; interactivity payloads are form-encoded and must be hashed as received.

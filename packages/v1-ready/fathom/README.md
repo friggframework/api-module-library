@@ -161,3 +161,13 @@ request options the module builds. No API key or network access is required.
 ## License
 
 MIT — see [LICENSE.md](./LICENSE.md).
+
+## Webhook signature verification
+
+`Api#verifyWebhookSignature({ headers, body, rawBody, now })` implements Fathom's Standard-Webhooks style check
+([docs](https://developers.fathom.ai/webhooks)): `webhook-id`, `webhook-timestamp` (s), `webhook-signature`
+(`v1,<base64>`, space separated); base64 HMAC-SHA256 of `${id}.${timestamp}.${raw body}` keyed with the base64-decoded
+part of the `whsec_` secret; 5 minute tolerance. Never throws.
+
+- Secret: `params.webhookSecret` or `FATHOM_WEBHOOK_SECRET` (the `whsec_...` value as Fathom returns it).
+- Pass `rawBody`.

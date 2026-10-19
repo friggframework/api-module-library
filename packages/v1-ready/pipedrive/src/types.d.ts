@@ -184,6 +184,24 @@ export interface GetPersonParams {
   custom_fields?: string;
 }
 
+/**
+ * Body for POST /v2/persons (name required) and PATCH /v2/persons/{id} (all optional).
+ * https://developers.pipedrive.com/docs/api/v1/Persons
+ */
+export interface PersonWriteParams {
+  name?: string;
+  owner_id?: number;
+  org_id?: number;
+  emails?: Array<{ value: string; primary?: boolean; label?: string }>;
+  phones?: Array<{ value: string; primary?: boolean; label?: string }>;
+  visible_to?: number;
+  label_ids?: number[];
+  marketing_status?: string;
+  add_time?: string; // POST only
+  custom_fields?: Record<string, any>;
+  [key: string]: any;
+}
+
 export interface SearchPersonsParams {
   term: string;
   fields?: string;

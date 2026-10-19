@@ -14,3 +14,13 @@ checks the `Authorization: Basic ...` header against the configured pair in cons
 - Credentials: `params.webhookUsername` / `params.webhookPassword`, or `PIPEDRIVE_WEBHOOK_USERNAME` /
   `PIPEDRIVE_WEBHOOK_PASSWORD`. With nothing configured it returns `false` (an unauthenticated webhook cannot be
   told from a forgery). There is no timestamp, so dedupe on `meta.id`.
+
+## Creating and updating persons
+
+| Method | Endpoint |
+|---|---|
+| `addPerson(person)` | `POST /api/v2/persons` — `name` required; `owner_id`, `org_id`, `emails[]`, `phones[]`, `visible_to`, `label_ids`, `custom_fields` |
+| `updatePerson(personId, person)` | `PATCH /api/v2/persons/{id}` — partial update, same fields, all optional |
+
+Docs: https://developers.pipedrive.com/docs/api/v1/Persons (the v2 endpoints are documented there). `emails` / `phones`
+are arrays of `{ value, primary, label }`.

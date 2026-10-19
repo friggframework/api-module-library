@@ -226,6 +226,17 @@ class Api extends ApiKeyRequester {
     }
 
     /**
+     * Delete a webhook.
+     * DELETE /webhooks/{id}  (204 on success, 404 if unknown)
+     * Docs: https://developers.fathom.ai/api-reference/webhooks/delete-a-webhook
+     */
+    async deleteWebhook(id) {
+        return this._delete({
+            url: this.baseUrl + this.URLs.webhooks + '/' + id,
+        });
+    }
+
+    /**
      * Verify a Fathom webhook delivery (Standard Webhooks style).
      * Docs: https://developers.fathom.ai/webhooks
      *

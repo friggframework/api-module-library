@@ -15,3 +15,17 @@ genuine delivery; never throws.
   `ASANA_WEBHOOK_SECRET`.
 - Asana defines no timestamp, so there is no replay window; dedupe on the event.
 - The guide does not state the digest encoding; hex matches Asana's reference servers.
+
+## Task search and webhook management
+
+| Method | Endpoint |
+|---|---|
+| `searchTasksInWorkspace(workspaceId, params)` | `GET /workspaces/{workspace_gid}/tasks/search` ([docs](https://developers.asana.com/reference/searchtasksforworkspace)) |
+| `createWebhook(resource, target, filters?)` | `POST /webhooks` ([docs](https://developers.asana.com/reference/createwebhook)) |
+| `deleteWebhook(webhookGid)` | `DELETE /webhooks/{webhook_gid}` ([docs](https://developers.asana.com/reference/deletewebhook)) |
+
+- `searchTasksInWorkspace` params are Asana's query filters (`due_on`, `completed`, `limit`, `opt_fields`, `text`...).
+  Operator filters may be written `projects_any` / `due_on_before` (rewritten to `projects.any` / `due_on.before`) or
+  in Asana's dotted form; arrays are comma-joined. Task search needs a Premium Asana workspace.
+- `createWebhook`: Asana calls `target` with an `X-Hook-Secret` handshake before the create call returns. Capture
+  that secret on the handshake request and pass it as `webhookSecret` to `verifyWebhookSignature`.

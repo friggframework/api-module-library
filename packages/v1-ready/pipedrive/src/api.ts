@@ -8,6 +8,7 @@ import {
   CreateDealParams,
   ListPersonsParams,
   GetPersonParams,
+  PersonWriteParams,
   SearchPersonsParams,
   SearchParams,
   CreateNoteParams,
@@ -298,6 +299,44 @@ export class Api extends OAuth2Requester {
       options.query = params;
     }
     return this._get(options);
+  }
+
+  /**
+   * Add a person
+   * POST /api/v2/persons (https://developers.pipedrive.com/docs/api/v1/Persons)
+   * @param person - Person fields; `name` is required
+   * @returns Response with the created person
+   */
+  async addPerson(person: PersonWriteParams): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.persons,
+      body: { ...person },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    return this._post(options);
+  }
+
+  /**
+   * Update a person (partial update)
+   * PATCH /api/v2/persons/{id} (https://developers.pipedrive.com/docs/api/v1/Persons)
+   * @param personId - The ID of the person to update
+   * @param person - Fields to change
+   * @returns Response with the updated person
+   */
+  async updatePerson(
+    personId: string | number,
+    person: PersonWriteParams
+  ): Promise<PipedriveResponse> {
+    const options: RequestOptions = {
+      url: this.baseUrl + this.URLs.personById(personId),
+      body: { ...person },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    return this._patch(options);
   }
 
   /**

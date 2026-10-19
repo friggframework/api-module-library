@@ -117,6 +117,19 @@ class Api extends OAuth2Requester {
             listMembershipsAddRemove: (listId) => `/crm/v3/lists/${listId}/memberships/add-and-remove`,
             associations: (fromObject, toObject) => `/crm/v4/associations/${fromObject}/${toObject}`,
             associationLabels: (fromObject, toObject) => `/crm/v4/associations/${fromObject}/${toObject}/labels`,
+            recordAssociations: (fromObject, objectId, toObject) =>
+                `/crm/v4/objects/${fromObject}/${objectId}/associations/${toObject}`,
+            contactsSearch: '/crm/v3/objects/contacts/search',
+            contactsBatchUpsert: '/crm/v3/objects/contacts/batch/upsert',
+            tasks: '/crm/v3/objects/tasks',
+            taskById: (taskId) => `/crm/v3/objects/tasks/${taskId}`,
+            tasksSearch: '/crm/v3/objects/tasks/search',
+            calls: '/crm/v3/objects/calls',
+            notes: '/crm/v3/objects/notes',
+            owners: '/crm/v3/owners',
+            pipelineById: (objType, pipelineId) => `/crm/v3/pipelines/${objType}/${pipelineId}`,
+            subscriptionDefinitions: '/communication-preferences/v3/definitions',
+            unsubscribe: '/communication-preferences/v3/unsubscribe',
 
         };
 
@@ -275,6 +288,98 @@ class Api extends OAuth2Requester {
         };
 
         return this._get(options);
+    }
+
+    /**
+     * Search contacts (POST /crm/v3/objects/contacts/search). Filters are ANDed in one filterGroup.
+     * @param {{email?: string, phone?: string, limit?: number, lastContactedBefore?: string|number|Date, properties?: string[], after?: string}} [params]
+     * lastContactedBefore filters on `notes_last_contacted` (LT). phone matches `phone` exactly.
+     */
+    async searchContacts(params = {}) {
+        const {email, phone, lastContactedBefore, properties, after} = params;
+        const filters = [];
+        if (email) filters.push({propertyName: 'email', operator: 'EQ', value: email});
+        if (phone) filters.push({propertyName: 'phone', operator: 'EQ', value: phone});
+        if (lastContactedBefore !== undefined && lastContactedBefore !== null) {
+            const ts = new Date(lastContactedBefore).getTime();
+            filters.push({propertyName: 'notes_last_contacted', operator: 'LT', value: String(ts)});
+        }
+        const body = {
+            filterGroups: filters.length ? [{filters}] : [],
+            limit: get(params, 'limit', 10),
+        };
+        if (properties && properties.length) body.properties = properties;
+        if (after) body.after = after;
+        return this._post({url: this.baseUrl + this.URLs.contactsSearch, body});
+    }
+
+    /**
+     * Create-or-update a contact keyed on email (POST /crm/v3/objects/contacts/batch/upsert, idProperty=email).
+     * Returns the single upserted contact. Note HubSpot does not support partial upserts when idProperty is email.
+     */
+    async upsertContactByEmail(email, properties) {
+        const options = {
+            url: this.baseUrl + this.URLs.contactsBatchUpsert,
+            body: {
+                inputs: [{idProperty: 'email', id: email, properties: {...properties, email}}],
+            },
+        };
+        const res = await this._post(options);
+        return res && Array.isArray(res.results) ? res.results[0] : res;
+    }
+
+    /** Ids associated with a record (GET /crm/v4/objects/{from}/{id}/associations/{to}), paged to exhaustion. */
+    async _listAssociatedIds(fromType, fromId, toType) {
+        const ids = [];
+        let after;
+        do {
+            const query = {limit: 500};
+            if (after) query.after = after;
+            const res = await this._get({
+                url: this.baseUrl + this.URLs.recordAssociations(fromType, fromId, toType),
+                query,
+            });
+            for (const r of get(res, 'results', [])) ids.push(String(r.toObjectId));
+            after = get(res, 'paging.next.after', null);
+        } while (after);
+        return ids;
+    }
+
+    /** Full records for ids (POST /crm/v3/objects/{type}/batch/read), chunked at 100. */
+    async _batchReadObjects(objectType, ids, properties) {
+        const out = [];
+        for (let i = 0; i < ids.length; i += 100) {
+            const res = await this._post({
+                url: `${this.baseUrl}/crm/v3/objects/${objectType}/batch/read`,
+                body: {
+                    inputs: ids.slice(i, i + 100).map((id) => ({id})),
+                    properties,
+                },
+            });
+            out.push(...get(res, 'results', []));
+        }
+        return out;
+    }
+
+    /**
+     * Deals associated with a contact, as full deal records. open=true keeps only deals where
+     * hs_is_closed is not "true"; open=false only closed ones; omitted returns all.
+     */
+    async listDealsForContact(contactId, open) {
+        const ids = await this._listAssociatedIds('contacts', contactId, 'deals');
+        if (!ids.length) return [];
+        const props = await this._propertiesList('deal');
+        const deals = await this._batchReadObjects('deals', ids, props.split(',').concat('hs_is_closed'));
+        if (open === undefined || open === null) return deals;
+        return deals.filter((d) => (String(get(d, 'properties.hs_is_closed')) === 'true') === !open);
+    }
+
+    /** Contacts associated with a deal, as full contact records. */
+    async listContactsForDeal(dealId) {
+        const ids = await this._listAssociatedIds('deals', dealId, 'contacts');
+        if (!ids.length) return [];
+        const props = await this._propertiesList('contact');
+        return this._batchReadObjects('contacts', ids, props.split(','));
     }
 
     async archiveContact(id) {
@@ -666,6 +771,79 @@ class Api extends OAuth2Requester {
         return this._patch(options);
     }
 
+    // **************************   Engagements (tasks, calls, notes)   ***************
+
+    /** Build an engagement create body with HUBSPOT_DEFINED associations. */
+    _engagementBody(properties, assocs) {
+        const body = {properties};
+        const associations = assocs
+            .filter(([id]) => id !== undefined && id !== null && id !== '')
+            .map(([id, typeId]) => ({
+                to: {id: String(id)},
+                types: [{associationCategory: 'HUBSPOT_DEFINED', associationTypeId: typeId}],
+            }));
+        if (associations.length) body.associations = associations;
+        return body;
+    }
+
+    /** Task (POST /crm/v3/objects/tasks); task->contact association type 204. */
+    async createTask(properties, contactId) {
+        return this._post({
+            url: this.baseUrl + this.URLs.tasks,
+            body: this._engagementBody(properties, [[contactId, 204]]),
+        });
+    }
+
+    /** Call (POST /crm/v3/objects/calls); call->contact association type 194. */
+    async createCallEngagement(properties, contactId) {
+        return this._post({
+            url: this.baseUrl + this.URLs.calls,
+            body: this._engagementBody(properties, [[contactId, 194]]),
+        });
+    }
+
+    /** Note (POST /crm/v3/objects/notes); note->contact 202, note->deal 214. */
+    async createNote(properties, contactId, dealId) {
+        return this._post({
+            url: this.baseUrl + this.URLs.notes,
+            body: this._engagementBody(properties, [[contactId, 202], [dealId, 214]]),
+        });
+    }
+
+    async getTaskById(id, properties) {
+        const options = {url: this.baseUrl + this.URLs.taskById(id)};
+        if (properties && properties.length) options.query = {properties: properties.join(',')};
+        return this._get(options);
+    }
+
+    async updateTask(id, properties) {
+        return this._patch({
+            url: this.baseUrl + this.URLs.taskById(id),
+            body: {properties},
+        });
+    }
+
+    /**
+     * Search tasks (POST /crm/v3/objects/tasks/search). dueBefore filters hs_timestamp (the task due date) LT;
+     * status -> hs_task_status EQ; ownerId -> hubspot_owner_id EQ.
+     */
+    async searchTasks(params = {}) {
+        const {dueBefore, status, ownerId, properties, after} = params;
+        const filters = [];
+        if (dueBefore !== undefined && dueBefore !== null) {
+            filters.push({propertyName: 'hs_timestamp', operator: 'LT', value: String(new Date(dueBefore).getTime())});
+        }
+        if (status) filters.push({propertyName: 'hs_task_status', operator: 'EQ', value: status});
+        if (ownerId) filters.push({propertyName: 'hubspot_owner_id', operator: 'EQ', value: String(ownerId)});
+        const body = {
+            filterGroups: filters.length ? [{filters}] : [],
+            limit: get(params, 'limit', 10),
+        };
+        if (properties && properties.length) body.properties = properties;
+        if (after) body.after = after;
+        return this._post({url: this.baseUrl + this.URLs.tasksSearch, body});
+    }
+
     // **************************   Owners   **********************************
 
     async getOwnerById(ownerId) {
@@ -673,6 +851,26 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.getOwnerById(ownerId),
         };
         return this._get(options);
+    }
+
+    /** All owners (GET /crm/v3/owners), paged to exhaustion; returns the array of owners. */
+    async listOwners() {
+        const owners = [];
+        let after;
+        do {
+            const query = {limit: 500};
+            if (after) query.after = after;
+            const res = await this._get({url: this.baseUrl + this.URLs.owners, query});
+            owners.push(...get(res, 'results', []));
+            after = get(res, 'paging.next.after', null);
+        } while (after);
+        return owners;
+    }
+
+    /** Owner by email (GET /crm/v3/owners?email=); null when none matches. */
+    async getOwnerByEmail(email) {
+        const res = await this._get({url: this.baseUrl + this.URLs.owners, query: {email}});
+        return get(res, 'results.0', null);
     }
 
     // **************************   Timeline Events   **********************************
@@ -892,6 +1090,38 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.getPipelineDetails(objType),
         };
         return this._get(options);
+    }
+
+    /**
+     * Deal stages (GET /crm/v3/pipelines/deals[/{pipelineId}]). Each stage carries its pipelineId.
+     * With no pipelineId, stages of every deal pipeline are flattened.
+     */
+    async listDealStages(pipelineId) {
+        if (pipelineId) {
+            const p = await this._get({url: this.baseUrl + this.URLs.pipelineById('deals', pipelineId)});
+            return get(p, 'stages', []).map((st) => ({pipelineId: p.id, ...st}));
+        }
+        const res = await this.getPipelineDetails('deals');
+        return get(res, 'results', []).flatMap((p) => get(p, 'stages', []).map((st) => ({pipelineId: p.id, ...st})));
+    }
+
+    // **************************   Email subscriptions   ************************
+
+    /** Subscription types (GET /communication-preferences/v3/definitions); returns the definitions array. */
+    async listSubscriptionDefinitions() {
+        const res = await this._get({url: this.baseUrl + this.URLs.subscriptionDefinitions});
+        return get(res, 'subscriptionDefinitions', get(res, 'results', []));
+    }
+
+    /**
+     * Unsubscribe an email from one subscription type (POST /communication-preferences/v3/unsubscribe).
+     * Returns the resulting PublicSubscriptionStatus. Requires communication_preferences.write.
+     */
+    async unsubscribeEmail(emailAddress, subscriptionId, legalBasis, legalBasisExplanation) {
+        const body = {emailAddress, subscriptionId: String(subscriptionId)};
+        if (legalBasis) body.legalBasis = legalBasis;
+        if (legalBasisExplanation) body.legalBasisExplanation = legalBasisExplanation;
+        return this._post({url: this.baseUrl + this.URLs.unsubscribe, body});
     }
 
     async getBatchAssociations(fromObjectType, toObjectType, inputs) {

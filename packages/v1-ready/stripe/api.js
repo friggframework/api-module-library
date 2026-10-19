@@ -45,6 +45,10 @@ function whHmac(key, parts, encoding) {
     return h.digest(encoding);
 }
 
+function errorMessage(e) {
+    return e instanceof Error ? e.message : JSON.stringify(e);
+}
+
 class Api extends OAuth2Requester {
     constructor(params = {}) {
         super(params);
@@ -198,6 +202,124 @@ class Api extends OAuth2Requester {
         } catch (e) {
             const error = e instanceof Error ? e.message : JSON.stringify(e);
             console.log('Delete webhook error:', error);
+            throw e;
+        }
+    }
+
+    // ---- customers, payment intents, refunds, payouts ----------------------
+    // Each call is a thin wrapper over the official stripe-node resource. `options` is the
+    // stripe-node RequestOptions object (e.g. { idempotencyKey, stripeAccount }).
+
+    /** GET /v1/customers/:id. https://docs.stripe.com/api/customers/retrieve */
+    async retrieveCustomer(id, params = {}, options = {}) {
+        if (!id) throw new Error('retrieveCustomer: id is required');
+        try {
+            return await this.stripe.customers.retrieve(id, params, options);
+        } catch (e) {
+            console.log('Retrieve customer error:', errorMessage(e));
+            throw e;
+        }
+    }
+
+    /**
+     * GET /v1/customers. https://docs.stripe.com/api/customers/list
+     * `params` are Stripe's list params (limit, starting_after, ending_before, email, created, ...).
+     * Shorthand: `created_gte` (unix seconds) is sent as `created[gte]`.
+     */
+    async listCustomers(params = {}, options = {}) {
+        try {
+            const { created_gte, ...rest } = params || {};
+            const query = { ...rest };
+            if (created_gte !== undefined && created_gte !== null) {
+                query.created = { ...(rest.created || {}), gte: created_gte };
+            }
+            return await this.stripe.customers.list(query, options);
+        } catch (e) {
+            console.log('List customers error:', errorMessage(e));
+            throw e;
+        }
+    }
+
+    /**
+     * GET /v1/customers/search. https://docs.stripe.com/api/customers/search
+     * `query` is Stripe's search query language, e.g. "email:'a@b.com'". `params` may carry limit and page.
+     */
+    async searchCustomers(query, params = {}, options = {}) {
+        if (!query) throw new Error('searchCustomers: query is required');
+        try {
+            return await this.stripe.customers.search({ ...params, query }, options);
+        } catch (e) {
+            console.log('Search customers error:', errorMessage(e));
+            throw e;
+        }
+    }
+
+    /** POST /v1/customers. https://docs.stripe.com/api/customers/create */
+    async createCustomer(params = {}, options = {}) {
+        try {
+            return await this.stripe.customers.create(params, options);
+        } catch (e) {
+            console.log('Create customer error:', errorMessage(e));
+            throw e;
+        }
+    }
+
+    /** POST /v1/customers/:id. https://docs.stripe.com/api/customers/update */
+    async updateCustomer(id, params = {}, options = {}) {
+        if (!id) throw new Error('updateCustomer: id is required');
+        try {
+            return await this.stripe.customers.update(id, params, options);
+        } catch (e) {
+            console.log('Update customer error:', errorMessage(e));
+            throw e;
+        }
+    }
+
+    /**
+     * GET /v1/payment_intents/:id. https://docs.stripe.com/api/payment_intents/retrieve
+     * `params` is `{ expand: [...] }`; an array is taken as the expand list.
+     */
+    async retrievePaymentIntent(id, params = {}, options = {}) {
+        if (!id) throw new Error('retrievePaymentIntent: id is required');
+        try {
+            const query = Array.isArray(params) ? { expand: params } : params;
+            return await this.stripe.paymentIntents.retrieve(id, query, options);
+        } catch (e) {
+            console.log('Retrieve payment intent error:', errorMessage(e));
+            throw e;
+        }
+    }
+
+    /** GET /v1/refunds/:id. https://docs.stripe.com/api/refunds/retrieve */
+    async retrieveRefund(id, params = {}, options = {}) {
+        if (!id) throw new Error('retrieveRefund: id is required');
+        try {
+            return await this.stripe.refunds.retrieve(id, params, options);
+        } catch (e) {
+            console.log('Retrieve refund error:', errorMessage(e));
+            throw e;
+        }
+    }
+
+    /**
+     * GET /v1/payouts. https://docs.stripe.com/api/payouts/list
+     * `params` are Stripe's list params (status, limit, starting_after, arrival_date, created, ...).
+     * Shorthand: `arrivedAfter` / `arrivedBefore` (unix seconds or a date string) are sent as
+     * `arrival_date[gt]` / `arrival_date[lt]`.
+     */
+    async listPayouts(params = {}, options = {}) {
+        try {
+            const { arrivedAfter, arrivedBefore, ...rest } = params || {};
+            const query = { ...rest };
+            const arrival = { ...(rest.arrival_date || {}) };
+            const ts = (v) =>
+                typeof v === 'number' ? v : Math.floor(new Date(v).getTime() / 1000);
+            if (arrivedAfter !== undefined && arrivedAfter !== null) arrival.gt = ts(arrivedAfter);
+            if (arrivedBefore !== undefined && arrivedBefore !== null) arrival.lt = ts(arrivedBefore);
+            if (Object.keys(arrival).length) query.arrival_date = arrival;
+            return await this.stripe.payouts.list(query, options);
+        } catch (e) {
+            console.log('List payouts error:', errorMessage(e));
             throw e;
         }
     }

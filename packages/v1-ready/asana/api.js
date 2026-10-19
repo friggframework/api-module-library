@@ -83,6 +83,12 @@ class Api extends OAuth2Requester {
             // Workspaces
             workspaces: '/workspaces',
             workspaceById: (workspaceId) => `/workspaces/${workspaceId}`,
+            workspaceTasksSearch: (workspaceId) =>
+                `/workspaces/${workspaceId}/tasks/search`,
+
+            // Webhooks
+            webhooks: '/webhooks',
+            webhookById: (webhookId) => `/webhooks/${webhookId}`,
 
             // Attachments
             attachments: '/attachments',
@@ -451,6 +457,64 @@ class Api extends OAuth2Requester {
         return this._put(options);
     }
 
+
+    // **************************   Task search / Webhooks   **********************************
+
+    /**
+     * Search tasks in a workspace.
+     * GET /workspaces/{workspace_gid}/tasks/search
+     * Docs: https://developers.asana.com/reference/searchtasksforworkspace
+     *
+     * `params` are the endpoint's query filters. Asana spells operator filters with a dot
+     * (`projects.any`, `due_on.before`); underscore spellings (`projects_any`, `due_on_before`)
+     * are accepted and rewritten, dotted keys pass through. Plain keys (`due_on`, `completed`,
+     * `limit`, `opt_fields`, `text`, `sort_by`...) are sent as given. Premium Asana only.
+     */
+    async searchTasksInWorkspace(workspaceId, params = {}) {
+        const query = {};
+        for (const [key, value] of Object.entries(params || {})) {
+            if (value === undefined || value === null) continue;
+            const k = key.replace(
+                /_(any|all|not|before|after)$/,
+                '.$1'
+            );
+            query[k] = Array.isArray(value) ? value.join(',') : value;
+        }
+        const options = {
+            url: this.baseUrl + this.URLs.workspaceTasksSearch(workspaceId),
+            query,
+        };
+        return this._get(options);
+    }
+
+    /**
+     * Create a webhook. POST /webhooks
+     * Docs: https://developers.asana.com/reference/createwebhook
+     *
+     * `filters` is an optional array of { resource_type, resource_subtype?, action, fields? }.
+     * Asana performs the X-Hook-Secret handshake against `target` while this call is in flight;
+     * the secret arrives on that handshake request (store it for verifyWebhookSignature).
+     */
+    async createWebhook(resource, target, filters) {
+        const data = { resource, target };
+        if (filters) data.filters = filters;
+        const options = {
+            url: this.baseUrl + this.URLs.webhooks,
+            body: { data },
+        };
+        return this._post(options);
+    }
+
+    /**
+     * Delete a webhook. DELETE /webhooks/{webhook_gid}
+     * Docs: https://developers.asana.com/reference/deletewebhook
+     */
+    async deleteWebhook(webhookGid) {
+        const options = {
+            url: this.baseUrl + this.URLs.webhookById(webhookGid),
+        };
+        return this._delete(options);
+    }
 
     /**
      * Verify an Asana webhook delivery (X-Hook-Signature).

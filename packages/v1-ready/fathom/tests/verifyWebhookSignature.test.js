@@ -1,8 +1,8 @@
 const crypto = require('crypto');
 const { Api } = require('../api');
 
-// Docs' example secret format: whsec_ + base64 key.
-const SECRET = 'whsec_5WbX5kEWLlfzsGNjH64I8lOOqUB6e8FH';
+// Docs' secret format: whsec_ + base64 key. Built at runtime from obviously fake key material.
+const SECRET = 'whsec_' + Buffer.from('fathom-test-key-material').toString('base64');
 const KEY = Buffer.from(SECRET.slice(6), 'base64');
 const TS = 1700000000;
 const NOW = TS * 1000;

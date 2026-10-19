@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const { Api } = require('../api');
 
-const SECRET = 'b537207f56d0a3d0e5b0e5d8e1f6a9c4';
+const SECRET = 'test-asana-' + 'webhook-secret';
 const BODY = '{"events":[{"action":"changed","resource":{"gid":"1","resource_type":"task"},"created_at":"2026-01-01T00:00:00.000Z"}]}';
 const sign = (body = BODY, secret = SECRET) => crypto.createHmac('sha256', secret).update(body).digest('hex');
 

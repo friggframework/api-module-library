@@ -1,10 +1,10 @@
 const crypto = require('crypto');
 const { Api } = require('../api');
 
-const SECRET = '8f742231b10e8888abcd99yyyzzz85a5';
+const SECRET = 'test-slack-' + 'signing-secret';
 const TS = 1531420618;
 const NOW = TS * 1000;
-const BODY = 'token=xyzz0WbapA4vBCDEFasx0q6G&team_id=T1DC2JH3J&command=%2Fweather&text=94070';
+const BODY = 'token=example-token&team_id=T1DC2JH3J&command=%2Fweather&text=94070';
 const sign = ({ secret = SECRET, ts = TS, body = BODY } = {}) =>
     'v0=' + crypto.createHmac('sha256', secret).update(`v0:${ts}:${body}`).digest('hex');
 const headers = (over = {}) => ({

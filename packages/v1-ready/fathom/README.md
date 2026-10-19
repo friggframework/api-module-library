@@ -171,3 +171,8 @@ part of the `whsec_` secret; 5 minute tolerance. Never throws.
 
 - Secret: `params.webhookSecret` or `FATHOM_WEBHOOK_SECRET` (the `whsec_...` value as Fathom returns it).
 - Pass `rawBody`.
+
+## Deleting a webhook
+
+`Api#deleteWebhook(id)` calls `DELETE /webhooks/{id}` ([docs](https://developers.fathom.ai/api-reference/webhooks/delete-a-webhook));
+Fathom answers 204 on success and 404 for an unknown id. Use the `id` returned by `createWebhook`.

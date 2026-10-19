@@ -125,3 +125,30 @@ deliveries older than 5 minutes are rejected. Returns `true` only for a genuine 
 - URI: HubSpot signs the full public URL it called. The runtime does not pass it, so provide `url` per call or
   configure `params.webhookUrl` / `HUBSPOT_WEBHOOK_URL`. `method` defaults to `POST`.
 - Pass `rawBody` (the exact bytes received); a re-serialised parsed body will usually not match.
+
+## Additional API methods
+
+All methods take positional arguments and return the parsed HubSpot response unless noted. Tests:
+`tests/newMethods.test.js` (nock, asserts the captured request).
+
+| Method | Request | Notes |
+|---|---|---|
+| `searchContacts({ email, phone, lastContactedBefore, limit, properties, after })` | `POST /crm/v3/objects/contacts/search` | Filters ANDed; `lastContactedBefore` filters `notes_last_contacted` LT |
+| `upsertContactByEmail(email, properties)` | `POST /crm/v3/objects/contacts/batch/upsert` (`idProperty: 'email'`) | Returns the single upserted contact. HubSpot does not support partial upserts keyed on email |
+| `listDealsForContact(contactId, open?)` | `GET /crm/v4/objects/contacts/{id}/associations/deals`, then deals `batch/read` | Returns full deals; `open` true/false filters on `hs_is_closed` |
+| `listContactsForDeal(dealId)` | `GET /crm/v4/objects/deals/{id}/associations/contacts`, then contacts `batch/read` | Returns full contacts |
+| `createTask(properties, contactId?)` | `POST /crm/v3/objects/tasks` | Associates to contact (type 204) |
+| `createCallEngagement(properties, contactId?)` | `POST /crm/v3/objects/calls` | Associates to contact (type 194) |
+| `createNote(properties, contactId?, dealId?)` | `POST /crm/v3/objects/notes` | Associates to contact (202) and/or deal (214) |
+| `getTaskById(id, properties?)` | `GET /crm/v3/objects/tasks/{id}` | |
+| `updateTask(id, properties)` | `PATCH /crm/v3/objects/tasks/{id}` | |
+| `searchTasks({ dueBefore, status, ownerId, limit, properties, after })` | `POST /crm/v3/objects/tasks/search` | `dueBefore` -> `hs_timestamp` LT, `status` -> `hs_task_status`, `ownerId` -> `hubspot_owner_id` |
+| `listOwners()` | `GET /crm/v3/owners` | Pages to exhaustion; returns the array |
+| `getOwnerByEmail(email)` | `GET /crm/v3/owners?email=` | First match or `null` |
+| `listDealStages(pipelineId?)` | `GET /crm/v3/pipelines/deals[/{pipelineId}]` | Array of stages, each with `pipelineId`; all pipelines when omitted |
+| `listSubscriptionDefinitions()` | `GET /communication-preferences/v3/definitions` | Returns the definitions array |
+| `unsubscribeEmail(emailAddress, subscriptionId, legalBasis?, legalBasisExplanation?)` | `POST /communication-preferences/v3/unsubscribe` | Needs `communication_preferences.write` scope; Marketing Hub Enterprise |
+
+New scopes these methods need beyond the contact/deal ones: `crm.objects.owners.read`, `crm.objects.contacts.write`,
+`crm.schemas.*` as already used, `communication_preferences.read` / `.write`, and tasks/calls/notes need the
+`crm.objects.contacts.*` + `sales-email-read` style engagement scopes for their object type.

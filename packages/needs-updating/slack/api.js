@@ -109,6 +109,7 @@ class Api extends OAuth2Requester {
             sharedFilePublicURL: '/files.sharedPublicURL', // Enables a file for public/external sharing.
 
             // Users
+            listUsers: '/users.list',
             lookupUserByEmail: '/users.lookupByEmail',
             getUserProfileById: '/users.profile.get',
             getUserById: '/users.info',
@@ -234,6 +235,22 @@ class Api extends OAuth2Requester {
             body: null,
         };
         const response = await this._post(options);
+        return response;
+    }
+
+    // Args (all optional):
+    // cursor: string, limit: number, include_locale: boolean, team_id: string
+    // Docs: https://docs.slack.dev/reference/methods/users.list (scope: users:read)
+    async listUsers(query = {}) {
+        const options = {
+            url: this.baseUrl + this.URLs.listUsers,
+            query,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                Accept: 'application/json',
+            },
+        };
+        const response = await this._get(options);
         return response;
     }
 

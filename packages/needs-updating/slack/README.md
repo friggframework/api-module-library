@@ -20,3 +20,9 @@ for a genuine request; never throws.
 
 - Secret: `params.webhookSecret` or `SLACK_SIGNING_SECRET` (the app's Signing Secret, not the client secret).
 - Pass `rawBody`; interactivity payloads are form-encoded and must be hashed as received.
+
+## Listing users
+
+`Api#listUsers(query = {})` calls `GET /users.list` ([docs](https://docs.slack.dev/reference/methods/users.list); needs
+`users:read`, plus `users:read.email` to see emails). `query` takes `limit`, `cursor` (pass
+`response_metadata.next_cursor` from the previous page until it is empty), `include_locale` and `team_id` (org tokens).

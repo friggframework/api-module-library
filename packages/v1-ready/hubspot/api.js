@@ -376,7 +376,7 @@ class Api extends OAuth2Requester {
         const properties = get(params, 'properties');
         const body = {properties};
         const options = {
-            url: this.baseUrl + this.URLs.getDealById(dealId),
+            url: this.baseUrl + this.URLs.dealById(dealId),
             body,
         };
         return this._patch(options);

@@ -88,7 +88,10 @@ const Definition = {
         client_id: process.env.GITLAB_CLIENT_ID,
         client_secret: process.env.GITLAB_CLIENT_SECRET,
         scope: process.env.GITLAB_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/gitlab`,
+        // Omit when unset so schema validation does not see the string "undefined/gitlab".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/gitlab`
+            : undefined,
         base_url: process.env.GITLAB_HOST,
     },
 };

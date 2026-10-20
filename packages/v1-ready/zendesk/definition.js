@@ -115,7 +115,10 @@ const Definition = {
         client_id: process.env.ZENDESK_CLIENT_ID,
         client_secret: process.env.ZENDESK_CLIENT_SECRET,
         scope: process.env.ZENDESK_SCOPE || DEFAULT_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/zendesk`,
+        // Omit when unset so schema validation does not see the string "undefined/zendesk".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/zendesk`
+            : undefined,
     },
 };
 

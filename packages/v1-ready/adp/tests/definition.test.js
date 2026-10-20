@@ -117,4 +117,25 @@ describe('ADP Definition', () => {
         await Definition.requiredAuthMethods.testAuthRequest(api);
         expect(called).toBe(true);
     });
+
+    it('getToken hydrates credentials then mints via client_credentials', async () => {
+        const api = new Api({});
+        api.getTokenFromClientCredentials = jest
+            .fn()
+            .mockResolvedValue({ access_token: 'tok', expires_in: 3600 });
+        await Definition.requiredAuthMethods.getToken(api, {
+            data: {
+                client_id: 'cid',
+                client_secret: 'csec',
+                ssl_cert: 'CERT',
+                ssl_key: 'KEY',
+            },
+        });
+        expect(api.client_id).toBe('cid');
+        expect(api.client_secret).toBe('csec');
+        expect(api.ssl_cert).toBe('CERT');
+        expect(api.ssl_key).toBe('KEY');
+        expect(api.getTokenFromClientCredentials).toHaveBeenCalled();
+    });
+
 });

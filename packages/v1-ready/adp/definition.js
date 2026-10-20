@@ -18,6 +18,20 @@ const Definition = {
         getAuthorizationRequirements: async (api) =>
             api.getAuthorizationRequirements(),
 
+        /**
+         * OAuth2Requester modules must export getToken. ADP uses the
+         * client_credentials grant (no browser code). Hydrate from the
+         * apiKey-form params when present, then mint via the documented
+         * token endpoint already implemented on Api.
+         * POST https://accounts.adp.com/auth/oauth/v2/token
+         */
+        getToken: async (api, params) => {
+            if (params) {
+                await Definition.requiredAuthMethods.setAuthParams(api, params);
+            }
+            return api.getTokenFromClientCredentials();
+        },
+
         setAuthParams: async (api, params) => {
             const data = (params && params.data) || {};
             const clientId =

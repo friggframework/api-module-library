@@ -43,9 +43,10 @@ Store the verification token as `NOTION_WEBHOOK_VERIFICATION_TOKEN`.
 
 ## Capability manifest
 
-See `notion.capabilities.json` (`capability-manifest/v0.1`). Started from the
-draft in friggframework/frigg
-(`packages/core/integrations/definitions/capabilities/notion.capabilities.json`).
+See `notion.capabilities.json` (`capability-manifest/v0.1`, `version` matches
+this package). Started from lefthookhq/lefthook-bots
+`definitions/manifests/notion.json`. Every listed capability maps to a
+doc-verified `Api` method; `webhook.verify` → `verifyWebhookSignature`.
 
 ## Fenestra
 

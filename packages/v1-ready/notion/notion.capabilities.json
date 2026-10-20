@@ -5,26 +5,6 @@
   "package": "@friggframework/api-module-notion",
   "version": "1.0.0",
   "auth": "oauth2",
-  "account": {
-    "description": "Values about the connected Notion workspace, persisted by the module (apiPropertiesToPersist). Definitions read them as $.install.accounts.<module key>.<name>.",
-    "fields": [
-      {
-        "name": "workspace_id",
-        "type": "string",
-        "description": "Notion workspace id from the OAuth token response"
-      },
-      {
-        "name": "workspace_name",
-        "type": "string",
-        "description": "Workspace display name from the OAuth token response"
-      },
-      {
-        "name": "bot_id",
-        "type": "string",
-        "description": "Bot user id for the installed connection"
-      }
-    ]
-  },
   "objects": {
     "page": {
       "label": "Page",
@@ -36,10 +16,6 @@
         },
         {
           "name": "parent.database_id",
-          "type": "string"
-        },
-        {
-          "name": "parent.data_source_id",
           "type": "string"
         },
         {
@@ -91,37 +67,6 @@
           "name": "url",
           "type": "string",
           "readOnly": true
-        },
-        {
-          "name": "data_sources",
-          "type": "json",
-          "readOnly": true,
-          "description": "Data sources under this database (Notion-Version 2025-09-03+)"
-        }
-      ]
-    },
-    "user": {
-      "label": "User",
-      "fields": [
-        {
-          "name": "id",
-          "type": "id",
-          "readOnly": true
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "tag": "person.displayName"
-        },
-        {
-          "name": "person.email",
-          "type": "email",
-          "tag": "contact.email"
-        },
-        {
-          "name": "type",
-          "type": "string",
-          "readOnly": true
         }
       ]
     }
@@ -130,7 +75,7 @@
     "page.created": {
       "delivery": "webhook",
       "object": "page",
-      "description": "Integration webhook (configured once on the public connection UI); routed by workspace_id.",
+      "description": "Integration webhook (configured once on the public integration); routed by workspace_id.",
       "payload": {
         "id": "7f2c3b8a-91c5-4b1d-8e0f-2a6f1d3c9e41",
         "timestamp": "2026-10-20T15:50:02.000Z",
@@ -160,39 +105,24 @@
     "verify": "verifyWebhookSignature"
   },
   "capabilities": {
-    "user.me": {
-      "kind": "read",
-      "method": "getSelf",
-      "output": "user",
-      "args": []
-    },
-    "user.list": {
-      "kind": "read",
-      "method": "listUsers",
-      "input": {
-        "start_cursor": { "type": "string" },
-        "page_size": { "type": "number" }
-      },
-      "output": "page<user>",
-      "args": ["$rest"]
-    },
-    "user.get": {
-      "kind": "read",
-      "method": "getUser",
-      "input": {
-        "userId": { "type": "string", "required": true }
-      },
-      "output": "user",
-      "args": ["userId"]
-    },
     "page.create": {
       "kind": "write",
       "method": "createPage",
       "input": {
-        "parent": { "type": "object", "required": true },
-        "properties": { "type": "object", "required": true },
-        "children": { "type": "array" },
-        "icon": { "type": "object" }
+        "parent": {
+          "type": "object",
+          "required": true
+        },
+        "properties": {
+          "type": "object",
+          "required": true
+        },
+        "children": {
+          "type": "array"
+        },
+        "icon": {
+          "type": "object"
+        }
       },
       "output": "page",
       "args": ["$rest"]
@@ -201,7 +131,10 @@
       "kind": "read",
       "method": "retrievePage",
       "input": {
-        "pageId": { "type": "string", "required": true }
+        "pageId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "page",
       "args": ["pageId"]
@@ -210,8 +143,14 @@
       "kind": "write",
       "method": "updatePage",
       "input": {
-        "pageId": { "type": "string", "required": true },
-        "properties": { "type": "object", "required": true }
+        "pageId": {
+          "type": "string",
+          "required": true
+        },
+        "properties": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "page",
       "args": ["pageId", "$rest"]
@@ -220,8 +159,14 @@
       "kind": "write",
       "method": "appendBlockChildren",
       "input": {
-        "blockId": { "type": "string", "required": true },
-        "children": { "type": "array", "required": true }
+        "blockId": {
+          "type": "string",
+          "required": true
+        },
+        "children": {
+          "type": "array",
+          "required": true
+        }
       },
       "output": "block[]",
       "args": ["blockId", "$rest"]
@@ -229,13 +174,20 @@
     "database.query": {
       "kind": "search",
       "method": "queryDatabase",
-      "label": "Query a data source (pass data_source_id as databaseId under Notion-Version 2025-09-03+)",
       "input": {
-        "databaseId": { "type": "string", "required": true },
-        "filter": { "type": "object" },
-        "sorts": { "type": "array" },
-        "page_size": { "type": "number" },
-        "start_cursor": { "type": "string" }
+        "databaseId": {
+          "type": "string",
+          "required": true
+        },
+        "filter": {
+          "type": "object"
+        },
+        "sorts": {
+          "type": "array"
+        },
+        "pageSize": {
+          "type": "number"
+        }
       },
       "output": "page[]",
       "args": ["databaseId", "$rest"]
@@ -244,53 +196,11 @@
       "kind": "read",
       "method": "searchDatabases",
       "input": {
-        "query": { "type": "string" }
+        "query": {
+          "type": "string"
+        }
       },
       "output": "database[]",
-      "args": ["$rest"]
-    },
-    "database.get": {
-      "kind": "read",
-      "method": "retrieveDatabase",
-      "input": {
-        "databaseId": { "type": "string", "required": true }
-      },
-      "output": "database",
-      "args": ["databaseId"]
-    },
-    "database.create": {
-      "kind": "write",
-      "method": "createDatabase",
-      "input": {
-        "parent": { "type": "object", "required": true },
-        "title": { "type": "array" },
-        "initial_data_source": { "type": "object" }
-      },
-      "output": "database",
-      "args": ["$rest"]
-    },
-    "database.update": {
-      "kind": "write",
-      "method": "updateDatabase",
-      "input": {
-        "databaseId": { "type": "string", "required": true },
-        "title": { "type": "array" },
-        "description": { "type": "array" }
-      },
-      "output": "database",
-      "args": ["databaseId", "$rest"]
-    },
-    "search": {
-      "kind": "search",
-      "method": "search",
-      "input": {
-        "query": { "type": "string" },
-        "filter": { "type": "object" },
-        "sort": { "type": "object" },
-        "start_cursor": { "type": "string" },
-        "page_size": { "type": "number" }
-      },
-      "output": "page_or_database[]",
       "args": ["$rest"]
     }
   },

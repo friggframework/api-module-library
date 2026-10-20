@@ -1,0 +1,279 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "jira",
+  "label": "Jira Cloud",
+  "package": "@friggframework/api-module-jira",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Jira Cloud site. Entity/credential externalId is the Atlassian cloudId from accessible-resources.",
+    "fields": [
+      {
+        "name": "cloudId",
+        "type": "string",
+        "description": "Atlassian site cloudId (externalId)"
+      },
+      {
+        "name": "siteName",
+        "type": "string",
+        "description": "Site display name from accessible-resources"
+      },
+      {
+        "name": "siteUrl",
+        "type": "string",
+        "description": "Site URL (e.g. https://example.atlassian.net)"
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "accountId", "type": "id", "readOnly": true },
+        { "name": "displayName", "type": "string", "tag": "person.displayName" },
+        { "name": "emailAddress", "type": "email", "tag": "contact.email" },
+        { "name": "active", "type": "boolean" },
+        { "name": "accountType", "type": "string" },
+        { "name": "timeZone", "type": "string" }
+      ]
+    },
+    "project": {
+      "label": "Project",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "key", "type": "string", "required": true },
+        { "name": "name", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "projectTypeKey", "type": "string" },
+        { "name": "simplified", "type": "boolean" },
+        { "name": "style", "type": "string" },
+        { "name": "isPrivate", "type": "boolean" },
+        { "name": "description", "type": "text" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "project.list",
+          "items": "values",
+          "paging": "startAt"
+        },
+        "get": {
+          "capability": "project.get",
+          "id": "projectIdOrKey"
+        },
+        "create": {
+          "capability": "project.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "project.update",
+          "body": "$"
+        }
+      }
+    },
+    "issue": {
+      "label": "Issue",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "key", "type": "string", "readOnly": true },
+        { "name": "fields.summary", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "fields.description", "type": "json" },
+        { "name": "fields.issuetype.id", "type": "string" },
+        { "name": "fields.project.id", "type": "string" },
+        { "name": "fields.status.name", "type": "string" },
+        { "name": "fields.assignee.accountId", "type": "string" },
+        { "name": "fields.reporter.accountId", "type": "string" },
+        { "name": "fields.priority.id", "type": "string" },
+        { "name": "fields.created", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "fields.updated", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "fields.updated",
+        "list": {
+          "capability": "issue.search",
+          "items": "issues",
+          "paging": "nextPageToken"
+        },
+        "get": {
+          "capability": "issue.get",
+          "id": "issueIdOrKey"
+        },
+        "create": {
+          "capability": "issue.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "issue.edit",
+          "body": "$"
+        }
+      }
+    },
+    "comment": {
+      "label": "Comment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "body", "type": "json", "required": true },
+        { "name": "author.accountId", "type": "string", "readOnly": true },
+        { "name": "created", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ]
+    },
+    "webhook": {
+      "label": "Dynamic webhook",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "jqlFilter", "type": "string", "required": true },
+        { "name": "events", "type": "json", "required": true },
+        { "name": "expirationDate", "type": "integer", "readOnly": true },
+        { "name": "url", "type": "string" }
+      ]
+    }
+  },
+  "events": {
+    "issue.created": {
+      "delivery": "webhook",
+      "object": "issue",
+      "description": "Dynamic webhook event jira:issue_created",
+      "match": "jira:issue_created"
+    },
+    "issue.updated": {
+      "delivery": "webhook",
+      "object": "issue",
+      "description": "Dynamic webhook event jira:issue_updated",
+      "match": "jira:issue_updated"
+    },
+    "issue.deleted": {
+      "delivery": "webhook",
+      "object": "issue",
+      "description": "Dynamic webhook event jira:issue_deleted",
+      "match": "jira:issue_deleted"
+    },
+    "comment.created": {
+      "delivery": "webhook",
+      "object": "comment",
+      "description": "Dynamic webhook event comment_created",
+      "match": "comment_created"
+    }
+  },
+  "webhook": {
+    "scope": "app",
+    "batch": ["event"],
+    "topic": "{{webhookEvent}}",
+    "account": "{{cloudId}}",
+    "verify": "verifyWebhookSignature",
+    "note": "OAuth 2.0 dynamic webhooks are registered via POST /rest/api/3/webhook. Deliveries include an Authorization bearer JWT signed with the app client secret. Only Connect and OAuth 2.0 apps can register; non-public OAuth apps only receive events when app owner matches the registering user."
+  },
+  "capabilities": {
+    "auth.accessibleResources": {
+      "kind": "read",
+      "method": "getAccessibleResources",
+      "args": []
+    },
+    "user.me": {
+      "kind": "read",
+      "method": "getCurrentUser",
+      "output": "user",
+      "args": ["params"]
+    },
+    "user.find": {
+      "kind": "read",
+      "method": "findUsers",
+      "output": "user",
+      "args": ["params"]
+    },
+    "project.list": {
+      "kind": "read",
+      "method": "listProjects",
+      "output": "project",
+      "args": ["params"]
+    },
+    "project.get": {
+      "kind": "read",
+      "method": "getProject",
+      "output": "project",
+      "args": ["projectIdOrKey", "params"]
+    },
+    "project.create": {
+      "kind": "write",
+      "method": "createProject",
+      "output": "project",
+      "args": ["body"]
+    },
+    "project.update": {
+      "kind": "write",
+      "method": "updateProject",
+      "output": "project",
+      "args": ["projectIdOrKey", "body"]
+    },
+    "issue.create": {
+      "kind": "write",
+      "method": "createIssue",
+      "output": "issue",
+      "args": ["body", "params"]
+    },
+    "issue.get": {
+      "kind": "read",
+      "method": "getIssue",
+      "output": "issue",
+      "args": ["issueIdOrKey", "params"]
+    },
+    "issue.edit": {
+      "kind": "write",
+      "method": "editIssue",
+      "output": "issue",
+      "args": ["issueIdOrKey", "body", "params"]
+    },
+    "issue.delete": {
+      "kind": "write",
+      "method": "deleteIssue",
+      "args": ["issueIdOrKey", "params"]
+    },
+    "issue.search": {
+      "kind": "read",
+      "method": "searchIssues",
+      "output": "issue",
+      "args": ["params"]
+    },
+    "comment.list": {
+      "kind": "read",
+      "method": "listComments",
+      "output": "comment",
+      "args": ["issueIdOrKey", "params"]
+    },
+    "comment.add": {
+      "kind": "write",
+      "method": "addComment",
+      "output": "comment",
+      "args": ["issueIdOrKey", "body", "params"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "output": "webhook",
+      "args": ["params"]
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhooks",
+      "output": "webhook",
+      "args": ["body"]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhooks",
+      "args": ["body"]
+    },
+    "webhook.refresh": {
+      "kind": "write",
+      "method": "refreshWebhooks",
+      "args": ["body"]
+    }
+  },
+  "options": {
+    "project": {
+      "capability": "project.list",
+      "label": "{{item.name}} ({{item.key}})",
+      "value": "$.item.id"
+    }
+  }
+}

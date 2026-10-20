@@ -1,0 +1,339 @@
+openapi: 3.0.3
+info:
+  title: Jira Cloud platform REST API (Frigg subset)
+  version: "3"
+  description: >-
+    Curated subset of the official Jira Cloud platform REST API v3 covering
+    exactly the endpoints implemented by @friggframework/api-module-jira.
+    Source of truth for operationIds ↔ Api methods. Official OpenAPI:
+    https://developer.atlassian.com/cloud/jira/platform/swagger-v3.v3.json
+    Intro: https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/
+    OAuth 2.0 (3LO): https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3
+    description: Jira Cloud REST API v3 via Atlassian OAuth gateway
+    variables:
+      cloudId:
+        default: "{cloudId}"
+        description: Site cloudId from /oauth/token/accessible-resources
+security:
+  - OAuth2: []
+tags:
+  - name: Auth
+  - name: Projects
+  - name: Issues
+  - name: Comments
+  - name: Users
+  - name: Webhooks
+paths:
+  /oauth/token/accessible-resources:
+    get:
+      tags: [Auth]
+      operationId: getAccessibleResources
+      summary: List accessible Atlassian sites for the access token
+      description: >-
+        GET https://api.atlassian.com/oauth/token/accessible-resources
+        (absolute URL; not under the Jira cloudId base). Returns cloudId values
+        used to construct API URLs.
+      servers:
+        - url: https://api.atlassian.com
+      responses:
+        "200":
+          description: Array of accessible resources
+  /myself:
+    get:
+      tags: [Auth]
+      operationId: getCurrentUser
+      summary: Get current user
+      description: Official operationId getCurrentUser. Scope read:jira-user.
+      responses:
+        "200":
+          description: User
+  /project/search:
+    get:
+      tags: [Projects]
+      operationId: listProjects
+      summary: Get projects paginated
+      description: >-
+        Official operationId searchProjects. Prefer over deprecated GET /project.
+        Scope read:jira-work.
+      parameters:
+        - in: query
+          name: startAt
+          schema: { type: integer }
+        - in: query
+          name: maxResults
+          schema: { type: integer }
+        - in: query
+          name: query
+          schema: { type: string }
+        - in: query
+          name: orderBy
+          schema: { type: string }
+      responses:
+        "200":
+          description: Page of projects
+  /project:
+    post:
+      tags: [Projects]
+      operationId: createProject
+      summary: Create project
+      description: Official operationId createProject. Scope manage:jira-configuration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created project
+  /project/{projectIdOrKey}:
+    get:
+      tags: [Projects]
+      operationId: getProject
+      summary: Get project
+      description: Official operationId getProject. Scope read:jira-work.
+      parameters:
+        - in: path
+          name: projectIdOrKey
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Project
+    put:
+      tags: [Projects]
+      operationId: updateProject
+      summary: Update project
+      description: Official operationId updateProject. Scope manage:jira-project.
+      parameters:
+        - in: path
+          name: projectIdOrKey
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated project
+  /issue:
+    post:
+      tags: [Issues]
+      operationId: createIssue
+      summary: Create issue
+      description: Official operationId createIssue. Scope write:jira-work.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created issue
+  /issue/{issueIdOrKey}:
+    get:
+      tags: [Issues]
+      operationId: getIssue
+      summary: Get issue
+      description: Official operationId getIssue. Scope read:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Issue
+    put:
+      tags: [Issues]
+      operationId: editIssue
+      summary: Edit issue
+      description: Official operationId editIssue. Scope write:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "204":
+          description: Updated
+    delete:
+      tags: [Issues]
+      operationId: deleteIssue
+      summary: Delete issue
+      description: Official operationId deleteIssue. Scope write:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+  /search/jql:
+    get:
+      tags: [Issues]
+      operationId: searchIssues
+      summary: Search issues using JQL enhanced search
+      description: >-
+        Official operationId searchAndReconsileIssuesUsingJql. Replaces
+        deprecated GET /rest/api/3/search. Scope read:jira-work.
+      parameters:
+        - in: query
+          name: jql
+          schema: { type: string }
+        - in: query
+          name: nextPageToken
+          schema: { type: string }
+        - in: query
+          name: maxResults
+          schema: { type: integer }
+        - in: query
+          name: fields
+          schema:
+            type: array
+            items: { type: string }
+      responses:
+        "200":
+          description: Search results
+  /issue/{issueIdOrKey}/comment:
+    get:
+      tags: [Comments]
+      operationId: listComments
+      summary: Get comments
+      description: Official operationId getComments. Scope read:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Page of comments
+    post:
+      tags: [Comments]
+      operationId: addComment
+      summary: Add comment
+      description: Official operationId addComment. Scope write:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created comment
+  /user/search:
+    get:
+      tags: [Users]
+      operationId: findUsers
+      summary: Find users
+      description: Official operationId findUsers. Scope read:jira-user.
+      parameters:
+        - in: query
+          name: query
+          schema: { type: string }
+        - in: query
+          name: maxResults
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Array of users
+  /webhook:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: Get dynamic webhooks for app
+      description: >-
+        Official operationId getDynamicWebhooksForApp.
+        Scopes read:jira-work, manage:jira-webhook.
+      parameters:
+        - in: query
+          name: startAt
+          schema: { type: integer }
+        - in: query
+          name: maxResults
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Page of webhooks
+    post:
+      tags: [Webhooks]
+      operationId: createWebhooks
+      summary: Register dynamic webhooks
+      description: >-
+        Official operationId registerDynamicWebhooks.
+        Body { url, webhooks: [{ events, jqlFilter, ... }] }.
+        Scopes read:jira-work, manage:jira-webhook.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Registration result
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhooks
+      summary: Delete webhooks by ID
+      description: >-
+        Official operationId deleteWebhookById. Body { webhookIds: number[] }.
+        Scopes read:jira-work, manage:jira-webhook.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "202":
+          description: Accepted
+  /webhook/refresh:
+    put:
+      tags: [Webhooks]
+      operationId: refreshWebhooks
+      summary: Extend webhook life
+      description: >-
+        Official operationId refreshWebhooks. Body { webhookIds: number[] }.
+        Scopes read:jira-work, manage:jira-webhook.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Expiration date
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: Atlassian OAuth 2.0 (3LO) bearer token
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.atlassian.com/authorize
+          tokenUrl: https://auth.atlassian.com/oauth/token
+          scopes:
+            read:jira-user: Read Jira user information
+            read:jira-work: Read Jira project and issue data
+            write:jira-work: Create and edit issues
+            manage:jira-webhook: Manage dynamic webhooks
+            manage:jira-project: Administer projects
+            manage:jira-configuration: Administer Jira
+            offline_access: Refresh tokens

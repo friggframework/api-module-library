@@ -1,0 +1,310 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "clickup",
+  "label": "ClickUp",
+  "package": "@friggframework/api-module-clickup",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected ClickUp Workspace. Entity/credential externalId is the first authorized team (workspace) id from GET /team; falls back to authorized user id.",
+    "fields": [
+      {
+        "name": "teamId",
+        "type": "string",
+        "description": "ClickUp Workspace (team) id used as externalId"
+      },
+      {
+        "name": "teamName",
+        "type": "string",
+        "description": "Workspace display name"
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "Authorized User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "username", "type": "string", "tag": "person.displayName" },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "profilePicture", "type": "string", "readOnly": true }
+      ]
+    },
+    "team": {
+      "label": "Workspace (Team)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name", "required": true },
+        { "name": "color", "type": "string" },
+        { "name": "avatar", "type": "string", "readOnly": true }
+      ]
+    },
+    "space": {
+      "label": "Space",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "private", "type": "boolean" },
+        { "name": "archived", "type": "boolean" }
+      ]
+    },
+    "folder": {
+      "label": "Folder",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "hidden", "type": "boolean" },
+        { "name": "archived", "type": "boolean" }
+      ]
+    },
+    "list": {
+      "label": "List",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "archived", "type": "boolean" }
+      ]
+    },
+    "task": {
+      "label": "Task",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "description", "type": "text" },
+        { "name": "status.status", "type": "string" },
+        { "name": "priority", "type": "json" },
+        { "name": "due_date", "type": "string" },
+        { "name": "date_created", "type": "string", "tag": "record.createdAt", "readOnly": true },
+        { "name": "date_updated", "type": "string", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "url", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "list.id", "type": "string" },
+        { "name": "assignees", "type": "json" }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "date_updated",
+        "list": {
+          "capability": "task.list",
+          "items": "tasks",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "task.get",
+          "id": "taskId"
+        },
+        "create": {
+          "capability": "task.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "task.update",
+          "body": "$"
+        }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "webhook.id", "type": "id", "readOnly": true },
+        { "name": "endpoint", "type": "string", "required": true },
+        { "name": "events", "type": "json", "required": true },
+        { "name": "secret", "type": "string", "readOnly": true },
+        { "name": "team_id", "type": "string" }
+      ]
+    }
+  },
+  "events": {
+    "task.created": {
+      "delivery": "webhook",
+      "object": "task",
+      "description": "ClickUp taskCreated webhook event.",
+      "match": "taskCreated",
+      "payload": {
+        "event": "taskCreated",
+        "task_id": "c0j",
+        "webhook_id": "7689a169-a000-4985-8676-6902b96d6627"
+      }
+    },
+    "task.updated": {
+      "delivery": "webhook",
+      "object": "task",
+      "description": "ClickUp taskUpdated webhook event.",
+      "match": "taskUpdated",
+      "payload": {
+        "event": "taskUpdated",
+        "task_id": "c0j",
+        "webhook_id": "7689a169-a000-4985-8676-6902b96d6627"
+      }
+    }
+  },
+  "webhook": {
+    "scope": "workspace",
+    "topic": "{{body.event}}",
+    "eventId": "{{body.webhook_id}}:{{body.history_items.0.id}}",
+    "account": "{{body.team_id}}",
+    "verify": "verifyWebhookSignature",
+    "note": "Webhooks are created via createWebhook (POST /team/{team_id}/webhook). Each webhook has a unique secret returned at creation; verify X-Signature with HMAC-SHA256. Inbound payloads often omit team_id — see open questions."
+  },
+  "capabilities": {
+    "user.get": {
+      "kind": "read",
+      "method": "getAuthorizedUser",
+      "output": "user",
+      "args": []
+    },
+    "team.list": {
+      "kind": "read",
+      "method": "getAuthorizedTeams",
+      "output": "team",
+      "args": []
+    },
+    "space.list": {
+      "kind": "read",
+      "method": "getSpaces",
+      "input": {
+        "teamId": { "type": "string", "required": true },
+        "archived": { "type": "boolean" }
+      },
+      "output": "space",
+      "args": ["teamId", "query"]
+    },
+    "space.get": {
+      "kind": "read",
+      "method": "getSpace",
+      "input": {
+        "spaceId": { "type": "string", "required": true }
+      },
+      "output": "space",
+      "args": ["spaceId"]
+    },
+    "folder.list": {
+      "kind": "read",
+      "method": "getFolders",
+      "input": {
+        "spaceId": { "type": "string", "required": true },
+        "archived": { "type": "boolean" }
+      },
+      "output": "folder",
+      "args": ["spaceId", "query"]
+    },
+    "list.listInFolder": {
+      "kind": "read",
+      "method": "getLists",
+      "input": {
+        "folderId": { "type": "string", "required": true },
+        "archived": { "type": "boolean" }
+      },
+      "output": "list",
+      "args": ["folderId", "query"]
+    },
+    "list.listFolderless": {
+      "kind": "read",
+      "method": "getFolderlessLists",
+      "input": {
+        "spaceId": { "type": "string", "required": true },
+        "archived": { "type": "boolean" }
+      },
+      "output": "list",
+      "args": ["spaceId", "query"]
+    },
+    "task.list": {
+      "kind": "read",
+      "method": "getTasks",
+      "input": {
+        "listId": { "type": "string", "required": true }
+      },
+      "output": "task",
+      "args": ["listId", "query"]
+    },
+    "task.get": {
+      "kind": "read",
+      "method": "getTask",
+      "input": {
+        "taskId": { "type": "string", "required": true }
+      },
+      "output": "task",
+      "args": ["taskId", "query"]
+    },
+    "task.create": {
+      "kind": "write",
+      "method": "createTask",
+      "input": {
+        "listId": { "type": "string", "required": true },
+        "name": { "type": "string", "required": true },
+        "description": { "type": "string" },
+        "assignees": { "type": "array" },
+        "status": { "type": "string" },
+        "priority": { "type": "number" },
+        "due_date": { "type": "string" }
+      },
+      "output": "task",
+      "args": ["listId", "$rest"]
+    },
+    "task.update": {
+      "kind": "write",
+      "method": "updateTask",
+      "input": {
+        "taskId": { "type": "string", "required": true },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string" },
+        "priority": { "type": "number" },
+        "due_date": { "type": "string" },
+        "assignees": { "type": "object" }
+      },
+      "output": "task",
+      "args": ["taskId", "$rest"]
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhook",
+      "input": {
+        "teamId": { "type": "string", "required": true },
+        "endpoint": { "type": "string", "required": true },
+        "events": { "type": "array", "required": true }
+      },
+      "output": "webhook",
+      "args": ["teamId", "$rest"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "getWebhooks",
+      "input": {
+        "teamId": { "type": "string", "required": true }
+      },
+      "output": "webhook",
+      "args": ["teamId"]
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhook",
+      "input": {
+        "webhookId": { "type": "string", "required": true },
+        "endpoint": { "type": "string" },
+        "events": { "type": "array" },
+        "status": { "type": "string" }
+      },
+      "output": "webhook",
+      "args": ["webhookId", "$rest"]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhook",
+      "input": {
+        "webhookId": { "type": "string", "required": true }
+      },
+      "args": ["webhookId"]
+    },
+    "webhook.verify": {
+      "kind": "action",
+      "method": "verifyWebhookSignature",
+      "input": {
+        "headers": { "type": "object", "required": true },
+        "rawBody": { "type": "string" },
+        "secret": { "type": "string", "required": true }
+      },
+      "args": ["$rest"]
+    }
+  }
+}

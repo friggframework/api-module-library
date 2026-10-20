@@ -1,0 +1,327 @@
+openapi: 3.0.3
+info:
+  title: ClickUp API v2 (Frigg module subset)
+  version: "2.0.0"
+  description: >-
+    Curated OpenAPI subset of the ClickUp public REST API v2 for
+    `@friggframework/api-module-clickup`. Every operationId here is a method on
+    the hand-written client in api.js, and only the endpoints that client
+    implements appear. Official operationIds (PascalCase) are noted in each
+    description; curated ids are camelCase to match Api methods.
+
+    Sources:
+      https://developer.clickup.com/
+      https://developer.clickup.com/docs/authentication
+      https://developer.clickup.com/docs/open-api-spec
+      https://developer.clickup.com/docs/webhooks
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.clickup.com/api/v2
+    description: ClickUp API v2
+security:
+  - AuthorizationToken: []
+tags:
+  - name: Authorization
+  - name: Workspaces
+  - name: Spaces
+  - name: Folders
+  - name: Lists
+  - name: Tasks
+  - name: Webhooks
+paths:
+  /user:
+    get:
+      tags: [Authorization]
+      operationId: getAuthorizedUser
+      summary: Get Authorized User
+      description: >-
+        View the details of the authenticated user's ClickUp account.
+        Official operationId: GetAuthorizedUser.
+        https://developer.clickup.com/reference/getauthorizeduser
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /team:
+    get:
+      tags: [Workspaces]
+      operationId: getAuthorizedTeams
+      summary: Get Authorized Workspaces
+      description: >-
+        View the Workspaces available to the authenticated user.
+        Official operationId: GetAuthorizedTeams.
+        https://developer.clickup.com/reference/getauthorizedteams
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /team/{team_id}/space:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+    get:
+      tags: [Spaces]
+      operationId: getSpaces
+      summary: Get Spaces
+      description: >-
+        View the Spaces available in a Workspace.
+        Official operationId: GetSpaces.
+        https://developer.clickup.com/reference/getspaces
+      parameters:
+        - in: query
+          name: archived
+          schema: { type: boolean }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /space/{space_id}:
+    parameters:
+      - $ref: "#/components/parameters/SpaceId"
+    get:
+      tags: [Spaces]
+      operationId: getSpace
+      summary: Get Space
+      description: >-
+        View a Space.
+        Official operationId: GetSpace.
+        https://developer.clickup.com/reference/getspace
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /space/{space_id}/folder:
+    parameters:
+      - $ref: "#/components/parameters/SpaceId"
+    get:
+      tags: [Folders]
+      operationId: getFolders
+      summary: Get Folders
+      description: >-
+        View the Folders in a Space.
+        Official operationId: GetFolders.
+        https://developer.clickup.com/reference/getfolders
+      parameters:
+        - in: query
+          name: archived
+          schema: { type: boolean }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /folder/{folder_id}/list:
+    parameters:
+      - $ref: "#/components/parameters/FolderId"
+    get:
+      tags: [Lists]
+      operationId: getLists
+      summary: Get Lists
+      description: >-
+        View the Lists within a Folder.
+        Official operationId: GetLists.
+        https://developer.clickup.com/reference/getlists
+      parameters:
+        - in: query
+          name: archived
+          schema: { type: boolean }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /space/{space_id}/list:
+    parameters:
+      - $ref: "#/components/parameters/SpaceId"
+    get:
+      tags: [Lists]
+      operationId: getFolderlessLists
+      summary: Get Folderless Lists
+      description: >-
+        View the Lists in a Space that are not in a Folder.
+        Official operationId: GetFolderlessLists.
+        https://developer.clickup.com/reference/getfolderlesslists
+      parameters:
+        - in: query
+          name: archived
+          schema: { type: boolean }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /list/{list_id}/task:
+    parameters:
+      - $ref: "#/components/parameters/ListId"
+    get:
+      tags: [Tasks]
+      operationId: getTasks
+      summary: Get Tasks
+      description: >-
+        View the tasks in a List.
+        Official operationId: GetTasks.
+        https://developer.clickup.com/reference/gettasks
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Tasks]
+      operationId: createTask
+      summary: Create Task
+      description: >-
+        Create a new task in a List.
+        Official operationId: CreateTask.
+        https://developer.clickup.com/reference/createtask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /task/{task_id}:
+    parameters:
+      - $ref: "#/components/parameters/TaskId"
+    get:
+      tags: [Tasks]
+      operationId: getTask
+      summary: Get Task
+      description: >-
+        View information about a task.
+        Official operationId: GetTask.
+        https://developer.clickup.com/reference/gettask
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [Tasks]
+      operationId: updateTask
+      summary: Update Task
+      description: >-
+        Update a task.
+        Official operationId: UpdateTask.
+        https://developer.clickup.com/reference/updatetask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /team/{team_id}/webhook:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+    get:
+      tags: [Webhooks]
+      operationId: getWebhooks
+      summary: Get Webhooks
+      description: >-
+        View the webhooks created via the API for a Workspace.
+        Official operationId: GetWebhooks.
+        https://developer.clickup.com/reference/getwebhooks
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create Webhook
+      description: >-
+        Set up a webhook to monitor for events. Response includes webhook.secret.
+        Official operationId: CreateWebhook.
+        https://developer.clickup.com/reference/createwebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [endpoint, events]
+              properties:
+                endpoint: { type: string }
+                events:
+                  type: array
+                  items: { type: string }
+                space_id: {}
+                folder_id: {}
+                list_id: {}
+                task_id: {}
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /webhook/{webhook_id}:
+    parameters:
+      - $ref: "#/components/parameters/WebhookId"
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update Webhook
+      description: >-
+        Update a webhook.
+        Official operationId: UpdateWebhook.
+        https://developer.clickup.com/reference/updatewebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete Webhook
+      description: >-
+        Delete a webhook.
+        Official operationId: DeleteWebhook.
+        https://developer.clickup.com/reference/deletewebhook
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+components:
+  securitySchemes:
+    AuthorizationToken:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >-
+        Personal API token (`Authorization: pk_…`) or OAuth access token
+        (`Authorization: Bearer {access_token}`).
+        https://developer.clickup.com/docs/authentication
+  parameters:
+    TeamId:
+      in: path
+      name: team_id
+      required: true
+      schema: { type: string }
+      description: Workspace (team) ID
+    SpaceId:
+      in: path
+      name: space_id
+      required: true
+      schema: { type: string }
+    FolderId:
+      in: path
+      name: folder_id
+      required: true
+      schema: { type: string }
+    ListId:
+      in: path
+      name: list_id
+      required: true
+      schema: { type: string }
+    TaskId:
+      in: path
+      name: task_id
+      required: true
+      schema: { type: string }
+    WebhookId:
+      in: path
+      name: webhook_id
+      required: true
+      schema: { type: string }
+  responses:
+    ObjectResponse:
+      description: Successful response
+      content:
+        application/json:
+          schema: { type: object }
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema: { type: object }

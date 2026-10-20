@@ -1,0 +1,481 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "activecampaign",
+  "label": "ActiveCampaign",
+  "package": "@friggframework/api-module-activecampaign",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Values about the connected account, persisted by the module (apiPropertiesToPersist).",
+    "fields": [
+      {
+        "name": "api_url",
+        "type": "string",
+        "description": "Developer-tab API Access URL (host only; client appends /api/3)"
+      }
+    ]
+  },
+  "objects": {
+    "contact": {
+      "label": "Contact",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "contact.email",
+          "required": true
+        },
+        {
+          "name": "firstName",
+          "type": "string",
+          "tag": "person.givenName"
+        },
+        {
+          "name": "lastName",
+          "type": "string",
+          "tag": "person.familyName"
+        },
+        {
+          "name": "phone",
+          "type": "phone",
+          "tag": "contact.phone"
+        },
+        {
+          "name": "cdate",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "udate",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "udate",
+        "list": {
+          "capability": "contact.list",
+          "cursor": "offset",
+          "limit": "limit",
+          "items": "contacts",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "contact.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "contact.create",
+          "body": "contact"
+        },
+        "update": {
+          "capability": "contact.update",
+          "id": "id",
+          "body": "contact"
+        }
+      }
+    },
+    "account": {
+      "label": "Account",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "organization.name",
+          "required": true
+        },
+        {
+          "name": "accountUrl",
+          "type": "string",
+          "tag": "organization.url"
+        },
+        {
+          "name": "createdTimestamp",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updatedTimestamp",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updatedTimestamp",
+        "list": {
+          "capability": "account.list",
+          "items": "accounts"
+        },
+        "get": {
+          "capability": "account.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "account.create",
+          "body": "account"
+        },
+        "update": {
+          "capability": "account.update",
+          "id": "id",
+          "body": "account"
+        }
+      }
+    },
+    "tag": {
+      "label": "Tag",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "tag",
+          "type": "string",
+          "tag": "record.tags",
+          "required": true
+        },
+        {
+          "name": "tagType",
+          "type": "enum",
+          "values": ["contact", "template"],
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "cdate",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "tag.list",
+          "items": "tags"
+        },
+        "create": {
+          "capability": "tag.create",
+          "body": "tag"
+        }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "events",
+          "type": "array"
+        },
+        {
+          "name": "sources",
+          "type": "array"
+        },
+        {
+          "name": "cdate",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "webhook.list",
+          "items": "webhooks"
+        },
+        "get": {
+          "capability": "webhook.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "webhook.create",
+          "body": "webhook"
+        },
+        "update": {
+          "capability": "webhook.update",
+          "id": "id",
+          "body": "webhook"
+        }
+      }
+    }
+  },
+  "capabilities": {
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": {},
+      "output": "user"
+    },
+    "contact.list": {
+      "kind": "list",
+      "method": "listContacts",
+      "input": {
+        "email": { "type": "string" },
+        "search": { "type": "string" },
+        "limit": { "type": "number" },
+        "offset": { "type": "number" },
+        "id_greater": { "type": "number" }
+      },
+      "output": "contact[]"
+    },
+    "contact.get": {
+      "kind": "read",
+      "method": "getContact",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "contact",
+      "args": ["id"]
+    },
+    "contact.create": {
+      "kind": "create",
+      "method": "createContact",
+      "input": {
+        "contact": { "type": "object", "required": true }
+      },
+      "output": "contact",
+      "args": ["body"]
+    },
+    "contact.update": {
+      "kind": "update",
+      "method": "updateContact",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "contact": { "type": "object", "required": true }
+      },
+      "output": "contact",
+      "args": ["id", "body"]
+    },
+    "contact.delete": {
+      "kind": "delete",
+      "method": "deleteContact",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "contact.bulkImport": {
+      "kind": "create",
+      "method": "bulkContactImport",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "import",
+      "args": ["body"]
+    },
+    "account.list": {
+      "kind": "list",
+      "method": "listAccounts",
+      "input": {
+        "search": { "type": "string" },
+        "count_deals": { "type": "boolean" }
+      },
+      "output": "account[]"
+    },
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "account",
+      "args": ["id"]
+    },
+    "account.create": {
+      "kind": "create",
+      "method": "createAccount",
+      "input": {
+        "account": { "type": "object", "required": true }
+      },
+      "output": "account",
+      "args": ["body"]
+    },
+    "account.update": {
+      "kind": "update",
+      "method": "updateAccount",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "account": { "type": "object", "required": true }
+      },
+      "output": "account",
+      "args": ["id", "body"]
+    },
+    "account.bulkDelete": {
+      "kind": "delete",
+      "method": "bulkDeleteAccounts",
+      "input": {
+        "ids": { "type": "array", "required": true }
+      },
+      "output": "void",
+      "args": ["ids"]
+    },
+    "accountContact.list": {
+      "kind": "list",
+      "method": "listAccountContacts",
+      "input": {},
+      "output": "accountContact[]"
+    },
+    "accountContact.get": {
+      "kind": "read",
+      "method": "getAccountContact",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "accountContact",
+      "args": ["id"]
+    },
+    "accountContact.create": {
+      "kind": "create",
+      "method": "createAccountContact",
+      "input": {
+        "accountContact": { "type": "object", "required": true }
+      },
+      "output": "accountContact",
+      "args": ["body"]
+    },
+    "accountContact.update": {
+      "kind": "update",
+      "method": "updateAccountContact",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "accountContact": { "type": "object", "required": true }
+      },
+      "output": "accountContact",
+      "args": ["id", "body"]
+    },
+    "accountContact.delete": {
+      "kind": "delete",
+      "method": "deleteAccountContact",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "tag.list": {
+      "kind": "list",
+      "method": "listTags",
+      "input": {
+        "search": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "output": "tag[]"
+    },
+    "tag.create": {
+      "kind": "create",
+      "method": "createTag",
+      "input": {
+        "tag": { "type": "object", "required": true }
+      },
+      "output": "tag",
+      "args": ["body"]
+    },
+    "tag.delete": {
+      "kind": "delete",
+      "method": "deleteTag",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "contactTag.create": {
+      "kind": "create",
+      "method": "createContactTag",
+      "input": {
+        "contactTag": { "type": "object", "required": true }
+      },
+      "output": "contactTag",
+      "args": ["body"]
+    },
+    "contactTag.delete": {
+      "kind": "delete",
+      "method": "deleteContactTag",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "webhook.list": {
+      "kind": "list",
+      "method": "listWebhooks",
+      "input": {},
+      "output": "webhook[]"
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "webhook",
+      "args": ["id"]
+    },
+    "webhook.create": {
+      "kind": "subscribe",
+      "method": "createWebhook",
+      "input": {
+        "webhook": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["body"]
+    },
+    "webhook.update": {
+      "kind": "update",
+      "method": "updateWebhook",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "webhook": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["id", "body"]
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhook",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    }
+  }
+}

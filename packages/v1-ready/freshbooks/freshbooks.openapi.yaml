@@ -32,7 +32,7 @@ paths:
   /auth/api/v1/users/me:
     get:
       tags: [Identity]
-      operationId: getUserInfo
+      operationId: getUserDetails
       summary: Get identity info for the authorized user
       description: >-
         Returns the identity plus business_memberships (account_id / business id).
@@ -462,6 +462,13 @@ paths:
         in: path
         required: true
         schema: { type: integer }
+    get:
+      tags: [Webhooks]
+      operationId: getCallback
+      summary: Get a single webhook callback
+      responses:
+        "200":
+          description: Callback object
     put:
       tags: [Webhooks]
       operationId: verifyCallback

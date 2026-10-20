@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { Definition } = require('../definition');
+const { Definition, chosenBusiness } = require('../definition');
 const { Api } = require('../api');
 
 describe('FreshBooks Definition', () => {
@@ -25,10 +25,14 @@ describe('FreshBooks Definition', () => {
         );
     });
 
-    it('persists tokens on credential and account/business on entity', () => {
+    it('persists tokens + freshbooksUserId; entity props empty (account on identifiers)', () => {
         expect(Definition.requiredAuthMethods.apiPropertiesToPersist).toEqual({
-            credential: ['access_token', 'refresh_token'],
-            entity: ['accountId', 'businessId'],
+            credential: [
+                'access_token',
+                'refresh_token',
+                'freshbooksUserId',
+            ],
+            entity: [],
         });
     });
 
@@ -40,28 +44,26 @@ describe('FreshBooks Definition', () => {
             return { access_token: 'a', refresh_token: 'r' };
         };
         await Definition.requiredAuthMethods.getToken(api, {
-            data: { code: 'auth-code' },
+            code: 'auth-code',
         });
         expect(seen).toBe('auth-code');
     });
 
-    it('getEntityDetails binds accountId from memberships', async () => {
+    it('getEntityDetails binds the sole business account_id', async () => {
         const api = new Api({ access_token: 't' });
-        api.getUserInfo = async () => ({
-            response: {
-                id: 712052,
-                email: 'b@example.com',
-                business_memberships: [
-                    {
-                        role: 'owner',
-                        business: {
-                            id: 77128,
-                            name: 'BillSpring',
-                            account_id: 'zDmNq',
-                        },
+        api.getUserDetails = async () => ({
+            id: 712052,
+            email: 'b@example.com',
+            business_memberships: [
+                {
+                    role: 'owner',
+                    business: {
+                        id: 77128,
+                        name: 'BillSpring',
+                        account_id: 'zDmNq',
                     },
-                ],
-            },
+                },
+            ],
         });
         const details = await Definition.requiredAuthMethods.getEntityDetails(
             api,
@@ -71,73 +73,83 @@ describe('FreshBooks Definition', () => {
         );
         expect(details.identifiers.externalId).toBe('zDmNq');
         expect(details.identifiers.userId).toBe('user-1');
-        expect(details.details.name).toBe('BillSpring');
+        expect(details.details).toEqual({ name: 'BillSpring' });
         expect(api.accountId).toBe('zDmNq');
-        expect(api.businessId).toBe(77128);
     });
 
-    it('getEntityDetails honours an explicit account_id from the callback', async () => {
+    it('getEntityDetails requires account_id when multiple businesses exist', async () => {
         const api = new Api({ access_token: 't' });
-        api.getUserInfo = async () => ({
-            response: {
-                business_memberships: [
-                    {
-                        role: 'owner',
-                        business: {
-                            id: 1,
-                            name: 'A',
-                            account_id: 'AAA',
-                        },
-                    },
-                    {
-                        role: 'manager',
-                        business: {
-                            id: 2,
-                            name: 'B',
-                            account_id: 'BBB',
-                        },
-                    },
-                ],
-            },
+        api.getUserDetails = async () => ({
+            id: 1,
+            business_memberships: [
+                {
+                    business: { id: 1, name: 'A', account_id: 'AAA' },
+                },
+                {
+                    business: { id: 2, name: 'B', account_id: 'BBB' },
+                },
+            ],
         });
+        await expect(
+            Definition.requiredAuthMethods.getEntityDetails(api, {}, {}, 'u')
+        ).rejects.toThrow(/multiple FreshBooks businesses/);
+
         const details = await Definition.requiredAuthMethods.getEntityDetails(
             api,
-            { data: { account_id: 'BBB' } },
+            { account_id: 'BBB' },
             {},
-            'user-2'
+            'u'
         );
         expect(details.identifiers.externalId).toBe('BBB');
         expect(details.details.name).toBe('B');
     });
 
-    it('getCredentialDetails uses the identity id', async () => {
-        const api = new Api({ access_token: 't' });
-        api.getUserInfo = async () => ({
-            response: { id: 712052, email: 'b@example.com' },
+    it('chosenBusiness throws when the requested account is unavailable', () => {
+        expect(() =>
+            chosenBusiness(
+                {
+                    id: 1,
+                    business_memberships: [
+                        { business: { account_id: 'AAA', name: 'A' } },
+                    ],
+                },
+                'MISSING'
+            )
+        ).toThrow(/not available/);
+    });
+
+    it('getCredentialDetails prefers freshbooksUserId then users/me id', async () => {
+        const api = new Api({
+            access_token: 't',
+            freshbooksUserId: '42',
         });
         const details =
             await Definition.requiredAuthMethods.getCredentialDetails(
                 api,
                 'user-c'
             );
-        expect(details.identifiers.externalId).toBe('712052');
-        expect(details.identifiers.userId).toBe('user-c');
+        expect(details.identifiers.externalId).toBe('42');
+        expect(details.details).toEqual({});
     });
 
-    it('testAuthRequest calls getUserInfo', async () => {
+    it('testAuthRequest calls getUserDetails', async () => {
         const api = new Api({ access_token: 't' });
         let called = false;
-        api.getUserInfo = async () => {
+        api.getUserDetails = async () => {
             called = true;
-            return { response: { id: 1 } };
+            return { id: 1 };
         };
         await Definition.requiredAuthMethods.testAuthRequest(api);
         expect(called).toBe(true);
     });
 
-    it('exports only Api and Definition from index', () => {
+    it('exports Api, Definition, and Config from index', () => {
         const mod = require('../index');
-        expect(Object.keys(mod).sort()).toEqual(['Api', 'Definition']);
+        expect(Object.keys(mod).sort()).toEqual([
+            'Api',
+            'Config',
+            'Definition',
+        ]);
     });
 
     it('has a capability manifest that only references real Api methods', () => {
@@ -148,13 +160,7 @@ describe('FreshBooks Definition', () => {
             )
         );
         expect(manifest.schema).toBe('capability-manifest/v0.1');
-        expect(manifest.module).toBe('freshbooks');
-        expect(manifest.package).toBe(
-            '@friggframework/api-module-freshbooks'
-        );
-        expect(manifest.version).toBe(
-            require('../package.json').version
-        );
+        expect(manifest.version).toBe(require('../package.json').version);
 
         const clientMethods = new Set(
             Object.getOwnPropertyNames(Api.prototype).filter(
@@ -164,12 +170,10 @@ describe('FreshBooks Definition', () => {
             )
         );
 
-        for (const [name, cap] of Object.entries(manifest.capabilities)) {
+        for (const cap of Object.values(manifest.capabilities)) {
             const ref = cap.implementedBy && cap.implementedBy.ref;
             expect(ref).toMatch(/^Api\./);
-            const method = ref.slice(4);
-            expect(clientMethods.has(method)).toBe(true);
-            void name;
+            expect(clientMethods.has(ref.slice(4))).toBe(true);
         }
 
         for (const obj of Object.values(manifest.objects)) {

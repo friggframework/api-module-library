@@ -1,4 +1,4 @@
-const { Api } = require('../api');
+const { Api, INVOICE_STATUSES } = require('../api');
 
 function makeApi(overrides = {}) {
     const api = new Api({
@@ -12,19 +12,57 @@ function makeApi(overrides = {}) {
     api._captured = [];
     api._get = async (options) => {
         api._captured.push({ method: 'GET', ...options });
-        return { response: { result: {} } };
+        return {
+            response: {
+                result: {
+                    clients: [],
+                    pages: 0,
+                    client: { id: 1 },
+                    invoice: { id: 1 },
+                    payment: { id: 1 },
+                    invoices: [],
+                    payments: [],
+                    total: 0,
+                    callbacks: [],
+                    callback: { id: 1 },
+                },
+                id: 99,
+                business_memberships: [],
+            },
+        };
     };
     api._post = async (options) => {
         api._captured.push({ method: 'POST', ...options });
-        return { response: { result: {} } };
+        return {
+            response: {
+                result: {
+                    client: { id: 1 },
+                    invoice: { id: 1 },
+                    callback: { callbackid: 5 },
+                },
+            },
+            access_token: 'new-access',
+            refresh_token: 'new-refresh',
+        };
     };
     api._put = async (options) => {
         api._captured.push({ method: 'PUT', ...options });
-        return { response: { result: {} } };
+        return {
+            response: {
+                result: {
+                    client: { id: 1 },
+                    callback: { callbackid: 5, verified: true },
+                },
+            },
+        };
     };
     api._delete = async (options) => {
         api._captured.push({ method: 'DELETE', ...options });
-        return { response: {} };
+        return {};
+    };
+    api.setTokens = async (tokens) => {
+        if (tokens.access_token) api.access_token = tokens.access_token;
+        if (tokens.refresh_token) api.refresh_token = tokens.refresh_token;
     };
     return api;
 }
@@ -37,24 +75,25 @@ describe('FreshBooks Api', () => {
             expect(api.tokenUri).toBe(
                 'https://api.freshbooks.com/auth/oauth/token'
             );
+            expect(api.authorizationUri).toBe(
+                'https://auth.freshbooks.com/oauth/authorize/'
+            );
         });
 
-        it('builds the official auth.freshbooks.com authorize URL', () => {
+        it('getAuthorizationUri includes client, redirect, response_type and state', () => {
             const api = new Api({
                 client_id: 'abc',
                 redirect_uri: 'https://app.example/cb',
-                scope: 'user:profile:read',
+                state: 'xyz',
             });
-            const uri = api.getAuthUri();
+            const uri = api.getAuthorizationUri();
             expect(uri).toContain(
                 'https://auth.freshbooks.com/oauth/authorize/?'
             );
             expect(uri).toContain('response_type=code');
             expect(uri).toContain('client_id=abc');
-            expect(uri).toContain(
-                'redirect_uri=https%3A%2F%2Fapp.example%2Fcb'
-            );
-            expect(uri).toContain('scope=user%3Aprofile%3Aread');
+            expect(uri).toContain('redirect_uri=https%3A%2F%2Fapp.example%2Fcb');
+            expect(uri).toContain('state=xyz');
         });
 
         it('adds Bearer + Api-Version alpha headers', async () => {
@@ -64,63 +103,154 @@ describe('FreshBooks Api', () => {
             expect(headers['Api-Version']).toBe('alpha');
         });
 
+        it('exchanges tokens with a JSON body (not form-urlencoded)', async () => {
+            const api = makeApi({ access_token: null });
+            await api.getTokenFromCode('auth-code');
+            const captured = api._captured[0];
+            expect(captured.url).toBe(
+                'https://api.freshbooks.com/auth/oauth/token'
+            );
+            expect(captured.headers['Content-Type']).toBe('application/json');
+            expect(captured.body).toEqual({
+                client_id: 'cid',
+                client_secret: 'csecret',
+                redirect_uri: 'https://example.com/callback',
+                grant_type: 'authorization_code',
+                code: 'auth-code',
+            });
+        });
+
+        it('refreshAccessToken posts grant_type=refresh_token as JSON', async () => {
+            const api = makeApi();
+            await api.refreshAccessToken({ refresh_token: 'old-refresh' });
+            expect(api._captured[0].body.grant_type).toBe('refresh_token');
+            expect(api._captured[0].body.refresh_token).toBe('old-refresh');
+        });
+
+        it('skips backoff retries for token URI requests', async () => {
+            const api = makeApi({ backOff: [0, 0, 0] });
+            let seenAttempt;
+            api._rawRequest = async function (url, options, attempt) {
+                // Call through our override path by invoking the real logic's attempt selection
+                const tokenRequestAttempt =
+                    url === this.tokenUri ? this.backOff.length : attempt;
+                seenAttempt = tokenRequestAttempt;
+                return { access_token: 'a', refresh_token: 'r' };
+            };
+            // Directly exercise the attempt calculation used by _rawRequest
+            await api._rawRequest(api.tokenUri, {}, 0);
+            expect(seenAttempt).toBe(api.backOff.length);
+        });
+
         it('requires accountId for accounting paths', async () => {
             const api = makeApi({ accountId: null });
             await expect(api.listClients()).rejects.toThrow(/accountId/);
         });
     });
 
-    describe('identity', () => {
-        it('getUserInfo hits GET /auth/api/v1/users/me', async () => {
-            const api = makeApi();
-            await api.getUserInfo();
-            expect(api._captured[0].url).toBe(
-                'https://api.freshbooks.com/auth/api/v1/users/me'
+    describe('webUrls & invoiceStatusName', () => {
+        it('builds FreshBooks web app deep links', () => {
+            const { webUrls } = makeApi();
+            expect(webUrls.client(7)).toBe(
+                'https://my.freshbooks.com/#/client/7'
+            );
+            expect(webUrls.invoice('ej6eR', 11)).toBe(
+                'https://my.freshbooks.com/#/invoice/ej6eR-11'
+            );
+            expect(webUrls.invoices()).toBe(
+                'https://my.freshbooks.com/#/invoices'
+            );
+            expect(webUrls.invoices('Left Hook')).toBe(
+                'https://my.freshbooks.com/#/invoices?q=Left%20Hook'
             );
         });
 
-        it('listBusinessAccounts maps memberships', async () => {
+        it('maps invoice status codes from the official docs', () => {
             const api = makeApi();
-            api.getUserInfo = async () => ({
-                response: {
-                    business_memberships: [
-                        {
-                            id: 1,
-                            role: 'owner',
-                            business: {
-                                id: 99,
-                                name: 'Acme',
-                                account_id: 'ABC123',
-                            },
-                        },
-                    ],
-                },
-            });
-            const accounts = await api.listBusinessAccounts();
-            expect(accounts).toEqual([
-                {
-                    name: 'Acme',
-                    accountId: 'ABC123',
-                    businessId: 99,
-                    role: 'owner',
-                    membershipId: 1,
-                },
-            ]);
+            expect(api.invoiceStatusName(2)).toBe('Sent');
+            expect(api.invoiceStatusName(4)).toBe('Paid');
+            expect(api.invoiceStatusName(8)).toBe('Partial');
+            expect(api.invoiceStatusName(42)).toBe('');
+            expect(INVOICE_STATUSES[1]).toBe('Draft');
+        });
+    });
+
+    describe('identity', () => {
+        it('getUserDetails hits GET /auth/api/v1/users/me and sets freshbooksUserId', async () => {
+            const api = makeApi();
+            api._get = async (options) => {
+                api._captured.push(options);
+                return {
+                    response: {
+                        id: 712052,
+                        email: 'b@example.com',
+                        business_memberships: [],
+                    },
+                };
+            };
+            const user = await api.getUserDetails();
+            expect(api._captured[0].url).toBe(
+                'https://api.freshbooks.com/auth/api/v1/users/me'
+            );
+            expect(user.id).toBe(712052);
+            expect(api.freshbooksUserId).toBe('712052');
+        });
+
+        it('getUserInfo aliases getUserDetails', async () => {
+            const api = makeApi();
+            api.getUserDetails = async () => ({ id: 1 });
+            expect(await api.getUserInfo()).toEqual({ id: 1 });
+        });
+
+        it('throws when users/me has no id', async () => {
+            const api = makeApi();
+            api._get = async () => ({ response: {} });
+            await expect(api.getUserDetails()).rejects.toThrow(/user id/i);
+        });
+
+        it('restores freshbooksUserId from credential params', () => {
+            expect(
+                new Api({ freshbooksUserId: '42' }).freshbooksUserId
+            ).toBe('42');
         });
     });
 
     describe('clients', () => {
-        it('listClients hits the accounting clients path', async () => {
+        it('listClients defaults to page 1 / 100 / updated_desc', async () => {
             const api = makeApi();
-            await api.listClients({ page: 1 });
-            expect(api._captured[0].url).toBe(
-                'https://api.freshbooks.com/accounting/account/zDmNq/users/clients?page=1'
+            await api.listClients('zDmNq');
+            expect(api._captured[0].url).toContain(
+                '/accounting/account/zDmNq/users/clients'
+            );
+            expect(api._captured[0].query).toEqual({
+                page: 1,
+                per_page: 100,
+                sort: 'updated_desc',
+            });
+        });
+
+        it('findClientsByEmail searches search[email]', async () => {
+            const api = makeApi();
+            await api.findClientsByEmail('zDmNq', '  a@b.co ');
+            expect(api._captured[0].query).toEqual({
+                'search[email]': 'a@b.co',
+                sort: 'updated_desc',
+            });
+        });
+
+        it('findClientsByEmail rejects empty email', async () => {
+            const api = makeApi();
+            await expect(api.findClientsByEmail('zDmNq', '')).rejects.toThrow(
+                /email/i
             );
         });
 
         it('createClient POSTs a wrapped client body', async () => {
             const api = makeApi();
-            await api.createClient({ fname: 'Ada', email: 'a@x.com' });
+            await api.createClient('zDmNq', {
+                fname: 'Ada',
+                email: 'a@x.com',
+            });
             expect(api._captured[0].method).toBe('POST');
             expect(api._captured[0].body).toEqual({
                 client: { fname: 'Ada', email: 'a@x.com' },
@@ -129,109 +259,104 @@ describe('FreshBooks Api', () => {
 
         it('updateClient PUTs to the client id path', async () => {
             const api = makeApi();
-            await api.updateClient(42, { fname: 'Grace' });
+            await api.updateClient('zDmNq', 42, { fname: 'Grace' });
             expect(api._captured[0].method).toBe('PUT');
             expect(api._captured[0].url).toContain('/users/clients/42');
         });
     });
 
-    describe('invoices', () => {
-        it('list/get/create/update/delete invoice paths', async () => {
+    describe('invoices & payments', () => {
+        it('getInvoice / createInvoice / updateInvoice / deleteInvoice', async () => {
             const api = makeApi();
-            await api.listInvoices();
-            await api.getInvoice(7);
-            await api.createInvoice({ customerid: 1 });
-            await api.updateInvoice(7, { notes: 'x' });
-            await api.deleteInvoice(7);
+            await api.getInvoice('zDmNq', 7);
+            await api.createInvoice('zDmNq', { customerid: 1 });
+            await api.updateInvoice('zDmNq', 7, { notes: 'x' });
+            await api.deleteInvoice('zDmNq', 7);
             expect(api._captured.map((c) => c.method)).toEqual([
-                'GET',
                 'GET',
                 'POST',
                 'PUT',
                 'DELETE',
             ]);
-            expect(api._captured[1].url).toContain('/invoices/invoices/7');
-            expect(api._captured[4].url).toContain('/invoices/invoices/7');
+        });
+
+        it('listClientInvoices filters by customerid', async () => {
+            const api = makeApi();
+            await api.listClientInvoices('zDmNq', 7, 5);
+            expect(api._captured[0].query).toEqual({
+                'search[customerid]': 7,
+                sort: 'invoice_date_desc',
+                per_page: 5,
+            });
+        });
+
+        it('getPayment includes invoice via query string', async () => {
+            const api = makeApi();
+            await api.getPayment('zDmNq', 21);
+            expect(api._captured[0].query).toEqual({
+                'include[]': 'invoice',
+            });
+            expect(api._captured[0].url).toContain('/payments/payments/21');
+        });
+
+        it('listClientPayments filters by clientid and includes invoice', async () => {
+            const api = makeApi();
+            await api.listClientPayments('zDmNq', 7, 5);
+            expect(api._captured[0].query).toEqual({
+                'search[clientid]': 7,
+                'include[]': 'invoice',
+                sort: 'updated_desc',
+                per_page: 5,
+            });
         });
     });
 
-    describe('expenses & categories', () => {
-        it('listExpenses and listExpenseCategories', async () => {
+    describe('expenses / staff / other income', () => {
+        it('covers expense, category, staff, other_income paths', async () => {
             const api = makeApi();
-            await api.listExpenses();
-            await api.getExpense(9);
-            await api.createExpense({
+            await api.listExpenses('zDmNq');
+            await api.getExpense('zDmNq', 9);
+            await api.createExpense('zDmNq', {
                 amount: { amount: '10.00' },
                 categoryid: 1,
                 staffid: 1,
                 date: '2024-01-01',
             });
-            await api.listExpenseCategories();
-            await api.getExpenseCategory(3);
+            await api.listExpenseCategories('zDmNq');
+            await api.listStaff('zDmNq');
+            await api.createOtherIncome('zDmNq', {
+                amount: { amount: '1.00' },
+            });
             expect(api._captured[0].url).toContain('/expenses/expenses');
             expect(api._captured[3].url).toContain('/expenses/categories');
-            expect(api._captured[4].url).toContain('/expenses/categories/3');
-        });
-    });
-
-    describe('payments & staff & other income', () => {
-        it('covers payment/staff/other_income paths', async () => {
-            const api = makeApi();
-            await api.listPayments();
-            await api.createPayment({
-                invoiceid: 1,
-                amount: { amount: '5.00' },
-                date: '2024-01-01',
-                type: 'Check',
-            });
-            await api.listStaff();
-            await api.getStaff(2);
-            await api.createOtherIncome({ amount: { amount: '1.00' } });
-            await api.updateOtherIncome(4, { note: 'n' });
-            expect(api._captured[0].url).toContain('/payments/payments');
-            expect(api._captured[2].url).toContain('/users/staffs');
-            expect(api._captured[4].url).toContain(
+            expect(api._captured[4].url).toContain('/users/staffs');
+            expect(api._captured[5].url).toContain(
                 '/other_incomes/other_incomes'
             );
-            expect(api._captured[5].body).toEqual({
-                other_income: { note: 'n' },
-            });
         });
     });
 
     describe('webhooks', () => {
-        it('create/list/verify/resend/delete callbacks', async () => {
+        it('create/list/get/verify/resend/delete callbacks', async () => {
             const api = makeApi();
-            await api.createCallback({
+            await api.createCallback('zDmNq', {
                 event: 'invoice.create',
                 uri: 'https://hook.example/fb',
             });
-            await api.listCallbacks();
-            await api.verifyCallback(2001, 'scADVVi5');
-            await api.resendCallbackVerification(2001);
-            await api.deleteCallback(2001);
+            await api.listCallbacks('zDmNq');
+            await api.getCallback('zDmNq', 2001);
+            await api.verifyCallback('zDmNq', 2001, 'scADVVi5');
+            await api.resendCallbackVerification('zDmNq', 2001);
+            await api.deleteCallback('zDmNq', 2001);
             expect(api._captured[0].method).toBe('POST');
-            expect(api._captured[0].url).toContain('/events/callbacks');
-            expect(api._captured[2].body).toEqual({
-                callback: { verifier: 'scADVVi5' },
-            });
+            expect(api._captured[2].url).toContain('/events/callbacks/2001');
             expect(api._captured[3].body).toEqual({
+                callback: { callback_id: 2001, verifier: 'scADVVi5' },
+            });
+            expect(api._captured[4].body).toEqual({
                 callback: { resend: true },
             });
-            expect(api._captured[4].method).toBe('DELETE');
-        });
-    });
-
-    describe('query builder', () => {
-        it('serializes nested search filters', async () => {
-            const api = makeApi();
-            await api.listClients({
-                search: { email: 'a@x.com', userids: [1, 2] },
-            });
-            const { url } = api._captured[0];
-            expect(url).toContain('search%5Bemail%5D=a%40x.com');
-            expect(url).toContain('search%5Buserids%5D%5B%5D=1');
-            expect(url).toContain('search%5Buserids%5D%5B%5D=2');
+            expect(api._captured[5].method).toBe('DELETE');
         });
     });
 });

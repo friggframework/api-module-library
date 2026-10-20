@@ -1,25 +1,51 @@
 const { OAuth2Requester, get } = require('@friggframework/core');
 
+const API_VERSION = 'alpha';
+const WEB_APP = 'https://my.freshbooks.com/#';
+
+/**
+ * Invoice status codes from https://www.freshbooks.com/api/invoices
+ * (status → display name).
+ */
+const INVOICE_STATUSES = {
+    0: 'Disputed',
+    1: 'Draft',
+    2: 'Sent',
+    3: 'Viewed',
+    4: 'Paid',
+    5: 'Auto Paid',
+    6: 'Retry',
+    7: 'Failed',
+    8: 'Partial',
+};
+
+const jsonHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Api-Version': API_VERSION,
+});
+
 /**
  * FreshBooks public API client.
  *
  * Auth: OAuth 2.0 authorization-code flow.
  *   Authorize: https://auth.freshbooks.com/oauth/authorize/
- *   Token:     POST https://api.freshbooks.com/auth/oauth/token
+ *   Token:     POST https://api.freshbooks.com/auth/oauth/token (JSON body)
  *
  * Verified facts (https://www.freshbooks.com/api/ only):
  *   - Authorization codes expire in 5 minutes
  *   - Access-token lifetime varies; example responses show expires_in=43200 (12h)
- *   - Refresh tokens are long-lived but one-time-use; each refresh returns a new
- *     refresh_token and invalidates the previous one (and the previous access token)
+ *   - Refresh tokens are one-time-use and rotate; codes are also single-use —
+ *     token requests must not be retried after a lost 2xx (see _rawRequest)
  *   - Accounting paths require account_id; many non-accounting paths use business_id
  *   - No daily request cap; short bursts may return HTTP 429; list pages capped at 100
- *   - Webhook delivery is signed with X-FreshBooks-Hmac-SHA256 (HMAC-SHA256 of a
- *     spaced JSON encoding of the form params, secret = callback verifier)
+ *   - Webhook delivery is signed with X-FreshBooks-Hmac-SHA256
  *
  * FreshBooks publishes HTML docs + a Postman collection; there is no official
  * OpenAPI. ./freshbooks.openapi.yaml is a hand-written subset covering the
  * endpoints this client implements (one method per operationId).
+ *
+ * Prior art: lefthookhq/freshbooks-integrations backend/src/api-modules/freshbooks/
+ * (Daniel) — auth/token/identity/callback patterns reconciled here.
  *
  * Docs: https://www.freshbooks.com/api/start
  */
@@ -28,6 +54,9 @@ class Api extends OAuth2Requester {
         super(params);
 
         this.baseUrl = 'https://api.freshbooks.com';
+        this.authorizationUri = 'https://auth.freshbooks.com/oauth/authorize/';
+        this.tokenUri = `${this.baseUrl}/auth/oauth/token`;
+
         this.client_id =
             get(params, 'client_id', null) || process.env.FRESHBOOKS_CLIENT_ID;
         this.client_secret =
@@ -38,36 +67,19 @@ class Api extends OAuth2Requester {
             process.env.REDIRECT_URI ||
             null;
         this.scope =
-            get(params, 'scope', null) ||
-            process.env.FRESHBOOKS_SCOPE ||
-            [
-                'user:profile:read',
-                'user:clients:read',
-                'user:clients:write',
-                'user:invoices:read',
-                'user:invoices:write',
-                'user:expenses:read',
-                'user:expenses:write',
-                'user:payments:read',
-                'user:payments:write',
-                'user:other_income:read',
-                'user:other_income:write',
-                'user:teams:read',
-            ].join(' ');
+            get(params, 'scope', null) || process.env.FRESHBOOKS_SCOPE || null;
+        this.state = get(params, 'state', null);
 
         this.access_token = get(params, 'access_token', null);
         this.refresh_token = get(params, 'refresh_token', null);
+        this.freshbooksUserId = get(params, 'freshbooksUserId', null);
         this.accountId =
             get(params, 'accountId', null) || get(params, 'account_id', null);
         this.businessId =
-            get(params, 'businessId', null) ||
-            get(params, 'business_id', null);
-
-        this.tokenUri = `${this.baseUrl}/auth/oauth/token`;
-        this.authorizationUri = this.buildAuthorizationUri();
+            get(params, 'businessId', null) || get(params, 'business_id', null);
 
         this.URLs = {
-            identity: '/auth/api/v1/users/me',
+            userDetails: '/auth/api/v1/users/me',
             clients: (accountId) =>
                 `/accounting/account/${accountId}/users/clients`,
             client: (accountId, clientId) =>
@@ -101,28 +113,43 @@ class Api extends OAuth2Requester {
             callback: (accountId, callbackId) =>
                 `/events/account/${accountId}/events/callbacks/${callbackId}`,
         };
+
+        this.webUrls = {
+            client: (clientId) => `${WEB_APP}/client/${clientId}`,
+            invoice: (accountId, invoiceId) =>
+                `${WEB_APP}/invoice/${accountId}-${invoiceId}`,
+            invoices: (search) =>
+                search
+                    ? `${WEB_APP}/invoices?q=${encodeURIComponent(search)}`
+                    : `${WEB_APP}/invoices`,
+        };
     }
 
-    buildAuthorizationUri(redirectUri) {
-        const redirect = redirectUri || this.redirect_uri || '';
-        const params = new URLSearchParams({
-            response_type: 'code',
-            client_id: this.client_id || '',
-            redirect_uri: redirect,
-        });
-        if (this.scope) params.set('scope', this.scope);
-        return `https://auth.freshbooks.com/oauth/authorize/?${params.toString()}`;
+    invoiceStatusName(status) {
+        return INVOICE_STATUSES[status] ?? '';
     }
 
     /**
-     * OAuth authorize URL for the current client_id / redirect_uri / scope.
-     * Official format: https://www.freshbooks.com/api/authentication
+     * OAuth authorize URL.
+     * Official: https://auth.freshbooks.com/oauth/authorize/?response_type=code&redirect_uri=&client_id=
+     * Scopes are configured on the FreshBooks app (not required in the URL).
      */
+    getAuthorizationUri() {
+        const query = new URLSearchParams({
+            client_id: this.client_id || '',
+            response_type: 'code',
+            redirect_uri: this.redirect_uri || '',
+        });
+        if (this.state) query.set('state', this.state);
+        if (this.scope) query.set('scope', this.scope);
+        return `${this.authorizationUri}?${query}`;
+    }
+
+    /** Alias used by Definition.getAuthorizationRequirements */
     getAuthUri(params = {}) {
-        const redirect =
-            params.redirect_uri || this.redirect_uri || process.env.REDIRECT_URI;
-        this.authorizationUri = this.buildAuthorizationUri(redirect);
-        return this.authorizationUri;
+        if (params.redirect_uri) this.redirect_uri = params.redirect_uri;
+        if (params.state) this.state = params.state;
+        return this.getAuthorizationUri();
     }
 
     setAccountId(accountId) {
@@ -138,432 +165,664 @@ class Api extends OAuth2Requester {
         if (!accountId) {
             throw new Error(
                 'FreshBooks accountId is required for accounting/events paths. ' +
-                    'Call setAccountId() after reading business_memberships from getUserInfo().'
+                    'Pass accountId or call setAccountId() after reading business_memberships from getUserDetails().'
             );
         }
         return accountId;
     }
 
-    _buildQuery(params = {}) {
-        const usp = new URLSearchParams();
-        for (const [key, value] of Object.entries(params || {})) {
-            if (value === undefined || value === null) continue;
-            if (Array.isArray(value)) {
-                for (const v of value) {
-                    if (v === undefined || v === null) continue;
-                    usp.append(key, String(v));
-                }
-            } else if (typeof value === 'object') {
-                for (const [innerKey, innerVal] of Object.entries(value)) {
-                    if (innerVal === undefined || innerVal === null) continue;
-                    if (Array.isArray(innerVal)) {
-                        for (const v of innerVal) {
-                            usp.append(`${key}[${innerKey}][]`, String(v));
-                        }
-                    } else {
-                        usp.append(`${key}[${innerKey}]`, String(innerVal));
-                    }
-                }
-            } else {
-                usp.append(key, String(value));
-            }
+    /**
+     * Allow (accountId, opts) or (opts) when this.accountId is already set.
+     */
+    _accountAndOpts(accountIdOrOpts, opts) {
+        if (
+            accountIdOrOpts &&
+            typeof accountIdOrOpts === 'object' &&
+            !Array.isArray(accountIdOrOpts)
+        ) {
+            return {
+                accountId: this.requireAccountId(undefined),
+                opts: accountIdOrOpts,
+            };
         }
-        const qs = usp.toString();
-        return qs ? `?${qs}` : '';
+        return {
+            accountId: this.requireAccountId(accountIdOrOpts),
+            opts: opts || {},
+        };
     }
 
     async addAuthHeaders(headers = {}) {
-        const next = await super.addAuthHeaders(headers);
-        // Official /users/me example sends Api-Version: alpha
-        // (https://www.freshbooks.com/api/identity_model).
-        next['Api-Version'] = next['Api-Version'] || 'alpha';
-        next['Content-Type'] = next['Content-Type'] || 'application/json';
-        return next;
+        const authHeaders = await super.addAuthHeaders(headers);
+        authHeaders['Api-Version'] = API_VERSION;
+        return authHeaders;
     }
 
     /**
-     * Exchange an authorization code for tokens.
-     * FreshBooks accepts application/x-www-form-urlencoded (or JSON) with
-     * client_id + client_secret in the body — matching OAuth2Requester's
-     * default getTokenFromCode(). Refresh responses include a new refresh_token;
-     * setTokens() persists the rotation.
+     * FreshBooks refresh tokens and auth codes are single-use: a retry after a
+     * lost 2xx re-sends a grant FreshBooks already consumed. Jump past the
+     * backoff slots so the token request is sent once.
      */
+    async _rawRequest(url, options, attempt = 0) {
+        const tokenRequestAttempt =
+            url === this.tokenUri ? this.backOff.length : attempt;
+        return super._rawRequest(url, options, tokenRequestAttempt);
+    }
+
     async getTokenFromCode(code) {
-        delete this.access_token;
-        return super.getTokenFromCode(code);
+        return this._requestToken({
+            grant_type: 'authorization_code',
+            code,
+        });
+    }
+
+    async refreshAccessToken({ refresh_token }) {
+        this.access_token = undefined;
+        return this._requestToken({
+            grant_type: 'refresh_token',
+            refresh_token,
+        });
+    }
+
+    /**
+     * Token exchange/refresh with JSON body (official Authentication docs).
+     * client_id + client_secret travel in the body, not Basic auth.
+     */
+    async _requestToken(grantFields) {
+        const response = await this._post({
+            url: this.tokenUri,
+            headers: jsonHeaders(),
+            body: {
+                client_id: this.client_id,
+                client_secret: this.client_secret,
+                redirect_uri: this.redirect_uri,
+                ...grantFields,
+            },
+        });
+        await this.setTokens(response);
+        return response;
     }
 
     // ---- Identity ----------------------------------------------------------
 
     /**
      * Identity info for the authorized user.
-     * GET /auth/api/v1/users/me
-     * Scope: user:profile:read
+     * GET /auth/api/v1/users/me — Scope: user:profile:read
+     * Returns the unwrapped identity object (inside `response`).
+     * Sets this.freshbooksUserId for credential persistence.
      */
-    async getUserInfo() {
-        return this._get({
-            url: this.baseUrl + this.URLs.identity,
+    async getUserDetails() {
+        const { response } = await this._get({
+            url: this.baseUrl + this.URLs.userDetails,
         });
+        if (response?.id == null) {
+            throw new Error(
+                'FreshBooks users/me response is missing the user id'
+            );
+        }
+        this.freshbooksUserId = String(response.id);
+        return response;
+    }
+
+    /** Alias kept for callers that used getUserInfo; same as getUserDetails. */
+    async getUserInfo() {
+        return this.getUserDetails();
     }
 
     /**
      * Convenience: map business_memberships to { name, accountId, businessId, role }.
      */
     async listBusinessAccounts() {
-        const res = await this.getUserInfo();
-        const memberships = res?.response?.business_memberships || [];
-        return memberships.map((mem) => ({
-            name: mem.business?.name,
-            accountId: mem.business?.account_id,
-            businessId: mem.business?.id,
-            role: mem.role,
-            membershipId: mem.id,
-        }));
+        const user = await this.getUserDetails();
+        return (user.business_memberships || [])
+            .map((mem) => ({
+                name: mem.business?.name,
+                accountId: mem.business?.account_id,
+                businessId: mem.business?.id,
+                role: mem.role,
+                membershipId: mem.id,
+            }))
+            .filter((a) => a.accountId);
     }
 
     // ---- Clients -----------------------------------------------------------
 
     /** GET /accounting/account/{accountId}/users/clients */
-    async listClients(params = {}, accountId) {
-        const id = this.requireAccountId(accountId);
-        return this._get({
-            url:
-                this.baseUrl +
-                this.URLs.clients(id) +
-                this._buildQuery(params),
+    async listClients(accountId, opts = {}) {
+        const resolved = this._accountAndOpts(accountId, opts);
+        const { page = 1, perPage = 100, ...rest } = resolved.opts;
+        const { response } = await this._get({
+            url: this.baseUrl + this.URLs.clients(resolved.accountId),
+            query: {
+                page,
+                per_page: perPage,
+                sort: 'updated_desc',
+                ...rest,
+            },
         });
+        const { clients, pages } = response.result;
+        return { clients, pages };
     }
 
     /** GET /accounting/account/{accountId}/users/clients/{clientId} */
-    async getClient(clientId, params = {}, accountId) {
+    async getClient(accountId, clientId) {
+        if (typeof accountId !== 'string') {
+            clientId = accountId;
+            accountId = undefined;
+        }
         const id = this.requireAccountId(accountId);
-        return this._get({
-            url:
-                this.baseUrl +
-                this.URLs.client(id, clientId) +
-                this._buildQuery(params),
+        const { response } = await this._get({
+            url: this.baseUrl + this.URLs.client(id, clientId),
         });
+        return response.result.client;
     }
 
-    /** POST /accounting/account/{accountId}/users/clients  body: { client: {...} } */
-    async createClient(data, accountId) {
+    /**
+     * GET clients filtered by exact email (search[email]).
+     * Docs: https://www.freshbooks.com/api/clients
+     */
+    async findClientsByEmail(accountId, email) {
+        if (arguments.length === 1) {
+            email = accountId;
+            accountId = undefined;
+        }
+        if (typeof email !== 'string' || !email.trim()) {
+            throw new Error('findClientsByEmail requires a non-empty email');
+        }
         const id = this.requireAccountId(accountId);
-        const body = data?.client ? data : { client: data };
-        return this._post({
+        const { response } = await this._get({
             url: this.baseUrl + this.URLs.clients(id),
-            headers: { 'Content-Type': 'application/json' },
-            body,
+            query: {
+                'search[email]': email.trim(),
+                sort: 'updated_desc',
+            },
         });
+        return response.result.clients;
+    }
+
+    /** POST /accounting/account/{accountId}/users/clients */
+    async createClient(accountId, client) {
+        if (arguments.length === 1) {
+            client = accountId;
+            accountId = undefined;
+        }
+        const id = this.requireAccountId(accountId);
+        const payload = client?.client ? client : { client };
+        const { response } = await this._post({
+            url: this.baseUrl + this.URLs.clients(id),
+            headers: jsonHeaders(),
+            body: payload,
+        });
+        return response.result.client;
     }
 
     /** PUT /accounting/account/{accountId}/users/clients/{clientId} */
-    async updateClient(clientId, data, accountId) {
+    async updateClient(accountId, clientId, client) {
+        if (arguments.length === 2) {
+            client = clientId;
+            clientId = accountId;
+            accountId = undefined;
+        }
         const id = this.requireAccountId(accountId);
-        const body = data?.client ? data : { client: data };
-        return this._put({
+        const payload = client?.client ? client : { client };
+        const { response } = await this._put({
             url: this.baseUrl + this.URLs.client(id, clientId),
-            headers: { 'Content-Type': 'application/json' },
-            body,
+            headers: jsonHeaders(),
+            body: payload,
         });
+        return response.result.client;
     }
 
     // ---- Invoices ----------------------------------------------------------
 
     /** GET /accounting/account/{accountId}/invoices/invoices */
-    async listInvoices(params = {}, accountId) {
-        const id = this.requireAccountId(accountId);
-        return this._get({
-            url:
-                this.baseUrl +
-                this.URLs.invoices(id) +
-                this._buildQuery(params),
+    async listInvoices(accountId, opts = {}) {
+        const resolved = this._accountAndOpts(accountId, opts);
+        const { response } = await this._get({
+            url: this.baseUrl + this.URLs.invoices(resolved.accountId),
+            query: resolved.opts,
         });
+        return response;
+    }
+
+    /** GET invoices for one client (search[customerid]) */
+    async listClientInvoices(accountId, clientId, perPage) {
+        // Allow (clientId, perPage?) when this.accountId is already set.
+        if (typeof accountId !== 'string') {
+            perPage = clientId;
+            clientId = accountId;
+            accountId = undefined;
+        }
+        const id = this.requireAccountId(accountId);
+        const query = {
+            'search[customerid]': clientId,
+            sort: 'invoice_date_desc',
+        };
+        if (perPage != null) query.per_page = perPage;
+        const { response } = await this._get({
+            url: this.baseUrl + this.URLs.invoices(id),
+            query,
+        });
+        return {
+            records: response.result.invoices,
+            total: response.result.total,
+        };
     }
 
     /** GET /accounting/account/{accountId}/invoices/invoices/{invoiceId} */
-    async getInvoice(invoiceId, params = {}, accountId) {
-        const id = this.requireAccountId(accountId);
-        return this._get({
-            url:
-                this.baseUrl +
-                this.URLs.invoice(id, invoiceId) +
-                this._buildQuery(params),
+    async getInvoice(accountId, invoiceId) {
+        let acct = accountId;
+        let iid = invoiceId;
+        if (arguments.length === 1) {
+            iid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const { response } = await this._get({
+            url: this.baseUrl + this.URLs.invoice(id, iid),
         });
+        return response.result.invoice;
     }
 
     /** POST /accounting/account/{accountId}/invoices/invoices */
-    async createInvoice(data, accountId) {
-        const id = this.requireAccountId(accountId);
-        const body = data?.invoice ? data : { invoice: data };
-        return this._post({
+    async createInvoice(accountId, invoice) {
+        let acct = accountId;
+        let body = invoice;
+        if (arguments.length === 1) {
+            body = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const payload = body?.invoice ? body : { invoice: body };
+        const { response } = await this._post({
             url: this.baseUrl + this.URLs.invoices(id),
-            headers: { 'Content-Type': 'application/json' },
-            body,
+            headers: jsonHeaders(),
+            body: payload,
         });
+        return response.result?.invoice ?? response;
     }
 
     /** PUT /accounting/account/{accountId}/invoices/invoices/{invoiceId} */
-    async updateInvoice(invoiceId, data, accountId) {
-        const id = this.requireAccountId(accountId);
-        const body = data?.invoice ? data : { invoice: data };
-        return this._put({
-            url: this.baseUrl + this.URLs.invoice(id, invoiceId),
-            headers: { 'Content-Type': 'application/json' },
-            body,
+    async updateInvoice(accountId, invoiceId, invoice) {
+        let acct = accountId;
+        let iid = invoiceId;
+        let body = invoice;
+        if (arguments.length === 2) {
+            body = invoiceId;
+            iid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const payload = body?.invoice ? body : { invoice: body };
+        const { response } = await this._put({
+            url: this.baseUrl + this.URLs.invoice(id, iid),
+            headers: jsonHeaders(),
+            body: payload,
         });
+        return response.result?.invoice ?? response;
     }
 
     /** DELETE /accounting/account/{accountId}/invoices/invoices/{invoiceId} */
-    async deleteInvoice(invoiceId, accountId) {
-        const id = this.requireAccountId(accountId);
+    async deleteInvoice(accountId, invoiceId) {
+        let acct = accountId;
+        let iid = invoiceId;
+        if (arguments.length === 1) {
+            iid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
         return this._delete({
-            url: this.baseUrl + this.URLs.invoice(id, invoiceId),
+            url: this.baseUrl + this.URLs.invoice(id, iid),
         });
     }
 
     // ---- Expenses ----------------------------------------------------------
 
-    /** GET /accounting/account/{accountId}/expenses/expenses */
-    async listExpenses(params = {}, accountId) {
-        const id = this.requireAccountId(accountId);
+    async listExpenses(accountId, opts = {}) {
+        const resolved = this._accountAndOpts(accountId, opts);
         return this._get({
-            url:
-                this.baseUrl +
-                this.URLs.expenses(id) +
-                this._buildQuery(params),
+            url: this.baseUrl + this.URLs.expenses(resolved.accountId),
+            query: resolved.opts,
         });
     }
 
-    /** GET /accounting/account/{accountId}/expenses/expenses/{expenseId} */
-    async getExpense(expenseId, params = {}, accountId) {
-        const id = this.requireAccountId(accountId);
+    async getExpense(accountId, expenseId) {
+        let acct = accountId;
+        let eid = expenseId;
+        if (arguments.length === 1) {
+            eid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
         return this._get({
-            url:
-                this.baseUrl +
-                this.URLs.expense(id, expenseId) +
-                this._buildQuery(params),
+            url: this.baseUrl + this.URLs.expense(id, eid),
         });
     }
 
-    /** POST /accounting/account/{accountId}/expenses/expenses */
-    async createExpense(data, accountId) {
-        const id = this.requireAccountId(accountId);
-        const body = data?.expense ? data : { expense: data };
+    async createExpense(accountId, expense) {
+        let acct = accountId;
+        let body = expense;
+        if (arguments.length === 1) {
+            body = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const payload = body?.expense ? body : { expense: body };
         return this._post({
             url: this.baseUrl + this.URLs.expenses(id),
-            headers: { 'Content-Type': 'application/json' },
-            body,
+            headers: jsonHeaders(),
+            body: payload,
         });
     }
 
-    /** PUT /accounting/account/{accountId}/expenses/expenses/{expenseId} */
-    async updateExpense(expenseId, data, accountId) {
-        const id = this.requireAccountId(accountId);
-        const body = data?.expense ? data : { expense: data };
+    async updateExpense(accountId, expenseId, expense) {
+        let acct = accountId;
+        let eid = expenseId;
+        let body = expense;
+        if (arguments.length === 2) {
+            body = expenseId;
+            eid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const payload = body?.expense ? body : { expense: body };
         return this._put({
-            url: this.baseUrl + this.URLs.expense(id, expenseId),
-            headers: { 'Content-Type': 'application/json' },
-            body,
+            url: this.baseUrl + this.URLs.expense(id, eid),
+            headers: jsonHeaders(),
+            body: payload,
         });
     }
 
-    /** GET /accounting/account/{accountId}/expenses/categories */
-    async listExpenseCategories(params = {}, accountId) {
-        const id = this.requireAccountId(accountId);
+    async listExpenseCategories(accountId, opts = {}) {
+        const resolved = this._accountAndOpts(accountId, opts);
         return this._get({
             url:
                 this.baseUrl +
-                this.URLs.expenseCategories(id) +
-                this._buildQuery(params),
+                this.URLs.expenseCategories(resolved.accountId),
+            query: resolved.opts,
         });
     }
 
-    /** GET /accounting/account/{accountId}/expenses/categories/{categoryId} */
-    async getExpenseCategory(categoryId, params = {}, accountId) {
-        const id = this.requireAccountId(accountId);
+    async getExpenseCategory(accountId, categoryId) {
+        let acct = accountId;
+        let cid = categoryId;
+        if (arguments.length === 1) {
+            cid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
         return this._get({
-            url:
-                this.baseUrl +
-                this.URLs.expenseCategory(id, categoryId) +
-                this._buildQuery(params),
+            url: this.baseUrl + this.URLs.expenseCategory(id, cid),
         });
     }
 
     // ---- Payments ----------------------------------------------------------
 
-    /** GET /accounting/account/{accountId}/payments/payments */
-    async listPayments(params = {}, accountId) {
-        const id = this.requireAccountId(accountId);
+    async listPayments(accountId, opts = {}) {
+        const resolved = this._accountAndOpts(accountId, opts);
         return this._get({
-            url:
-                this.baseUrl +
-                this.URLs.payments(id) +
-                this._buildQuery(params),
+            url: this.baseUrl + this.URLs.payments(resolved.accountId),
+            query: resolved.opts,
         });
     }
 
-    /** GET /accounting/account/{accountId}/payments/payments/{paymentId} */
-    async getPayment(paymentId, params = {}, accountId) {
+    /** GET payments for one client (search[clientid]) with invoice include */
+    async listClientPayments(accountId, clientId, perPage) {
+        if (typeof accountId !== 'string') {
+            perPage = clientId;
+            clientId = accountId;
+            accountId = undefined;
+        }
         const id = this.requireAccountId(accountId);
-        return this._get({
-            url:
-                this.baseUrl +
-                this.URLs.payment(id, paymentId) +
-                this._buildQuery(params),
+        const query = {
+            'search[clientid]': clientId,
+            'include[]': 'invoice',
+            sort: 'updated_desc',
+        };
+        if (perPage != null) query.per_page = perPage;
+        const { response } = await this._get({
+            url: this.baseUrl + this.URLs.payments(id),
+            query,
         });
+        return {
+            records: response.result.payments,
+            total: response.result.total,
+        };
     }
 
-    /** POST /accounting/account/{accountId}/payments/payments */
-    async createPayment(data, accountId) {
-        const id = this.requireAccountId(accountId);
-        const body = data?.payment ? data : { payment: data };
+    /**
+     * GET /accounting/account/{accountId}/payments/payments/{paymentId}
+     * Includes related invoice by default (include[]=invoice).
+     */
+    async getPayment(accountId, paymentId) {
+        let acct = accountId;
+        let pid = paymentId;
+        if (arguments.length === 1) {
+            pid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const { response } = await this._get({
+            url: this.baseUrl + this.URLs.payment(id, pid),
+            query: { 'include[]': 'invoice' },
+        });
+        return response.result.payment;
+    }
+
+    async createPayment(accountId, payment) {
+        let acct = accountId;
+        let body = payment;
+        if (arguments.length === 1) {
+            body = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const payload = body?.payment ? body : { payment: body };
         return this._post({
             url: this.baseUrl + this.URLs.payments(id),
-            headers: { 'Content-Type': 'application/json' },
-            body,
+            headers: jsonHeaders(),
+            body: payload,
         });
     }
 
-    /** PUT /accounting/account/{accountId}/payments/payments/{paymentId} */
-    async updatePayment(paymentId, data, accountId) {
-        const id = this.requireAccountId(accountId);
-        const body = data?.payment ? data : { payment: data };
+    async updatePayment(accountId, paymentId, payment) {
+        let acct = accountId;
+        let pid = paymentId;
+        let body = payment;
+        if (arguments.length === 2) {
+            body = paymentId;
+            pid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const payload = body?.payment ? body : { payment: body };
         return this._put({
-            url: this.baseUrl + this.URLs.payment(id, paymentId),
-            headers: { 'Content-Type': 'application/json' },
-            body,
+            url: this.baseUrl + this.URLs.payment(id, pid),
+            headers: jsonHeaders(),
+            body: payload,
         });
     }
 
     // ---- Staff -------------------------------------------------------------
 
-    /** GET /accounting/account/{accountId}/users/staffs */
-    async listStaff(params = {}, accountId) {
-        const id = this.requireAccountId(accountId);
+    async listStaff(accountId, opts = {}) {
+        const resolved = this._accountAndOpts(accountId, opts);
         return this._get({
-            url:
-                this.baseUrl + this.URLs.staffs(id) + this._buildQuery(params),
+            url: this.baseUrl + this.URLs.staffs(resolved.accountId),
+            query: resolved.opts,
         });
     }
 
-    /** GET /accounting/account/{accountId}/users/staffs/{staffId} */
-    async getStaff(staffId, params = {}, accountId) {
-        const id = this.requireAccountId(accountId);
+    async getStaff(accountId, staffId) {
+        let acct = accountId;
+        let sid = staffId;
+        if (arguments.length === 1) {
+            sid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
         return this._get({
-            url:
-                this.baseUrl +
-                this.URLs.staff(id, staffId) +
-                this._buildQuery(params),
+            url: this.baseUrl + this.URLs.staff(id, sid),
         });
     }
 
     // ---- Other income ------------------------------------------------------
 
-    /** GET /accounting/account/{accountId}/other_incomes/other_incomes */
-    async listOtherIncomes(params = {}, accountId) {
-        const id = this.requireAccountId(accountId);
+    async listOtherIncomes(accountId, opts = {}) {
+        const resolved = this._accountAndOpts(accountId, opts);
         return this._get({
-            url:
-                this.baseUrl +
-                this.URLs.otherIncomes(id) +
-                this._buildQuery(params),
+            url: this.baseUrl + this.URLs.otherIncomes(resolved.accountId),
+            query: resolved.opts,
         });
     }
 
-    /** GET /accounting/account/{accountId}/other_incomes/other_incomes/{incomeId} */
-    async getOtherIncome(incomeId, params = {}, accountId) {
-        const id = this.requireAccountId(accountId);
+    async getOtherIncome(accountId, incomeId) {
+        let acct = accountId;
+        let iid = incomeId;
+        if (arguments.length === 1) {
+            iid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
         return this._get({
-            url:
-                this.baseUrl +
-                this.URLs.otherIncome(id, incomeId) +
-                this._buildQuery(params),
+            url: this.baseUrl + this.URLs.otherIncome(id, iid),
         });
     }
 
-    /** POST /accounting/account/{accountId}/other_incomes/other_incomes */
-    async createOtherIncome(data, accountId) {
-        const id = this.requireAccountId(accountId);
-        const body = data?.other_income ? data : { other_income: data };
+    async createOtherIncome(accountId, otherIncome) {
+        let acct = accountId;
+        let body = otherIncome;
+        if (arguments.length === 1) {
+            body = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const payload = body?.other_income
+            ? body
+            : { other_income: body };
         return this._post({
             url: this.baseUrl + this.URLs.otherIncomes(id),
-            headers: { 'Content-Type': 'application/json' },
-            body,
+            headers: jsonHeaders(),
+            body: payload,
         });
     }
 
-    /** PUT /accounting/account/{accountId}/other_incomes/other_incomes/{incomeId} */
-    async updateOtherIncome(incomeId, data, accountId) {
-        const id = this.requireAccountId(accountId);
-        const body = data?.other_income ? data : { other_income: data };
+    async updateOtherIncome(accountId, incomeId, otherIncome) {
+        let acct = accountId;
+        let iid = incomeId;
+        let body = otherIncome;
+        if (arguments.length === 2) {
+            body = incomeId;
+            iid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const payload = body?.other_income
+            ? body
+            : { other_income: body };
         return this._put({
-            url: this.baseUrl + this.URLs.otherIncome(id, incomeId),
-            headers: { 'Content-Type': 'application/json' },
-            body,
+            url: this.baseUrl + this.URLs.otherIncome(id, iid),
+            headers: jsonHeaders(),
+            body: payload,
         });
     }
 
     // ---- Webhook callbacks -------------------------------------------------
 
-    /** GET /events/account/{accountId}/events/callbacks */
-    async listCallbacks(params = {}, accountId) {
-        const id = this.requireAccountId(accountId);
-        return this._get({
-            url:
-                this.baseUrl +
-                this.URLs.callbacks(id) +
-                this._buildQuery(params),
+    async listCallbacks(accountId, opts = {}) {
+        const resolved = this._accountAndOpts(accountId, opts);
+        const { page = 1, perPage = 100 } = resolved.opts;
+        const { response } = await this._get({
+            url: this.baseUrl + this.URLs.callbacks(resolved.accountId),
+            query: { page, per_page: perPage },
         });
+        const { callbacks, pages } = response.result;
+        return { callbacks, pages };
     }
 
-    /**
-     * POST /events/account/{accountId}/events/callbacks
-     * body: { callback: { event, uri } }
-     * FreshBooks then POSTs a verifier to the URI; call verifyCallback next.
-     */
-    async createCallback(data, accountId) {
-        const id = this.requireAccountId(accountId);
-        const body = data?.callback ? data : { callback: data };
-        return this._post({
+    /** GET /events/account/{accountId}/events/callbacks/{callbackId} */
+    async getCallback(accountId, callbackId) {
+        let acct = accountId;
+        let cid = callbackId;
+        if (arguments.length === 1) {
+            cid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const { response } = await this._get({
+            url: this.baseUrl + this.URLs.callback(id, cid),
+        });
+        return response.result.callback;
+    }
+
+    async createCallback(accountId, data) {
+        let acct = accountId;
+        let body = data;
+        if (arguments.length === 1) {
+            body = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const payload = body?.callback ? body : { callback: body };
+        const { response } = await this._post({
             url: this.baseUrl + this.URLs.callbacks(id),
-            headers: { 'Content-Type': 'application/json' },
-            body,
+            headers: jsonHeaders(),
+            body: payload,
         });
+        return response.result.callback;
     }
 
     /**
-     * PUT /events/account/{accountId}/events/callbacks/{callbackId}
-     * body: { callback: { verifier } }
+     * PUT verify — body includes callback_id + verifier
+     * (reconciled with lefthookhq/freshbooks-integrations module).
      */
-    async verifyCallback(callbackId, verifier, accountId) {
-        const id = this.requireAccountId(accountId);
-        return this._put({
-            url: this.baseUrl + this.URLs.callback(id, callbackId),
-            headers: { 'Content-Type': 'application/json' },
-            body: { callback: { verifier } },
+    async verifyCallback(accountId, callbackId, verifier) {
+        let acct = accountId;
+        let cid = callbackId;
+        let ver = verifier;
+        if (arguments.length === 2) {
+            ver = callbackId;
+            cid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const { response } = await this._put({
+            url: this.baseUrl + this.URLs.callback(id, cid),
+            headers: jsonHeaders(),
+            body: {
+                callback: { callback_id: cid, verifier: ver },
+            },
         });
+        return response.result.callback;
     }
 
-    /**
-     * PUT /events/account/{accountId}/events/callbacks/{callbackId}
-     * body: { callback: { resend: true } }
-     */
-    async resendCallbackVerification(callbackId, accountId) {
-        const id = this.requireAccountId(accountId);
-        return this._put({
-            url: this.baseUrl + this.URLs.callback(id, callbackId),
-            headers: { 'Content-Type': 'application/json' },
+    async resendCallbackVerification(accountId, callbackId) {
+        let acct = accountId;
+        let cid = callbackId;
+        if (arguments.length === 1) {
+            cid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        const { response } = await this._put({
+            url: this.baseUrl + this.URLs.callback(id, cid),
+            headers: jsonHeaders(),
             body: { callback: { resend: true } },
         });
+        return response.result.callback;
     }
 
-    /** DELETE /events/account/{accountId}/events/callbacks/{callbackId} */
-    async deleteCallback(callbackId, accountId) {
-        const id = this.requireAccountId(accountId);
-        return this._delete({
-            url: this.baseUrl + this.URLs.callback(id, callbackId),
+    async deleteCallback(accountId, callbackId) {
+        let acct = accountId;
+        let cid = callbackId;
+        if (arguments.length === 1) {
+            cid = accountId;
+            acct = undefined;
+        }
+        const id = this.requireAccountId(acct);
+        await this._delete({
+            url: this.baseUrl + this.URLs.callback(id, cid),
         });
     }
 }
 
-module.exports = { Api };
+module.exports = { Api, INVOICE_STATUSES, API_VERSION };

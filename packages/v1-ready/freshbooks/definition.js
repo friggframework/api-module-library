@@ -4,43 +4,44 @@ const { get } = require('@friggframework/core');
 const config = require('./defaultConfig.json');
 
 /**
- * Pick the FreshBooks account this connection should bind to.
- * Prefer an explicit account_id from the OAuth callback / UI; otherwise the
- * first business_membership that has an account_id.
+ * Resolve which FreshBooks business/account this connection binds to.
+ * Reconciled with lefthookhq/freshbooks-integrations Definition.chosenBusiness:
+ * require an explicit account_id when the identity has multiple businesses.
  */
-function resolveAccountSelection(api, callbackParams, identityResponse) {
-    const data = (callbackParams && callbackParams.data) || callbackParams || {};
-    const requested =
-        get(data, 'account_id', null) ||
-        get(data, 'accountId', null) ||
-        get(data, 'appOrgId', null);
+function chosenBusiness(user, accountId) {
+    const businesses = (user.business_memberships ?? [])
+        .map((membership) => membership?.business)
+        .filter((business) => business?.account_id);
 
-    const memberships =
-        identityResponse?.response?.business_memberships || [];
-    const accounts = memberships
-        .map((m) => ({
-            accountId: m.business?.account_id,
-            businessId: m.business?.id,
-            name: m.business?.name,
-            role: m.role,
-        }))
-        .filter((a) => a.accountId);
+    if (accountId) {
+        const business = businesses.find(
+            (candidate) => String(candidate.account_id) === String(accountId)
+        );
+        if (!business) {
+            throw new Error(
+                `FreshBooks business not available to this user: ${accountId}`
+            );
+        }
+        return business;
+    }
 
-    const selected = requested
-        ? accounts.find((a) => String(a.accountId) === String(requested))
-        : accounts[0];
-
-    if (!selected) {
+    if (businesses.length === 0) {
         throw new Error(
-            'FreshBooks: no account_id available on this identity. ' +
-                'Client-only FreshBooks users may lack an accounting account_id ' +
-                '(see https://www.freshbooks.com/api/identity_model).'
+            `FreshBooks user ${user.id} has no FreshBooks business to connect`
         );
     }
 
-    api.setAccountId(selected.accountId);
-    if (selected.businessId) api.setBusinessId(selected.businessId);
-    return selected;
+    if (businesses.length > 1) {
+        const choices = businesses
+            .map((business) => `${business.name} (${business.account_id})`)
+            .join(', ');
+        throw new Error(
+            `FreshBooks user ${user.id} belongs to multiple FreshBooks businesses; ` +
+                `retry with account_id set to one of: ${choices}`
+        );
+    }
+
+    return businesses[0];
 }
 
 const Definition = {
@@ -50,7 +51,7 @@ const Definition = {
     modelName: 'FreshBooks',
     requiredAuthMethods: {
         getAuthorizationRequirements: (api) => ({
-            url: api.getAuthUri(),
+            url: api.getAuthorizationUri(),
             type: 'oauth2',
         }),
         getToken: async (api, params) => {
@@ -59,57 +60,56 @@ const Definition = {
             return api.getTokenFromCode(code);
         },
         getEntityDetails: async (api, callbackParams, tokenResponse, userId) => {
-            const identity = await api.getUserInfo();
-            const selected = resolveAccountSelection(
-                api,
-                callbackParams,
-                identity
-            );
+            const data =
+                (callbackParams && callbackParams.data) || callbackParams || {};
+            const requested =
+                get(data, 'account_id', null) ||
+                get(data, 'accountId', null) ||
+                get(callbackParams, 'account_id', null);
+
+            const user = await api.getUserDetails();
+            const business = chosenBusiness(user, requested);
+            api.setAccountId(business.account_id);
+            if (business.id) api.setBusinessId(business.id);
+
             return {
                 identifiers: {
-                    externalId: String(selected.accountId),
+                    externalId: String(business.account_id),
                     userId,
                 },
-                details: {
-                    name: selected.name,
-                    businessId: selected.businessId,
-                    role: selected.role,
-                    email: identity?.response?.email,
-                },
+                details: { name: business.name },
             };
         },
         getCredentialDetails: async (api, userId) => {
-            const identity = await api.getUserInfo();
-            const identityId = identity?.response?.id;
-            if (!identityId) {
-                throw new Error(
-                    'FreshBooks /auth/api/v1/users/me did not return an identity id'
-                );
-            }
+            const externalId =
+                api.freshbooksUserId ?? (await api.getUserDetails()).id;
             return {
                 identifiers: {
-                    externalId: String(identityId),
+                    externalId: String(externalId),
                     userId,
                 },
-                details: {
-                    email: identity?.response?.email,
-                },
+                details: {},
             };
         },
         apiPropertiesToPersist: {
-            credential: ['access_token', 'refresh_token'],
-            entity: ['accountId', 'businessId'],
+            credential: [
+                'access_token',
+                'refresh_token',
+                'freshbooksUserId',
+            ],
+            // account_id lives on entity.identifiers.externalId (chosenBusiness);
+            // callers pass accountId into Api methods or rely on setAccountId.
+            entity: [],
         },
-        testAuthRequest: async (api) => api.getUserInfo(),
+        testAuthRequest: async (api) => api.getUserDetails(),
     },
     env: {
         client_id: process.env.FRESHBOOKS_CLIENT_ID,
         client_secret: process.env.FRESHBOOKS_CLIENT_SECRET,
-        scope: process.env.FRESHBOOKS_SCOPE,
         redirect_uri: process.env.REDIRECT_URI
-            ? `${process.env.REDIRECT_URI}/freshbooks`
+            ? `${process.env.REDIRECT_URI}/${config.name}`
             : undefined,
     },
 };
 
-module.exports = { Definition };
+module.exports = { Definition, chosenBusiness };

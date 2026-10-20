@@ -1,0 +1,579 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "slack",
+  "label": "Slack",
+  "package": "@friggframework/api-module-slack",
+  "version": "1.2.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected workspace, persisted by the module (apiPropertiesToPersist). Definitions read them as $.install.accounts.<module key>.<name>.",
+    "fields": [
+      {
+        "name": "team_id",
+        "type": "string",
+        "description": "Slack workspace (team) id the connection was authorized for"
+      },
+      {
+        "name": "team_name",
+        "type": "string",
+        "description": "Human-readable workspace name from oauth.v2.access / auth.test"
+      }
+    ]
+  },
+  "objects": {
+    "conversation": {
+      "label": "Conversation",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "tag": "record.id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "is_channel",
+          "type": "boolean",
+          "readOnly": true
+        },
+        {
+          "name": "is_private",
+          "type": "boolean"
+        },
+        {
+          "name": "is_archived",
+          "type": "boolean",
+          "readOnly": true
+        },
+        {
+          "name": "is_im",
+          "type": "boolean",
+          "readOnly": true
+        },
+        {
+          "name": "is_mpim",
+          "type": "boolean",
+          "readOnly": true
+        },
+        {
+          "name": "topic.value",
+          "type": "text"
+        },
+        {
+          "name": "purpose.value",
+          "type": "text"
+        },
+        {
+          "name": "num_members",
+          "type": "number",
+          "readOnly": true
+        },
+        {
+          "name": "created",
+          "type": "number",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "conversation.list",
+          "cursor": "cursor",
+          "limit": "limit",
+          "items": "channels",
+          "paging": "cursor"
+        },
+        "get": {
+          "capability": "conversation.get",
+          "id": "channel"
+        },
+        "create": {
+          "capability": "conversation.create",
+          "body": "body"
+        }
+      }
+    },
+    "message": {
+      "label": "Message",
+      "fields": [
+        {
+          "name": "ts",
+          "type": "id",
+          "tag": "record.id",
+          "readOnly": true
+        },
+        {
+          "name": "channel",
+          "type": "string"
+        },
+        {
+          "name": "user",
+          "type": "string",
+          "tag": "person.id"
+        },
+        {
+          "name": "text",
+          "type": "text",
+          "tag": "message.body"
+        },
+        {
+          "name": "blocks",
+          "type": "json"
+        },
+        {
+          "name": "thread_ts",
+          "type": "string"
+        },
+        {
+          "name": "permalink",
+          "type": "string",
+          "readOnly": true
+        }
+      ]
+    },
+    "user": {
+      "label": "User",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "tag": "record.id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "person.username"
+        },
+        {
+          "name": "real_name",
+          "type": "string",
+          "tag": "person.displayName"
+        },
+        {
+          "name": "profile.email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "profile.display_name",
+          "type": "string",
+          "tag": "person.displayName"
+        },
+        {
+          "name": "profile.title",
+          "type": "string"
+        },
+        {
+          "name": "profile.phone",
+          "type": "phone",
+          "tag": "contact.phone"
+        },
+        {
+          "name": "is_bot",
+          "type": "boolean",
+          "readOnly": true
+        },
+        {
+          "name": "deleted",
+          "type": "boolean",
+          "readOnly": true
+        },
+        {
+          "name": "tz",
+          "type": "string"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "user.list",
+          "cursor": "cursor",
+          "limit": "limit",
+          "items": "members",
+          "paging": "cursor"
+        },
+        "get": {
+          "capability": "user.get",
+          "id": "user"
+        }
+      }
+    },
+    "file": {
+      "label": "File",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "tag": "record.id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "mimetype",
+          "type": "string"
+        },
+        {
+          "name": "filetype",
+          "type": "string"
+        },
+        {
+          "name": "user",
+          "type": "string",
+          "tag": "person.id"
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "readOnly": true
+        },
+        {
+          "name": "url_private",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "permalink",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "created",
+          "type": "number",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "file.list",
+          "items": "files",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "file.get",
+          "id": "file"
+        }
+      }
+    }
+  },
+  "events": {
+    "message.channels": {
+      "delivery": "webhook",
+      "object": "message",
+      "description": "Events API event_callback when a message is posted to a channel the app is subscribed to. Subscriptions are configured on the Slack app (Event Subscriptions / app manifest), not via Web API CRUD.",
+      "payload": {
+        "type": "event_callback",
+        "team_id": "T12345678",
+        "event": {
+          "type": "message",
+          "channel": "C12345678",
+          "user": "U12345678",
+          "text": "Hello",
+          "ts": "1355517523.000005"
+        },
+        "event_id": "Ev12345678",
+        "event_time": 1355517523
+      },
+      "match": "message"
+    },
+    "app_mention": {
+      "delivery": "webhook",
+      "object": "message",
+      "description": "Events API app_mention when the bot is @-mentioned.",
+      "payload": {
+        "type": "event_callback",
+        "team_id": "T12345678",
+        "event": {
+          "type": "app_mention",
+          "user": "U12345678",
+          "text": "<@U0LAN0Z89> is it everything a bot could hope for?",
+          "ts": "1515449522.000016",
+          "channel": "C0LAN2Q65"
+        }
+      },
+      "match": "app_mention"
+    }
+  },
+  "webhook": {
+    "scope": "app",
+    "batch": [],
+    "topic": "{{body.event.type}}",
+    "eventId": "{{body.event_id}}",
+    "account": "{{body.team_id}}",
+    "verify": "verifyWebhookSignature",
+    "note": "Slack signs the raw body with HMAC-SHA256 (X-Slack-Signature / X-Slack-Request-Timestamp). Events API deliveries include team_id for tenant routing. Event subscriptions are configured in the Slack app (Request URL + subscribed events / app manifest), not via a Web API create-subscription endpoint. Api.verifyWebhookSignature implements the signing-secret check; the Tier-3 extension routes by team_id and answers url_verification challenges."
+  },
+  "capabilities": {
+    "auth.test": {
+      "kind": "read",
+      "method": "authTest",
+      "input": {},
+      "output": "object",
+      "args": []
+    },
+    "team.list": {
+      "kind": "read",
+      "method": "listTeams",
+      "input": {
+        "cursor": { "type": "string" },
+        "limit": { "type": "number" },
+        "include_icon": { "type": "boolean" }
+      },
+      "output": "object",
+      "args": ["$rest"]
+    },
+    "conversation.list": {
+      "kind": "read",
+      "method": "listConversations",
+      "input": {
+        "cursor": { "type": "string" },
+        "limit": { "type": "number" },
+        "types": { "type": "string" },
+        "exclude_archived": { "type": "boolean" },
+        "team_id": { "type": "string" }
+      },
+      "output": "page<conversation>",
+      "args": ["$rest"]
+    },
+    "conversation.get": {
+      "kind": "read",
+      "method": "getConversation",
+      "input": {
+        "channel": { "type": "string", "required": true }
+      },
+      "output": "conversation",
+      "args": ["$rest"]
+    },
+    "conversation.create": {
+      "kind": "write",
+      "method": "createConversation",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "conversation",
+      "args": ["body"]
+    },
+    "conversation.invite": {
+      "kind": "write",
+      "method": "inviteToConversation",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "conversation",
+      "args": ["body"]
+    },
+    "conversation.history": {
+      "kind": "read",
+      "method": "getConversationHistory",
+      "input": {
+        "channel": { "type": "string", "required": true },
+        "cursor": { "type": "string" },
+        "limit": { "type": "number" }
+      },
+      "output": "message[]",
+      "args": ["$rest"]
+    },
+    "conversation.members": {
+      "kind": "read",
+      "method": "getConversationMembers",
+      "input": {
+        "channel": { "type": "string", "required": true }
+      },
+      "output": "string[]",
+      "args": ["$rest"]
+    },
+    "conversation.rename": {
+      "kind": "write",
+      "method": "renameConversation",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "conversation",
+      "args": ["body"]
+    },
+    "conversation.archive": {
+      "kind": "write",
+      "method": "archiveConversation",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "object",
+      "args": ["body"]
+    },
+    "message.post": {
+      "kind": "write",
+      "method": "postMessage",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "message",
+      "args": ["body"]
+    },
+    "message.update": {
+      "kind": "write",
+      "method": "updateMessage",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "message",
+      "args": ["body"]
+    },
+    "message.delete": {
+      "kind": "write",
+      "method": "deleteMessage",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "object",
+      "args": ["body"]
+    },
+    "message.postEphemeral": {
+      "kind": "write",
+      "method": "postEphemeral",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "object",
+      "args": ["body"]
+    },
+    "message.permalink": {
+      "kind": "read",
+      "method": "getMessagePermalink",
+      "input": {
+        "channel": { "type": "string", "required": true },
+        "message_ts": { "type": "string", "required": true }
+      },
+      "output": "object",
+      "args": ["$rest"]
+    },
+    "user.list": {
+      "kind": "read",
+      "method": "listUsers",
+      "input": {
+        "cursor": { "type": "string" },
+        "limit": { "type": "number" }
+      },
+      "output": "page<user>",
+      "args": ["$rest"]
+    },
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": {
+        "user": { "type": "string", "required": true }
+      },
+      "output": "user",
+      "args": ["$rest"]
+    },
+    "user.lookupByEmail": {
+      "kind": "search",
+      "method": "lookupUserByEmail",
+      "input": {
+        "email": { "type": "string", "required": true }
+      },
+      "output": "user",
+      "args": ["$rest"]
+    },
+    "user.profile.get": {
+      "kind": "read",
+      "method": "getUserProfile",
+      "input": {
+        "user": { "type": "string" }
+      },
+      "output": "object",
+      "args": ["$rest"]
+    },
+    "file.list": {
+      "kind": "read",
+      "method": "listFiles",
+      "input": {
+        "channel": { "type": "string" },
+        "user": { "type": "string" },
+        "types": { "type": "string" }
+      },
+      "output": "page<file>",
+      "args": ["$rest"]
+    },
+    "file.get": {
+      "kind": "read",
+      "method": "getFile",
+      "input": {
+        "file": { "type": "string", "required": true }
+      },
+      "output": "file",
+      "args": ["$rest"]
+    },
+    "event.authorizations.list": {
+      "kind": "read",
+      "method": "listEventAuthorizations",
+      "input": {
+        "event_context": { "type": "string", "required": true }
+      },
+      "output": "object",
+      "args": ["$rest"]
+    },
+    "view.open": {
+      "kind": "write",
+      "method": "openView",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "object",
+      "args": ["body"]
+    },
+    "view.publish": {
+      "kind": "write",
+      "method": "publishView",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "object",
+      "args": ["body"]
+    },
+    "view.update": {
+      "kind": "write",
+      "method": "updateView",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "object",
+      "args": ["body"]
+    },
+    "view.push": {
+      "kind": "write",
+      "method": "pushView",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "object",
+      "args": ["body"]
+    }
+  },
+  "options": {
+    "conversation": {
+      "capability": "conversation.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id"
+    },
+    "user": {
+      "capability": "user.list",
+      "label": "{{item.real_name}} ({{item.name}})",
+      "value": "$.item.id"
+    }
+  }
+}

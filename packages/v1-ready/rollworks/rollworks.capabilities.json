@@ -1,0 +1,324 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "rollworks",
+  "label": "RollWorks",
+  "package": "@friggframework/api-module-rollworks",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected RollWorks / AdRoll ABM organization. advertisable_eid is the Advertisable used for Audience API calls.",
+    "fields": [
+      {
+        "name": "advertisable_eid",
+        "type": "string",
+        "description": "Advertisable EID required by Target Account List endpoints"
+      }
+    ]
+  },
+  "objects": {
+    "organization": {
+      "label": "Organization",
+      "fields": [
+        {
+          "name": "eid",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "organization.name"
+        },
+        {
+          "name": "created_date",
+          "type": "datetime",
+          "readOnly": true
+        }
+      ]
+    },
+    "advertisable": {
+      "label": "Advertisable",
+      "fields": [
+        {
+          "name": "eid",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "organization.name"
+        }
+      ]
+    },
+    "targetAccountList": {
+      "label": "Target Account List",
+      "fields": [
+        {
+          "name": "eid",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "list.name"
+        },
+        {
+          "name": "advertisable_eid",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "items_count",
+          "type": "number",
+          "readOnly": true
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        {
+          "name": "tiers",
+          "type": "json",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "eid",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "targetAccountList.list",
+          "items": "results"
+        },
+        "get": {
+          "capability": "targetAccountList.get",
+          "id": "talEid"
+        },
+        "create": {
+          "capability": "targetAccountList.create"
+        },
+        "update": {
+          "capability": "targetAccountList.update",
+          "id": "talEid"
+        }
+      }
+    },
+    "targetAccountItem": {
+      "label": "Target Account (domain)",
+      "fields": [
+        {
+          "name": "domain",
+          "type": "string",
+          "tag": "organization.domain"
+        },
+        {
+          "name": "score",
+          "type": "number"
+        },
+        {
+          "name": "source",
+          "type": "string"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "readOnly": true
+        }
+      ]
+    }
+  },
+  "capabilities": {
+    "organization.get": {
+      "kind": "read",
+      "method": "getOrganization",
+      "input": {
+        "organization": {
+          "type": "string"
+        }
+      },
+      "output": "organization"
+    },
+    "advertisable.list": {
+      "kind": "read",
+      "method": "listAdvertisables",
+      "input": {
+        "organization": {
+          "type": "string"
+        }
+      },
+      "output": "page<advertisable>"
+    },
+    "targetAccountList.list": {
+      "kind": "read",
+      "method": "listTargetAccounts",
+      "input": {
+        "advertisable_eid": {
+          "type": "string"
+        },
+        "scoring_model_id": {
+          "type": "string"
+        },
+        "include_deleted": {
+          "type": "boolean"
+        }
+      },
+      "output": "page<targetAccountList>"
+    },
+    "targetAccountList.get": {
+      "kind": "read",
+      "method": "getTargetAccount",
+      "input": {
+        "talEid": {
+          "type": "string",
+          "required": true
+        },
+        "advertisable_eid": {
+          "type": "string"
+        }
+      },
+      "output": "targetAccountList",
+      "args": [
+        "talEid",
+        "$rest"
+      ]
+    },
+    "targetAccountList.create": {
+      "kind": "write",
+      "method": "createTargetAccount",
+      "input": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "domains": {
+          "type": "array"
+        },
+        "advertisable_eid": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "output": "targetAccountList"
+    },
+    "targetAccountList.update": {
+      "kind": "write",
+      "method": "updateTargetAccount",
+      "input": {
+        "talEid": {
+          "type": "string",
+          "required": true
+        },
+        "name": {
+          "type": "string"
+        },
+        "advertisable_eid": {
+          "type": "string"
+        }
+      },
+      "output": "targetAccountList",
+      "args": [
+        "talEid",
+        "$rest"
+      ]
+    },
+    "targetAccountList.delete": {
+      "kind": "delete",
+      "method": "deleteTargetAccount",
+      "input": {
+        "talEid": {
+          "type": "string",
+          "required": true
+        },
+        "advertisable_eid": {
+          "type": "string"
+        },
+        "force": {
+          "type": "boolean"
+        }
+      },
+      "output": "void",
+      "args": [
+        "talEid",
+        "$rest"
+      ]
+    },
+    "targetAccountItem.list": {
+      "kind": "read",
+      "method": "listTargetAccountItems",
+      "input": {
+        "talEid": {
+          "type": "string",
+          "required": true
+        },
+        "tierEid": {
+          "type": "string"
+        },
+        "advertisable_eid": {
+          "type": "string"
+        }
+      },
+      "output": "page<targetAccountItem>",
+      "args": [
+        "talEid",
+        "$rest"
+      ]
+    },
+    "targetAccountItem.add": {
+      "kind": "write",
+      "method": "addTargetAccountItems",
+      "input": {
+        "talEid": {
+          "type": "string",
+          "required": true
+        },
+        "domains": {
+          "type": "array"
+        },
+        "items": {
+          "type": "array"
+        },
+        "tierEid": {
+          "type": "string"
+        },
+        "advertisable_eid": {
+          "type": "string"
+        }
+      },
+      "output": "object",
+      "args": [
+        "talEid",
+        "$rest"
+      ]
+    },
+    "targetAccountItem.remove": {
+      "kind": "delete",
+      "method": "removeTargetAccountItems",
+      "input": {
+        "talEid": {
+          "type": "string",
+          "required": true
+        },
+        "domains": {
+          "type": "array",
+          "required": true
+        },
+        "tierEid": {
+          "type": "string"
+        },
+        "advertisable_eid": {
+          "type": "string"
+        }
+      },
+      "output": "void",
+      "args": [
+        "talEid",
+        "$rest"
+      ]
+    }
+  }
+}

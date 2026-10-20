@@ -14,7 +14,7 @@ const {
  * override INTERCOM_WEBHOOK via binding.handlers.
  *
  * Topic subscriptions themselves are configured in the Intercom Developer Hub
- * — there is no REST CRUD for webhook subscriptions in OpenAPI 2.17.
+ * — there is no REST CRUD for webhook subscriptions in OpenAPI 2.15.
  *
  * Contract: https://github.com/friggframework/frigg/blob/next/packages/core/integrations/EXTENSIONS.md
  * Vendor: https://developers.intercom.com/docs/webhooks/setting-up-webhooks

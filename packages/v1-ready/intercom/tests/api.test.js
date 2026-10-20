@@ -70,11 +70,11 @@ describe('Intercom Api', () => {
         it('adds Bearer + Intercom-Version auth headers', async () => {
             const api = new Api({
                 access_token: 'secret-token',
-                apiVersion: '2.17',
+                apiVersion: '2.15',
             });
             const headers = await api.addAuthHeaders({});
             expect(headers.Authorization).toBe('Bearer secret-token');
-            expect(headers['Intercom-Version']).toBe('2.17');
+            expect(headers['Intercom-Version']).toBe('2.15');
             expect(headers.Accept).toBe('application/json');
         });
 
@@ -173,10 +173,22 @@ describe('Intercom Api', () => {
 
         it('getConversation hits the by-id path', async () => {
             const api = makeApi();
-            await api.getConversation('cv_1');
+            await api.getConversation(123);
             expect(api._captured[0].url).toBe(
-                'https://api.intercom.io/conversations/cv_1'
+                'https://api.intercom.io/conversations/123'
             );
+        });
+
+        it('getConversation forwards display_as / include_translations', async () => {
+            const api = makeApi();
+            await api.getConversation(123, {
+                display_as: 'plaintext',
+                include_translations: true,
+            });
+            const { url } = api._captured[0];
+            expect(url).toContain('/conversations/123?');
+            expect(url).toContain('display_as=plaintext');
+            expect(url).toContain('include_translations=true');
         });
 
         it('createConversation POSTs JSON', async () => {
@@ -190,13 +202,22 @@ describe('Intercom Api', () => {
             expect(api._captured[0].body).toEqual(body);
         });
 
-        it('updateConversation PUTs JSON', async () => {
+        it('updateConversation PUTs JSON and optional display_as', async () => {
             const api = makeApi();
-            await api.updateConversation('cv_1', { read: true });
-            expect(api._captured[0].method).toBe('PUT');
-            expect(api._captured[0].url).toBe(
-                'https://api.intercom.io/conversations/cv_1'
+            await api.updateConversation(
+                123,
+                { read: true, company_id: 'co_1' },
+                { display_as: 'plaintext' }
             );
+            expect(api._captured[0].method).toBe('PUT');
+            expect(api._captured[0].url).toContain(
+                'https://api.intercom.io/conversations/123?'
+            );
+            expect(api._captured[0].url).toContain('display_as=plaintext');
+            expect(api._captured[0].body).toEqual({
+                read: true,
+                company_id: 'co_1',
+            });
         });
 
         it('replyConversation POSTs to /reply', async () => {
@@ -218,24 +239,28 @@ describe('Intercom Api', () => {
     describe('admins / companies / tags', () => {
         it('listAdmins and getAdmin hit the admin paths', async () => {
             const api = makeApi();
-            await api.listAdmins();
-            await api.getAdmin('99');
-            expect(api._captured[0].url).toBe(
-                'https://api.intercom.io/admins'
+            await api.listAdmins({ display_avatar: true });
+            await api.getAdmin(99);
+            expect(api._captured[0].url).toContain(
+                'https://api.intercom.io/admins?'
             );
+            expect(api._captured[0].url).toContain('display_avatar=true');
             expect(api._captured[1].url).toBe(
                 'https://api.intercom.io/admins/99'
             );
         });
 
-        it('listCompanies POSTs to /companies/list', async () => {
+        it('listCompanies POSTs to /companies/list with query params', async () => {
             const api = makeApi();
-            await api.listCompanies({ per_page: 20 });
+            await api.listCompanies({ page: 2, per_page: 20, order: 'asc' });
             expect(api._captured[0].method).toBe('POST');
-            expect(api._captured[0].url).toBe(
-                'https://api.intercom.io/companies/list'
+            expect(api._captured[0].url).toContain(
+                'https://api.intercom.io/companies/list?'
             );
-            expect(api._captured[0].body).toEqual({ per_page: 20 });
+            expect(api._captured[0].url).toContain('page=2');
+            expect(api._captured[0].url).toContain('per_page=20');
+            expect(api._captured[0].url).toContain('order=asc');
+            expect(api._captured[0].body).toEqual({});
         });
 
         it('getCompany and createOrUpdateCompany hit company paths', async () => {

@@ -40,10 +40,9 @@
         "updatedAt": "updated_at",
         "list": {
           "capability": "contact.list",
-          "cursor": "starting_after",
-          "limit": "per_page",
           "items": "data",
-          "paging": "cursor"
+          "paging": "cursor",
+          "note": "Official 2.15 ListContacts documents no query params; response uses cursor_pages."
         },
         "get": { "capability": "contact.get", "id": "contactId" },
         "create": { "capability": "contact.create", "body": "body" },
@@ -107,10 +106,11 @@
         "updatedAt": "updated_at",
         "list": {
           "capability": "company.list",
-          "cursor": "starting_after",
+          "cursor": "page",
           "limit": "per_page",
           "items": "data",
-          "paging": "cursor"
+          "paging": "page",
+          "note": "Official 2.15 listAllCompanies uses query page/per_page/order (POST /companies/list, empty body)."
         },
         "get": { "capability": "company.get", "id": "companyId" },
         "create": { "capability": "company.createOrUpdate", "body": "body" }
@@ -173,7 +173,7 @@
     "eventId": "{{body.app_id}}:{{body.topic}}:{{body.id}}",
     "account": "{{body.app_id}}",
     "verify": "verifyWebhookSignature",
-    "note": "Webhook subscriptions (HTTPS URL + topics) are configured in the Intercom Developer Hub for the app — not via REST CRUD in OpenAPI 2.17. Intercom signs the raw JSON body with HMAC-SHA1 using the app client_secret; header X-Hub-Signature is sha1=<hex>."
+    "note": "Webhook subscriptions (HTTPS URL + topics) are configured in the Intercom Developer Hub for the app — not via REST CRUD in OpenAPI 2.15. Intercom signs the raw JSON body with HMAC-SHA1 using the app client_secret; header X-Hub-Signature is sha1=<hex>."
   },
   "capabilities": {
     "identity.get": {
@@ -307,6 +307,6 @@
     }
   },
   "options": {
-    "note": "Webhook topic subscriptions are configured in the Developer Hub (not REST). Public marketplace apps require OAuth + Intercom app review for requested scopes. Private apps may use a workspace Access Token (same Bearer header)."
+    "note": "Webhook topic subscriptions are configured in the Developer Hub (not REST). Public marketplace apps require OAuth + Intercom app review for requested scopes. Private apps may use a workspace Access Token (same Bearer header). API version pinned to official OpenAPI 2.15."
   }
 }

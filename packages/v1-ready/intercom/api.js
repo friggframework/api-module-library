@@ -4,12 +4,12 @@ const { OAuth2Requester, get } = require('@friggframework/core');
 const DEFAULT_BASE_URL = 'https://api.intercom.io';
 const DEFAULT_AUTH_HOST = 'https://app.intercom.com';
 const TOKEN_PATH = '/auth/eagle/token';
-const DEFAULT_API_VERSION = '2.17';
+const DEFAULT_API_VERSION = '2.15';
 
 const SIGNATURE_HEADER = 'x-hub-signature';
 
 /**
- * Intercom REST API client (API version 2.17).
+ * Intercom REST API client (API version 2.15).
  *
  * Auth: OAuth 2.0 authorization-code for public marketplace apps, or a
  * workspace Access Token (Bearer) for private apps. Token exchange uses
@@ -20,7 +20,7 @@ const SIGNATURE_HEADER = 'x-hub-signature';
  * Authorize: https://app.intercom.com/oauth?client_id=…&state=…
  * Token: POST https://api.intercom.io/auth/eagle/token
  *
- * Official OpenAPI: https://github.com/intercom/Intercom-OpenAPI
+ * Official OpenAPI (pinned): https://raw.githubusercontent.com/intercom/Intercom-OpenAPI/main/descriptions/2.15/api.intercom.io.yaml
  * Docs: https://developers.intercom.com/docs/references/rest-api/api.intercom.io
  * OAuth: https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/setting-up-oauth
  *
@@ -201,9 +201,11 @@ class Api extends OAuth2Requester {
     // ---- Contacts ----------------------------------------------------------
 
     /**
-     * List contacts (cursor pagination via pages).
+     * List contacts.
      * GET /contacts
-     * Optional query: per_page, starting_after
+     * Official 2.15 OpenAPI documents no query params on this operation; the
+     * response still uses cursor_pages (`pages.next.starting_after`). Extra
+     * query keys are forwarded if the caller supplies them.
      */
     async listContacts(params = {}) {
         return this._get({
@@ -267,10 +269,15 @@ class Api extends OAuth2Requester {
     /**
      * Retrieve a conversation (includes conversation parts).
      * GET /conversations/{conversation_id}
+     * Optional query (official 2.15): display_as, include_translations.
+     * Path conversation_id is an integer in the official spec.
      */
-    async getConversation(conversationId) {
+    async getConversation(conversationId, params = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.conversationById(conversationId),
+            url:
+                this.baseUrl +
+                this.URLs.conversationById(conversationId) +
+                this._buildQuery(params),
         });
     }
 
@@ -288,15 +295,19 @@ class Api extends OAuth2Requester {
     }
 
     /**
-     * Update a conversation (custom attributes, title, …).
+     * Update a conversation (custom attributes, title, company_id, …).
      * PUT /conversations/{conversation_id}
+     * Optional query (official 2.15): display_as.
      * For reply / assign / open / close / snooze use replyConversation
      * or the manage parts endpoint (not modeled in this cut).
      */
-    async updateConversation(conversationId, body) {
+    async updateConversation(conversationId, body, params = {}) {
         return this._put(
             this.addJsonHeaders({
-                url: this.baseUrl + this.URLs.conversationById(conversationId),
+                url:
+                    this.baseUrl +
+                    this.URLs.conversationById(conversationId) +
+                    this._buildQuery(params),
                 body,
             })
         );
@@ -320,6 +331,7 @@ class Api extends OAuth2Requester {
     /**
      * List admins (teammates).
      * GET /admins
+     * Optional query (official 2.15): display_avatar.
      */
     async listAdmins(params = {}) {
         return this._get({
@@ -342,13 +354,16 @@ class Api extends OAuth2Requester {
     /**
      * List all companies (POST list endpoint).
      * POST /companies/list
-     * Optional body/query pagination: per_page, starting_after
+     * Official 2.15 query params: page, per_page, order (asc|desc). No body.
      */
     async listCompanies(params = {}) {
         return this._post(
             this.addJsonHeaders({
-                url: this.baseUrl + this.URLs.companiesList,
-                body: params || {},
+                url:
+                    this.baseUrl +
+                    this.URLs.companiesList +
+                    this._buildQuery(params),
+                body: {},
             })
         );
     }
@@ -422,7 +437,7 @@ class Api extends OAuth2Requester {
      *
      * Webhook *subscriptions* (topics + HTTPS endpoint) are configured in the
      * Developer Hub for the app — there is no REST CRUD for them in the public
-     * OpenAPI (2.17).
+     * OpenAPI (2.15).
      *
      * @param {Object} args
      * @param {Object} [args.headers]

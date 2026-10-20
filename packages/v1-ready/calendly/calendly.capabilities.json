@@ -1,0 +1,123 @@
+{
+  "$schema": "capability-manifest/v0.1",
+  "module": "calendly",
+  "package": "@friggframework/api-module-calendly",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "authorizationUrl": "https://auth.calendly.com/oauth/authorize",
+    "tokenUrl": "https://auth.calendly.com/oauth/token",
+    "scopes": [
+      "users:read",
+      "event_types:read",
+      "scheduled_events:read",
+      "webhooks:read",
+      "webhooks:write"
+    ],
+    "testAuth": "getCurrentUser"
+  },
+  "objects": {
+    "user": {
+      "list": null,
+      "get": "getCurrentUser",
+      "fields": [
+        { "name": "uri", "tags": ["id", "externalId"] },
+        { "name": "name", "tags": ["display"] },
+        { "name": "email", "tags": ["identity"] },
+        { "name": "slug", "tags": [] },
+        { "name": "scheduling_url", "tags": ["url"] },
+        { "name": "timezone", "tags": [] },
+        { "name": "avatar_url", "tags": [] },
+        { "name": "current_organization", "tags": ["organization"] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] },
+        { "name": "resource_type", "tags": [] },
+        { "name": "locale", "tags": [] },
+        { "name": "time_notation", "tags": [] }
+      ]
+    },
+    "event_type": {
+      "list": "listEventTypes",
+      "get": "getEventType",
+      "fields": [
+        { "name": "uri", "tags": ["id"] },
+        { "name": "name", "tags": ["display"] },
+        { "name": "active", "tags": ["status"] },
+        { "name": "slug", "tags": [] },
+        { "name": "scheduling_url", "tags": ["url"] },
+        { "name": "duration", "tags": [] },
+        { "name": "kind", "tags": [] },
+        { "name": "pooling_type", "tags": [] },
+        { "name": "type", "tags": [] },
+        { "name": "color", "tags": [] },
+        { "name": "description_plain", "tags": [] },
+        { "name": "description_html", "tags": [] },
+        { "name": "secret", "tags": [] },
+        { "name": "booking_method", "tags": [] },
+        { "name": "custom_questions", "tags": [] },
+        { "name": "profile", "tags": [] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ]
+    },
+    "scheduled_event": {
+      "list": "listScheduledEvents",
+      "get": "getScheduledEvent",
+      "fields": [
+        { "name": "uri", "tags": ["id"] },
+        { "name": "name", "tags": ["display"] },
+        { "name": "status", "tags": ["status"] },
+        { "name": "start_time", "tags": ["timestamp"] },
+        { "name": "end_time", "tags": ["timestamp"] },
+        { "name": "event_type", "tags": ["ref"] },
+        { "name": "location", "tags": [] },
+        { "name": "invitees_counter", "tags": [] },
+        { "name": "event_memberships", "tags": [] },
+        { "name": "event_guests", "tags": [] },
+        { "name": "calendar_event", "tags": [] },
+        { "name": "cancellation", "tags": [] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ]
+    },
+    "invitee": {
+      "list": "listEventInvitees",
+      "get": "getEventInvitee",
+      "fields": [
+        { "name": "uri", "tags": ["id"] },
+        { "name": "email", "tags": ["identity"] },
+        { "name": "name", "tags": ["display"] },
+        { "name": "first_name", "tags": [] },
+        { "name": "last_name", "tags": [] },
+        { "name": "status", "tags": ["status"] },
+        { "name": "timezone", "tags": [] },
+        { "name": "event", "tags": ["ref"] },
+        { "name": "questions_and_answers", "tags": [] },
+        { "name": "cancel_url", "tags": ["url"] },
+        { "name": "reschedule_url", "tags": ["url"] },
+        { "name": "rescheduled", "tags": [] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ]
+    },
+    "webhook_subscription": {
+      "list": "listWebhookSubscriptions",
+      "get": "getWebhookSubscription",
+      "create": "createWebhookSubscription",
+      "delete": "deleteWebhookSubscription",
+      "fields": [
+        { "name": "uri", "tags": ["id"] },
+        { "name": "callback_url", "tags": ["url"] },
+        { "name": "state", "tags": ["status"] },
+        { "name": "events", "tags": [] },
+        { "name": "scope", "tags": [] },
+        { "name": "organization", "tags": ["organization"] },
+        { "name": "user", "tags": ["ref"] },
+        { "name": "group", "tags": ["ref"] },
+        { "name": "creator", "tags": ["ref"] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ]
+    }
+  }
+}

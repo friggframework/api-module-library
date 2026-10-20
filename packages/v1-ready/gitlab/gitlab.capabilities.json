@@ -1,0 +1,369 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "gitlab",
+  "label": "GitLab",
+  "package": "@friggframework/api-module-gitlab",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected GitLab user on a given instance. Entity/credential externalId is GET /user.id; host is persisted for Self-Managed.",
+    "fields": [
+      {
+        "name": "userId",
+        "type": "string",
+        "description": "GitLab user id (externalId)"
+      },
+      {
+        "name": "username",
+        "type": "string",
+        "description": "GitLab username"
+      },
+      {
+        "name": "host",
+        "type": "string",
+        "description": "GitLab instance host (default https://gitlab.com)"
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User (current)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "username", "type": "string", "tag": "person.username" },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "state", "type": "string", "readOnly": true },
+        { "name": "web_url", "type": "string", "tag": "record.url", "readOnly": true }
+      ]
+    },
+    "project": {
+      "label": "Project",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "path", "type": "string" },
+        { "name": "path_with_namespace", "type": "string", "readOnly": true },
+        { "name": "description", "type": "text" },
+        { "name": "visibility", "type": "enum", "values": ["private", "internal", "public"] },
+        { "name": "default_branch", "type": "string" },
+        { "name": "web_url", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "last_activity_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "last_activity_at",
+        "list": {
+          "capability": "project.list",
+          "items": "$",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "project.get",
+          "id": "projectId"
+        },
+        "create": {
+          "capability": "project.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "project.update",
+          "body": "$"
+        }
+      }
+    },
+    "issue": {
+      "label": "Issue",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "iid", "type": "number", "readOnly": true },
+        { "name": "project_id", "type": "string" },
+        { "name": "title", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "description", "type": "text" },
+        { "name": "state", "type": "enum", "values": ["opened", "closed"] },
+        { "name": "labels", "type": "json" },
+        { "name": "web_url", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "author.id", "type": "string", "tag": "record.owner", "readOnly": true },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "iid",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "issue.list",
+          "items": "$",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "issue.get",
+          "id": "issueIid"
+        },
+        "create": {
+          "capability": "issue.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "issue.update",
+          "body": "$"
+        }
+      }
+    },
+    "merge_request": {
+      "label": "Merge Request",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "iid", "type": "number", "readOnly": true },
+        { "name": "project_id", "type": "string" },
+        { "name": "title", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "description", "type": "text" },
+        { "name": "state", "type": "enum", "values": ["opened", "closed", "locked", "merged"] },
+        { "name": "source_branch", "type": "string", "required": true },
+        { "name": "target_branch", "type": "string", "required": true },
+        { "name": "web_url", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "author.id", "type": "string", "tag": "record.owner", "readOnly": true },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "iid",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "mergeRequest.list",
+          "items": "$",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "mergeRequest.get",
+          "id": "mergeRequestIid"
+        },
+        "create": {
+          "capability": "mergeRequest.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "mergeRequest.update",
+          "body": "$"
+        }
+      }
+    },
+    "project_hook": {
+      "label": "Project Webhook",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "url", "type": "string", "required": true },
+        { "name": "name", "type": "string" },
+        { "name": "project_id", "type": "string" },
+        { "name": "push_events", "type": "boolean" },
+        { "name": "issues_events", "type": "boolean" },
+        { "name": "merge_requests_events", "type": "boolean" },
+        { "name": "enable_ssl_verification", "type": "boolean" }
+      ]
+    }
+  },
+  "events": {
+    "issue": {
+      "delivery": "webhook",
+      "object": "issue",
+      "description": "Project Issue Hook (object_kind=issue). Routed by project.id.",
+      "payload": {
+        "object_kind": "issue",
+        "event_type": "issue",
+        "project": { "id": 15, "name": "Gitlab Test" },
+        "object_attributes": {
+          "id": 301,
+          "iid": 42,
+          "title": "New API: Create and update issues",
+          "action": "open"
+        }
+      },
+      "record": "object_attributes",
+      "idPath": "object_attributes.iid"
+    },
+    "merge_request": {
+      "delivery": "webhook",
+      "object": "merge_request",
+      "description": "Project Merge Request Hook (object_kind=merge_request). Routed by project.id.",
+      "payload": {
+        "object_kind": "merge_request",
+        "event_type": "merge_request",
+        "project": { "id": 15 },
+        "object_attributes": {
+          "id": 99,
+          "iid": 1,
+          "title": "Test MR",
+          "action": "open",
+          "source_branch": "feature",
+          "target_branch": "main"
+        }
+      },
+      "record": "object_attributes",
+      "idPath": "object_attributes.iid"
+    },
+    "push": {
+      "delivery": "webhook",
+      "object": "project",
+      "description": "Project Push Hook (object_kind=push). Routed by project.id / project_id.",
+      "payload": {
+        "object_kind": "push",
+        "event_name": "push",
+        "project_id": 15,
+        "project": { "id": 15 },
+        "ref": "refs/heads/main",
+        "checkout_sha": "da1560886d4f094c3e6c9ef40349f7d38b5d27d7"
+      }
+    }
+  },
+  "webhook": {
+    "scope": "project",
+    "topic": [
+      "{{body.object_kind}}",
+      "{{headers.X-Gitlab-Event}}"
+    ],
+    "eventId": [
+      "{{headers.X-Gitlab-Event-UUID}}",
+      "{{headers.webhook-id}}"
+    ],
+    "account": [
+      "{{body.project.id}}",
+      "{{body.project_id}}"
+    ],
+    "verify": "verifyWebhookSignature",
+    "note": "Prefer signing_token (whsec_… → webhook-signature HMAC, Standard Webhooks). Legacy token → X-Gitlab-Token. Api.verifyWebhookSignature + Tier-3 extensions/webhooks (project.id routing)."
+  },
+  "capabilities": {
+    "user.getCurrent": {
+      "kind": "read",
+      "method": "getCurrentUser",
+      "label": "GET /user",
+      "output": "user",
+      "args": []
+    },
+    "project.list": {
+      "kind": "read",
+      "method": "listProjects",
+      "label": "GET /projects",
+      "output": "project[]",
+      "args": ["params"]
+    },
+    "project.get": {
+      "kind": "read",
+      "method": "getProject",
+      "label": "GET /projects/:id",
+      "output": "project",
+      "args": ["projectId", "params"]
+    },
+    "project.create": {
+      "kind": "write",
+      "method": "createProject",
+      "label": "POST /projects",
+      "output": "project",
+      "args": ["data"]
+    },
+    "project.update": {
+      "kind": "write",
+      "method": "updateProject",
+      "label": "PUT /projects/:id",
+      "output": "project",
+      "args": ["projectId", "data"]
+    },
+    "issue.list": {
+      "kind": "read",
+      "method": "listIssues",
+      "label": "GET /projects/:id/issues",
+      "output": "issue[]",
+      "args": ["projectId", "params"]
+    },
+    "issue.get": {
+      "kind": "read",
+      "method": "getIssue",
+      "label": "GET /projects/:id/issues/:issue_iid",
+      "output": "issue",
+      "args": ["projectId", "issueIid"]
+    },
+    "issue.create": {
+      "kind": "write",
+      "method": "createIssue",
+      "label": "POST /projects/:id/issues",
+      "output": "issue",
+      "args": ["projectId", "data"]
+    },
+    "issue.update": {
+      "kind": "write",
+      "method": "updateIssue",
+      "label": "PUT /projects/:id/issues/:issue_iid",
+      "output": "issue",
+      "args": ["projectId", "issueIid", "data"]
+    },
+    "mergeRequest.list": {
+      "kind": "read",
+      "method": "listMergeRequests",
+      "label": "GET /projects/:id/merge_requests",
+      "output": "merge_request[]",
+      "args": ["projectId", "params"]
+    },
+    "mergeRequest.get": {
+      "kind": "read",
+      "method": "getMergeRequest",
+      "label": "GET /projects/:id/merge_requests/:merge_request_iid",
+      "output": "merge_request",
+      "args": ["projectId", "mergeRequestIid"]
+    },
+    "mergeRequest.create": {
+      "kind": "write",
+      "method": "createMergeRequest",
+      "label": "POST /projects/:id/merge_requests",
+      "output": "merge_request",
+      "args": ["projectId", "data"]
+    },
+    "mergeRequest.update": {
+      "kind": "write",
+      "method": "updateMergeRequest",
+      "label": "PUT /projects/:id/merge_requests/:merge_request_iid",
+      "output": "merge_request",
+      "args": ["projectId", "mergeRequestIid", "data"]
+    },
+    "projectHook.list": {
+      "kind": "read",
+      "method": "listProjectHooks",
+      "label": "GET /projects/:id/hooks",
+      "output": "project_hook[]",
+      "args": ["projectId"]
+    },
+    "projectHook.get": {
+      "kind": "read",
+      "method": "getProjectHook",
+      "label": "GET /projects/:id/hooks/:hook_id",
+      "output": "project_hook",
+      "args": ["projectId", "hookId"]
+    },
+    "projectHook.create": {
+      "kind": "write",
+      "method": "createProjectHook",
+      "label": "POST /projects/:id/hooks",
+      "output": "project_hook",
+      "args": ["projectId", "data"]
+    },
+    "projectHook.update": {
+      "kind": "write",
+      "method": "updateProjectHook",
+      "label": "PUT /projects/:id/hooks/:hook_id",
+      "output": "project_hook",
+      "args": ["projectId", "hookId", "data"]
+    },
+    "projectHook.delete": {
+      "kind": "write",
+      "method": "deleteProjectHook",
+      "label": "DELETE /projects/:id/hooks/:hook_id",
+      "args": ["projectId", "hookId"]
+    }
+  },
+  "options": {
+    "project": {
+      "capability": "project.list",
+      "label": "{{item.path_with_namespace}}",
+      "value": "$.item.id"
+    }
+  }
+}

@@ -90,7 +90,10 @@ const Definition = {
         client_id: process.env.AIRTABLE_CLIENT_ID,
         client_secret: process.env.AIRTABLE_CLIENT_SECRET,
         scope: process.env.AIRTABLE_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/airtable`,
+        // Omit when unset so schema validation does not see the string "undefined/airtable".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/airtable`
+            : undefined,
     },
 };
 

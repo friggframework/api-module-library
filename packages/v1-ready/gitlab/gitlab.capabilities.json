@@ -32,7 +32,8 @@
         { "name": "id", "type": "id", "readOnly": true },
         { "name": "username", "type": "string", "tag": "person.username" },
         { "name": "name", "type": "string", "tag": "person.fullName" },
-        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "public_email", "type": "email", "tag": "contact.email" },
+        { "name": "email", "type": "email" },
         { "name": "state", "type": "string", "readOnly": true },
         { "name": "web_url", "type": "string", "tag": "record.url", "readOnly": true }
       ]
@@ -308,7 +309,7 @@
       "method": "getMergeRequest",
       "label": "GET /projects/:id/merge_requests/:merge_request_iid",
       "output": "merge_request",
-      "args": ["projectId", "mergeRequestIid"]
+      "args": ["projectId", "mergeRequestIid", "params"]
     },
     "mergeRequest.create": {
       "kind": "write",
@@ -329,7 +330,7 @@
       "method": "listProjectHooks",
       "label": "GET /projects/:id/hooks",
       "output": "project_hook[]",
-      "args": ["projectId"]
+      "args": ["projectId", "params"]
     },
     "projectHook.get": {
       "kind": "read",

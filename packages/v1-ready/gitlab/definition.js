@@ -24,7 +24,9 @@ async function resolveUserIdentity(api) {
         externalId: String(user.id),
         name: user.name || user.username || String(user.id),
         username: user.username || null,
-        email: user.email || user.public_email || null,
+        // read_user scope documents public_email; current-user payload may also
+        // include private `email` (APIEntitiesUserPublic in openapi_v3).
+        email: user.public_email || user.email || null,
     };
 }
 

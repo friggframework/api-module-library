@@ -48,10 +48,51 @@ describe('OpenAPI spec ↔ client sync', () => {
         expect(spec.servers[0].url).toBe(api.baseUrl);
     });
 
-    it('declares bearer token security matching GitLab OAuth/PAT', () => {
-        const scheme = spec.components.securitySchemes.bearerAuth;
-        expect(scheme.type).toBe('http');
-        expect(scheme.scheme).toBe('bearer');
+    it('declares vendor-aligned security schemes (oauth2, bearer, PRIVATE-TOKEN)', () => {
+        const schemes = spec.components.securitySchemes;
+        expect(schemes.bearerAuth.type).toBe('http');
+        expect(schemes.bearerAuth.scheme).toBe('bearer');
+        expect(schemes.privateToken.type).toBe('apiKey');
+        expect(schemes.privateToken.name).toBe('PRIVATE-TOKEN');
+        expect(schemes.privateToken.in).toBe('header');
+        const oauth = schemes.OAuth2;
+        expect(oauth.type).toBe('oauth2');
+        expect(oauth.flows.authorizationCode.authorizationUrl).toBe(
+            'https://gitlab.com/oauth/authorize'
+        );
+        expect(oauth.flows.authorizationCode.tokenUrl).toBe(
+            'https://gitlab.com/oauth/token'
+        );
+        expect(oauth.flows.authorizationCode.scopes).toHaveProperty('api');
+        expect(oauth.flows.authorizationCode.scopes).toHaveProperty(
+            'read_user'
+        );
+    });
+
+    it('documents server URL composed from vendor host + /api/v4 path prefix', () => {
+        expect(spec.servers[0].url).toBe('https://gitlab.com/api/v4');
+        expect(spec.info.description).toContain('openapi_v2.yaml');
+    });
+
+    it('aligns issue_type and labels types with vendor OpenAPI', () => {
+        const createIssue =
+            spec.paths['/projects/{id}/issues'].post.requestBody.content[
+                'application/json'
+            ].schema;
+        expect(createIssue.properties.issue_type.enum).toEqual([
+            'issue',
+            'incident',
+            'test_case',
+            'requirement',
+            'task',
+            'ticket',
+        ]);
+        expect(createIssue.properties.labels.type).toBe('array');
+        const listLabels =
+            spec.paths['/projects/{id}/issues'].get.parameters.find(
+                (p) => p.name === 'labels'
+            );
+        expect(listLabels.schema.type).toBe('array');
     });
 
     it('every resource client method is declared in the OpenAPI (1:1)', () => {

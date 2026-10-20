@@ -146,7 +146,7 @@ describe('GitLab Api', () => {
         it('list / get / create / update paths', async () => {
             const api = makeApi();
             await api.listMergeRequests(9, { state: 'opened' });
-            await api.getMergeRequest(9, 1);
+            await api.getMergeRequest(9, 1, { render_html: true });
             await api.createMergeRequest(9, {
                 source_branch: 'feat',
                 target_branch: 'main',
@@ -159,6 +159,7 @@ describe('GitLab Api', () => {
             expect(api._captured[1].url).toBe(
                 'https://gitlab.com/api/v4/projects/9/merge_requests/1'
             );
+            expect(api._captured[1].query).toEqual({ render_html: true });
             expect(api._captured[2].method).toBe('POST');
             expect(api._captured[3].method).toBe('PUT');
         });
@@ -167,7 +168,7 @@ describe('GitLab Api', () => {
     describe('project hooks', () => {
         it('CRUD paths', async () => {
             const api = makeApi();
-            await api.listProjectHooks(5);
+            await api.listProjectHooks(5, { page: 2, per_page: 10 });
             await api.getProjectHook(5, 11);
             await api.createProjectHook(5, {
                 url: 'https://hook.example/gitlab',
@@ -181,6 +182,7 @@ describe('GitLab Api', () => {
             expect(api._captured[0].url).toBe(
                 'https://gitlab.com/api/v4/projects/5/hooks'
             );
+            expect(api._captured[0].query).toEqual({ page: 2, per_page: 10 });
             expect(api._captured[1].url).toBe(
                 'https://gitlab.com/api/v4/projects/5/hooks/11'
             );

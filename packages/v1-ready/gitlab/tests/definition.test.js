@@ -62,7 +62,8 @@ describe('GitLab Definition', () => {
             id: 42,
             username: 'jane',
             name: 'Jane Doe',
-            email: 'jane@example.com',
+            public_email: 'jane-public@example.com',
+            email: 'jane-private@example.com',
         });
         const details = await Definition.requiredAuthMethods.getEntityDetails(
             api,
@@ -74,6 +75,7 @@ describe('GitLab Definition', () => {
         expect(details.identifiers.userId).toBe('user-1');
         expect(details.details.name).toBe('Jane Doe');
         expect(details.details.username).toBe('jane');
+        expect(details.details.email).toBe('jane-public@example.com');
         expect(details.details.host).toBe('https://gitlab.com');
     });
 

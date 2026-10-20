@@ -10,9 +10,21 @@ OAuth 2.0 authorization-code (with refresh). Register an application under
 
 - Docs: [OAuth provider](https://docs.gitlab.com/integration/oauth_provider/), [OAuth API](https://docs.gitlab.com/api/oauth2/)
 - Tokens are sent as `Authorization: Bearer <token>`
+- Vendor OpenAPI also documents `PRIVATE-TOKEN` (PAT); the curated
+  `gitlab.openapi.yaml` declares oauth2, bearer, and PRIVATE-TOKEN schemes.
 
 Self-Managed / Dedicated: set `GITLAB_HOST` (or pass `host` to the Api) so OAuth
 and API calls target `{host}/oauth/*` and `{host}/api/v4`.
+
+## Vendor OpenAPI
+
+Curated contract is diffed against:
+
+- https://gitlab.com/gitlab-org/gitlab/-/raw/master/doc/api/openapi/openapi_v2.yaml  
+  (`host: gitlab.com`, paths prefixed `/api/v4/...` → composed base
+  `https://gitlab.com/api/v4`)
+- https://gitlab.com/gitlab-org/gitlab/-/raw/master/doc/api/openapi/openapi_v3.yaml  
+  (fills gaps: `GET /api/v4/user`, oauth2/bearer security schemes)
 
 ## Covered surface
 

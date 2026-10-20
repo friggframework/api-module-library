@@ -1,0 +1,531 @@
+openapi: 3.0.3
+info:
+  title: Yotpo Core API
+  version: "3.0"
+  description: >-
+    Yotpo Core API (v3) syncs a store's catalog, customers, orders, and
+    fulfillments, and manages webhook subscriptions. Official reference:
+    https://core-api.yotpo.com/reference/welcome. This file is Left Hook's
+    curated subset covering exactly the endpoints
+    @friggframework/api-module-yotpo implements. operationIds are camelCase
+    aliases of Yotpo's kebab-case ids so they match Api methods 1:1
+    (spec-sync enforced).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.yotpo.com
+    description: Yotpo Core API
+security:
+  - YotpoToken: []
+tags:
+  - name: Authentication
+  - name: Products
+  - name: Orders
+  - name: Order Fulfillments
+  - name: Customers
+  - name: Webhooks
+paths:
+  /core/v3/stores/{store_id}/access_tokens:
+    post:
+      tags: [Authentication]
+      operationId: generateAccessToken
+      summary: Generate Access Token
+      description: >-
+        Exchange store_id (app key) + API secret for an access token used as
+        X-Yotpo-Token. Official operationId: yotpo-authentication.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [secret]
+              properties:
+                secret:
+                  type: string
+                  description: API secret
+      responses:
+        '200':
+          description: Access token minted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+        '401':
+          description: Invalid store_id or secret
+
+  /core/v3/stores/{store_id}/products:
+    get:
+      tags: [Products]
+      operationId: listProducts
+      summary: Retrieve products
+      description: "Official operationId: retrieve-products."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+        - $ref: '#/components/parameters/PageInfo'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/ExternalIds'
+      responses:
+        '200':
+          description: Product list
+        '400':
+          description: Bad request
+    post:
+      tags: [Products]
+      operationId: createProduct
+      summary: Create product
+      description: "Official operationId: create-product."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product]
+              properties:
+                product:
+                  type: object
+                  required: [external_id, name]
+                  properties:
+                    external_id: { type: string }
+                    name: { type: string }
+                    description: "{ type: string }"
+                    status:
+                      type: string
+                      enum: [active, draft, archived, inactive]
+                    url: { type: string }
+                    image_url: { type: string }
+                    price: { type: number }
+                    currency: { type: string }
+                    sku: { type: string }
+      responses:
+        '201':
+          description: Product created
+        '400':
+          description: Bad request
+        '409':
+          description: Product already exists
+
+  /core/v3/stores/{store_id}/products/{yotpo_product_id}:
+    get:
+      tags: [Products]
+      operationId: getProduct
+      summary: Retrieve product by ID
+      description: "Official operationId: retrieve-product-by-id."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+        - $ref: '#/components/parameters/YotpoProductId'
+      responses:
+        '200':
+          description: Product
+        '404':
+          description: Not found
+    patch:
+      tags: [Products]
+      operationId: updateProduct
+      summary: Update product
+      description: "Official operationId: update-product."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+        - $ref: '#/components/parameters/YotpoProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product]
+              properties:
+                product:
+                  type: object
+      responses:
+        '200':
+          description: Updated
+        '404':
+          description: Not found
+
+  /core/v3/stores/{store_id}/orders:
+    get:
+      tags: [Orders]
+      operationId: listOrders
+      summary: Retrieve orders
+      description: "Official operationId: retrieve-orders."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+        - $ref: '#/components/parameters/PageInfo'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/ExternalIds'
+        - in: query
+          name: order_date_min
+          schema: { type: string, format: date-time }
+        - in: query
+          name: order_date_max
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: Order list
+        '400':
+          description: Bad request
+    post:
+      tags: [Orders]
+      operationId: createOrder
+      summary: Create order
+      description: "Official operationId: create-order."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [order]
+              properties:
+                order:
+                  type: object
+                  required: [external_id, order_date, customer, line_items]
+                  properties:
+                    external_id: { type: string }
+                    order_date: { type: string, format: date-time }
+                    customer: { type: object }
+                    line_items:
+                      type: array
+                      items: { type: object }
+      responses:
+        '201':
+          description: Order created
+        '400':
+          description: Bad request
+
+  /core/v3/stores/{store_id}/orders/{yotpo_order_id}:
+    get:
+      tags: [Orders]
+      operationId: getOrder
+      summary: Retrieve order by ID
+      description: "Official operationId: retrieve-order-by-id."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+        - $ref: '#/components/parameters/YotpoOrderId'
+      responses:
+        '200':
+          description: Order
+        '404':
+          description: Not found
+    patch:
+      tags: [Orders]
+      operationId: updateOrder
+      summary: Update order
+      description: "Official operationId: update-order."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+        - $ref: '#/components/parameters/YotpoOrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [order]
+              properties:
+                order:
+                  type: object
+      responses:
+        '200':
+          description: Updated
+        '404':
+          description: Not found
+
+  /core/v3/stores/{store_id}/orders/{yotpo_order_id}/fulfillments:
+    get:
+      tags: [Order Fulfillments]
+      operationId: listOrderFulfillments
+      summary: Retrieve order fulfillments
+      description: "Official operationId: retrieve-order-fulfillments."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+        - $ref: '#/components/parameters/YotpoOrderId'
+        - $ref: '#/components/parameters/PageInfo'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Fulfillment list
+        '404':
+          description: Order not found
+    post:
+      tags: [Order Fulfillments]
+      operationId: createOrderFulfillment
+      summary: Create order fulfillment
+      description: "Official operationId: create-order-fulfillment."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+        - $ref: '#/components/parameters/YotpoOrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fulfillment]
+              properties:
+                fulfillment:
+                  type: object
+                  required:
+                    - external_id
+                    - fulfillment_date
+                    - status
+                    - fulfilled_items
+                  properties:
+                    external_id: { type: string }
+                    fulfillment_date: { type: string, format: date-time }
+                    status:
+                      type: string
+                      enum: [pending, open, success, cancelled, error, failure]
+                    fulfilled_items:
+                      type: array
+                      items:
+                        type: object
+                        required: [external_product_id, quantity]
+                        properties:
+                          external_product_id: { type: string }
+                          quantity: { type: integer }
+      responses:
+        '201':
+          description: Fulfillment created
+        '400':
+          description: Bad request
+        '404':
+          description: Order not found
+
+  /core/v3/stores/{store_id}/customers:
+    get:
+      tags: [Customers]
+      operationId: listCustomers
+      summary: Retrieve customers
+      description: "Official operationId: retrieve-customers."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+        - $ref: '#/components/parameters/PageInfo'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/ExternalIds'
+        - in: query
+          name: email
+          schema: { type: string }
+        - in: query
+          name: phone_number
+          schema: { type: string }
+      responses:
+        '200':
+          description: Customer list
+        '400':
+          description: Bad request
+    patch:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: Create or update customer
+      description: >-
+        Upsert customer. Official operationId: create-customer.
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customer]
+              properties:
+                customer:
+                  type: object
+                  properties:
+                    external_id: { type: string }
+                    email: { type: string }
+                    phone_number: { type: string }
+                    first_name: { type: string }
+                    last_name: { type: string }
+      responses:
+        '200':
+          description: Created or updated
+        '400':
+          description: Bad request
+
+  /core/v3/stores/{store_id}/webhooks/targets:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookTargets
+      summary: Retrieve webhook targets
+      description: "Official operationId: retrieve-targets."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+      responses:
+        '200':
+          description: Target list
+    post:
+      tags: [Webhooks]
+      operationId: createWebhookTarget
+      summary: Create webhook target
+      description: "Official operationId: create-target."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhook_target]
+              properties:
+                webhook_target:
+                  type: object
+                  required: [url]
+                  properties:
+                    url: { type: string, format: uri }
+      responses:
+        '200':
+          description: Target created
+        '409':
+          description: Target already exists
+
+  /core/v3/stores/{store_id}/webhooks/filters:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookFilters
+      summary: Retrieve webhook filters
+      description: "Official operationId: retrieve-filters."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+      responses:
+        '200':
+          description: Filter list
+    post:
+      tags: [Webhooks]
+      operationId: createWebhookFilter
+      summary: Create webhook filter
+      description: "Official operationId: create-filter."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                webhook_filter:
+                  type: object
+                  required: [events]
+                  properties:
+                    events:
+                      type: array
+                      items: { type: string }
+      responses:
+        '201':
+          description: Filter created
+        '409':
+          description: Filter already exists
+
+  /core/v3/stores/{store_id}/webhooks/subscriptions:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookSubscriptions
+      summary: Retrieve webhook subscriptions
+      description: "Official operationId: retrieve-subscriptions."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+      responses:
+        '200':
+          description: Subscription list
+    post:
+      tags: [Webhooks]
+      operationId: createWebhookSubscription
+      summary: Create webhook subscription
+      description: "Official operationId: create-subscription."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhook_subscription]
+              properties:
+                webhook_subscription:
+                  type: object
+                  required: [target_id]
+                  properties:
+                    target_id: { type: string }
+                    filter_id: { type: string }
+                    active: { type: boolean }
+      responses:
+        '201':
+          description: Subscription created
+        '409':
+          description: Already exists
+
+  /core/v3/stores/{store_id}/webhooks/subscriptions/{yotpo_subscription_id}:
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhookSubscription
+      summary: Delete webhook subscription
+      description: "Official operationId: delete-subscription."
+      parameters:
+        - $ref: '#/components/parameters/StoreId'
+        - in: path
+          name: yotpo_subscription_id
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+
+components:
+  securitySchemes:
+    YotpoToken:
+      type: apiKey
+      in: header
+      name: X-Yotpo-Token
+      description: >-
+        Access token from POST /core/v3/stores/{store_id}/access_tokens.
+        See https://core-api.yotpo.com/reference/authentication.
+  parameters:
+    StoreId:
+      in: path
+      name: store_id
+      required: true
+      schema: { type: string }
+      description: Store ID (app key)
+    YotpoProductId:
+      in: path
+      name: yotpo_product_id
+      required: true
+      schema: { type: string }
+    YotpoOrderId:
+      in: path
+      name: yotpo_order_id
+      required: true
+      schema: { type: string }
+    PageInfo:
+      in: query
+      name: page_info
+      schema: { type: string }
+      description: Encoded page cursor
+    Limit:
+      in: query
+      name: limit
+      schema: { type: integer, minimum: 1, maximum: 100 }
+    ExternalIds:
+      in: query
+      name: external_ids
+      schema: { type: string }
+      description: Comma-separated external IDs (URL-encoded, max 100)

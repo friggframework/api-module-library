@@ -1,0 +1,321 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "yotpo",
+  "label": "Yotpo",
+  "package": "@friggframework/api-module-yotpo",
+  "version": "1.0.0",
+  "auth": "api_key",
+  "account": {
+    "description": "Connected Yotpo store identity (store_id / app key) and Core API credentials.",
+    "fields": [
+      {
+        "name": "store_id",
+        "type": "string",
+        "description": "Yotpo store ID (app key) used in every Core API path."
+      }
+    ]
+  },
+  "objects": {
+    "product": {
+      "label": "Product",
+      "fields": [
+        { "name": "yotpo_id", "type": "id", "readOnly": true },
+        { "name": "external_id", "type": "string", "tag": "product.externalId" },
+        { "name": "name", "type": "string", "tag": "product.name" },
+        { "name": "description", "type": "text", "tag": "product.description" },
+        { "name": "status", "type": "string" },
+        { "name": "url", "type": "string", "tag": "product.url" },
+        { "name": "image_url", "type": "string", "tag": "product.imageUrl" },
+        { "name": "price", "type": "number", "tag": "product.price" },
+        { "name": "currency", "type": "string", "tag": "product.currency" },
+        { "name": "sku", "type": "string", "tag": "product.sku" },
+        { "name": "brand", "type": "string", "tag": "product.brand" }
+      ],
+      "sync": {
+        "id": "yotpo_id",
+        "list": {
+          "capability": "product.list",
+          "cursor": "page_info",
+          "items": "products",
+          "next": "page_info"
+        },
+        "get": {
+          "capability": "product.get",
+          "id": "yotpoProductId"
+        },
+        "create": {
+          "capability": "product.create"
+        },
+        "update": {
+          "capability": "product.update",
+          "id": "yotpoProductId"
+        }
+      }
+    },
+    "order": {
+      "label": "Order",
+      "fields": [
+        { "name": "yotpo_id", "type": "id", "readOnly": true },
+        { "name": "external_id", "type": "string", "tag": "order.externalId" },
+        { "name": "order_name", "type": "string", "tag": "order.name" },
+        { "name": "order_date", "type": "datetime", "tag": "order.date" },
+        { "name": "total_price", "type": "number", "tag": "order.total" },
+        { "name": "currency", "type": "string", "tag": "order.currency" },
+        { "name": "payment_status", "type": "string" },
+        { "name": "customer.email", "type": "email", "tag": "customer.email" },
+        { "name": "customer.external_id", "type": "string", "tag": "customer.externalId" },
+        { "name": "line_items", "type": "json", "tag": "order.lineItems" }
+      ],
+      "sync": {
+        "id": "yotpo_id",
+        "list": {
+          "capability": "order.list",
+          "cursor": "page_info",
+          "items": "orders",
+          "next": "page_info"
+        },
+        "get": {
+          "capability": "order.get",
+          "id": "yotpoOrderId"
+        },
+        "create": {
+          "capability": "order.create"
+        },
+        "update": {
+          "capability": "order.update",
+          "id": "yotpoOrderId"
+        }
+      }
+    },
+    "fulfillment": {
+      "label": "Order fulfillment",
+      "fields": [
+        { "name": "yotpo_id", "type": "id", "readOnly": true },
+        { "name": "external_id", "type": "string" },
+        { "name": "fulfillment_date", "type": "datetime", "tag": "fulfillment.date" },
+        { "name": "status", "type": "string", "tag": "fulfillment.status" },
+        { "name": "shipment_info.tracking_number", "type": "string", "tag": "shipment.trackingNumber" },
+        { "name": "fulfilled_items", "type": "json" }
+      ],
+      "sync": {
+        "id": "yotpo_id",
+        "list": {
+          "capability": "fulfillment.list",
+          "items": "fulfillments"
+        },
+        "create": {
+          "capability": "fulfillment.create"
+        }
+      }
+    },
+    "customer": {
+      "label": "Customer",
+      "fields": [
+        { "name": "external_id", "type": "string", "tag": "customer.externalId" },
+        { "name": "email", "type": "email", "tag": "customer.email" },
+        { "name": "phone_number", "type": "string", "tag": "customer.phone" },
+        { "name": "first_name", "type": "string", "tag": "customer.firstName" },
+        { "name": "last_name", "type": "string", "tag": "customer.lastName" }
+      ],
+      "sync": {
+        "id": "external_id",
+        "list": {
+          "capability": "customer.list",
+          "cursor": "page_info",
+          "items": "customers",
+          "next": "page_info"
+        },
+        "create": {
+          "capability": "customer.create"
+        }
+      }
+    },
+    "webhookSubscription": {
+      "label": "Webhook subscription",
+      "fields": [
+        { "name": "yotpo_id", "type": "id", "readOnly": true },
+        { "name": "target_id", "type": "string" },
+        { "name": "filter_id", "type": "string" },
+        { "name": "active", "type": "boolean" }
+      ]
+    }
+  },
+  "events": {
+    "review.created": {
+      "delivery": "webhook",
+      "object": "product",
+      "subscribe": "webhookSubscription.create",
+      "description": "Example Core webhook topic (review_create). Full topic list: https://core-api.yotpo.com/docs/topics"
+    }
+  },
+  "capabilities": {
+    "product.list": {
+      "kind": "read",
+      "method": "listProducts",
+      "input": {
+        "page_info": { "type": "string" },
+        "limit": { "type": "integer" },
+        "external_ids": { "type": "string" }
+      },
+      "output": "page<product>"
+    },
+    "product.get": {
+      "kind": "read",
+      "method": "getProduct",
+      "input": {
+        "yotpoProductId": { "type": "string", "required": true }
+      },
+      "output": "product",
+      "args": ["yotpoProductId"]
+    },
+    "product.create": {
+      "kind": "write",
+      "method": "createProduct",
+      "input": {
+        "product": { "type": "object", "required": true }
+      },
+      "output": "product"
+    },
+    "product.update": {
+      "kind": "write",
+      "method": "updateProduct",
+      "input": {
+        "yotpoProductId": { "type": "string", "required": true },
+        "product": { "type": "object", "required": true }
+      },
+      "output": "product",
+      "args": ["yotpoProductId"]
+    },
+    "order.list": {
+      "kind": "read",
+      "method": "listOrders",
+      "input": {
+        "page_info": { "type": "string" },
+        "limit": { "type": "integer" },
+        "external_ids": { "type": "string" },
+        "order_date_min": { "type": "string" },
+        "order_date_max": { "type": "string" }
+      },
+      "output": "page<order>"
+    },
+    "order.get": {
+      "kind": "read",
+      "method": "getOrder",
+      "input": {
+        "yotpoOrderId": { "type": "string", "required": true }
+      },
+      "output": "order",
+      "args": ["yotpoOrderId"]
+    },
+    "order.create": {
+      "kind": "write",
+      "method": "createOrder",
+      "input": {
+        "order": { "type": "object", "required": true }
+      },
+      "output": "order"
+    },
+    "order.update": {
+      "kind": "write",
+      "method": "updateOrder",
+      "input": {
+        "yotpoOrderId": { "type": "string", "required": true },
+        "order": { "type": "object", "required": true }
+      },
+      "output": "order",
+      "args": ["yotpoOrderId"]
+    },
+    "fulfillment.list": {
+      "kind": "read",
+      "method": "listOrderFulfillments",
+      "input": {
+        "yotpoOrderId": { "type": "string", "required": true },
+        "page_info": { "type": "string" },
+        "limit": { "type": "integer" }
+      },
+      "output": "page<fulfillment>",
+      "args": ["yotpoOrderId"]
+    },
+    "fulfillment.create": {
+      "kind": "write",
+      "method": "createOrderFulfillment",
+      "input": {
+        "yotpoOrderId": { "type": "string", "required": true },
+        "fulfillment": { "type": "object", "required": true }
+      },
+      "output": "fulfillment",
+      "args": ["yotpoOrderId"]
+    },
+    "customer.list": {
+      "kind": "read",
+      "method": "listCustomers",
+      "input": {
+        "page_info": { "type": "string" },
+        "limit": { "type": "integer" },
+        "external_ids": { "type": "string" },
+        "email": { "type": "string" },
+        "phone_number": { "type": "string" }
+      },
+      "output": "page<customer>"
+    },
+    "customer.create": {
+      "kind": "write",
+      "method": "createCustomer",
+      "input": {
+        "customer": { "type": "object", "required": true }
+      },
+      "output": "customer"
+    },
+    "webhookTarget.create": {
+      "kind": "subscribe",
+      "method": "createWebhookTarget",
+      "input": {
+        "webhook_target": { "type": "object", "required": true }
+      },
+      "output": "webhookTarget"
+    },
+    "webhookTarget.list": {
+      "kind": "read",
+      "method": "listWebhookTargets",
+      "input": {},
+      "output": "page<webhookTarget>"
+    },
+    "webhookFilter.create": {
+      "kind": "subscribe",
+      "method": "createWebhookFilter",
+      "input": {
+        "webhook_filter": { "type": "object", "required": true }
+      },
+      "output": "webhookFilter"
+    },
+    "webhookFilter.list": {
+      "kind": "read",
+      "method": "listWebhookFilters",
+      "input": {},
+      "output": "page<webhookFilter>"
+    },
+    "webhookSubscription.create": {
+      "kind": "subscribe",
+      "method": "createWebhookSubscription",
+      "input": {
+        "webhook_subscription": { "type": "object", "required": true }
+      },
+      "output": "webhookSubscription"
+    },
+    "webhookSubscription.list": {
+      "kind": "read",
+      "method": "listWebhookSubscriptions",
+      "input": {},
+      "output": "page<webhookSubscription>"
+    },
+    "webhookSubscription.delete": {
+      "kind": "delete",
+      "method": "deleteWebhookSubscription",
+      "input": {
+        "yotpoSubscriptionId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["yotpoSubscriptionId"]
+    }
+  }
+}

@@ -106,4 +106,13 @@ describe('Intercom Definition', () => {
         await Definition.requiredAuthMethods.testAuthRequest(api);
         expect(called).toBe(true);
     });
+
+    it('omits redirect_uri when REDIRECT_URI is unset', () => {
+        expect(Definition.env.redirect_uri).toBe(
+            process.env.REDIRECT_URI
+                ? `${process.env.REDIRECT_URI}/intercom`
+                : undefined
+        );
+    });
+
 });

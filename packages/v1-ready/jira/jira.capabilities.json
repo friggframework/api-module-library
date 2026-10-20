@@ -6,12 +6,17 @@
   "version": "1.0.0",
   "auth": "oauth2",
   "account": {
-    "description": "Connected Jira Cloud site. Entity/credential externalId is the Atlassian cloudId from accessible-resources.",
+    "description": "Connected Jira Cloud site. Entity/credential externalId is the Atlassian cloudId. `site` is the host (e.g. acme.atlassian.net) from accessible-resources url. Aligned with lefthook-bots draft manifest account fields.",
     "fields": [
+      {
+        "name": "site",
+        "type": "string",
+        "description": "Atlassian site host (acme.atlassian.net)"
+      },
       {
         "name": "cloudId",
         "type": "string",
-        "description": "Atlassian site cloudId (externalId)"
+        "description": "Atlassian cloud id used in API URLs"
       },
       {
         "name": "siteName",
@@ -21,11 +26,62 @@
       {
         "name": "siteUrl",
         "type": "string",
-        "description": "Site URL (e.g. https://example.atlassian.net)"
+        "description": "Full site URL (https://acme.atlassian.net)"
       }
     ]
   },
   "objects": {
+    "issue": {
+      "label": "Issue",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "key", "type": "string", "tag": "record.displayId", "readOnly": true },
+        { "name": "fields.summary", "type": "string", "tag": "ticket.subject", "required": true },
+        { "name": "fields.description", "type": "text", "tag": "ticket.description" },
+        { "name": "fields.issuetype.id", "type": "string" },
+        { "name": "fields.project.key", "type": "string" },
+        { "name": "fields.project.id", "type": "string" },
+        {
+          "name": "fields.priority.name",
+          "type": "enum",
+          "tag": "ticket.priority",
+          "values": ["Highest", "High", "Medium", "Low", "Lowest"]
+        },
+        { "name": "fields.labels", "type": "string[]", "tag": "record.tags" },
+        { "name": "fields.assignee.accountId", "type": "string", "tag": "record.owner" },
+        { "name": "fields.reporter.accountId", "type": "string" },
+        { "name": "fields.status.name", "type": "string", "tag": "ticket.status", "readOnly": true },
+        {
+          "name": "fields.status.statusCategory.key",
+          "type": "enum",
+          "values": ["new", "indeterminate", "done"],
+          "readOnly": true
+        },
+        { "name": "fields.resolution.name", "type": "string", "readOnly": true },
+        { "name": "fields.created", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "fields.updated", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "key",
+        "updatedAt": "fields.updated",
+        "list": {
+          "capability": "issue.search",
+          "items": "issues",
+          "paging": "nextPageToken"
+        },
+        "get": {
+          "capability": "issue.get",
+          "id": "issueIdOrKey"
+        },
+        "create": {
+          "capability": "issue.create"
+        },
+        "update": {
+          "capability": "issue.update",
+          "id": "issueIdOrKey"
+        }
+      }
+    },
     "user": {
       "label": "User",
       "fields": [
@@ -50,9 +106,9 @@
         { "name": "description", "type": "text" }
       ],
       "sync": {
-        "id": "id",
+        "id": "key",
         "list": {
-          "capability": "project.search",
+          "capability": "project.list",
           "items": "values",
           "paging": "startAt"
         },
@@ -66,44 +122,6 @@
         },
         "update": {
           "capability": "project.update",
-          "body": "$"
-        }
-      }
-    },
-    "issue": {
-      "label": "Issue",
-      "fields": [
-        { "name": "id", "type": "id", "readOnly": true },
-        { "name": "key", "type": "string", "readOnly": true },
-        { "name": "fields.summary", "type": "string", "tag": "record.displayName", "required": true },
-        { "name": "fields.description", "type": "json" },
-        { "name": "fields.issuetype.id", "type": "string" },
-        { "name": "fields.project.id", "type": "string" },
-        { "name": "fields.status.name", "type": "string" },
-        { "name": "fields.assignee.accountId", "type": "string" },
-        { "name": "fields.reporter.accountId", "type": "string" },
-        { "name": "fields.priority.id", "type": "string" },
-        { "name": "fields.created", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
-        { "name": "fields.updated", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
-      ],
-      "sync": {
-        "id": "id",
-        "updatedAt": "fields.updated",
-        "list": {
-          "capability": "issue.searchJql",
-          "items": "issues",
-          "paging": "nextPageToken"
-        },
-        "get": {
-          "capability": "issue.get",
-          "id": "issueIdOrKey"
-        },
-        "create": {
-          "capability": "issue.create",
-          "body": "$"
-        },
-        "update": {
-          "capability": "issue.edit",
           "body": "$"
         }
       }
@@ -133,59 +151,107 @@
     "issue.created": {
       "delivery": "webhook",
       "object": "issue",
-      "description": "Dynamic webhook event jira:issue_created",
-      "match": "jira:issue_created"
+      "subscribe": "webhook.register",
+      "description": "jira:issue_created from a dynamic webhook registered by the OAuth app.",
+      "match": "jira:issue_created",
+      "record": "issue"
     },
     "issue.updated": {
       "delivery": "webhook",
       "object": "issue",
-      "description": "Dynamic webhook event jira:issue_updated",
-      "match": "jira:issue_updated"
+      "subscribe": "webhook.register",
+      "description": "jira:issue_updated from a dynamic webhook registered by the OAuth app. Dynamic webhooks expire after 30 days unless refreshed.",
+      "match": "jira:issue_updated",
+      "record": "issue"
     },
     "issue.deleted": {
       "delivery": "webhook",
       "object": "issue",
-      "description": "Dynamic webhook event jira:issue_deleted",
-      "match": "jira:issue_deleted"
+      "subscribe": "webhook.register",
+      "description": "jira:issue_deleted",
+      "match": "jira:issue_deleted",
+      "record": "issue"
     },
     "comment.created": {
       "delivery": "webhook",
       "object": "comment",
-      "description": "Dynamic webhook event comment_created",
+      "subscribe": "webhook.register",
+      "description": "comment_created",
       "match": "comment_created"
     }
   },
   "webhook": {
-    "scope": "app",
-    "batch": ["event"],
-    "topic": "{{webhookEvent}}",
+    "scope": "installation",
+    "topic": "{{body.webhookEvent}}",
+    "eventId": "{{body.issue.id}}:{{body.timestamp}}",
     "account": "{{cloudId}}",
     "verify": "verifyWebhookSignature",
-    "note": "OAuth 2.0 dynamic webhooks are registered via POST /rest/api/3/webhook. Deliveries include an Authorization bearer JWT signed with the app client secret. Only Connect and OAuth 2.0 apps can register; non-public OAuth apps only receive events when app owner matches the registering user."
+    "note": "OAuth 2.0 dynamic webhooks via POST /rest/api/3/webhook. Deliveries include Authorization bearer JWT signed with the app client secret. Expire after ~30 days unless refreshWebhooks is called."
   },
   "capabilities": {
-    "auth.accessibleResources": {
-      "kind": "read",
-      "method": "getAccessibleResources",
-      "args": []
+    "issue.create": {
+      "kind": "write",
+      "method": "createIssue",
+      "input": {
+        "fields": { "type": "object", "required": true }
+      },
+      "output": "issue",
+      "args": ["body", "params"]
     },
-    "user.me": {
+    "issue.get": {
       "kind": "read",
-      "method": "getCurrentUser",
-      "output": "user",
-      "args": ["params"]
+      "method": "getIssue",
+      "input": {
+        "issueIdOrKey": { "type": "string", "required": true },
+        "fields": { "type": "array" }
+      },
+      "output": "issue",
+      "args": ["issueIdOrKey", "params"]
     },
-    "user.find": {
-      "kind": "read",
-      "method": "findUsers",
-      "output": "user",
-      "args": ["params"]
+    "issue.update": {
+      "kind": "write",
+      "method": "editIssue",
+      "input": {
+        "issueIdOrKey": { "type": "string", "required": true },
+        "fields": { "type": "object", "required": true }
+      },
+      "output": "void",
+      "args": ["issueIdOrKey", "body", "params"]
     },
-    "project.search": {
+    "issue.addComment": {
+      "kind": "write",
+      "method": "addComment",
+      "input": {
+        "issueIdOrKey": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "comment",
+      "args": ["issueIdOrKey", "body", "params"]
+    },
+    "issue.search": {
+      "kind": "search",
+      "method": "searchAndReconsileIssuesUsingJql",
+      "input": {
+        "jql": { "type": "string", "required": true },
+        "maxResults": { "type": "number" },
+        "fields": { "type": "array" }
+      },
+      "output": "issue[]",
+      "args": ["params"],
+      "note": "Draft named method searchJql; Api uses official swagger operationId searchAndReconsileIssuesUsingJql (GET /search/jql)."
+    },
+    "issue.delete": {
+      "kind": "write",
+      "method": "deleteIssue",
+      "args": ["issueIdOrKey", "params"]
+    },
+    "project.list": {
       "kind": "read",
       "method": "searchProjects",
-      "output": "project",
-      "args": ["params"]
+      "input": {},
+      "output": "project[]",
+      "args": ["params"],
+      "note": "Draft named method listProjects; Api uses official swagger operationId searchProjects (GET /project/search)."
     },
     "project.get": {
       "kind": "read",
@@ -205,46 +271,35 @@
       "output": "project",
       "args": ["projectIdOrKey", "body"]
     },
-    "issue.create": {
+    "webhook.register": {
+      "kind": "subscribe",
+      "method": "registerDynamicWebhooks",
+      "input": {
+        "url": { "type": "string", "required": true },
+        "events": { "type": "array", "required": true },
+        "jqlFilter": { "type": "string", "required": true }
+      },
+      "output": "webhook[]",
+      "args": ["body"]
+    },
+    "webhook.refresh": {
       "kind": "write",
-      "method": "createIssue",
-      "output": "issue",
-      "args": ["body", "params"]
+      "method": "refreshWebhooks",
+      "input": {
+        "webhookIds": { "type": "array", "required": true }
+      },
+      "output": "void",
+      "args": ["body"]
     },
-    "issue.get": {
-      "kind": "read",
-      "method": "getIssue",
-      "output": "issue",
-      "args": ["issueIdOrKey", "params"]
-    },
-    "issue.edit": {
-      "kind": "write",
-      "method": "editIssue",
-      "output": "issue",
-      "args": ["issueIdOrKey", "body", "params"]
-    },
-    "issue.delete": {
-      "kind": "write",
-      "method": "deleteIssue",
-      "args": ["issueIdOrKey", "params"]
-    },
-    "issue.searchJql": {
-      "kind": "read",
-      "method": "searchAndReconsileIssuesUsingJql",
-      "output": "issue",
-      "args": ["params"]
-    },
-    "comment.list": {
-      "kind": "read",
-      "method": "getComments",
-      "output": "comment",
-      "args": ["issueIdOrKey", "params"]
-    },
-    "comment.add": {
-      "kind": "write",
-      "method": "addComment",
-      "output": "comment",
-      "args": ["issueIdOrKey", "body", "params"]
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhookById",
+      "input": {
+        "webhookIds": { "type": "array", "required": true }
+      },
+      "output": "void",
+      "args": ["body"],
+      "note": "Draft named method deleteWebhooks; Api uses official swagger operationId deleteWebhookById."
     },
     "webhook.list": {
       "kind": "read",
@@ -252,28 +307,68 @@
       "output": "webhook",
       "args": ["params"]
     },
-    "webhook.create": {
-      "kind": "write",
-      "method": "registerDynamicWebhooks",
-      "output": "webhook",
-      "args": ["body"]
+    "auth.accessibleResources": {
+      "kind": "read",
+      "method": "getAccessibleResources",
+      "args": []
     },
-    "webhook.delete": {
-      "kind": "write",
-      "method": "deleteWebhookById",
-      "args": ["body"]
+    "user.me": {
+      "kind": "read",
+      "method": "getCurrentUser",
+      "output": "user",
+      "args": ["params"]
     },
-    "webhook.refresh": {
-      "kind": "write",
-      "method": "refreshWebhooks",
-      "args": ["body"]
+    "user.find": {
+      "kind": "read",
+      "method": "findUsers",
+      "output": "user",
+      "args": ["params"]
+    },
+    "comment.list": {
+      "kind": "read",
+      "method": "getComments",
+      "output": "comment",
+      "args": ["issueIdOrKey", "params"]
+    }
+  },
+  "skipped": {
+    "issue.transition": {
+      "method": "transitionIssue",
+      "officialOperationId": "doTransition",
+      "path": "POST /rest/api/3/issue/{issueIdOrKey}/transitions",
+      "scope": "write:jira-work",
+      "reason": "Present in lefthook-bots draft and swagger-v3, but out of this module's initial CRUD/search/webhook cut. Not implemented on Api."
+    },
+    "remoteLink.create": {
+      "method": "createRemoteLink",
+      "officialOperationId": "createOrUpdateRemoteIssueLink",
+      "path": "POST /rest/api/3/issue/{issueIdOrKey}/remotelink",
+      "scope": "write:jira-work",
+      "reason": "Present in lefthook-bots draft and swagger-v3 (remote issue links). Out of initial scope — not implemented on Api."
+    },
+    "issueType.list": {
+      "method": "listIssueTypes",
+      "officialOperationId": "getIssueAllTypes (or getCreateIssueMetaIssueTypes for project-scoped)",
+      "path": "GET /rest/api/3/issuetype (alt: GET /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes)",
+      "scope": "read:jira-work",
+      "reason": "Present in lefthook-bots draft (options.issueType) and swagger-v3. Out of initial scope — not implemented on Api. Draft method name listIssueTypes does not match either official operationId."
     }
   },
   "options": {
     "project": {
-      "capability": "project.search",
+      "capability": "project.list",
       "label": "{{item.name}} ({{item.key}})",
-      "value": "$.item.id"
+      "value": "$.item.key"
+    },
+    "issueType": {
+      "capability": "issueType.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id",
+      "status": "unimplemented",
+      "note": "Blocked on skipped.issueType.list"
     }
+  },
+  "credits": {
+    "lefthookBotsDraft": "definitions/manifests/jira (private lefthook-bots) — issue object/tags, account.site+cloudId, events, webhook.register/refresh/delete, issue.* and project.list capability keys adopted; transition/remoteLink/issueType listed under skipped."
   }
 }

@@ -106,6 +106,40 @@ describe('Capability manifest ↔ client sync', () => {
         expect(missing).toEqual([]);
     });
 
+    it('covers lefthook-bots draft capabilities (mapped or skipped)', () => {
+        // Draft keys from lefthook-bots definitions/manifests/jira
+        const draftCaps = [
+            'issue.create',
+            'issue.get',
+            'issue.update',
+            'issue.addComment',
+            'issue.transition',
+            'issue.search',
+            'remoteLink.create',
+            'project.list',
+            'issueType.list',
+            'webhook.register',
+            'webhook.refresh',
+            'webhook.delete',
+        ];
+        for (const key of draftCaps) {
+            const wired = manifest.capabilities[key];
+            const skipped = manifest.skipped && manifest.skipped[key];
+            expect(wired || skipped).toBeTruthy();
+            if (wired) {
+                expect(clientMethods).toContain(wired.method);
+            } else {
+                expect(skipped.reason).toMatch(/\S/);
+                expect(clientMethods).not.toContain(skipped.method);
+            }
+        }
+        expect(manifest.account.fields.map((f) => f.name)).toEqual(
+            expect.arrayContaining(['site', 'cloudId'])
+        );
+        expect(manifest.objects.issue).toBeTruthy();
+        expect(manifest.webhook.verify).toBe('verifyWebhookSignature');
+    });
+
     it('webhook.verify points at verifyWebhookSignature', () => {
         expect(manifest.webhook.verify).toBe('verifyWebhookSignature');
         expect(clientMethods).toContain('verifyWebhookSignature');

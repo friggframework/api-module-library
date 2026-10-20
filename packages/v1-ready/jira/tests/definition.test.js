@@ -21,12 +21,13 @@ describe('Jira Definition', () => {
         expect(reqs.url).toContain('auth.atlassian.com/authorize');
     });
 
-    it('persists tokens and cloudId on the credential', () => {
+    it('persists tokens, cloudId, and site on the credential', () => {
         expect(Definition.requiredAuthMethods.apiPropertiesToPersist).toEqual({
             credential: [
                 'access_token',
                 'refresh_token',
                 'cloudId',
+                'site',
                 'siteUrl',
                 'siteName',
                 'accessTokenExpire',

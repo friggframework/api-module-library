@@ -78,6 +78,7 @@ const Definition = {
                 details: {
                     name: identity.name,
                     siteUrl: identity.siteUrl,
+                    site: api.site || null,
                     cloudId: identity.externalId,
                 },
             };
@@ -96,6 +97,7 @@ const Definition = {
                 'access_token',
                 'refresh_token',
                 'cloudId',
+                'site',
                 'siteUrl',
                 'siteName',
                 'accessTokenExpire',

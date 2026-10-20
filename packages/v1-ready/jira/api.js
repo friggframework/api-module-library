@@ -131,6 +131,19 @@ class Api extends OAuth2Requester {
             null;
         this.siteUrl = get(params, 'siteUrl', null) || get(params, 'site_url', null);
         this.siteName = get(params, 'siteName', null) || get(params, 'site_name', null);
+        this.site =
+            get(params, 'site', null) ||
+            (this.siteUrl
+                ? (() => {
+                      try {
+                          return new URL(this.siteUrl).host;
+                      } catch (_e) {
+                          return String(this.siteUrl)
+                              .replace(/^https?:\/\//, '')
+                              .replace(/\/$/, '');
+                      }
+                  })()
+                : null);
 
         this._applyCloudUrls();
         this.authorizationUri = this._buildAuthorizationUri();
@@ -161,7 +174,17 @@ class Api extends OAuth2Requester {
      */
     setCloudId(cloudId, meta = {}) {
         this.cloudId = cloudId ? String(cloudId) : null;
-        if (meta.url) this.siteUrl = meta.url;
+        if (meta.url) {
+            this.siteUrl = meta.url;
+            // Host only (acme.atlassian.net) — matches lefthook-bots account.site
+            try {
+                this.site = new URL(meta.url).host;
+            } catch (_e) {
+                this.site = String(meta.url)
+                    .replace(/^https?:\/\//, '')
+                    .replace(/\/$/, '');
+            }
+        }
         if (meta.name) this.siteName = meta.name;
         this._applyCloudUrls();
     }

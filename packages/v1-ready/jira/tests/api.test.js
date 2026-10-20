@@ -91,6 +91,7 @@ describe('Jira Api', () => {
             });
             expect(api.cloudId).toBe('site-1');
             expect(api.siteUrl).toBe('https://acme.atlassian.net');
+            expect(api.site).toBe('acme.atlassian.net');
             expect(api.siteName).toBe('Acme');
             expect(api.baseUrl).toContain('/ex/jira/site-1/');
         });

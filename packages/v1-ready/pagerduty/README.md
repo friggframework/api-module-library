@@ -20,7 +20,8 @@ V3 webhook subscriptions.
 
 - REST overview: https://developer.pagerduty.com/docs/rest-api-overview
 - OAuth: https://developer.pagerduty.com/docs/oauth-functionality
-- Official OpenAPI: https://github.com/PagerDuty/api-schema (`reference/REST/openapiv3.json`)
+- Official OpenAPI (canonical): https://raw.githubusercontent.com/PagerDuty/api-schema/main/reference/REST/openapiv3.json
+- OpenAPI repo: https://github.com/PagerDuty/api-schema
 - Webhook signature verify: https://developer.pagerduty.com/docs/verifying-signatures
 
 ## Installation

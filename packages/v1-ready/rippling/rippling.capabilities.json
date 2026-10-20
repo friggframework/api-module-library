@@ -1,0 +1,176 @@
+{
+  "schema": "capability-manifest/v0.1",
+  "module": "rippling",
+  "package": "@friggframework/api-module-rippling",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "grant": "authorization_code",
+    "methods": {
+      "getToken": "getTokenFromCode",
+      "testAuth": "listCompanies"
+    },
+    "credentials": ["client_id", "client_secret", "app_name"],
+    "docs": "https://developer.rippling.com/documentation/developer-portal/v2-guides/installation"
+  },
+  "objects": {
+    "company": {
+      "description": "Rippling tenant organization bound to the OAuth access token",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "name", "tags": ["display"] },
+        { "name": "legal_name", "tags": ["display"] },
+        { "name": "primary_email", "tags": ["pii", "identity"] },
+        { "name": "phone", "tags": ["pii"] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listCompanies",
+          "spec": "rippling.openapi.yaml#/paths/~1companies~/get"
+        }
+      }
+    },
+    "worker": {
+      "description": "Employment/engagement profile (HR worker record). Distinct from User.",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "user_id", "tags": ["relation"] },
+        { "name": "work_email", "tags": ["pii", "identity", "lookup"] },
+        { "name": "status", "tags": ["enum"] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listWorkers",
+          "spec": "rippling.openapi.yaml#/paths/~1workers~/get"
+        },
+        "get": {
+          "method": "getWorker",
+          "spec": "rippling.openapi.yaml#/paths/~1workers~1{id}~/get"
+        },
+        "create": {
+          "method": "createDraftHires",
+          "spec": "rippling.openapi.yaml#/paths/~1draft-hires~/post",
+          "notes": "Workers are created via draft hires; an admin finishes hiring in Rippling."
+        }
+      }
+    },
+    "user": {
+      "description": "Person/login profile associated with one or more workers",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "username", "tags": ["identity", "lookup"] },
+        { "name": "display_name", "tags": ["display"] },
+        { "name": "active", "tags": ["enum"] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listUsers",
+          "spec": "rippling.openapi.yaml#/paths/~1users~/get"
+        },
+        "get": {
+          "method": "getUser",
+          "spec": "rippling.openapi.yaml#/paths/~1users~1{id}~/get"
+        }
+      }
+    },
+    "department": {
+      "description": "Organizational department",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "name", "tags": ["display", "required"] },
+        { "name": "parent_id", "tags": ["relation"] },
+        { "name": "reference_code", "tags": ["lookup"] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listDepartments",
+          "spec": "rippling.openapi.yaml#/paths/~1departments~/get"
+        },
+        "get": {
+          "method": "getDepartment",
+          "spec": "rippling.openapi.yaml#/paths/~1departments~1{id}~/get"
+        },
+        "create": {
+          "method": "createDepartment",
+          "spec": "rippling.openapi.yaml#/paths/~1departments~/post"
+        },
+        "update": {
+          "method": "updateDepartment",
+          "spec": "rippling.openapi.yaml#/paths/~1departments~1{id}~/patch"
+        }
+      }
+    },
+    "workLocation": {
+      "description": "Company work location / site",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "name", "tags": ["display", "required"] },
+        { "name": "address.street_address", "tags": ["address"] },
+        { "name": "address.locality", "tags": ["address"] },
+        { "name": "address.region", "tags": ["address"] },
+        { "name": "address.postal_code", "tags": ["address"] },
+        { "name": "address.country", "tags": ["address"] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listWorkLocations",
+          "spec": "rippling.openapi.yaml#/paths/~1work-locations~/get"
+        },
+        "get": {
+          "method": "getWorkLocation",
+          "spec": "rippling.openapi.yaml#/paths/~1work-locations~1{id}~/get"
+        },
+        "create": {
+          "method": "createWorkLocation",
+          "spec": "rippling.openapi.yaml#/paths/~1work-locations~/post"
+        },
+        "update": {
+          "method": "updateWorkLocation",
+          "spec": "rippling.openapi.yaml#/paths/~1work-locations~1{id}~/patch"
+        }
+      }
+    },
+    "draftHire": {
+      "description": "Draft hire candidates awaiting admin completion of hiring",
+      "fields": [
+        { "name": "draft_hire_role_id", "tags": ["identifier"] },
+        { "name": "status", "tags": ["enum"] },
+        { "name": "message", "tags": [] }
+      ],
+      "capabilities": {
+        "create": {
+          "method": "createDraftHires",
+          "spec": "rippling.openapi.yaml#/paths/~1draft-hires~/post"
+        }
+      }
+    }
+  },
+  "skipped": {
+    "webhooks": {
+      "reason": "App Shop webhooks are configured in the Rippling Developer Portal (Integration → Webhook → Webhook URL). There is no public REST create/list/delete subscription API for partner webhooks. In-product webhooks trigger Rippling workflows/functions, not third-party subscription management.",
+      "docs": "https://developer.rippling.com/documentation/developer-portal/v2-guides/webhooks"
+    },
+    "workerUpdate": {
+      "reason": "HRIS getting-started documents workers as list/get; create is via draft-hires. A general PATCH /workers/{id} update surface was not verified from public docs without partner sign-in for this cut.",
+      "docs": "https://developer.rippling.com/documentation/rest-api/guides/hris-getting-started"
+    },
+    "compensations": {
+      "reason": "Compensations list/get are documented but deferred from this first cut; add when an integration needs pay data (scope compensations.read).",
+      "docs": "https://developer.rippling.com/documentation/rest-api/reference/list-compensations"
+    },
+    "v1Apis": {
+      "reason": "Legacy V1 hosts (api.rippling.com employee/company/payroll paths) are archived for new work. Exception: OAuth token URL and mark_app_installed remain on api.rippling.com per the v2 Installation guide.",
+      "docs": "https://developer.rippling.com/documentation/v1-archive-api"
+    }
+  }
+}

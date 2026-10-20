@@ -19,10 +19,11 @@ For marketplace / multi-account distribution Zendesk requires a **global OAuth c
 | Area | Methods |
 |---|---|
 | Identity | `getCurrentUser` |
-| Tickets | `listTickets`, `getTicket`, `createTicket`, `updateTicket`, `deleteTicket`, `listTicketComments` |
+| Tickets | `listTickets`, `getTicket`, `createTicket`, `updateTicket`, `addTicketComment`, `deleteTicket`, `listTicketComments`, `searchTickets` |
 | Users | `listUsers`, `getUser`, `createUser`, `updateUser`, `deleteUser` |
 | Organizations | `listOrganizations`, `getOrganization`, `createOrganization`, `updateOrganization`, `deleteOrganization` |
-| Webhooks | `listWebhooks`, `getWebhook`, `createWebhook`, `updateWebhook`, `deleteWebhook`, `getWebhookSigningSecret` |
+| Groups | `listGroups` |
+| Webhooks | `listWebhooks`, `getWebhook`, `createWebhook`, `updateWebhook`, `deleteWebhook`, `getWebhookSigningSecret`; `Api.verifyWebhookSignature` (static) |
 
 Inbound webhook verification lives under `extensions/webhooks/` (HubSpot-style Tier-3 bundle).
 
@@ -30,7 +31,7 @@ Inbound webhook verification lives under `extensions/webhooks/` (HubSpot-style T
 
 - `api.js` / `definition.js` / `index.js`
 - `zendesk.openapi.yaml` — curated OpenAPI subset (1:1 with `api.js`)
-- `zendesk.capabilities.json` — `capability-manifest/v0.1` (compared to lefthook-bots draft; unimplemented draft entries listed under `skipped`)
+- `zendesk.capabilities.json` — `capability-manifest/v0.1` (covers lefthook-bots draft capabilities)
 - `zendesk.fenestra.yaml` — Support app UI locations (ZAF)
 - `tests/` — offline Jest (api, definition, spec-sync, webhooks)
 

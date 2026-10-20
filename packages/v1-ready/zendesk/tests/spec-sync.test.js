@@ -23,16 +23,34 @@ const specOperationIds = Object.values(spec.paths).flatMap((item) =>
         .map(([, op]) => op.operationId)
 );
 
+const helperOperationIds = (spec['x-frigg-helpers'] || []).map(
+    (h) => h.operationId
+);
+
 const clientMethods = Object.getOwnPropertyNames(Api.prototype).filter(
     (m) => typeof Api.prototype[m] === 'function' && m !== 'constructor'
 );
 
 describe('OpenAPI spec ↔ client sync', () => {
     it('every operationId has a matching client method', () => {
-        const missing = specOperationIds.filter(
+        const missing = [...specOperationIds, ...helperOperationIds].filter(
             (op) => !clientMethods.includes(op)
         );
         expect(missing).toEqual([]);
+    });
+
+    it('documents ListSearchResults and ListGroups from the vendor OAS', () => {
+        expect(spec.paths['/api/v2/search'].get.operationId).toBe(
+            'searchTickets'
+        );
+        expect(spec.paths['/api/v2/search'].get.description).toMatch(
+            /ListSearchResults/
+        );
+        expect(spec.paths['/api/v2/groups'].get.operationId).toBe('listGroups');
+        expect(spec.paths['/api/v2/groups'].get.description).toMatch(
+            /ListGroups/
+        );
+        expect(helperOperationIds).toContain('addTicketComment');
     });
 
     it('the base server URL matches the client baseUrl', () => {
@@ -93,13 +111,14 @@ describe('Capability manifest ↔ client sync', () => {
         expect(userEmail.tag).toBe('contact.email');
     });
 
-    it('maps lefthook-bots draft capabilities to Api methods or skipped', () => {
-        // Draft: ticket.get→showTicket, ticket.update, user.get→showUser,
-        // webhook.create, webhook.delete — implemented under our method names.
+    it('covers every lefthook-bots draft capability with a real Api method', () => {
         const mapped = {
             'ticket.get': 'getTicket',
             'ticket.update': 'updateTicket',
+            'ticket.addComment': 'addTicketComment',
+            'ticket.search': 'searchTickets',
             'user.get': 'getUser',
+            'group.list': 'listGroups',
             'webhook.create': 'createWebhook',
             'webhook.delete': 'deleteWebhook',
         };
@@ -107,14 +126,14 @@ describe('Capability manifest ↔ client sync', () => {
             expect(capabilities.capabilities[cap].method).toBe(method);
             expect(clientMethods).toContain(method);
         }
-        // Draft-only capabilities must not appear as live capabilities.
-        for (const key of Object.keys(capabilities.skipped.capabilities)) {
-            expect(capabilities.capabilities[key]).toBeUndefined();
-            expect(capabilities.skipped.capabilities[key].reason).toBeTruthy();
-        }
-        expect(capabilities.skipped.source).toMatch(/lefthook-bots/);
+        expect(capabilities.options.group.capability).toBe('group.list');
+        expect(capabilities.objects.group).toBeTruthy();
+        expect(capabilities.webhook.verify).toBe('verifyWebhookSignature');
+        expect(typeof Api.verifyWebhookSignature).toBe('function');
         expect(capabilities.events['ticket.tagsChanged'].match).toBe(
             'zen:event-type:ticket.tags_changed'
         );
+        // No draft capabilities left under skipped.capabilities
+        expect(capabilities.skipped.capabilities).toBeUndefined();
     });
 });

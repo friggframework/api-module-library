@@ -41,10 +41,12 @@ class Api extends OAuth2Requester {
             tickets: '/api/v2/tickets',
             ticketById: (id) => `/api/v2/tickets/${id}`,
             ticketComments: (id) => `/api/v2/tickets/${id}/comments`,
+            search: '/api/v2/search',
             users: '/api/v2/users',
             userById: (id) => `/api/v2/users/${id}`,
             organizations: '/api/v2/organizations',
             organizationById: (id) => `/api/v2/organizations/${id}`,
+            groups: '/api/v2/groups',
             webhooks: '/api/v2/webhooks',
             webhookById: (id) => `/api/v2/webhooks/${id}`,
             webhookSigningSecret: (id) =>
@@ -285,6 +287,20 @@ class Api extends OAuth2Requester {
     }
 
     /**
+     * Add a comment to a ticket (helper wrapping UpdateTicket).
+     * PUT /api/v2/tickets/{ticket_id} with `{ ticket: { comment: { body, public } } }`.
+     * Official OAS has no dedicated create-comment path; comments are written
+     * via UpdateTicket's `ticket.comment` (TicketCommentObject).
+     */
+    async addTicketComment(ticketId, { body, public: isPublic } = {}) {
+        const comment = { body };
+        if (isPublic !== undefined) {
+            comment.public = isPublic;
+        }
+        return this.updateTicket(ticketId, { ticket: { comment } });
+    }
+
+    /**
      * Delete a ticket.
      * DELETE /api/v2/tickets/{ticket_id}
      * Official operationId: DeleteTicket
@@ -307,6 +323,57 @@ class Api extends OAuth2Requester {
             headers: { 'Content-Type': 'application/json' },
             query,
         });
+    }
+
+    /**
+     * Search tickets via the global Search API.
+     * GET /api/v2/search
+     * Official operationId: ListSearchResults
+     *
+     * Ensures `type:ticket` is present in the query string (appends it when
+     * the caller omits it) so results are restricted to tickets.
+     * @see https://developer.zendesk.com/api-reference/ticketing/ticket-management/search/
+     */
+    async searchTickets(query = {}) {
+        const q =
+            typeof query === 'string' ? { query } : { ...(query || {}) };
+        const raw = q.query != null ? String(q.query) : '';
+        if (!/\btype\s*:\s*ticket\b/i.test(raw)) {
+            q.query = raw.trim() ? `${raw.trim()} type:ticket` : 'type:ticket';
+        }
+        return this._get({
+            url: this.baseUrl + this.URLs.search,
+            headers: { 'Content-Type': 'application/json' },
+            query: q,
+        });
+    }
+
+    /**
+     * List groups.
+     * GET /api/v2/groups
+     * Official operationId: ListGroups
+     */
+    async listGroups(query = {}) {
+        return this._get({
+            url: this.baseUrl + this.URLs.groups,
+            headers: { 'Content-Type': 'application/json' },
+            query,
+        });
+    }
+
+    /**
+     * Verify an inbound Zendesk webhook signature.
+     * Delegates to extensions/webhooks/signature-verifier.js (lefthook-bots
+     * draft name: verifyWebhookSignature).
+     *
+     * @param {{ req: object, signingSecret: string }} args
+     * @returns {{ valid: boolean, reason?: string }}
+     */
+    static verifyWebhookSignature(args) {
+        const {
+            verifyZendeskSignature,
+        } = require('./extensions/webhooks/signature-verifier');
+        return verifyZendeskSignature(args);
     }
 
     // ---- Users -------------------------------------------------------------

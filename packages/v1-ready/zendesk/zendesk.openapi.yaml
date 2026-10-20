@@ -34,7 +34,18 @@ tags:
   - name: Users
   - name: Tickets
   - name: Organizations
+  - name: Groups
+  - name: Search
   - name: Webhooks
+# Module helpers that wrap official OAS operations (not separate HTTP paths).
+x-frigg-helpers:
+  - operationId: addTicketComment
+    wraps: updateTicket
+    description: >-
+      Helper for lefthook-bots `ticket.addComment`. Calls UpdateTicket
+      (PUT /api/v2/tickets/{ticket_id}) with
+      `{ "ticket": { "comment": { "body", "public" } } }`. Official OAS has
+      no dedicated create-comment path.
 paths:
   /api/v2/users/me:
     get:
@@ -141,7 +152,11 @@ paths:
       tags: [Tickets]
       operationId: updateTicket
       summary: Update a ticket
-      description: "Official operationId: UpdateTicket. Official response schema TicketUpdateResponse includes ticket + audit."
+      description: >-
+        Official operationId: UpdateTicket. Official response schema
+        TicketUpdateResponse includes ticket + audit. Add comments via
+        `ticket.comment` (TicketCommentObject); module helper
+        `addTicketComment` wraps this path for lefthook-bots.
       requestBody:
         content:
           application/json:
@@ -201,6 +216,68 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/TicketComment"
+
+  /api/v2/search:
+    get:
+      tags: [Search]
+      operationId: searchTickets
+      summary: Search tickets
+      description: >-
+        Official operationId: ListSearchResults (GET /api/v2/search).
+        Module helper `searchTickets` ensures the query includes `type:ticket`
+        so results are restricted to tickets. Query syntax:
+        https://developer.zendesk.com/api-reference/ticketing/ticket-management/search/
+      parameters:
+        - in: query
+          name: query
+          required: true
+          schema: { type: string }
+          description: Search query; module appends `type:ticket` when missing
+        - in: query
+          name: sort_by
+          schema: { type: string }
+        - in: query
+          name: sort_order
+          schema: { type: string }
+        - in: query
+          name: include
+          schema: { type: string }
+      responses:
+        "200":
+          description: SearchResponse
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+
+  /api/v2/groups:
+    get:
+      tags: [Groups]
+      operationId: listGroups
+      summary: List groups
+      description: "Official operationId: ListGroups."
+      parameters:
+        - in: query
+          name: exclude_deleted
+          schema: { type: boolean }
+        - in: query
+          name: page
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+      responses:
+        "200":
+          description: GroupsResponse
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  groups:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Group"
 
   /api/v2/users:
     get:
@@ -751,6 +828,41 @@ components:
         tags:
           type: array
           items: { type: string }
+    Group:
+      type: object
+      description: Subset of official GroupObject (required name)
+      properties:
+        id: { type: integer, readOnly: true }
+        url: { type: string, readOnly: true }
+        name: { type: string }
+        description: { type: string }
+        default: { type: boolean, readOnly: true }
+        deleted: { type: boolean, readOnly: true }
+        is_public: { type: boolean }
+        created_at: { type: string, format: date-time, readOnly: true }
+        updated_at: { type: string, format: date-time, readOnly: true }
+    SearchResponse:
+      type: object
+      description: Official SearchResponse from ListSearchResults
+      properties:
+        count: { type: integer, readOnly: true }
+        facets: { type: string, nullable: true, readOnly: true }
+        next_page: { type: string, nullable: true, readOnly: true }
+        previous_page: { type: string, nullable: true, readOnly: true }
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              url: { type: string }
+              result_type: { type: string }
+              subject: { type: string }
+              description: { type: string }
+              status: { type: string }
+              priority: { type: string }
+              created_at: { type: string, format: date-time }
+              updated_at: { type: string, format: date-time }
     Webhook:
       type: object
       properties:

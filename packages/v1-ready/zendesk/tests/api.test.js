@@ -159,6 +159,74 @@ describe('Zendesk Api', () => {
                 'https://acme.zendesk.com/api/v2/tickets/99/comments'
             );
         });
+
+        it('addTicketComment wraps updateTicket with ticket.comment', async () => {
+            const api = makeApi();
+            await api.addTicketComment(12, {
+                body: 'Thanks',
+                public: false,
+            });
+            expect(api._captured[0]).toMatchObject({
+                method: 'PUT',
+                url: 'https://acme.zendesk.com/api/v2/tickets/12',
+                body: {
+                    ticket: { comment: { body: 'Thanks', public: false } },
+                },
+            });
+        });
+
+        it('searchTickets hits GET /search and ensures type:ticket', async () => {
+            const api = makeApi();
+            await api.searchTickets({ query: 'status:open' });
+            expect(api._captured[0].url).toBe(
+                'https://acme.zendesk.com/api/v2/search'
+            );
+            expect(api._captured[0].query.query).toBe(
+                'status:open type:ticket'
+            );
+            await api.searchTickets({ query: 'printer type:ticket' });
+            expect(api._captured[1].query.query).toBe('printer type:ticket');
+        });
+    });
+
+    describe('groups', () => {
+        it('listGroups hits GET /groups', async () => {
+            const api = makeApi();
+            await api.listGroups({ exclude_deleted: true });
+            expect(api._captured[0].url).toBe(
+                'https://acme.zendesk.com/api/v2/groups'
+            );
+            expect(api._captured[0].query).toEqual({ exclude_deleted: true });
+        });
+    });
+
+    describe('webhook signature', () => {
+        it('Api.verifyWebhookSignature delegates to the extension verifier', () => {
+            const crypto = require('crypto');
+            const body = '{"id":"evt-1"}';
+            const timestamp = '1710000000';
+            const secret = 'signing-secret';
+            const signature = crypto
+                .createHmac('sha256', secret)
+                .update(timestamp + body, 'utf8')
+                .digest('base64');
+            const ok = Api.verifyWebhookSignature({
+                req: {
+                    headers: {
+                        'x-zendesk-webhook-signature': signature,
+                        'x-zendesk-webhook-signature-timestamp': timestamp,
+                    },
+                    rawBody: body,
+                },
+                signingSecret: secret,
+            });
+            expect(ok).toEqual({ valid: true });
+            const bad = Api.verifyWebhookSignature({
+                req: { headers: {}, rawBody: body },
+                signingSecret: secret,
+            });
+            expect(bad.valid).toBe(false);
+        });
     });
 
     describe('users', () => {

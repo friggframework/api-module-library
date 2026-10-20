@@ -91,11 +91,17 @@ describe('GitHub Api', () => {
             const api = makeApi();
             await api.listReposForAuthenticatedUser({
                 visibility: 'all',
+                since: '2024-01-01T00:00:00Z',
+                before: '2024-12-31T23:59:59Z',
             });
             expect(api._captured[0].url).toBe(
                 'https://api.github.com/user/repos'
             );
             expect(api._captured[0].query.visibility).toBe('all');
+            expect(api._captured[0].query.since).toBe('2024-01-01T00:00:00Z');
+            expect(api._captured[0].query.before).toBe(
+                '2024-12-31T23:59:59Z'
+            );
         });
 
         it('createRepositoryForAuthenticatedUser POSTs to /user/repos', async () => {
@@ -182,12 +188,22 @@ describe('GitHub Api', () => {
             );
         });
 
-        it('createPullRequest POSTs', async () => {
+        it('createPullRequest POSTs (official required: head+base)', async () => {
             const api = makeApi();
-            const body = { title: 't', head: 'feature', base: 'main' };
+            const body = { head: 'feature', base: 'main', issue: 12 };
             await api.createPullRequest('o', 'r', body);
             expect(api._captured[0].method).toBe('POST');
             expect(api._captured[0].body).toEqual(body);
+        });
+
+        it('updateRepositoryWebhook forwards add_events', async () => {
+            const api = makeApi();
+            await api.updateRepositoryWebhook('o', 'r', 99, {
+                add_events: ['pull_request'],
+            });
+            expect(api._captured[0].body).toEqual({
+                add_events: ['pull_request'],
+            });
         });
 
         it('updatePullRequest PATCHes', async () => {

@@ -224,8 +224,8 @@ class Api extends OAuth2Requester {
      * GET /user/repos
      * Official operationId: repos/list-for-authenticated-user
      * Docs: https://docs.github.com/rest/repos/repos#list-repositories-for-the-authenticated-user
-     * Query: visibility, affiliation, type, sort, direction, per_page, page,
-     *        since, before.
+     * Query (official): visibility, affiliation, type, sort, direction,
+     * per_page, page, since, before.
      */
     async listReposForAuthenticatedUser(query = {}) {
         return this._get({
@@ -282,7 +282,9 @@ class Api extends OAuth2Requester {
      * Official operationId: issues/list-for-repo
      * Docs: https://docs.github.com/rest/issues/issues#list-repository-issues
      * Note: GitHub's issues list also returns pull requests (each PR is an
-     * issue). Filter with `?state=` / labels / etc. as documented.
+     * issue). Query (official): milestone, state, assignee, type, creator,
+     * mentioned, issue_field_values, labels, sort, direction, since,
+     * per_page, page.
      */
     async listRepositoryIssues(owner, repo, query = {}) {
         return this._get({
@@ -308,8 +310,9 @@ class Api extends OAuth2Requester {
      * POST /repos/{owner}/{repo}/issues
      * Official operationId: issues/create
      * Docs: https://docs.github.com/rest/issues/issues#create-an-issue
-     * Scope: public_repo or repo. Body: { title (required), body, assignees,
-     * labels, milestone, ... }
+     * Scope: public_repo or repo. Body: { title (required; string|integer),
+     * body, assignee, assignees, labels (string|object items), milestone,
+     * type, parent_issue_id, ... }
      */
     async createIssue(owner, repo, data) {
         return this._post({
@@ -363,7 +366,8 @@ class Api extends OAuth2Requester {
      * POST /repos/{owner}/{repo}/pulls
      * Official operationId: pulls/create
      * Docs: https://docs.github.com/rest/pulls/pulls#create-a-pull-request
-     * Body: { title, head, base (required), body, draft, ... }
+     * Body: { head, base (required), title (required unless issue), issue
+     * (required unless title), head_repo, body, draft, maintainer_can_modify }
      */
     async createPullRequest(owner, repo, data) {
         return this._post({
@@ -433,6 +437,7 @@ class Api extends OAuth2Requester {
      * PATCH /repos/{owner}/{repo}/hooks/{hook_id}
      * Official operationId: repos/update-webhook
      * Docs: https://docs.github.com/rest/repos/webhooks#update-a-repository-webhook
+     * Body: { config, events, add_events, remove_events, active }
      */
     async updateRepositoryWebhook(owner, repo, hookId, data) {
         return this._patch({

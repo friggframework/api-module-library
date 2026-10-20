@@ -61,7 +61,7 @@ this module yet — see open questions in the PR.
 | `updateIssue(owner, repo, issueNumber, data)` | `PATCH .../issues/{issue_number}` | `issues/update` |
 | `listPullRequests(owner, repo, query)` | `GET /repos/{owner}/{repo}/pulls` | `pulls/list` |
 | `getPullRequest(owner, repo, pullNumber)` | `GET .../pulls/{pull_number}` | `pulls/get` |
-| `createPullRequest(owner, repo, data)` | `POST .../pulls` | `pulls/create` |
+| `createPullRequest(owner, repo, data)` | `POST .../pulls` | `pulls/create` (required: `head`+`base`; `title` XOR `issue`) |
 | `updatePullRequest(owner, repo, pullNumber, data)` | `PATCH .../pulls/{pull_number}` | `pulls/update` |
 | `listRepositoryWebhooks(owner, repo, query)` | `GET .../hooks` | `repos/list-webhooks` |
 | `getRepositoryWebhook(owner, repo, hookId)` | `GET .../hooks/{hook_id}` | `repos/get-webhook` |

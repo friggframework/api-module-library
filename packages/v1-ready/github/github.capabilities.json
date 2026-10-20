@@ -81,6 +81,7 @@
         { "name": "title", "type": "string", "tags": ["display"] },
         { "name": "body", "type": "string", "tags": ["content"], "nullable": true },
         { "name": "state", "type": "string", "tags": ["status"] },
+        { "name": "state_reason", "type": "string", "tags": ["status"], "nullable": true, "enum": ["completed", "not_planned", "duplicate", "reopened"] },
         { "name": "html_url", "type": "string", "tags": ["link"] },
         { "name": "user.login", "type": "string", "tags": ["relation"] },
         { "name": "pull_request", "type": "object", "tags": ["relation"], "nullable": true }
@@ -93,7 +94,7 @@
       }
     },
     "pull_request": {
-      "description": "Pull request",
+      "description": "Pull request. Create requires head+base; title XOR issue per official OpenAPI.",
       "fields": [
         { "name": "id", "type": "integer", "tags": ["identifier"] },
         { "name": "number", "type": "integer", "tags": ["identifier"] },
@@ -112,7 +113,7 @@
       }
     },
     "repository_webhook": {
-      "description": "Repository webhook (hook) subscription",
+      "description": "Repository webhook (hook) subscription. Update supports add_events/remove_events.",
       "fields": [
         { "name": "id", "type": "integer", "tags": ["identifier"] },
         { "name": "name", "type": "string", "tags": [] },

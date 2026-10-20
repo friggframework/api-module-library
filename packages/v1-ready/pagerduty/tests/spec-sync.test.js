@@ -37,15 +37,13 @@ describe('OpenAPI spec ↔ client sync', () => {
         expect(spec.servers[0].url).toBe(api.baseUrl);
     });
 
-    it('declares oauth2 security with PagerDuty identity endpoints and Accept header', () => {
-        const scheme = spec.components.securitySchemes.oauth2;
-        expect(scheme.type).toBe('oauth2');
-        expect(scheme.flows.authorizationCode.authorizationUrl).toBe(
-            'https://identity.pagerduty.com/oauth/authorize'
-        );
-        expect(scheme.flows.authorizationCode.tokenUrl).toBe(
-            'https://identity.pagerduty.com/oauth/token'
-        );
+    it('declares the official api_key Authorization security scheme and Accept header', () => {
+        // Official OpenAPI securitySchemes only defines api_key (Token token=…).
+        const scheme = spec.components.securitySchemes.api_key;
+        expect(scheme.type).toBe('apiKey');
+        expect(scheme.in).toBe('header');
+        expect(scheme.name).toBe('Authorization');
+        expect(scheme.description).toMatch(/Token token=/);
         const acceptHeader = (scheme['x-additional-headers'] || []).find(
             (h) => h.name === 'Accept'
         );
@@ -59,5 +57,28 @@ describe('OpenAPI spec ↔ client sync', () => {
             redirect_uri: 'https://ex.com/r',
         });
         expect(acceptHeader.schema.default).toBe(api.acceptHeader);
+    });
+
+    it('uses official []-suffixed names for exploded array query params', () => {
+        const listIncidents = spec.paths['/incidents'].get;
+        const names = (listIncidents.parameters || []).map((p) => p.name);
+        expect(names).toEqual(
+            expect.arrayContaining([
+                'statuses[]',
+                'service_ids[]',
+                'team_ids[]',
+                'user_ids[]',
+                'urgencies[]',
+                'include[]',
+                'since',
+                'until',
+                'time_zone',
+            ])
+        );
+        expect(names).not.toContain('statuses');
+        const fromUpdate = (spec.paths['/incidents/{id}'].put.parameters || []).find(
+            (p) => p.name === 'From'
+        );
+        expect(fromUpdate.required).toBe(true);
     });
 });

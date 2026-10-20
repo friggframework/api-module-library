@@ -133,23 +133,30 @@ describe('PagerDuty Api', () => {
             );
         });
 
-        it('listUsers passes query params', async () => {
+        it('listUsers serializes scalar and [] array query params on the URL', async () => {
             const api = makeApi();
-            await api.listUsers({ limit: 25, query: 'ada' });
-            expect(api._captured[0].url).toBe(
-                'https://api.pagerduty.com/users'
-            );
-            expect(api._captured[0].query).toEqual({
+            await api.listUsers({
                 limit: 25,
                 query: 'ada',
+                team_ids: ['T1', 'T2'],
+                include: ['teams'],
             });
+            const { url } = api._captured[0];
+            expect(url.startsWith('https://api.pagerduty.com/users?')).toBe(
+                true
+            );
+            expect(url).toContain('limit=25');
+            expect(url).toContain('query=ada');
+            expect(url).toContain('team_ids%5B%5D=T1');
+            expect(url).toContain('team_ids%5B%5D=T2');
+            expect(url).toContain('include%5B%5D=teams');
         });
 
-        it('getUser hits GET /users/{id}', async () => {
+        it('getUser hits GET /users/{id} and supports include[]', async () => {
             const api = makeApi();
-            await api.getUser('PUSER1');
+            await api.getUser('PUSER1', { include: ['contact_methods'] });
             expect(api._captured[0].url).toBe(
-                'https://api.pagerduty.com/users/PUSER1'
+                'https://api.pagerduty.com/users/PUSER1?include%5B%5D=contact_methods'
             );
         });
 
@@ -180,13 +187,25 @@ describe('PagerDuty Api', () => {
     });
 
     describe('incidents', () => {
-        it('listIncidents hits GET /incidents', async () => {
+        it('listIncidents uses official statuses[] / since / until names', async () => {
             const api = makeApi();
-            await api.listIncidents({ statuses: ['triggered'], limit: 10 });
-            expect(api._captured[0].url).toBe(
-                'https://api.pagerduty.com/incidents'
+            await api.listIncidents({
+                statuses: ['triggered', 'acknowledged'],
+                limit: 10,
+                since: '2026-01-01T00:00:00Z',
+                until: '2026-02-01T00:00:00Z',
+                sort_by: ['created_at:desc', 'urgency:asc'],
+            });
+            const { url } = api._captured[0];
+            expect(url).toContain('https://api.pagerduty.com/incidents?');
+            expect(url).toContain('statuses%5B%5D=triggered');
+            expect(url).toContain('statuses%5B%5D=acknowledged');
+            expect(url).toContain('since=2026-01-01T00%3A00%3A00Z');
+            expect(url).toContain('until=2026-02-01T00%3A00%3A00Z');
+            // style=form explode=false → comma-joined
+            expect(url).toContain(
+                'sort_by=created_at%3Adesc%2Curgency%3Aasc'
             );
-            expect(api._captured[0].query.statuses).toEqual(['triggered']);
         });
 
         it('getIncident hits GET /incidents/{id}', async () => {
@@ -230,8 +249,13 @@ describe('PagerDuty Api', () => {
     describe('services', () => {
         it('listServices / getService / createService / updateService', async () => {
             const api = makeApi();
-            await api.listServices({ limit: 5 });
-            await api.getService('PSVC1');
+            await api.listServices({
+                limit: 5,
+                team_ids: ['TEAM1'],
+                sort_by: 'name:asc',
+                name: 'API',
+            });
+            await api.getService('PSVC1', { include: ['teams'] });
             await api.createService({
                 service: {
                     name: 'API',
@@ -251,8 +275,11 @@ describe('PagerDuty Api', () => {
                 'POST',
                 'PUT',
             ]);
+            expect(api._captured[0].url).toContain('team_ids%5B%5D=TEAM1');
+            expect(api._captured[0].url).toContain('sort_by=name%3Aasc');
+            expect(api._captured[0].url).toContain('name=API');
             expect(api._captured[1].url).toBe(
-                'https://api.pagerduty.com/services/PSVC1'
+                'https://api.pagerduty.com/services/PSVC1?include%5B%5D=teams'
             );
             expect(api._captured[3].url).toBe(
                 'https://api.pagerduty.com/services/PSVC1'
@@ -263,7 +290,13 @@ describe('PagerDuty Api', () => {
     describe('webhook subscriptions', () => {
         it('CRUD paths match the official OpenAPI', async () => {
             const api = makeApi();
-            await api.listWebhookSubscriptions({ limit: 10 });
+            await api.listWebhookSubscriptions({
+                limit: 10,
+                filter_type: 'service',
+                filter_id: 'PSVC1',
+            });
+            expect(api._captured[0].url).toContain('filter_type=service');
+            expect(api._captured[0].url).toContain('filter_id=PSVC1');
             await api.getWebhookSubscription('PWH1');
             await api.createWebhookSubscription({
                 webhook_subscription: {
@@ -283,13 +316,22 @@ describe('PagerDuty Api', () => {
                 },
             });
             await api.deleteWebhookSubscription('PWH1');
-            expect(api._captured.map((c) => `${c.method} ${c.url}`)).toEqual([
-                'GET https://api.pagerduty.com/webhook_subscriptions',
-                'GET https://api.pagerduty.com/webhook_subscriptions/PWH1',
-                'POST https://api.pagerduty.com/webhook_subscriptions',
-                'PUT https://api.pagerduty.com/webhook_subscriptions/PWH1',
-                'DELETE https://api.pagerduty.com/webhook_subscriptions/PWH1',
+            expect(api._captured.map((c) => c.method)).toEqual([
+                'GET',
+                'GET',
+                'POST',
+                'PUT',
+                'DELETE',
             ]);
+            expect(api._captured[1].url).toBe(
+                'https://api.pagerduty.com/webhook_subscriptions/PWH1'
+            );
+            expect(api._captured[2].url).toBe(
+                'https://api.pagerduty.com/webhook_subscriptions'
+            );
+            expect(api._captured[4].url).toBe(
+                'https://api.pagerduty.com/webhook_subscriptions/PWH1'
+            );
         });
     });
 });

@@ -4,11 +4,17 @@ info:
   version: "2.0.0"
   description: >-
     Curated subset of PagerDuty's official REST OpenAPI
-    (https://github.com/PagerDuty/api-schema/blob/main/reference/REST/openapiv3.json)
+    (https://raw.githubusercontent.com/PagerDuty/api-schema/main/reference/REST/openapiv3.json
+    — same document as github.com/PagerDuty/api-schema reference/REST/openapiv3.json)
     covering identity (users/me), users, incidents, services, and V3 webhook
-    subscriptions. operationIds match the official spec 1:1 so they align with
-    the hand-written Api methods. Paths, methods, parameters, and documented
-    Scoped OAuth scopes are taken from the official spec — nothing invented.
+    subscriptions. Paths, methods, parameter names (including `foo[]` array
+    query params), required flags, enums, request/response wrappers, success
+    status codes, server URL, and the `api_key` security scheme are taken from
+    that document. operationIds match the official spec 1:1 with Api methods.
+    Scoped OAuth scope strings in descriptions are copied from the official
+    operation descriptions. OAuth Bearer token usage is documented in PagerDuty's
+    OAuth guide (not in this OpenAPI's securitySchemes); the Api client uses
+    Bearer for Apps while still sending the required Accept version header.
   contact:
     name: Left Hook
     url: https://lefthook.com
@@ -16,7 +22,7 @@ servers:
   - url: https://api.pagerduty.com
     description: PagerDuty V2 API.
 security:
-  - oauth2: []
+  - api_key: []
 tags:
   - name: Users
   - name: Incidents
@@ -29,296 +35,544 @@ paths:
       operationId: getCurrentUser
       summary: Get the current user
       description: >-
-        Get the current user. Scoped OAuth requires: `users.read`.
+        Get details about the current user. This endpoint can only be used with
+        a user-level API key or a key generated through an OAuth flow (not an
+        account-level access token). Official OpenAPI does not list a Scoped
+        OAuth scope line on this operation.
+      parameters:
+        - in: query
+          name: include[]
+          required: false
+          schema:
+            type: string
+            enum:
+              - contact_methods
+              - notification_rules
+              - teams
+              - subdomains
+              - calendar_urls
+          explode: true
       responses:
         "200":
-          description: Success
+          description: The requesting user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
   /users:
     get:
       tags: [Users]
       operationId: listUsers
       summary: List users
-      description: >-
-        List users of your PagerDuty account. Scoped OAuth requires: `users.read`.
+      description: "List users of your PagerDuty account. Scoped OAuth requires: `users.read`"
       parameters:
         - in: query
+          name: query
+          required: false
+          schema: { type: string }
+        - in: query
+          name: team_ids[]
+          required: false
+          schema:
+            type: array
+            items: { type: string }
+            uniqueItems: true
+          explode: true
+        - in: query
           name: limit
+          required: false
           schema: { type: integer }
         - in: query
           name: offset
+          required: false
           schema: { type: integer }
         - in: query
           name: total
+          required: false
           schema: { type: boolean }
         - in: query
-          name: query
-          schema: { type: string }
-          description: Filters the result, matching name or email partial strings.
+          name: include[]
+          required: false
+          schema:
+            type: string
+            enum:
+              - contact_methods
+              - notification_rules
+              - teams
+              - subdomains
+          explode: true
       responses:
         "200":
-          description: Success
+          description: A paginated array of users.
     post:
       tags: [Users]
       operationId: createUser
       summary: Create a user
-      description: >-
-        Create a new user. Requires the `From` header. Scoped OAuth requires:
-        `users.write`.
+      description: "Create a new user. Scoped OAuth requires: `users.write`"
       parameters:
         - in: header
           name: From
           required: true
           schema: { type: string, format: email }
+          description: >-
+            The email address of a valid user associated with the account
+            making the request.
       requestBody:
-        required: true
         content:
           application/json:
-            schema: { type: object }
+            schema:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  type: object
       responses:
         "201":
-          description: Created
+          description: The user that was created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
   /users/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
     get:
       tags: [Users]
       operationId: getUser
       summary: Get a user
-      description: "Get details about an existing user. Scoped OAuth requires: `users.read`."
+      description: "Get details about an existing user. Scoped OAuth requires: `users.read`"
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
+        - in: query
+          name: include[]
+          required: false
+          schema:
+            type: string
+            enum:
+              - contact_methods
+              - notification_rules
+              - teams
+              - subdomains
+              - calendar_urls
+          explode: true
       responses:
         "200":
-          description: Success
+          description: The user requested.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
     put:
       tags: [Users]
       operationId: updateUser
       summary: Update a user
-      description: "Update an existing user. Scoped OAuth requires: `users.write`."
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
+      description: "Update an existing user. Scoped OAuth requires: `users.write`"
       requestBody:
-        required: true
         content:
           application/json:
-            schema: { type: object }
+            schema:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  type: object
       responses:
         "200":
-          description: Success
+          description: The user that was updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
   /incidents:
     get:
       tags: [Incidents]
       operationId: listIncidents
       summary: List incidents
-      description: >-
-        List existing incidents. Scoped OAuth requires: `incidents.read`.
+      description: "List existing incidents. Scoped OAuth requires: `incidents.read`"
       parameters:
         - in: query
           name: limit
+          required: false
           schema: { type: integer }
         - in: query
           name: offset
+          required: false
           schema: { type: integer }
         - in: query
           name: total
+          required: false
           schema: { type: boolean }
         - in: query
           name: date_range
-          schema: { type: string }
+          required: false
+          schema:
+            type: string
+            enum: [all]
         - in: query
           name: incident_key
+          required: false
           schema: { type: string }
         - in: query
-          name: statuses
+          name: service_ids[]
+          required: false
           schema:
             type: array
             items: { type: string }
-          style: form
+            uniqueItems: true
           explode: true
         - in: query
-          name: service_ids
+          name: team_ids[]
+          required: false
           schema:
             type: array
             items: { type: string }
-          style: form
+            uniqueItems: true
           explode: true
         - in: query
-          name: team_ids
+          name: user_ids[]
+          required: false
           schema:
             type: array
             items: { type: string }
-          style: form
+            uniqueItems: true
           explode: true
         - in: query
-          name: user_ids
+          name: urgencies[]
+          required: false
           schema:
-            type: array
-            items: { type: string }
-          style: form
+            type: string
+            enum: [high, low]
+            uniqueItems: true
           explode: true
         - in: query
-          name: urgencies
+          name: time_zone
+          required: false
+          schema: { type: string, format: tzinfo }
+        - in: query
+          name: statuses[]
+          required: false
           schema:
-            type: array
-            items: { type: string }
-          style: form
+            type: string
+            enum: [triggered, acknowledged, resolved]
+            uniqueItems: true
           explode: true
         - in: query
           name: sort_by
-          schema: { type: string }
-        - in: query
-          name: include
+          required: false
+          description: >-
+            Field:direction pairs (incident_number/created_at/resolved_at/urgency
+            and asc/desc), max two, comma-separated when multiple
+            (style=form, explode=false).
+          style: form
+          explode: false
           schema:
             type: array
             items: { type: string }
-          style: form
+            maxItems: 2
+            uniqueItems: true
+        - in: query
+          name: include[]
+          required: false
+          schema:
+            type: string
+            enum:
+              - acknowledgers
+              - agents
+              - assignees
+              - conference_bridge
+              - escalation_policies
+              - first_trigger_log_entries
+              - priorities
+              - services
+              - teams
+              - users
           explode: true
+        - in: query
+          name: since
+          required: false
+          schema: { type: string }
+        - in: query
+          name: until
+          required: false
+          schema: { type: string }
       responses:
         "200":
-          description: Success
+          description: A paginated array of incidents.
     post:
       tags: [Incidents]
       operationId: createIncident
       summary: Create an Incident
-      description: >-
-        Create an Incident. Requires the `From` header. Scoped OAuth requires:
-        `incidents.write`.
+      description: "Create an Incident. Scoped OAuth requires: `incidents.write`"
       parameters:
         - in: header
           name: From
           required: true
           schema: { type: string, format: email }
       requestBody:
-        required: true
         content:
           application/json:
-            schema: { type: object }
+            schema:
+              type: object
+              required: [incident]
+              properties:
+                incident:
+                  type: object
+                  required: [type, title, service]
+                  properties:
+                    type: { type: string }
+                    title: { type: string }
+                    service: { type: object }
+                    priority: { type: object }
+                    urgency: { type: string }
+                    body: { type: object }
+                    incident_key: { type: string }
+                    assignments: { type: array }
+                    incident_type: { type: object }
+                    escalation_policy: { type: object }
+                    conference_bridge: { type: object }
       responses:
         "201":
-          description: Created
+          description: The incident object created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  incident:
+                    type: object
   /incidents/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
     get:
       tags: [Incidents]
       operationId: getIncident
       summary: Get an incident
-      description: "Show detailed information about an incident. Scoped OAuth requires: `incidents.read`."
+      description: "Show detailed information about an incident. Scoped OAuth requires: `incidents.read`"
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
+        - in: query
+          name: include[]
+          required: false
+          schema:
+            type: string
+            enum:
+              - acknowledgers
+              - agents
+              - assignees
+              - conference_bridge
+              - custom_fields
+              - escalation_policies
+              - first_trigger_log_entries
+              - priorities
+              - services
+              - teams
+              - users
+          explode: true
       responses:
         "200":
-          description: Success
+          description: The incident requested.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  incident:
+                    type: object
     put:
       tags: [Incidents]
       operationId: updateIncident
       summary: Update an incident
       description: >-
         Acknowledge, resolve, escalate or reassign an incident. Scoped OAuth
-        requires: `incidents.write`.
+        requires: `incidents.write`. Official OpenAPI requires the `From`
+        header (`from_header`, required=true).
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
         - in: header
           name: From
-          required: false
+          required: true
           schema: { type: string, format: email }
       requestBody:
-        required: true
         content:
           application/json:
-            schema: { type: object }
+            schema:
+              type: object
+              required: [incident]
+              properties:
+                incident:
+                  type: object
+                  required: [type]
+                  properties:
+                    type: { type: string }
+                    status: { type: string }
+                    priority: { type: object }
+                    resolution: { type: string }
+                    title: { type: string }
+                    escalation_level: { type: integer }
+                    assignments: { type: array }
+                    incident_type: { type: object }
+                    escalation_policy: { type: object }
+                    urgency: { type: string }
+                    conference_bridge: { type: object }
+                    service: { type: object }
       responses:
         "200":
-          description: Success
+          description: The incident was updated.
   /services:
     get:
       tags: [Services]
       operationId: listServices
       summary: List services
-      description: "List existing services. Scoped OAuth requires: `services.read`."
+      description: "List existing services. Scoped OAuth requires: `services.read`"
       parameters:
         - in: query
+          name: query
+          required: false
+          schema: { type: string }
+        - in: query
           name: limit
+          required: false
           schema: { type: integer }
         - in: query
           name: offset
+          required: false
           schema: { type: integer }
         - in: query
           name: total
+          required: false
           schema: { type: boolean }
         - in: query
-          name: query
+          name: team_ids[]
+          required: false
+          schema:
+            type: array
+            items: { type: string }
+            uniqueItems: true
+          explode: true
+        - in: query
+          name: time_zone
+          required: false
+          schema: { type: string, format: tzinfo }
+        - in: query
+          name: sort_by
+          required: false
+          schema:
+            type: string
+            enum: [name, "name:asc", "name:desc"]
+        - in: query
+          name: include[]
+          required: false
+          schema:
+            type: string
+            enum:
+              - escalation_policies
+              - teams
+              - integrations
+              - auto_pause_notifications_parameters
+          explode: true
+        - in: query
+          name: name
+          required: false
           schema: { type: string }
-        - in: query
-          name: team_ids
-          schema:
-            type: array
-            items: { type: string }
-          style: form
-          explode: true
-        - in: query
-          name: include
-          schema:
-            type: array
-            items: { type: string }
-          style: form
-          explode: true
       responses:
         "200":
-          description: Success
+          description: A paginated array of services.
     post:
       tags: [Services]
       operationId: createService
       summary: Create a service
-      description: "Create a new service. Scoped OAuth requires: `services.write`."
+      description: "Create a new service. Scoped OAuth requires: `services.write`"
       requestBody:
-        required: true
         content:
           application/json:
-            schema: { type: object }
+            schema:
+              type: object
+              required: [service]
+              properties:
+                service:
+                  type: object
       responses:
         "201":
-          description: Created
+          description: The service that was created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: object
   /services/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
     get:
       tags: [Services]
       operationId: getService
       summary: Get a service
-      description: "Get details about an existing service. Scoped OAuth requires: `services.read`."
+      description: "Get details about an existing service. Scoped OAuth requires: `services.read`"
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
+        - in: query
+          name: include[]
+          required: false
+          schema:
+            type: string
+            enum:
+              - escalation_policies
+              - teams
+              - integrations
+              - auto_pause_notifications_parameters
+          explode: true
       responses:
         "200":
-          description: Success
+          description: The service requested.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: object
     put:
       tags: [Services]
       operationId: updateService
       summary: Update a service
-      description: "Update an existing service. Scoped OAuth requires: `services.write`."
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
+      description: "Update an existing service. Scoped OAuth requires: `services.write`"
       requestBody:
-        required: true
         content:
           application/json:
-            schema: { type: object }
+            schema:
+              type: object
+              required: [service]
+              properties:
+                service:
+                  type: object
       responses:
         "200":
-          description: Success
+          description: The service that was updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: object
   /webhook_subscriptions:
     get:
       tags: [Webhooks]
@@ -326,102 +580,137 @@ paths:
       summary: List webhook subscriptions
       description: >-
         List webhook subscriptions. Scoped OAuth requires:
-        `webhook_subscriptions.read`.
+        `webhook_subscriptions.read`
       parameters:
         - in: query
           name: limit
+          required: false
           schema: { type: integer }
         - in: query
           name: offset
+          required: false
           schema: { type: integer }
         - in: query
           name: total
-          schema: { type: boolean }
+          required: false
+          schema: { type: boolean, default: false }
+        - in: query
+          name: filter_type
+          required: false
+          schema:
+            type: string
+            enum: [account, service, team]
+        - in: query
+          name: filter_id
+          required: false
+          schema: { type: string }
       responses:
         "200":
-          description: Success
+          description: A set of webhook subscriptions matching the request.
     post:
       tags: [Webhooks]
       operationId: createWebhookSubscription
       summary: Create a webhook subscription
       description: >-
-        Create a V3 webhook subscription. The delivery_method.secret is returned
-        once and is used to verify X-PagerDuty-Signature. Scoped OAuth requires:
-        `webhook_subscriptions.write`.
+        Create a V3 webhook subscription. delivery_method.secret is returned
+        only on the initial create response. Scoped OAuth requires:
+        `webhook_subscriptions.write`
       requestBody:
-        required: true
         content:
           application/json:
-            schema: { type: object }
+            schema:
+              type: object
+              required: [webhook_subscription]
+              properties:
+                webhook_subscription:
+                  type: object
+                  required: [type, delivery_method, events, filter]
+                  properties:
+                    id: { type: string }
+                    type: { type: string }
+                    active: { type: boolean }
+                    delivery_method:
+                      type: object
+                      required: [type, url]
+                      properties:
+                        id: { type: string, readOnly: true }
+                        secret: { type: string, readOnly: true, nullable: true }
+                        temporarily_disabled: { type: boolean }
+                        type:
+                          type: string
+                          enum: [http_delivery_method]
+                        url: { type: string, format: url }
+                        custom_headers: { type: array }
+                    description: { type: string }
+                    events: { type: array }
+                    filter: { type: object }
+                    oauth_client: { type: object }
       responses:
         "200":
-          description: Success
+          description: The webhook subscription that was created.
   /webhook_subscriptions/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
     get:
       tags: [Webhooks]
       operationId: getWebhookSubscription
       summary: Get a webhook subscription
       description: >-
         Get a webhook subscription. Scoped OAuth requires:
-        `webhook_subscriptions.read`.
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
+        `webhook_subscriptions.read`
       responses:
         "200":
-          description: Success
+          description: The webhook subscription that was requested.
     put:
       tags: [Webhooks]
       operationId: updateWebhookSubscription
       summary: Update a webhook subscription
       description: >-
         Update a webhook subscription. Scoped OAuth requires:
-        `webhook_subscriptions.write`.
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
+        `webhook_subscriptions.write`
       requestBody:
-        required: true
         content:
           application/json:
-            schema: { type: object }
+            schema:
+              type: object
+              properties:
+                webhook_subscription:
+                  type: object
+                  properties:
+                    description: { type: string }
+                    events: { type: array }
+                    filter: { type: object }
+                    active: { type: boolean }
+                    oauth_client_id: { type: string }
       responses:
         "200":
-          description: Success
+          description: The updated webhook subscription.
     delete:
       tags: [Webhooks]
       operationId: deleteWebhookSubscription
       summary: Delete a webhook subscription
       description: >-
         Delete a webhook subscription. Scoped OAuth requires:
-        `webhook_subscriptions.write`.
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
+        `webhook_subscriptions.write`
       responses:
         "204":
-          description: Deleted
+          description: The webhook subscription was deleted successfully.
 components:
   securitySchemes:
-    oauth2:
-      type: oauth2
+    api_key:
+      type: apiKey
+      name: Authorization
+      in: header
       description: >-
-        PagerDuty OAuth 2.0 (Classic User OAuth or Scoped OAuth). Access tokens
-        are sent as `Authorization: Bearer <token>`. REST requests also require
+        The API Key with format `Token token=<API_KEY>` (verbatim from the
+        official OpenAPI). OAuth access tokens use `Bearer <token>` in the same
+        header per https://developer.pagerduty.com/docs/oauth-functionality —
+        that scheme is not declared in the official REST OpenAPI
+        securitySchemes. All REST requests also require
         `Accept: application/vnd.pagerduty+json;version=2`.
-      flows:
-        authorizationCode:
-          authorizationUrl: https://identity.pagerduty.com/oauth/authorize
-          tokenUrl: https://identity.pagerduty.com/oauth/token
-          scopes:
-            read: Classic User OAuth — read-only access for the authorizing user
-            write: Classic User OAuth — read/write access for the authorizing user
       x-additional-headers:
         - name: Accept
           schema:

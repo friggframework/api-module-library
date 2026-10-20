@@ -1,5 +1,15 @@
 const { OAuth2Requester, get } = require('@friggframework/core');
 
+/** Official OpenAPI exploded array query param base names (serialized as `name[]`). */
+const ARRAY_QUERY_KEYS = new Set([
+    'statuses',
+    'service_ids',
+    'team_ids',
+    'user_ids',
+    'urgencies',
+    'include',
+]);
+
 /**
  * PagerDuty REST API client (OAuth 2.0).
  *
@@ -120,27 +130,61 @@ class Api extends OAuth2Requester {
     }
 
     /**
-     * Build query options, dropping null/undefined values. Array params use
-     * PagerDuty's `key[]` repeated-key convention (e.g. statuses[]).
+     * Official OpenAPI names exploded array query params with a literal `[]`
+     * suffix (e.g. `statuses[]`, `include[]`). Keys already ending in `[]`
+     * are left alone; known array keys without the suffix are normalized.
+     *
+     * `sort_by` on listIncidents is style=form explode=false (comma-joined).
+     *
+     * Built as a query string and appended to the URL because core Requester
+     * stringifies array values and cannot emit repeated `key[]=` params.
      */
-    _query(params = {}) {
-        const query = {};
-        for (const [key, value] of Object.entries(params)) {
+    _buildQuery(params = {}) {
+        const usp = new URLSearchParams();
+        for (const [rawKey, value] of Object.entries(params || {})) {
             if (value === undefined || value === null) continue;
-            query[key] = value;
+
+            let key = rawKey;
+            if (
+                !key.endsWith('[]') &&
+                ARRAY_QUERY_KEYS.has(key) &&
+                (Array.isArray(value) || typeof value === 'string')
+            ) {
+                key = `${key}[]`;
+            }
+
+            if (Array.isArray(value)) {
+                if (key === 'sort_by') {
+                    // listIncidents: style=form, explode=false
+                    if (value.length) usp.append('sort_by', value.join(','));
+                } else {
+                    for (const v of value) {
+                        if (v === undefined || v === null) continue;
+                        usp.append(key, String(v));
+                    }
+                }
+            } else {
+                usp.append(key, String(value));
+            }
         }
-        return query;
+        const qs = usp.toString();
+        return qs ? `?${qs}` : '';
+    }
+
+    _url(path, params) {
+        return this.baseUrl + path + this._buildQuery(params);
     }
 
     // ---- Identity ----------------------------------------------------------
 
     /**
      * getCurrentUser — GET /users/me
-     * Returns the user associated with the current auth token.
+     * Optional params: include[] (contact_methods, notification_rules, …).
+     * Official: user-level API key or OAuth user token only.
      */
-    async getCurrentUser() {
+    async getCurrentUser(params = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.currentUser,
+            url: this._url(this.URLs.currentUser, params),
         });
     }
 
@@ -149,15 +193,14 @@ class Api extends OAuth2Requester {
     /** listUsers — GET /users */
     async listUsers(params = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.users,
-            query: this._query(params),
+            url: this._url(this.URLs.users, params),
         });
     }
 
     /** getUser — GET /users/{id} */
-    async getUser(userId) {
+    async getUser(userId, params = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.userById(userId),
+            url: this._url(this.URLs.userById(userId), params),
         });
     }
 
@@ -189,15 +232,14 @@ class Api extends OAuth2Requester {
     /** listIncidents — GET /incidents */
     async listIncidents(params = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.incidents,
-            query: this._query(params),
+            url: this._url(this.URLs.incidents, params),
         });
     }
 
     /** getIncident — GET /incidents/{id} */
-    async getIncident(incidentId) {
+    async getIncident(incidentId, params = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.incidentById(incidentId),
+            url: this._url(this.URLs.incidentById(incidentId), params),
         });
     }
 
@@ -218,7 +260,7 @@ class Api extends OAuth2Requester {
 
     /**
      * updateIncident — PUT /incidents/{id}
-     * Optional `From` header for change tracking.
+     * Official OpenAPI requires the `From` header (`from_header`, required).
      */
     async updateIncident(incidentId, data, { from } = {}) {
         const headers = {};
@@ -235,15 +277,14 @@ class Api extends OAuth2Requester {
     /** listServices — GET /services */
     async listServices(params = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.services,
-            query: this._query(params),
+            url: this._url(this.URLs.services, params),
         });
     }
 
     /** getService — GET /services/{id} */
-    async getService(serviceId) {
+    async getService(serviceId, params = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.serviceById(serviceId),
+            url: this._url(this.URLs.serviceById(serviceId), params),
         });
     }
 
@@ -268,8 +309,7 @@ class Api extends OAuth2Requester {
     /** listWebhookSubscriptions — GET /webhook_subscriptions */
     async listWebhookSubscriptions(params = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.webhookSubscriptions,
-            query: this._query(params),
+            url: this._url(this.URLs.webhookSubscriptions, params),
         });
     }
 

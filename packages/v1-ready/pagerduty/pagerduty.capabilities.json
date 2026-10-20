@@ -195,7 +195,9 @@
     "account.get": {
       "kind": "read",
       "method": "getCurrentUser",
-      "input": {},
+      "input": {
+        "include": { "type": "array" }
+      },
       "output": "user"
     },
     "user.list": {
@@ -204,7 +206,10 @@
       "input": {
         "limit": { "type": "integer" },
         "offset": { "type": "integer" },
-        "query": { "type": "string" }
+        "total": { "type": "boolean" },
+        "query": { "type": "string" },
+        "team_ids": { "type": "array" },
+        "include": { "type": "array" }
       },
       "output": "page<user>"
     },
@@ -212,7 +217,8 @@
       "kind": "read",
       "method": "getUser",
       "input": {
-        "userId": { "type": "string", "required": true }
+        "userId": { "type": "string", "required": true },
+        "include": { "type": "array" }
       },
       "output": "user",
       "args": ["userId"]
@@ -243,6 +249,7 @@
       "input": {
         "limit": { "type": "integer" },
         "offset": { "type": "integer" },
+        "total": { "type": "boolean" },
         "statuses": { "type": "array" },
         "service_ids": { "type": "array" },
         "team_ids": { "type": "array" },
@@ -250,8 +257,11 @@
         "urgencies": { "type": "array" },
         "incident_key": { "type": "string" },
         "date_range": { "type": "string" },
-        "sort_by": { "type": "string" },
-        "include": { "type": "array" }
+        "sort_by": { "type": "array" },
+        "include": { "type": "array" },
+        "since": { "type": "string" },
+        "until": { "type": "string" },
+        "time_zone": { "type": "string" }
       },
       "output": "page<incident>"
     },
@@ -259,7 +269,8 @@
       "kind": "read",
       "method": "getIncident",
       "input": {
-        "incidentId": { "type": "string", "required": true }
+        "incidentId": { "type": "string", "required": true },
+        "include": { "type": "array" }
       },
       "output": "incident",
       "args": ["incidentId"]
@@ -280,7 +291,7 @@
       "input": {
         "incidentId": { "type": "string", "required": true },
         "data": { "type": "object", "required": true },
-        "from": { "type": "string" }
+        "from": { "type": "string", "required": true }
       },
       "output": "incident",
       "args": ["incidentId", "data"]
@@ -291,9 +302,13 @@
       "input": {
         "limit": { "type": "integer" },
         "offset": { "type": "integer" },
+        "total": { "type": "boolean" },
         "query": { "type": "string" },
         "team_ids": { "type": "array" },
-        "include": { "type": "array" }
+        "include": { "type": "array" },
+        "time_zone": { "type": "string" },
+        "sort_by": { "type": "string" },
+        "name": { "type": "string" }
       },
       "output": "page<service>"
     },
@@ -301,7 +316,8 @@
       "kind": "read",
       "method": "getService",
       "input": {
-        "serviceId": { "type": "string", "required": true }
+        "serviceId": { "type": "string", "required": true },
+        "include": { "type": "array" }
       },
       "output": "service",
       "args": ["serviceId"]
@@ -330,7 +346,10 @@
       "method": "listWebhookSubscriptions",
       "input": {
         "limit": { "type": "integer" },
-        "offset": { "type": "integer" }
+        "offset": { "type": "integer" },
+        "total": { "type": "boolean" },
+        "filter_type": { "type": "string" },
+        "filter_id": { "type": "string" }
       },
       "output": "page<webhookSubscription>"
     },

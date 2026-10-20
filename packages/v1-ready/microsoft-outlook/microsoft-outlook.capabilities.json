@@ -1,0 +1,522 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "microsoft-outlook",
+  "label": "Microsoft Outlook",
+  "package": "@friggframework/api-module-microsoft-outlook",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected Microsoft 365 mailbox / tenant, persisted by the module (apiPropertiesToPersist).",
+    "fields": [
+      {
+        "name": "tenant_id",
+        "type": "string",
+        "description": "Microsoft Entra tenant (directory) id for the connection"
+      }
+    ]
+  },
+  "objects": {
+    "message": {
+      "label": "Mail message",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "subject",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "bodyPreview",
+          "type": "text",
+          "tag": "message.preview",
+          "readOnly": true
+        },
+        {
+          "name": "body.content",
+          "type": "text",
+          "tag": "message.body"
+        },
+        { "name": "body.contentType", "type": "string" },
+        {
+          "name": "from.emailAddress.address",
+          "type": "email",
+          "tag": "contact.email",
+          "readOnly": true
+        },
+        {
+          "name": "from.emailAddress.name",
+          "type": "string",
+          "tag": "person.displayName",
+          "readOnly": true
+        },
+        {
+          "name": "toRecipients",
+          "type": "json",
+          "tag": "message.to"
+        },
+        {
+          "name": "ccRecipients",
+          "type": "json",
+          "tag": "message.cc"
+        },
+        {
+          "name": "receivedDateTime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "lastModifiedDateTime",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        { "name": "isRead", "type": "boolean" },
+        { "name": "isDraft", "type": "boolean", "readOnly": true },
+        {
+          "name": "webLink",
+          "type": "string",
+          "tag": "record.url",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "message.list" },
+        "get": { "capability": "message.get" },
+        "create": { "capability": "message.create" },
+        "update": { "capability": "message.update" },
+        "delete": { "capability": "message.delete" }
+      }
+    },
+    "mailFolder": {
+      "label": "Mail folder",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "displayName",
+          "type": "string",
+          "tag": "record.displayName",
+          "required": true
+        },
+        { "name": "parentFolderId", "type": "string", "readOnly": true },
+        { "name": "childFolderCount", "type": "integer", "readOnly": true },
+        { "name": "totalItemCount", "type": "integer", "readOnly": true },
+        { "name": "unreadItemCount", "type": "integer", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "mailFolder.list" },
+        "get": { "capability": "mailFolder.get" }
+      }
+    },
+    "calendar": {
+      "label": "Calendar",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName",
+          "required": true
+        },
+        { "name": "color", "type": "string" },
+        { "name": "hexColor", "type": "string" },
+        { "name": "isDefaultCalendar", "type": "boolean", "readOnly": true },
+        { "name": "canEdit", "type": "boolean", "readOnly": true },
+        { "name": "canShare", "type": "boolean", "readOnly": true },
+        { "name": "owner.name", "type": "string", "tag": "person.displayName" },
+        {
+          "name": "owner.address",
+          "type": "email",
+          "tag": "contact.email"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "calendar.list" },
+        "get": { "capability": "calendar.get" }
+      }
+    },
+    "event": {
+      "label": "Calendar event",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "subject",
+          "type": "string",
+          "tag": "record.displayName",
+          "required": true
+        },
+        {
+          "name": "bodyPreview",
+          "type": "text",
+          "tag": "message.preview",
+          "readOnly": true
+        },
+        {
+          "name": "body.content",
+          "type": "text",
+          "tag": "message.body"
+        },
+        { "name": "body.contentType", "type": "string" },
+        {
+          "name": "start.dateTime",
+          "type": "datetime",
+          "tag": "event.start",
+          "required": true
+        },
+        {
+          "name": "end.dateTime",
+          "type": "datetime",
+          "tag": "event.end",
+          "required": true
+        },
+        {
+          "name": "location.displayName",
+          "type": "string",
+          "tag": "event.location"
+        },
+        {
+          "name": "organizer.emailAddress.address",
+          "type": "email",
+          "tag": "contact.email",
+          "readOnly": true
+        },
+        {
+          "name": "organizer.emailAddress.name",
+          "type": "string",
+          "tag": "person.displayName",
+          "readOnly": true
+        },
+        { "name": "attendees", "type": "json", "tag": "event.attendees" },
+        {
+          "name": "webLink",
+          "type": "string",
+          "tag": "record.url",
+          "readOnly": true
+        },
+        {
+          "name": "createdDateTime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "lastModifiedDateTime",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        { "name": "isAllDay", "type": "boolean" },
+        { "name": "isCancelled", "type": "boolean", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "event.list" },
+        "get": { "capability": "event.get" },
+        "create": { "capability": "event.create" },
+        "update": { "capability": "event.update" },
+        "delete": { "capability": "event.delete" }
+      }
+    },
+    "subscription": {
+      "label": "Change notification subscription",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "resource", "type": "string", "required": true },
+        { "name": "changeType", "type": "string", "required": true },
+        {
+          "name": "notificationUrl",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "expirationDateTime",
+          "type": "datetime",
+          "required": true
+        },
+        { "name": "clientState", "type": "string" }
+      ]
+    }
+  },
+  "events": {
+    "message.created": {
+      "delivery": "webhook",
+      "object": "message",
+      "description": "Graph change notification for mailbox messages (e.g. resource me/mailFolders('Inbox')/messages).",
+      "payload": {
+        "value": [
+          {
+            "subscriptionId": "sub-id",
+            "clientState": "secret",
+            "changeType": "created",
+            "resource": "Users/{id}/Messages/{id}",
+            "tenantId": "tenant-guid"
+          }
+        ]
+      },
+      "match": "created"
+    },
+    "message.updated": {
+      "delivery": "webhook",
+      "object": "message",
+      "description": "Graph change notification when a message is updated.",
+      "payload": {
+        "value": [
+          {
+            "subscriptionId": "sub-id",
+            "clientState": "secret",
+            "changeType": "updated",
+            "resource": "Users/{id}/Messages/{id}",
+            "tenantId": "tenant-guid"
+          }
+        ]
+      },
+      "match": "updated"
+    },
+    "event.created": {
+      "delivery": "webhook",
+      "object": "event",
+      "description": "Graph change notification for calendar events (resource me/events).",
+      "payload": {
+        "value": [
+          {
+            "subscriptionId": "sub-id",
+            "clientState": "secret",
+            "changeType": "created",
+            "resource": "Users/{id}/Events/{id}",
+            "tenantId": "tenant-guid"
+          }
+        ]
+      },
+      "match": "created"
+    },
+    "event.updated": {
+      "delivery": "webhook",
+      "object": "event",
+      "description": "Graph change notification when a calendar event is updated.",
+      "payload": {
+        "value": [
+          {
+            "subscriptionId": "sub-id",
+            "clientState": "secret",
+            "changeType": "updated",
+            "resource": "Users/{id}/Events/{id}",
+            "tenantId": "tenant-guid"
+          }
+        ]
+      },
+      "match": "updated"
+    }
+  },
+  "webhook": {
+    "scope": "subscription",
+    "batch": ["body.value"],
+    "topic": "{{item.changeType}}",
+    "eventId": "{{item.subscriptionId}}:{{item.resource}}:{{item.changeType}}",
+    "account": "{{item.tenantId}}",
+    "verify": "verifyWebhookClientState",
+    "note": "Microsoft Graph change notifications authenticate via clientState (not HMAC). Create subscriptions with createSubscription; the Tier-3 extension handles validationToken handshake and tenantId routing."
+  },
+  "capabilities": {
+    "me.get": {
+      "kind": "read",
+      "method": "getMe",
+      "output": "user",
+      "args": []
+    },
+    "organization.get": {
+      "kind": "read",
+      "method": "getOrganization",
+      "output": "organization",
+      "args": []
+    },
+    "message.list": {
+      "kind": "read",
+      "method": "listMessages",
+      "output": "page<message>",
+      "args": ["$rest"]
+    },
+    "message.get": {
+      "kind": "read",
+      "method": "getMessage",
+      "input": {
+        "messageId": { "type": "string", "required": true }
+      },
+      "output": "message",
+      "args": ["messageId", "$rest"]
+    },
+    "message.create": {
+      "kind": "write",
+      "method": "createMessage",
+      "input": {
+        "message": { "type": "object", "required": true }
+      },
+      "output": "message",
+      "args": ["message"]
+    },
+    "message.update": {
+      "kind": "write",
+      "method": "updateMessage",
+      "input": {
+        "messageId": { "type": "string", "required": true },
+        "message": { "type": "object", "required": true }
+      },
+      "output": "message",
+      "args": ["messageId", "message"]
+    },
+    "message.delete": {
+      "kind": "write",
+      "method": "deleteMessage",
+      "input": {
+        "messageId": { "type": "string", "required": true }
+      },
+      "args": ["messageId"]
+    },
+    "message.send": {
+      "kind": "write",
+      "method": "sendMail",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "args": ["body"]
+    },
+    "mailFolder.list": {
+      "kind": "read",
+      "method": "listMailFolders",
+      "output": "page<mailFolder>",
+      "args": ["$rest"]
+    },
+    "mailFolder.get": {
+      "kind": "read",
+      "method": "getMailFolder",
+      "input": {
+        "folderId": { "type": "string", "required": true }
+      },
+      "output": "mailFolder",
+      "args": ["folderId", "$rest"]
+    },
+    "calendar.list": {
+      "kind": "read",
+      "method": "listCalendars",
+      "output": "page<calendar>",
+      "args": ["$rest"]
+    },
+    "calendar.get": {
+      "kind": "read",
+      "method": "getCalendar",
+      "input": {
+        "calendarId": { "type": "string", "required": true }
+      },
+      "output": "calendar",
+      "args": ["calendarId", "$rest"]
+    },
+    "event.list": {
+      "kind": "read",
+      "method": "listEvents",
+      "output": "page<event>",
+      "args": ["$rest"]
+    },
+    "event.get": {
+      "kind": "read",
+      "method": "getEvent",
+      "input": {
+        "eventId": { "type": "string", "required": true }
+      },
+      "output": "event",
+      "args": ["eventId", "$rest"]
+    },
+    "event.create": {
+      "kind": "write",
+      "method": "createEvent",
+      "input": {
+        "event": { "type": "object", "required": true }
+      },
+      "output": "event",
+      "args": ["event"]
+    },
+    "event.update": {
+      "kind": "write",
+      "method": "updateEvent",
+      "input": {
+        "eventId": { "type": "string", "required": true },
+        "event": { "type": "object", "required": true }
+      },
+      "output": "event",
+      "args": ["eventId", "event"]
+    },
+    "event.delete": {
+      "kind": "write",
+      "method": "deleteEvent",
+      "input": {
+        "eventId": { "type": "string", "required": true }
+      },
+      "args": ["eventId"]
+    },
+    "event.listCalendarView": {
+      "kind": "read",
+      "method": "listCalendarView",
+      "input": {
+        "startDateTime": { "type": "string", "required": true },
+        "endDateTime": { "type": "string", "required": true }
+      },
+      "output": "page<event>",
+      "args": ["$rest"]
+    },
+    "subscription.create": {
+      "kind": "write",
+      "method": "createSubscription",
+      "input": {
+        "subscription": { "type": "object", "required": true }
+      },
+      "output": "subscription",
+      "args": ["subscription"]
+    },
+    "subscription.list": {
+      "kind": "read",
+      "method": "listSubscriptions",
+      "output": "page<subscription>",
+      "args": ["$rest"]
+    },
+    "subscription.get": {
+      "kind": "read",
+      "method": "getSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "output": "subscription",
+      "args": ["subscriptionId"]
+    },
+    "subscription.renew": {
+      "kind": "write",
+      "method": "renewSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "subscription",
+      "args": ["subscriptionId", "body"]
+    },
+    "subscription.delete": {
+      "kind": "write",
+      "method": "deleteSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "args": ["subscriptionId"]
+    }
+  },
+  "options": {
+    "mailFolder": {
+      "capability": "mailFolder.list",
+      "label": "{{item.displayName}}",
+      "value": "$.item.id"
+    },
+    "calendar": {
+      "capability": "calendar.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id"
+    }
+  }
+}

@@ -1,0 +1,405 @@
+openapi: 3.0.3
+info:
+  title: Microsoft Outlook (Microsoft Graph) API — Frigg subset
+  version: "1.0.0"
+  description: >-
+    Curated subset of Microsoft Graph v1.0 covering Outlook mail and calendar
+    objects the @friggframework/api-module-microsoft-outlook client implements.
+    Source of truth is Microsoft Learn Graph docs; this file mirrors api.js 1:1
+    (one method per operationId). Official Graph OpenAPI metadata:
+    https://github.com/microsoftgraph/msgraph-metadata and
+    https://aka.ms/graph/v1.0/openapi.yaml
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Outlook mail API overview
+    url: https://learn.microsoft.com/en-us/graph/api/resources/mail-api-overview
+servers:
+  - url: https://graph.microsoft.com/v1.0
+    description: Microsoft Graph v1.0 (global)
+security:
+  - OAuth2: []
+tags:
+  - name: Identity
+  - name: Messages
+  - name: MailFolders
+  - name: Calendars
+  - name: Events
+  - name: Subscriptions
+paths:
+  /me:
+    get:
+      tags: [Identity]
+      operationId: getMe
+      summary: Get the signed-in user
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/user-get
+      responses:
+        "200":
+          description: user
+  /organization:
+    get:
+      tags: [Identity]
+      operationId: getOrganization
+      summary: Get organization (tenant) details
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/organization-get
+      responses:
+        "200":
+          description: organization (client returns value[0])
+  /me/messages:
+    get:
+      tags: [Messages]
+      operationId: listMessages
+      summary: List messages in the signed-in user's mailbox
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/user-list-messages
+      parameters:
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataFilter"
+        - $ref: "#/components/parameters/ODataTop"
+        - $ref: "#/components/parameters/ODataSkip"
+        - $ref: "#/components/parameters/ODataOrderby"
+      responses:
+        "200":
+          description: message collection
+    post:
+      tags: [Messages]
+      operationId: createMessage
+      summary: Create a draft message
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/user-post-messages
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: message
+  /me/messages/{message-id}:
+    parameters:
+      - $ref: "#/components/parameters/MessageId"
+    get:
+      tags: [Messages]
+      operationId: getMessage
+      summary: Get a message
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/message-get
+      parameters:
+        - $ref: "#/components/parameters/ODataSelect"
+      responses:
+        "200":
+          description: message
+    patch:
+      tags: [Messages]
+      operationId: updateMessage
+      summary: Update a message
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/message-update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: message
+    delete:
+      tags: [Messages]
+      operationId: deleteMessage
+      summary: Delete a message
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/message-delete
+      responses:
+        "204":
+          description: deleted
+  /me/sendMail:
+    post:
+      tags: [Messages]
+      operationId: sendMail
+      summary: Send a new message
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/user-sendmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message: { type: object }
+                saveToSentItems: { type: boolean }
+      responses:
+        "202":
+          description: accepted
+  /me/mailFolders:
+    get:
+      tags: [MailFolders]
+      operationId: listMailFolders
+      summary: List mail folders
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/user-list-mailfolders
+      parameters:
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataTop"
+      responses:
+        "200":
+          description: mailFolder collection
+  /me/mailFolders/{folder-id}:
+    parameters:
+      - $ref: "#/components/parameters/FolderId"
+    get:
+      tags: [MailFolders]
+      operationId: getMailFolder
+      summary: Get a mail folder
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/mailfolder-get
+      responses:
+        "200":
+          description: mailFolder
+  /me/calendars:
+    get:
+      tags: [Calendars]
+      operationId: listCalendars
+      summary: List calendars
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/user-list-calendars
+      parameters:
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataTop"
+      responses:
+        "200":
+          description: calendar collection
+  /me/calendars/{calendar-id}:
+    parameters:
+      - $ref: "#/components/parameters/CalendarId"
+    get:
+      tags: [Calendars]
+      operationId: getCalendar
+      summary: Get a calendar
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/calendar-get
+      responses:
+        "200":
+          description: calendar
+  /me/events:
+    get:
+      tags: [Events]
+      operationId: listEvents
+      summary: List events in the user's mailbox
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/user-list-events
+      parameters:
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataFilter"
+        - $ref: "#/components/parameters/ODataTop"
+        - $ref: "#/components/parameters/ODataOrderby"
+      responses:
+        "200":
+          description: event collection
+    post:
+      tags: [Events]
+      operationId: createEvent
+      summary: Create an event in the default calendar
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/user-post-events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: event
+  /me/events/{event-id}:
+    parameters:
+      - $ref: "#/components/parameters/EventId"
+    get:
+      tags: [Events]
+      operationId: getEvent
+      summary: Get an event
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/event-get
+      parameters:
+        - $ref: "#/components/parameters/ODataSelect"
+      responses:
+        "200":
+          description: event
+    patch:
+      tags: [Events]
+      operationId: updateEvent
+      summary: Update an event
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/event-update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: event
+    delete:
+      tags: [Events]
+      operationId: deleteEvent
+      summary: Delete an event
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/event-delete
+      responses:
+        "204":
+          description: deleted
+  /me/calendarView:
+    get:
+      tags: [Events]
+      operationId: listCalendarView
+      summary: List calendar view (expanded occurrences in a time range)
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/user-list-calendarview
+      parameters:
+        - in: query
+          name: startDateTime
+          required: true
+          schema: { type: string, format: date-time }
+        - in: query
+          name: endDateTime
+          required: true
+          schema: { type: string, format: date-time }
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataTop"
+      responses:
+        "200":
+          description: event collection
+  /subscriptions:
+    get:
+      tags: [Subscriptions]
+      operationId: listSubscriptions
+      summary: List change-notification subscriptions
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/subscription-list
+      responses:
+        "200":
+          description: subscription collection
+    post:
+      tags: [Subscriptions]
+      operationId: createSubscription
+      summary: Create a change-notification subscription
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubscriptionCreate" }
+      responses:
+        "201":
+          description: subscription
+  /subscriptions/{subscription-id}:
+    parameters:
+      - $ref: "#/components/parameters/SubscriptionId"
+    get:
+      tags: [Subscriptions]
+      operationId: getSubscription
+      summary: Get a subscription
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/subscription-get
+      responses:
+        "200":
+          description: subscription
+    patch:
+      tags: [Subscriptions]
+      operationId: renewSubscription
+      summary: Update / renew a subscription
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/subscription-update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: subscription
+    delete:
+      tags: [Subscriptions]
+      operationId: deleteSubscription
+      summary: Delete a subscription
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/subscription-delete
+      responses:
+        "204":
+          description: deleted
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.microsoftonline.com/common/oauth2/v2.0/authorize
+          tokenUrl: https://login.microsoftonline.com/common/oauth2/v2.0/token
+          scopes:
+            openid: Sign users in
+            offline_access: Maintain access to data
+            User.Read: Sign in and read user profile
+            Mail.ReadWrite: Read and write user mail
+            Mail.Send: Send mail as the user
+            Calendars.ReadWrite: Have full access to user calendars
+  parameters:
+    MessageId:
+      in: path
+      name: message-id
+      required: true
+      schema: { type: string }
+    FolderId:
+      in: path
+      name: folder-id
+      required: true
+      schema: { type: string }
+    CalendarId:
+      in: path
+      name: calendar-id
+      required: true
+      schema: { type: string }
+    EventId:
+      in: path
+      name: event-id
+      required: true
+      schema: { type: string }
+    SubscriptionId:
+      in: path
+      name: subscription-id
+      required: true
+      schema: { type: string }
+    ODataSelect:
+      in: query
+      name: $select
+      schema: { type: string }
+    ODataFilter:
+      in: query
+      name: $filter
+      schema: { type: string }
+    ODataTop:
+      in: query
+      name: $top
+      schema: { type: integer, minimum: 1, maximum: 1000 }
+    ODataSkip:
+      in: query
+      name: $skip
+      schema: { type: integer, minimum: 0 }
+    ODataOrderby:
+      in: query
+      name: $orderby
+      schema: { type: string }
+  schemas:
+    SubscriptionCreate:
+      type: object
+      required: [changeType, notificationUrl, resource, expirationDateTime]
+      properties:
+        changeType: { type: string }
+        notificationUrl: { type: string, format: uri }
+        resource: { type: string }
+        expirationDateTime: { type: string, format: date-time }
+        clientState: { type: string }
+        latestSupportedTlsVersion: { type: string }

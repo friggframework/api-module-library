@@ -1,0 +1,149 @@
+# Fenestra Document: Outreach Web Widget Extensions
+#
+# Outreach embeds partner UI as hosted web widgets (iframes) via Shell / Tab /
+# Tile extension points. Widgets receive configured context properties through
+# the @getoutreach/extensibility-sdk. There is no required component catalog —
+# any web stack may be used inside the iframe.
+#
+# Sources:
+#   https://developers.outreach.io/client-extensions/web-widget-extensions
+#   https://developers.outreach.io/client-extensions/javascript-sdk
+#   https://developers.outreach.io/client-extensions/your-first-outreach-extension
+
+fenestra: "0.1.0"
+
+info:
+  title: Outreach Web Widget Extensions
+  version: "1.0.0"
+  description: |
+    Outreach client extensions let an app display a hosted web widget inside the
+    Outreach web client. Extension types: Shell (full-page from the main
+    sidebar), Tab (Prospect / Account / Opportunity detail tabs), and Tile
+    (Prospect / Account overview tiles). Context properties are selected in the
+    Developer Portal and delivered through the Extensibility SDK.
+
+platform:
+  name: Outreach
+  vendor: Outreach
+  documentation: https://developers.outreach.io/client-extensions/web-widget-extensions
+  appMarketplace: https://marketplace.outreach.io/
+
+sdks:
+  outreach-extensibility:
+    name: Outreach Extensibility SDK
+    packageManager: npm
+    package: "@getoutreach/extensibility-sdk"
+    # Installed from GitHub per official docs:
+    #   npm install github:getoutreach/extensibility-sdk
+    repository: https://github.com/getoutreach/extensibility-sdk
+    documentation: https://developers.outreach.io/client-extensions/javascript-sdk
+    exports:
+      init:
+        type: utility
+        description: Initialize the host bridge; returns OutreachContext
+      navigate:
+        type: utility
+        description: Navigate within Outreach (Opportunity, Prospect, Account, App)
+      enhanceTextEditor:
+        type: utility
+        description: Return HTML (and optional subject) for text-editor extensions
+
+policies:
+  componentRequirement:
+    level: optional
+    scope: all
+    notes: >-
+      Outreach does not require a proprietary component set. Any technology that
+      can run in an iframe (e.g. React) is supported.
+  customComponents:
+    allowed: true
+
+extensionPoints:
+  - id: shell
+    name: Shell extension
+    type: fullPage
+    extensionType: iframe
+    description: >-
+      Full-page application launched from the main Outreach sidebar. Can receive
+      user and org context properties configured in the Developer Portal.
+    context:
+      provides:
+        - user
+        - org
+
+  - id: prospect-tab
+    name: Prospect tab extension
+    type: panel
+    extensionType: iframe
+    description: Custom tab on the Prospect detail page.
+    context:
+      provides:
+        - user
+        - org
+        - prospect
+        - account
+
+  - id: account-tab
+    name: Account tab extension
+    type: panel
+    extensionType: iframe
+    description: Custom tab on the Account detail page.
+    context:
+      provides:
+        - user
+        - org
+        - account
+
+  - id: opportunity-tab
+    name: Opportunity tab extension
+    type: panel
+    extensionType: iframe
+    description: Custom tab on the Opportunity detail page.
+    context:
+      provides:
+        - user
+        - org
+        - opportunity
+
+  - id: prospect-tile
+    name: Prospect tile extension
+    type: card
+    extensionType: iframe
+    description: >-
+      Condensed tile on the Prospect overview; end users choose placement.
+    context:
+      provides:
+        - user
+        - org
+        - prospect
+
+  - id: account-tile
+    name: Account tile extension
+    type: card
+    extensionType: iframe
+    description: >-
+      Condensed tile on the Account overview; end users choose placement.
+    context:
+      provides:
+        - user
+        - org
+        - account
+
+renderingEngines:
+  iframe:
+    type: custom
+    name: Hosted web widget
+    description: >-
+      Outreach loads the configured Hosting URL in an iframe and bridges context
+      via the Extensibility SDK. Mapped to Fenestra `custom` because the host
+      does not use React/LWC/JSON Forms/MCP Apps rendering engines.
+    sandboxing:
+      iframeSandbox: true
+
+jsonFormsIntegration:
+  supported: false
+  notes: Outreach web widgets are free-form HTML/JS applications.
+
+mcpAppsIntegration:
+  supported: false
+  notes: Not documented as integrated with MCP Apps.

@@ -27,6 +27,7 @@ tags:
   - name: Payments
   - name: Staff
   - name: OtherIncome
+  - name: BillVendors
   - name: Webhooks
 paths:
   /auth/api/v1/users/me:
@@ -358,6 +359,61 @@ paths:
         "200":
           description: Staff object
 
+  /accounting/account/{accountId}/bill_vendors/bill_vendors:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+    get:
+      tags: [BillVendors]
+      operationId: listBillVendors
+      summary: List bill vendors
+      description: "Scope user:bill_vendors:read. Docs https://www.freshbooks.com/api/vendors"
+      responses:
+        "200":
+          description: Paginated bill_vendors list
+    post:
+      tags: [BillVendors]
+      operationId: createBillVendor
+      summary: Create a bill vendor
+      description: "Scope user:bill_vendors:write. Body wraps { bill_vendor: {...} }."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bill_vendor]
+              properties:
+                bill_vendor:
+                  type: object
+      responses:
+        "200":
+          description: Created bill_vendor
+
+  /accounting/account/{accountId}/bill_vendors/bill_vendors/{vendorId}:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+      - name: vendorId
+        in: path
+        required: true
+        schema: { type: integer }
+    put:
+      tags: [BillVendors]
+      operationId: updateBillVendor
+      summary: Update a bill vendor (soft-delete via vis_state=1)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bill_vendor]
+              properties:
+                bill_vendor:
+                  type: object
+      responses:
+        "200":
+          description: Updated bill_vendor
+
   /accounting/account/{accountId}/other_incomes/other_incomes:
     parameters:
       - $ref: "#/components/parameters/accountId"
@@ -554,4 +610,6 @@ components:
             user:payments:write: Create/update payments
             user:other_income:read: List/get other income
             user:other_income:write: Create/update other income
+            user:bill_vendors:read: List bill vendors
+            user:bill_vendors:write: Create/update bill vendors
             user:teams:read: List/get staff

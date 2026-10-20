@@ -51,15 +51,16 @@ Every `operationId` has a matching `Api` method (`tests/spec-sync.test.js`).
 
 | Area | Methods |
 |---|---|
-| Identity | `getUserInfo`, `listBusinessAccounts` |
-| Clients | `listClients`, `getClient`, `createClient`, `updateClient` |
-| Invoices | `listInvoices`, `getInvoice`, `createInvoice`, `updateInvoice`, `deleteInvoice` |
+| Identity | `getUserDetails` / `getUserInfo`, `getUserEmail`, `listBusinessAccounts` / `retrieveAccounts` |
+| Clients | `listClients`, `getClient` / `getClientById`, `findClientsByEmail` / `searchClientByEmail`, `createClient`, `updateClient` |
+| Invoices | `listInvoices`, `listClientInvoices` / `getClientInvoices`, `getInvoice` / `getInvoiceById`, `createInvoice`, `updateInvoice`, `deleteInvoice` |
 | Expenses | `listExpenses`, `getExpense`, `createExpense`, `updateExpense` |
 | Categories | `listExpenseCategories`, `getExpenseCategory` (read-only via API) |
-| Payments | `listPayments`, `getPayment`, `createPayment`, `updatePayment` |
+| Payments | `listPayments`, `listClientPayments` / `getClientPayments`, `getPayment` / `getPaymentById`, `createPayment`, `updatePayment` |
 | Staff | `listStaff`, `getStaff` |
 | Other income | `listOtherIncomes`, `getOtherIncome`, `createOtherIncome`, `updateOtherIncome` |
-| Webhooks | `listCallbacks`, `createCallback`, `verifyCallback`, `resendCallbackVerification`, `deleteCallback` |
+| Bill vendors | `listBillVendors`, `createBillVendor`, `updateBillVendor` |
+| Webhooks | `listCallbacks`, `getCallback`, `createCallback` / `createEventCallback`, `verifyCallback` / `verifyEventCallback`, `resendCallbackVerification`, `deleteCallback` / `deleteEventCallback` |
 
 ## Webhooks
 
@@ -85,6 +86,17 @@ as the HMAC secret ([docs](https://www.freshbooks.com/api/webhooks)).
   `freshbooksUserId`, `findClientsByEmail`, client invoice/payment helpers,
   `getCallback`, `webUrls`, `invoiceStatusName`, multi-business account
   selection). Integration-specific logic was not copied.
+- Also reconciled against `lefthookhq/freshbooks--frigg` (older TypeScript
+  module): verified `bill_vendors` list/create (+ `updateBillVendor` from
+  [Vendors](https://www.freshbooks.com/api/vendors) docs), and compatibility
+  aliases (`searchClientByEmail`, `getClientById`, `getClientInvoices`,
+  `getInvoiceById`, `getClientPayments`, `getPaymentById`,
+  `createEventCallback` / `verifyEventCallback` / `deleteEventCallback`,
+  `getUserEmail`, `retrieveAccounts`, `setAccessToken` /
+  `setRefreshToken` / `setRedirectUri`). Skipped: `getOtherExpensesCategory`,
+  expense body transform helpers, `manager.ts` / Entity wiring, and the stale
+  `my.freshbooks.com/service/auth/oauth/authorize` auth URL (current docs use
+  `auth.freshbooks.com`).
 
 ## Test
 

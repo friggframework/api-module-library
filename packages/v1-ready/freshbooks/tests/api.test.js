@@ -202,6 +202,25 @@ describe('FreshBooks Api', () => {
             expect(await api.getUserInfo()).toEqual({ id: 1 });
         });
 
+        it('getUserEmail returns email from getUserDetails', async () => {
+            const api = makeApi();
+            api.getUserDetails = async () => ({
+                id: 1,
+                email: 'acct@example.com',
+            });
+            expect(await api.getUserEmail()).toBe('acct@example.com');
+        });
+
+        it('retrieveAccounts maps listBusinessAccounts to { name, id }', async () => {
+            const api = makeApi();
+            api.listBusinessAccounts = async () => [
+                { name: 'Acme', accountId: 'zDmNq', businessId: 1 },
+            ];
+            expect(await api.retrieveAccounts()).toEqual([
+                { name: 'Acme', id: 'zDmNq' },
+            ]);
+        });
+
         it('throws when users/me has no id', async () => {
             const api = makeApi();
             api._get = async () => ({ response: {} });
@@ -212,6 +231,16 @@ describe('FreshBooks Api', () => {
             expect(
                 new Api({ freshbooksUserId: '42' }).freshbooksUserId
             ).toBe('42');
+        });
+
+        it('setAccessToken / setRefreshToken / setRedirectUri mutate state', () => {
+            const api = makeApi();
+            api.setAccessToken('a2');
+            api.setRefreshToken('r2');
+            api.setRedirectUri('https://app.example/new');
+            expect(api.access_token).toBe('a2');
+            expect(api.refresh_token).toBe('r2');
+            expect(api.redirect_uri).toBe('https://app.example/new');
         });
     });
 
@@ -243,6 +272,14 @@ describe('FreshBooks Api', () => {
             await expect(api.findClientsByEmail('zDmNq', '')).rejects.toThrow(
                 /email/i
             );
+        });
+
+        it('searchClientByEmail / getClientById alias find/get', async () => {
+            const api = makeApi();
+            await api.searchClientByEmail('zDmNq', 'a@b.co');
+            await api.getClientById('zDmNq', 9);
+            expect(api._captured[0].query['search[email]']).toBe('a@b.co');
+            expect(api._captured[1].url).toContain('/users/clients/9');
         });
 
         it('createClient POSTs a wrapped client body', async () => {
@@ -309,6 +346,57 @@ describe('FreshBooks Api', () => {
                 per_page: 5,
             });
         });
+
+        it('getClientInvoices / getInvoiceById / getClientPayments / getPaymentById aliases', async () => {
+            const api = makeApi();
+            await api.getClientInvoices('zDmNq', 7, 5);
+            await api.getInvoiceById('zDmNq', 11);
+            await api.getClientPayments('zDmNq', 7, 5);
+            await api.getPaymentById('zDmNq', 21);
+            expect(api._captured[0].query['search[customerid]']).toBe(7);
+            expect(api._captured[1].url).toContain('/invoices/invoices/11');
+            expect(api._captured[2].query['search[clientid]']).toBe(7);
+            expect(api._captured[3].url).toContain('/payments/payments/21');
+        });
+    });
+
+    describe('bill vendors', () => {
+        it('listBillVendors GETs bill_vendors path', async () => {
+            const api = makeApi();
+            await api.listBillVendors('zDmNq', { page: 1 });
+            expect(api._captured[0].method).toBe('GET');
+            expect(api._captured[0].url).toContain(
+                '/accounting/account/zDmNq/bill_vendors/bill_vendors'
+            );
+            expect(api._captured[0].query).toEqual({ page: 1 });
+        });
+
+        it('createBillVendor POSTs wrapped bill_vendor body', async () => {
+            const api = makeApi();
+            await api.createBillVendor('zDmNq', {
+                vendor_name: 'Acme Supply',
+                currency_code: 'USD',
+            });
+            expect(api._captured[0].method).toBe('POST');
+            expect(api._captured[0].body).toEqual({
+                bill_vendor: {
+                    vendor_name: 'Acme Supply',
+                    currency_code: 'USD',
+                },
+            });
+        });
+
+        it('updateBillVendor PUTs to vendor id path', async () => {
+            const api = makeApi();
+            await api.updateBillVendor('zDmNq', 55, { vis_state: 1 });
+            expect(api._captured[0].method).toBe('PUT');
+            expect(api._captured[0].url).toContain(
+                '/bill_vendors/bill_vendors/55'
+            );
+            expect(api._captured[0].body).toEqual({
+                bill_vendor: { vis_state: 1 },
+            });
+        });
     });
 
     describe('expenses / staff / other income', () => {
@@ -357,6 +445,21 @@ describe('FreshBooks Api', () => {
                 callback: { resend: true },
             });
             expect(api._captured[5].method).toBe('DELETE');
+        });
+
+        it('createEventCallback / verifyEventCallback / deleteEventCallback aliases', async () => {
+            const api = makeApi();
+            await api.createEventCallback('zDmNq', {
+                event: 'invoice.create',
+                uri: 'https://hook.example/fb',
+            });
+            await api.verifyEventCallback('zDmNq', 2001, 'scADVVi5');
+            await api.deleteEventCallback('zDmNq', 2001);
+            expect(api._captured[0].method).toBe('POST');
+            expect(api._captured[1].body).toEqual({
+                callback: { callback_id: 2001, verifier: 'scADVVi5' },
+            });
+            expect(api._captured[2].method).toBe('DELETE');
         });
     });
 });

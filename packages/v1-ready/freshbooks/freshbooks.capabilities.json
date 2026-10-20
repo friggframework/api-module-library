@@ -25,6 +25,8 @@
       "user:payments:write",
       "user:other_income:read",
       "user:other_income:write",
+      "user:bill_vendors:read",
+      "user:bill_vendors:write",
       "user:teams:read"
     ],
     "identityMethod": "getUserDetails",
@@ -35,7 +37,13 @@
   },
   "objects": {
     "identity": {
-      "methods": ["getUserDetails", "getUserInfo", "listBusinessAccounts"],
+      "methods": [
+        "getUserDetails",
+        "getUserInfo",
+        "getUserEmail",
+        "listBusinessAccounts",
+        "retrieveAccounts"
+      ],
       "fields": [
         { "name": "id", "tags": ["identifier", "identity"] },
         { "name": "email", "tags": ["pii", "identity"] },
@@ -59,7 +67,9 @@
       "methods": [
         "listClients",
         "getClient",
+        "getClientById",
         "findClientsByEmail",
+        "searchClientByEmail",
         "createClient",
         "updateClient"
       ],
@@ -79,7 +89,9 @@
       "methods": [
         "listInvoices",
         "listClientInvoices",
+        "getClientInvoices",
         "getInvoice",
+        "getInvoiceById",
         "createInvoice",
         "updateInvoice",
         "deleteInvoice",
@@ -128,7 +140,9 @@
       "methods": [
         "listPayments",
         "listClientPayments",
+        "getClientPayments",
         "getPayment",
+        "getPaymentById",
         "createPayment",
         "updatePayment"
       ],
@@ -165,14 +179,31 @@
         { "name": "source", "tags": ["display"] }
       ]
     },
+    "bill_vendor": {
+      "methods": [
+        "listBillVendors",
+        "createBillVendor",
+        "updateBillVendor"
+      ],
+      "fields": [
+        { "name": "vendorid", "tags": ["identifier"] },
+        { "name": "vendor_name", "tags": ["display", "required-on-create"] },
+        { "name": "website", "tags": ["url"] },
+        { "name": "currency_code", "tags": ["money"] },
+        { "name": "vis_state", "tags": ["lifecycle"] }
+      ]
+    },
     "callback": {
       "methods": [
         "listCallbacks",
         "getCallback",
         "createCallback",
+        "createEventCallback",
         "verifyCallback",
+        "verifyEventCallback",
         "resendCallbackVerification",
-        "deleteCallback"
+        "deleteCallback",
+        "deleteEventCallback"
       ],
       "fields": [
         { "name": "id", "tags": ["identifier"] },
@@ -297,6 +328,39 @@
       "implementedBy": {
         "kind": "api-class-method",
         "ref": "Api.createOtherIncome"
+      }
+    },
+    "accounting.bill_vendor.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listBillVendors"
+      },
+      "spec": {
+        "kind": "openapi",
+        "ref": "./freshbooks.openapi.yaml#/paths/~1accounting~1account~1{accountId}~1bill_vendors~1bill_vendors/get"
+      }
+    },
+    "accounting.bill_vendor.create": {
+      "surface": "data-write",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.createBillVendor"
+      },
+      "spec": {
+        "kind": "openapi",
+        "ref": "./freshbooks.openapi.yaml#/paths/~1accounting~1account~1{accountId}~1bill_vendors~1bill_vendors/post"
+      }
+    },
+    "accounting.bill_vendor.update": {
+      "surface": "data-write",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.updateBillVendor"
+      },
+      "spec": {
+        "kind": "openapi",
+        "ref": "./freshbooks.openapi.yaml#/paths/~1accounting~1account~1{accountId}~1bill_vendors~1bill_vendors~1{vendorId}/put"
       }
     },
     "accounting.webhook.create": {

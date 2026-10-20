@@ -44,8 +44,9 @@ const jsonHeaders = () => ({
  * OpenAPI. ./freshbooks.openapi.yaml is a hand-written subset covering the
  * endpoints this client implements (one method per operationId).
  *
- * Prior art: lefthookhq/freshbooks-integrations backend/src/api-modules/freshbooks/
- * (Daniel) — auth/token/identity/callback patterns reconciled here.
+ * Prior art:
+ *   - lefthookhq/freshbooks-integrations …/api-modules/freshbooks/ (Daniel)
+ *   - lefthookhq/freshbooks--frigg (older TypeScript module) — bill_vendors + aliases
  *
  * Docs: https://www.freshbooks.com/api/start
  */
@@ -108,6 +109,10 @@ class Api extends OAuth2Requester {
                 `/accounting/account/${accountId}/other_incomes/other_incomes`,
             otherIncome: (accountId, incomeId) =>
                 `/accounting/account/${accountId}/other_incomes/other_incomes/${incomeId}`,
+            billVendors: (accountId) =>
+                `/accounting/account/${accountId}/bill_vendors/bill_vendors`,
+            billVendor: (accountId, vendorId) =>
+                `/accounting/account/${accountId}/bill_vendors/bill_vendors/${vendorId}`,
             callbacks: (accountId) =>
                 `/events/account/${accountId}/events/callbacks`,
             callback: (accountId, callbackId) =>
@@ -158,6 +163,18 @@ class Api extends OAuth2Requester {
 
     setBusinessId(businessId) {
         this.businessId = businessId;
+    }
+
+    setAccessToken(access_token) {
+        this.access_token = access_token;
+    }
+
+    setRefreshToken(refresh_token) {
+        this.refresh_token = refresh_token;
+    }
+
+    setRedirectUri(redirectUri) {
+        this.redirect_uri = redirectUri;
     }
 
     requireAccountId(explicit) {
@@ -268,6 +285,12 @@ class Api extends OAuth2Requester {
         return this.getUserDetails();
     }
 
+    /** Convenience from older TS module: email only from /users/me. */
+    async getUserEmail() {
+        const user = await this.getUserDetails();
+        return user.email;
+    }
+
     /**
      * Convenience: map business_memberships to { name, accountId, businessId, role }.
      */
@@ -282,6 +305,15 @@ class Api extends OAuth2Requester {
                 membershipId: mem.id,
             }))
             .filter((a) => a.accountId);
+    }
+
+    /**
+     * Older TS module shape: [{ name, id }] where id is account_id.
+     * Prefer listBusinessAccounts() for new callers.
+     */
+    async retrieveAccounts() {
+        const accounts = await this.listBusinessAccounts();
+        return accounts.map((a) => ({ name: a.name, id: a.accountId }));
     }
 
     // ---- Clients -----------------------------------------------------------
@@ -337,6 +369,16 @@ class Api extends OAuth2Requester {
             },
         });
         return response.result.clients;
+    }
+
+    /** Alias from lefthookhq/freshbooks--frigg */
+    async searchClientByEmail(accountId, email) {
+        return this.findClientsByEmail(accountId, email);
+    }
+
+    /** Alias from lefthookhq/freshbooks--frigg */
+    async getClientById(accountId, clientId) {
+        return this.getClient(accountId, clientId);
     }
 
     /** POST /accounting/account/{accountId}/users/clients */
@@ -408,6 +450,11 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /** Alias from lefthookhq/freshbooks--frigg */
+    async getClientInvoices(accountId, clientId, perPage) {
+        return this.listClientInvoices(accountId, clientId, perPage);
+    }
+
     /** GET /accounting/account/{accountId}/invoices/invoices/{invoiceId} */
     async getInvoice(accountId, invoiceId) {
         let acct = accountId;
@@ -421,6 +468,11 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.invoice(id, iid),
         });
         return response.result.invoice;
+    }
+
+    /** Alias from lefthookhq/freshbooks--frigg */
+    async getInvoiceById(accountId, invoiceId) {
+        return this.getInvoice(accountId, invoiceId);
     }
 
     /** POST /accounting/account/{accountId}/invoices/invoices */
@@ -589,6 +641,11 @@ class Api extends OAuth2Requester {
         };
     }
 
+    /** Alias from lefthookhq/freshbooks--frigg */
+    async getClientPayments(accountId, clientId, perPage) {
+        return this.listClientPayments(accountId, clientId, perPage);
+    }
+
     /**
      * GET /accounting/account/{accountId}/payments/payments/{paymentId}
      * Includes related invoice by default (include[]=invoice).
@@ -606,6 +663,11 @@ class Api extends OAuth2Requester {
             query: { 'include[]': 'invoice' },
         });
         return response.result.payment;
+    }
+
+    /** Alias from lefthookhq/freshbooks--frigg */
+    async getPaymentById(accountId, paymentId) {
+        return this.getPayment(accountId, paymentId);
     }
 
     async createPayment(accountId, payment) {
@@ -726,6 +788,58 @@ class Api extends OAuth2Requester {
         });
     }
 
+    // ---- Bill vendors (Accounts Payable) -----------------------------------
+    // Docs: https://www.freshbooks.com/api/vendors
+    // Scopes: user:bill_vendors:read / user:bill_vendors:write
+    // Present in lefthookhq/freshbooks--frigg (list + create).
+
+    /** GET /accounting/account/{accountId}/bill_vendors/bill_vendors */
+    async listBillVendors(accountId, opts = {}) {
+        const resolved = this._accountAndOpts(accountId, opts);
+        return this._get({
+            url: this.baseUrl + this.URLs.billVendors(resolved.accountId),
+            query: resolved.opts,
+        });
+    }
+
+    /** POST /accounting/account/{accountId}/bill_vendors/bill_vendors */
+    async createBillVendor(accountId, billVendor) {
+        if (arguments.length === 1) {
+            billVendor = accountId;
+            accountId = undefined;
+        }
+        const id = this.requireAccountId(accountId);
+        const payload = billVendor?.bill_vendor
+            ? billVendor
+            : { bill_vendor: billVendor };
+        return this._post({
+            url: this.baseUrl + this.URLs.billVendors(id),
+            headers: jsonHeaders(),
+            body: payload,
+        });
+    }
+
+    /**
+     * PUT /accounting/account/{accountId}/bill_vendors/bill_vendors/{vendorId}
+     * Also used to soft-delete via vis_state=1.
+     */
+    async updateBillVendor(accountId, vendorId, billVendor) {
+        if (arguments.length === 2) {
+            billVendor = vendorId;
+            vendorId = accountId;
+            accountId = undefined;
+        }
+        const id = this.requireAccountId(accountId);
+        const payload = billVendor?.bill_vendor
+            ? billVendor
+            : { bill_vendor: billVendor };
+        return this._put({
+            url: this.baseUrl + this.URLs.billVendor(id, vendorId),
+            headers: jsonHeaders(),
+            body: payload,
+        });
+    }
+
     // ---- Webhook callbacks -------------------------------------------------
 
     async listCallbacks(accountId, opts = {}) {
@@ -822,6 +936,19 @@ class Api extends OAuth2Requester {
         await this._delete({
             url: this.baseUrl + this.URLs.callback(id, cid),
         });
+    }
+
+    /** Aliases from lefthookhq/freshbooks--frigg */
+    async createEventCallback(accountId, data) {
+        return this.createCallback(accountId, data);
+    }
+
+    async verifyEventCallback(accountId, callbackId, verifier) {
+        return this.verifyCallback(accountId, callbackId, verifier);
+    }
+
+    async deleteEventCallback(accountId, callbackId) {
+        return this.deleteCallback(accountId, callbackId);
     }
 }
 

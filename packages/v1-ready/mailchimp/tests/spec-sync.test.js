@@ -48,11 +48,22 @@ describe('OpenAPI spec ↔ client sync', () => {
         );
     });
 
-    it('declares basicAuth security matching the vendor swagger', () => {
-        const scheme = spec.components.securitySchemes.basicAuth;
-        expect(scheme.type).toBe('http');
-        expect(scheme.scheme).toBe('basic');
+    it('declares BearerAuth (OAuth) and basicAuth (API key) schemes', () => {
+        const bearer = spec.components.securitySchemes.BearerAuth;
+        const basic = spec.components.securitySchemes.basicAuth;
+        expect(bearer.type).toBe('http');
+        expect(bearer.scheme).toBe('bearer');
+        expect(basic.type).toBe('http');
+        expect(basic.scheme).toBe('basic');
+        // Vendor swagger only lists basicAuth (API-key path); we also declare
+        // BearerAuth for OAuth access tokens per the OAuth guide.
         expect(vendor.securityDefinitions.basicAuth.type).toBe('basic');
+        const schemes = (spec.security || []).flatMap((entry) =>
+            Object.keys(entry)
+        );
+        expect(schemes).toEqual(
+            expect.arrayContaining(['BearerAuth', 'basicAuth'])
+        );
     });
 
     it('info.version matches the vendor swagger version', () => {

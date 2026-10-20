@@ -8,9 +8,11 @@ const { OAuth2Requester, get } = require('@friggframework/core');
  *   https://raw.githubusercontent.com/mailchimp/mailchimp-client-lib-codegen/main/spec/marketing.json
  * Curated OAS subset: ./mailchimp.openapi.yaml — operationIds match Api methods 1:1.
  *
- * Auth (vendor swagger `securityDefinitions.basicAuth`):
- *   HTTP Basic with username `anystring` and password = API key or OAuth access token.
- *   Fundamentals also document Bearer; this client uses Basic to match the swagger.
+ * Auth (two paths; OpenAPI declares both schemes):
+ *   OAuth access_token → Authorization: Bearer <access_token>
+ *     (OAuth guide / Marketing API calls; metadata uses `OAuth <token>`)
+ *   API key only → Authorization: Basic base64(anystring:<api_key>)
+ *     (vendor swagger securityDefinitions.basicAuth — API-key path)
  *
  * OAuth 2 (Marketplace / multi-tenant; not in the Marketing swagger host):
  *   Authorize: https://login.mailchimp.com/oauth2/authorize
@@ -18,6 +20,7 @@ const { OAuth2Requester, get } = require('@friggframework/core');
  *   Metadata:  GET https://login.mailchimp.com/oauth2/metadata
  *              Authorization: OAuth <access_token> → { dc, api_endpoint, ... }
  *   Tokens do not expire; there is no refresh_token.
+ *   Docs: https://mailchimp.com/developer/marketing/guides/access-user-data-oauth-2/
  *
  * Base URL (vendor swagger host + basePath):
  *   Default: https://server.api.mailchimp.com/3.0
@@ -200,22 +203,23 @@ class Api extends OAuth2Requester {
     }
 
     /**
-     * Marketing API auth per vendor swagger: HTTP Basic
-     * (`anystring` : API key or OAuth access token).
-     * OAuth metadata endpoint still requires `Authorization: OAuth …`.
+     * Marketing API auth headers:
+     *   - OAuth metadata: `Authorization: OAuth <access_token>`
+     *   - OAuth API calls: `Authorization: Bearer <access_token>`
+     *   - API key only:    `Authorization: Basic base64(anystring:<api_key>)`
+     *     (swagger basicAuth; not used when access_token is present)
      */
     async addAuthHeaders(headers = {}) {
         const h = { ...headers };
         delete h.Authorization;
         if (this._useOAuthMetadataHeader && this.access_token) {
             h.Authorization = `OAuth ${this.access_token}`;
-        } else {
-            const token = this.access_token || this.api_key;
-            if (token) {
-                h.Authorization = `Basic ${Buffer.from(
-                    `anystring:${token}`
-                ).toString('base64')}`;
-            }
+        } else if (this.access_token) {
+            h.Authorization = `Bearer ${this.access_token}`;
+        } else if (this.api_key) {
+            h.Authorization = `Basic ${Buffer.from(
+                `anystring:${this.api_key}`
+            ).toString('base64')}`;
         }
         return h;
     }

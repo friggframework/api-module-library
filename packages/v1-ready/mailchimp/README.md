@@ -18,15 +18,18 @@ await this.mailchimp.api.postListsIdMembers(listId, {
 
 ## Authentication
 
-**Vendor swagger:** `securityDefinitions.basicAuth` — HTTP Basic with username
-`anystring` and password = API key or OAuth access token. This client uses
-Basic on Marketing API calls to match that swagger.
+Two schemes (both declared in `mailchimp.openapi.yaml`):
+
+| Path | Header | Notes |
+|---|---|---|
+| **OAuth access token** | `Authorization: Bearer <access_token>` | Marketing API calls ([OAuth guide](https://mailchimp.com/developer/marketing/guides/access-user-data-oauth-2/)) |
+| **OAuth metadata** | `Authorization: OAuth <access_token>` | `GET login.mailchimp.com/oauth2/metadata` only |
+| **API key** | `Authorization: Basic base64(anystring:<api_key>)` | Vendor swagger `basicAuth` (API-key path) |
 
 **OAuth 2 (Marketplace):** authorization code on `login.mailchimp.com`
 (not part of the Marketing swagger host). Access tokens do not expire; there
-is no `refresh_token`. After code exchange the client calls
-`/oauth2/metadata` (`Authorization: OAuth <token>`) to discover `dc` and set
-`server_prefix`.
+is no `refresh_token`. After code exchange the client calls metadata to
+discover `dc` and set `server_prefix`.
 
 | Step | URL |
 |---|---|

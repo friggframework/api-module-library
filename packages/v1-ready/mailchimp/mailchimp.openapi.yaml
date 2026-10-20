@@ -17,6 +17,7 @@ servers:
   description: Vendor swagger host (`server.api.mailchimp.com`) + basePath `/3.0`. Replace the `server`
     subdomain with the account data center (e.g. us6) from OAuth metadata `dc` or the API-key suffix.
 security:
+- BearerAuth: []
 - basicAuth: []
 tags:
 - name: root
@@ -11314,9 +11315,14 @@ paths:
           type: string
 components:
   securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'OAuth 2 access token. Marketing API calls use `Authorization: Bearer <access_token>`
+        per Mailchimp OAuth docs (https://mailchimp.com/developer/marketing/guides/access-user-data-oauth-2/).
+        The OAuth metadata endpoint uses `Authorization: OAuth <token>` instead.'
     basicAuth:
       type: http
       scheme: basic
-      description: Vendor swagger securityDefinitions.basicAuth. HTTP Basic with username anystring and
-        password = API key or OAuth access token (Fundamentals also document Bearer; this module uses
-        Basic to match the official swagger).
+      description: 'API-key path from vendor swagger securityDefinitions.basicAuth: HTTP Basic with username
+        `anystring` and password = API key. Used only when no OAuth access_token is present.'

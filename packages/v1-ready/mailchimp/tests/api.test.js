@@ -62,12 +62,10 @@ describe('Mailchimp Api', () => {
             expect(api.baseUrl).toBe('https://us19.api.mailchimp.com/3.0');
         });
 
-        it('emits HTTP Basic for OAuth access_token (vendor basicAuth)', async () => {
+        it('emits Bearer for OAuth access_token on Marketing API calls', async () => {
             const api = new Api({ access_token: 'atok' });
             const headers = await api.addAuthHeaders({});
-            expect(headers.Authorization).toBe(
-                `Basic ${Buffer.from('anystring:atok').toString('base64')}`
-            );
+            expect(headers.Authorization).toBe('Bearer atok');
         });
 
         it('emits HTTP Basic for api_key when no access_token', async () => {
@@ -78,15 +76,13 @@ describe('Mailchimp Api', () => {
             );
         });
 
-        it('prefers access_token over api_key for Basic password', async () => {
+        it('prefers Bearer access_token over api_key Basic', async () => {
             const api = new Api({
                 access_token: 'atok',
                 api_key: 'key-us1',
             });
             const headers = await api.addAuthHeaders({});
-            expect(headers.Authorization).toBe(
-                `Basic ${Buffer.from('anystring:atok').toString('base64')}`
-            );
+            expect(headers.Authorization).toBe('Bearer atok');
         });
 
         it('builds an authorize URL without scopes', () => {

@@ -622,7 +622,7 @@
     "webhookAccountLookup": "Classic list webhook payloads include data.list_id but not account_id. Extension resolve expects ?account_id= on the callback URL (recommended at postListsIdWebhooks time) matching GET / account_id. Not addressed by the Marketing swagger.",
     "signedWebhookBodyEncoding": "Official sync guide documents application/x-www-form-urlencoded bodies; signature examples also json_decode the raw body. Not specified in marketing.json.",
     "lefthookManifest": "lefthookhq/lefthook-bots was not publicly accessible from this environment; no draft manifest was available to start from.",
-    "vendorSpec": "Aligned to official codegen Swagger 2.0 v3.0.91 (https://raw.githubusercontent.com/mailchimp/mailchimp-client-lib-codegen/main/spec/marketing.json): host server.api.mailchimp.com + /3.0, securityDefinitions.basicAuth only (no OAuth scopes on Marketing API), vendor operationIds.",
+    "vendorSpec": "Aligned to official codegen Swagger 2.0 v3.0.91 (https://raw.githubusercontent.com/mailchimp/mailchimp-client-lib-codegen/main/spec/marketing.json): host server.api.mailchimp.com + /3.0, vendor securityDefinitions.basicAuth (API-key path only; no OAuth scopes on Marketing API), vendor operationIds. Module OpenAPI also declares BearerAuth for OAuth access tokens per https://mailchimp.com/developer/marketing/guides/access-user-data-oauth-2/ (Bearer on API calls; OAuth header on metadata).",
     "webhookSigningFields": "marketing.json v3.0.91 list-webhook schemas do not include signing_secret / signing_enabled; those appear in the developer webhook guide. Extension signature verification follows the guide; confirm against live create responses whether secrets are returned outside this swagger revision."
   }
 }

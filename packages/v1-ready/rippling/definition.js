@@ -122,7 +122,10 @@ const Definition = {
         client_secret: process.env.RIPPLING_CLIENT_SECRET,
         app_name: process.env.RIPPLING_APP_NAME,
         scope: process.env.RIPPLING_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/rippling`,
+        // Omit when unset so schema validation does not see the string "undefined/rippling".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/rippling`
+            : undefined,
     },
 };
 

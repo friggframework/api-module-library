@@ -148,6 +148,10 @@ describe('Rippling Definition', () => {
         expect(Definition.env).toHaveProperty('client_secret');
         expect(Definition.env).toHaveProperty('app_name');
         expect(Definition.env).toHaveProperty('scope');
-        expect(Definition.env.redirect_uri).toMatch(/\/rippling$/);
+        expect(Definition.env.redirect_uri).toBe(
+            process.env.REDIRECT_URI
+                ? `${process.env.REDIRECT_URI}/rippling`
+                : undefined
+        );
     });
 });

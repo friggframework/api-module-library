@@ -158,5 +158,7 @@ describe('Figma Definition', () => {
         }
         expect(declared.has('getMe')).toBe(true);
         expect(declared.has('postWebhook')).toBe(true);
+        expect(manifest.auth.scopes).toContain('project_metadata:read');
+        expect(manifest.auth.scopes).toContain('folder_metadata:read');
     });
 });

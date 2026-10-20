@@ -201,10 +201,14 @@ class Api extends OAuth2Requester {
         });
     }
 
-    /** GET /v2/folders/{folder_id}/files */
-    async getFolderFiles(folderId) {
+    /**
+     * GET /v2/folders/{folder_id}/files
+     * Optional query: branch_data (boolean, default false)
+     */
+    async getFolderFiles(folderId, query = {}) {
         return this._get({
             url: this.baseUrl + this.URLs.folderFiles(folderId),
+            query,
         });
     }
 
@@ -231,6 +235,9 @@ class Api extends OAuth2Requester {
     /**
      * POST /v2/webhooks
      * Body requires event_type, endpoint, passcode, context, context_id.
+     * event_type enum (official): FILE_UPDATE | FILE_VERSION_UPDATE |
+     * FILE_DELETE | LIBRARY_PUBLISH | FILE_COMMENT | DEV_MODE_STATUS_UPDATE
+     * (PING is delivery-only; not a creatable subscription).
      */
     async postWebhook(data) {
         return this._post({
@@ -247,7 +254,12 @@ class Api extends OAuth2Requester {
         });
     }
 
-    /** PUT /v2/webhooks/{webhook_id} */
+    /**
+     * PUT /v2/webhooks/{webhook_id}
+     * Official OpenAPI marks required: event_type, team_id, endpoint, passcode
+     * (team_id is required in the schema but not listed under properties —
+     * preserved as published by figma/rest-api-spec).
+     */
     async putWebhook(webhookId, data) {
         return this._put({
             url: this.baseUrl + this.URLs.webhook(webhookId),

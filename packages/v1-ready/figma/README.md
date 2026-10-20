@@ -48,7 +48,7 @@ Method names match official OpenAPI `operationId`s
 | `getProjectFiles(projectId, query)` | `GET /v1/projects/{id}/files` | Files in a project. |
 | `getProjectMeta(projectId)` | `GET /v1/projects/{id}/meta` | Project metadata. |
 | `getTeamFolders(teamId)` | `GET /v2/teams/{id}/folders` | List folders. |
-| `getFolderFiles(folderId)` | `GET /v2/folders/{id}/files` | Files in a folder. |
+| `getFolderFiles(folderId, query)` | `GET /v2/folders/{id}/files` | Files in a folder (`branch_data` optional). |
 | `getFolderMeta(folderId)` | `GET /v2/folders/{id}/meta` | Folder metadata. |
 | `getWebhooks(query)` | `GET /v2/webhooks` | List webhooks by context or plan. |
 | `postWebhook(data)` | `POST /v2/webhooks` | Create a webhook. |
@@ -88,12 +88,15 @@ signature header). See
 
 ## Sources
 
+- **Vendor OpenAPI (canonical for paths/params/schemas/scopes):** https://raw.githubusercontent.com/figma/rest-api-spec/main/openapi/openapi.yaml
+- https://github.com/figma/rest-api-spec
 - https://developers.figma.com/docs/rest-api/
 - https://developers.figma.com/docs/rest-api/authentication/
 - https://developers.figma.com/docs/rest-api/oauth-apps/
 - https://developers.figma.com/docs/rest-api/scopes/
 - https://developers.figma.com/docs/rest-api/webhooks/
-- https://github.com/figma/rest-api-spec
+
+`figma.openapi.yaml` is a path-filtered extract of that vendor document (callbacks omitted). Server URL, per-operation security/scopes, parameters, and request/response schemas are taken from it.
 
 ## Tests
 

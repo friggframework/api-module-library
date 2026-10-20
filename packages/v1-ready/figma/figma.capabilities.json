@@ -16,17 +16,18 @@
       "file_comments:read",
       "file_comments:write",
       "projects:read",
+      "project_metadata:read",
       "folders:read",
       "folder_metadata:read",
       "webhooks:read",
       "webhooks:write"
     ],
     "identityMethod": "getMe",
-    "notes": "Public OAuth apps require Figma review before end-user authorization. Private apps are limited to the associated team/org."
+    "notes": "Public OAuth apps require Figma review before end-user authorization. Private apps are limited to the associated team/org. Scope list matches the curated OpenAPI operations from figma/rest-api-spec."
   },
   "objects": {
     "user": {
-      "description": "Authenticated Figma user (GET /v1/me)",
+      "description": "Authenticated Figma user (GET /v1/me → User + email)",
       "methods": {
         "get": "getMe"
       },
@@ -38,23 +39,25 @@
       ]
     },
     "file": {
-      "description": "Figma design file document and metadata",
+      "description": "Figma design file. getFile returns camelCase document fields; list/meta endpoints use snake_case on nested file objects.",
       "methods": {
         "get": "getFile",
         "getMeta": "getFileMeta"
       },
       "fields": [
-        { "name": "key", "type": "string", "tags": ["identifier"] },
         { "name": "name", "type": "string", "tags": ["displayName"] },
         { "name": "lastModified", "type": "string", "tags": ["timestamp"] },
         { "name": "thumbnailUrl", "type": "string", "tags": ["thumbnail"] },
         { "name": "version", "type": "string", "tags": [] },
         { "name": "editorType", "type": "string", "tags": [] },
-        { "name": "document", "type": "object", "tags": ["content"] }
+        { "name": "role", "type": "string", "tags": [] },
+        { "name": "linkAccess", "type": "string", "tags": [] },
+        { "name": "document", "type": "object", "tags": ["content"] },
+        { "name": "schemaVersion", "type": "number", "tags": [] }
       ]
     },
     "project": {
-      "description": "Legacy team project (folder). Prefer folder object for new work.",
+      "description": "Legacy team project. List items: id, name. Meta: id, name, created_at, updated_at, file_count, thumbnail_url.",
       "methods": {
         "listByTeam": "getTeamProjects",
         "listFiles": "getProjectFiles",
@@ -62,11 +65,15 @@
       },
       "fields": [
         { "name": "id", "type": "string", "tags": ["identifier"] },
-        { "name": "name", "type": "string", "tags": ["displayName"] }
+        { "name": "name", "type": "string", "tags": ["displayName"] },
+        { "name": "created_at", "type": "string", "tags": ["timestamp"] },
+        { "name": "updated_at", "type": "string", "tags": ["timestamp"] },
+        { "name": "file_count", "type": "number", "tags": [] },
+        { "name": "thumbnail_url", "type": "string", "tags": ["thumbnail"] }
       ]
     },
     "folder": {
-      "description": "Team folder (replaces projects). List files and read metadata.",
+      "description": "Team folder (replaces projects). List items include parent_folder_id and sharing_audience_control; meta matches project meta shape.",
       "methods": {
         "listByTeam": "getTeamFolders",
         "listFiles": "getFolderFiles",
@@ -74,11 +81,17 @@
       },
       "fields": [
         { "name": "id", "type": "string", "tags": ["identifier"] },
-        { "name": "name", "type": "string", "tags": ["displayName"] }
+        { "name": "name", "type": "string", "tags": ["displayName"] },
+        { "name": "created_at", "type": "string", "tags": ["timestamp"] },
+        { "name": "parent_folder_id", "type": "string", "tags": ["parent"] },
+        { "name": "sharing_audience_control", "type": "string", "tags": [] },
+        { "name": "updated_at", "type": "string", "tags": ["timestamp"] },
+        { "name": "file_count", "type": "number", "tags": [] },
+        { "name": "thumbnail_url", "type": "string", "tags": ["thumbnail"] }
       ]
     },
     "comment": {
-      "description": "File comments. Public API supports list/create/delete (no update).",
+      "description": "File comments (Comment schema). Public API supports list/create/delete (no update).",
       "methods": {
         "list": "getComments",
         "create": "postComment",
@@ -88,13 +101,17 @@
         { "name": "id", "type": "string", "tags": ["identifier"] },
         { "name": "message", "type": "string", "tags": ["content"] },
         { "name": "file_key", "type": "string", "tags": ["parent"] },
+        { "name": "parent_id", "type": "string", "tags": ["parent"] },
+        { "name": "order_id", "type": "string", "tags": [] },
+        { "name": "client_meta", "type": "object", "tags": [] },
+        { "name": "reactions", "type": "array", "tags": [] },
         { "name": "user", "type": "object", "tags": ["author"] },
         { "name": "created_at", "type": "string", "tags": ["timestamp"] },
         { "name": "resolved_at", "type": "string", "tags": ["timestamp"] }
       ]
     },
     "webhook": {
-      "description": "Webhooks V2 subscription on a team, project/folder, or file context",
+      "description": "Webhooks V2 (WebhookV2 schema) on team, project/folder, or file context",
       "methods": {
         "list": "getWebhooks",
         "create": "postWebhook",
@@ -107,8 +124,11 @@
       "fields": [
         { "name": "id", "type": "string", "tags": ["identifier"] },
         { "name": "event_type", "type": "string", "tags": ["event"] },
+        { "name": "team_id", "type": "string", "tags": [] },
         { "name": "context", "type": "string", "tags": [] },
         { "name": "context_id", "type": "string", "tags": ["parent"] },
+        { "name": "plan_api_id", "type": "string", "tags": [] },
+        { "name": "client_id", "type": "string", "tags": [] },
         { "name": "endpoint", "type": "string", "tags": ["url"] },
         { "name": "passcode", "type": "string", "tags": ["secret", "redactedOnRead"] },
         { "name": "status", "type": "string", "tags": ["status"] },

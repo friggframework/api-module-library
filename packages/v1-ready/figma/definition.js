@@ -11,6 +11,9 @@ const config = require('./defaultConfig.json');
  * Default scopes cover the core objects this module implements. Override via
  * FIGMA_SCOPE (space- or comma-separated).
  */
+// Scopes required by the curated OpenAPI operations (figma/rest-api-spec).
+// Includes project_metadata:read for GET /v1/projects/{id}/meta and
+// folder_metadata:read for GET /v2/folders/{id}/meta.
 const DEFAULT_SCOPES = [
     'current_user:read',
     'file_content:read',
@@ -18,6 +21,7 @@ const DEFAULT_SCOPES = [
     'file_comments:read',
     'file_comments:write',
     'projects:read',
+    'project_metadata:read',
     'folders:read',
     'folder_metadata:read',
     'webhooks:read',

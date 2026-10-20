@@ -132,7 +132,7 @@ describe('Figma Api', () => {
         it('lists team folders and folder files/meta', async () => {
             const api = makeApi();
             await api.getTeamFolders('t1');
-            await api.getFolderFiles('fold1');
+            await api.getFolderFiles('fold1', { branch_data: true });
             await api.getFolderMeta('fold1');
             expect(api._captured[0].url).toBe(
                 'https://api.figma.com/v2/teams/t1/folders'
@@ -140,6 +140,7 @@ describe('Figma Api', () => {
             expect(api._captured[1].url).toBe(
                 'https://api.figma.com/v2/folders/fold1/files'
             );
+            expect(api._captured[1].query).toEqual({ branch_data: true });
             expect(api._captured[2].url).toBe(
                 'https://api.figma.com/v2/folders/fold1/meta'
             );
@@ -159,7 +160,13 @@ describe('Figma Api', () => {
             await api.getWebhooks({ context: 'team', context_id: 't1' });
             await api.postWebhook(body);
             await api.getWebhook('99');
-            await api.putWebhook('99', { ...body, status: 'PAUSED' });
+            await api.putWebhook('99', {
+                event_type: 'FILE_UPDATE',
+                team_id: 't1',
+                endpoint: body.endpoint,
+                passcode: body.passcode,
+                status: 'PAUSED',
+            });
             await api.deleteWebhook('99');
             await api.getTeamWebhooks('t1');
             await api.getWebhookRequests('99');
@@ -173,6 +180,7 @@ describe('Figma Api', () => {
                 'https://api.figma.com/v2/webhooks/99'
             );
             expect(api._captured[3].method).toBe('PUT');
+            expect(api._captured[3].body.team_id).toBe('t1');
             expect(api._captured[4].method).toBe('DELETE');
             expect(api._captured[5].url).toBe(
                 'https://api.figma.com/v2/teams/t1/webhooks'

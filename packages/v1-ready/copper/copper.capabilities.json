@@ -1,0 +1,463 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "copper",
+  "label": "Copper CRM",
+  "package": "@friggframework/api-module-copper",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Values about the connected Copper account, from GET /account and persisted credentials.",
+    "fields": [
+      {
+        "name": "user_email",
+        "type": "email",
+        "description": "Email of the API key owner (X-PW-UserEmail)"
+      }
+    ]
+  },
+  "objects": {
+    "person": {
+      "label": "Person",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "first_name", "type": "string", "tag": "person.givenName" },
+        { "name": "last_name", "type": "string", "tag": "person.familyName" },
+        { "name": "emails[0].email", "type": "email", "tag": "contact.email" },
+        { "name": "phone_numbers[0].number", "type": "phone", "tag": "contact.phone" },
+        { "name": "title", "type": "string", "tag": "person.title" },
+        { "name": "company_id", "type": "string" },
+        { "name": "assignee_id", "type": "string", "tag": "record.owner" },
+        {
+          "name": "date_created",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "date_modified",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "date_modified",
+        "list": {
+          "capability": "person.list",
+          "cursor": "page_number",
+          "limit": "page_size",
+          "items": "$",
+          "paging": "page"
+        },
+        "get": { "capability": "person.get", "id": "id" },
+        "create": { "capability": "person.create", "body": "person" },
+        "update": { "capability": "person.update", "id": "id", "body": "person" }
+      }
+    },
+    "company": {
+      "label": "Company",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name", "required": true },
+        { "name": "email_domain", "type": "string", "tag": "organization.domain" },
+        { "name": "details", "type": "text" },
+        { "name": "phone_numbers[0].number", "type": "phone", "tag": "contact.phone" },
+        { "name": "primary_contact_id", "type": "string" },
+        { "name": "assignee_id", "type": "string", "tag": "record.owner" },
+        {
+          "name": "date_created",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "date_modified",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "date_modified",
+        "list": {
+          "capability": "company.list",
+          "cursor": "page_number",
+          "limit": "page_size",
+          "items": "$",
+          "paging": "page"
+        },
+        "get": { "capability": "company.get", "id": "id" },
+        "create": { "capability": "company.create", "body": "company" },
+        "update": { "capability": "company.update", "id": "id", "body": "company" }
+      }
+    },
+    "opportunity": {
+      "label": "Opportunity",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "required": true },
+        { "name": "status", "type": "string" },
+        { "name": "monetary_value", "type": "number", "tag": "deal.amount" },
+        { "name": "win_probability", "type": "number" },
+        { "name": "pipeline_id", "type": "string" },
+        { "name": "pipeline_stage_id", "type": "string" },
+        { "name": "company_id", "type": "string" },
+        { "name": "primary_contact_id", "type": "string" },
+        { "name": "assignee_id", "type": "string", "tag": "record.owner" },
+        { "name": "close_date", "type": "date", "tag": "deal.closeDate" },
+        { "name": "details", "type": "text" },
+        {
+          "name": "date_created",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "date_modified",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "date_modified",
+        "list": {
+          "capability": "opportunity.list",
+          "cursor": "page_number",
+          "limit": "page_size",
+          "items": "$",
+          "paging": "page"
+        },
+        "get": { "capability": "opportunity.get", "id": "id" },
+        "create": { "capability": "opportunity.create", "body": "opportunity" },
+        "update": {
+          "capability": "opportunity.update",
+          "id": "id",
+          "body": "opportunity"
+        }
+      }
+    },
+    "lead": {
+      "label": "Lead",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "first_name", "type": "string", "tag": "person.givenName" },
+        { "name": "last_name", "type": "string", "tag": "person.familyName" },
+        { "name": "email.email", "type": "email", "tag": "contact.email" },
+        { "name": "phone_numbers[0].number", "type": "phone", "tag": "contact.phone" },
+        { "name": "status", "type": "string" },
+        { "name": "company_name", "type": "string", "tag": "organization.name" },
+        { "name": "monetary_value", "type": "number" },
+        { "name": "assignee_id", "type": "string", "tag": "record.owner" },
+        {
+          "name": "date_created",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "date_modified",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "date_modified",
+        "list": {
+          "capability": "lead.list",
+          "cursor": "page_number",
+          "limit": "page_size",
+          "items": "$",
+          "paging": "page"
+        },
+        "get": { "capability": "lead.get", "id": "id" },
+        "create": { "capability": "lead.create", "body": "lead" },
+        "update": { "capability": "lead.update", "id": "id", "body": "lead" }
+      }
+    },
+    "webhook": {
+      "label": "Webhook subscription",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "target", "type": "string", "required": true },
+        { "name": "type", "type": "string", "required": true },
+        { "name": "event", "type": "string", "required": true },
+        { "name": "custom_field_computed_values", "type": "boolean" },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "webhook.list", "items": "$" },
+        "create": { "capability": "webhook.create", "body": "webhook" },
+        "update": { "capability": "webhook.update", "id": "id", "body": "webhook" }
+      }
+    }
+  },
+  "events": {
+    "person.created": {
+      "delivery": "webhook",
+      "object": "person",
+      "subscribe": "webhook.create",
+      "payload": {
+        "ids": [123],
+        "type": "person",
+        "event": "new",
+        "subscription_id": 1,
+        "timestamp": "2021-12-13T19:18:22.084Z"
+      },
+      "record": null,
+      "idPath": "ids.0",
+      "match": "person.create"
+    },
+    "person.updated": {
+      "delivery": "webhook",
+      "object": "person",
+      "subscribe": "webhook.create",
+      "payload": {
+        "ids": [123],
+        "type": "person",
+        "event": "update",
+        "subscription_id": 1,
+        "updated_attributes": { "details": [null, "Updated"] },
+        "timestamp": "2021-12-13T19:18:22.084Z"
+      },
+      "record": null,
+      "idPath": "ids.0",
+      "match": "person.update"
+    },
+    "company.created": {
+      "delivery": "webhook",
+      "object": "company",
+      "subscribe": "webhook.create",
+      "payload": {
+        "ids": [456],
+        "type": "company",
+        "event": "new",
+        "subscription_id": 2,
+        "timestamp": "2021-12-13T19:18:22.084Z"
+      },
+      "record": null,
+      "idPath": "ids.0",
+      "match": "company.create"
+    },
+    "opportunity.updated": {
+      "delivery": "webhook",
+      "object": "opportunity",
+      "subscribe": "webhook.create",
+      "payload": {
+        "ids": [789],
+        "type": "opportunity",
+        "event": "update",
+        "subscription_id": 3,
+        "timestamp": "2021-12-13T19:18:22.084Z"
+      },
+      "record": null,
+      "idPath": "ids.0",
+      "match": "opportunity.update"
+    },
+    "lead.created": {
+      "delivery": "webhook",
+      "object": "lead",
+      "subscribe": "webhook.create",
+      "payload": {
+        "ids": [321],
+        "type": "lead",
+        "event": "new",
+        "subscription_id": 4,
+        "timestamp": "2021-12-13T19:18:22.084Z"
+      },
+      "record": null,
+      "idPath": "ids.0",
+      "match": "lead.create"
+    }
+  },
+  "capabilities": {
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "input": {},
+      "output": "account"
+    },
+    "person.list": {
+      "kind": "list",
+      "method": "listPeople",
+      "input": {
+        "page_number": { "type": "number" },
+        "page_size": { "type": "number" },
+        "name": { "type": "string" },
+        "emails": { "type": "array" }
+      },
+      "output": "person[]",
+      "args": ["body"]
+    },
+    "person.get": {
+      "kind": "read",
+      "method": "getPerson",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "person",
+      "args": ["id"]
+    },
+    "person.create": {
+      "kind": "create",
+      "method": "createPerson",
+      "input": { "person": { "type": "object", "required": true } },
+      "output": "person",
+      "args": ["body"]
+    },
+    "person.update": {
+      "kind": "update",
+      "method": "updatePerson",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "person": { "type": "object", "required": true }
+      },
+      "output": "person",
+      "args": ["id", "body"]
+    },
+    "company.list": {
+      "kind": "list",
+      "method": "listCompanies",
+      "input": {
+        "page_number": { "type": "number" },
+        "page_size": { "type": "number" },
+        "name": { "type": "string" }
+      },
+      "output": "company[]",
+      "args": ["body"]
+    },
+    "company.get": {
+      "kind": "read",
+      "method": "getCompany",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "company",
+      "args": ["id"]
+    },
+    "company.create": {
+      "kind": "create",
+      "method": "createCompany",
+      "input": { "company": { "type": "object", "required": true } },
+      "output": "company",
+      "args": ["body"]
+    },
+    "company.update": {
+      "kind": "update",
+      "method": "updateCompany",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "company": { "type": "object", "required": true }
+      },
+      "output": "company",
+      "args": ["id", "body"]
+    },
+    "opportunity.list": {
+      "kind": "list",
+      "method": "listOpportunities",
+      "input": {
+        "page_number": { "type": "number" },
+        "page_size": { "type": "number" }
+      },
+      "output": "opportunity[]",
+      "args": ["body"]
+    },
+    "opportunity.get": {
+      "kind": "read",
+      "method": "getOpportunity",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "opportunity",
+      "args": ["id"]
+    },
+    "opportunity.create": {
+      "kind": "create",
+      "method": "createOpportunity",
+      "input": { "opportunity": { "type": "object", "required": true } },
+      "output": "opportunity",
+      "args": ["body"]
+    },
+    "opportunity.update": {
+      "kind": "update",
+      "method": "updateOpportunity",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "opportunity": { "type": "object", "required": true }
+      },
+      "output": "opportunity",
+      "args": ["id", "body"]
+    },
+    "lead.list": {
+      "kind": "list",
+      "method": "listLeads",
+      "input": {
+        "page_number": { "type": "number" },
+        "page_size": { "type": "number" }
+      },
+      "output": "lead[]",
+      "args": ["body"]
+    },
+    "lead.get": {
+      "kind": "read",
+      "method": "getLead",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "lead",
+      "args": ["id"]
+    },
+    "lead.create": {
+      "kind": "create",
+      "method": "createLead",
+      "input": { "lead": { "type": "object", "required": true } },
+      "output": "lead",
+      "args": ["body"]
+    },
+    "lead.update": {
+      "kind": "update",
+      "method": "updateLead",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "lead": { "type": "object", "required": true }
+      },
+      "output": "lead",
+      "args": ["id", "body"]
+    },
+    "webhook.list": {
+      "kind": "list",
+      "method": "listWebhooks",
+      "input": {},
+      "output": "webhook[]"
+    },
+    "webhook.create": {
+      "kind": "create",
+      "method": "createWebhook",
+      "input": { "webhook": { "type": "object", "required": true } },
+      "output": "webhook",
+      "args": ["body"]
+    },
+    "webhook.update": {
+      "kind": "update",
+      "method": "updateWebhook",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "webhook": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["id", "body"]
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhook",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "void",
+      "args": ["id"]
+    }
+  }
+}

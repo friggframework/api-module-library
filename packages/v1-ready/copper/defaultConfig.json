@@ -1,0 +1,18 @@
+{
+    "name": "copper",
+    "label": "Copper CRM",
+    "productUrl": "https://www.copper.com",
+    "apiDocs": "https://developer.copper.com",
+    "logoUrl": "https://friggframework.org/assets/img/copper-icon.jpeg",
+    "categories": [
+        "CRM"
+    ],
+    "description": "Copper is a relationship-focused CRM designed for Google Workspace that helps teams track people, companies, and opportunities.",
+    "config": {
+        "apiKey": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

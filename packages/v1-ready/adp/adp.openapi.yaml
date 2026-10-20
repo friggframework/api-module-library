@@ -1,0 +1,417 @@
+openapi: 3.0.3
+info:
+  title: ADP Workforce Now API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    ADP Workforce Now Worker Management and Event Notification APIs. This file
+    is Left Hook's curated subset of the official ADP developer documentation
+    (Worker Management API Guide for ADP Workforce Now; Event notifications ESI;
+    Data Connector authorization), covering exactly the endpoints the
+    @friggframework/api-module-adp client in api.js implements. It is the source
+    of truth the hand-written client mirrors 1:1 (one method per operationId).
+    ADP does not publish a single public OpenAPI document for this surface;
+    paths and scopes are taken from ADP's official guides and Developer Hub.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: ADP Developer Resources
+    url: https://developers.adp.com/
+servers:
+  - url: https://api.adp.com
+    description: ADP API Gateway (production)
+security:
+  - BearerAuth: []
+tags:
+  - name: Authentication
+  - name: Workers
+  - name: Worker Demographics
+  - name: Worker Events
+  - name: Event Notifications
+  - name: Codelists
+paths:
+  /auth/oauth/v2/token:
+    post:
+      servers:
+        - url: https://accounts.adp.com
+          description: ADP OAuth token endpoint
+      tags: [Authentication]
+      operationId: getToken
+      summary: Obtain access token (client credentials)
+      description: >-
+        OAuth 2.0 client credentials grant. Send HTTP Basic
+        (client_id:client_secret) and grant_type=client_credentials as
+        application/x-www-form-urlencoded. The request must present the
+        ADP-issued X.509 client certificate (mutual TLS).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [grant_type]
+              properties:
+                grant_type:
+                  type: string
+                  enum: [client_credentials]
+      responses:
+        "200":
+          description: Access token issued.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token: { type: string }
+                  token_type: { type: string, enum: [Bearer] }
+                  expires_in: { type: integer }
+
+  /hr/v2/workers:
+    get:
+      tags: [Workers]
+      operationId: listWorkers
+      summary: List workers
+      description: >-
+        Returns workers the requester is authorized to view.
+        Scope: /hr/workerInformationManagement/workerManagement/workerProfileManagement/worker.read
+      parameters:
+        - in: query
+          name: $top
+          schema: { type: integer }
+          description: Page size (OData).
+        - in: query
+          name: $skip
+          schema: { type: integer }
+          description: Offset (OData).
+        - in: query
+          name: $select
+          schema: { type: string }
+          description: OData select of worker properties.
+        - in: query
+          name: $filter
+          schema: { type: string }
+          description: OData filter expression.
+        - in: query
+          name: count
+          schema: { type: boolean }
+          description: When true, include total count under /meta/totalNumber.
+        - in: query
+          name: asOfDate
+          schema: { type: string }
+          description: Return records as of the given date.
+      responses:
+        "200":
+          description: Worker collection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkersResponse'
+
+  /hr/v2/workers/meta:
+    get:
+      tags: [Workers]
+      operationId: getWorkersMeta
+      summary: Workers meta
+      description: Returns metadata for the workers collection (e.g. supported filters).
+      responses:
+        "200":
+          description: Meta document.
+          content:
+            application/json:
+              schema: { type: object }
+
+  /hr/v2/workers/{associateOid}:
+    get:
+      tags: [Workers]
+      operationId: getWorker
+      summary: Get worker by associate OID
+      parameters:
+        - $ref: '#/components/parameters/associateOid'
+        - in: query
+          name: $select
+          schema: { type: string }
+      responses:
+        "200":
+          description: Single worker.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkersResponse'
+
+  /hr/v2/worker-demographics:
+    get:
+      tags: [Worker Demographics]
+      operationId: listWorkerDemographics
+      summary: List worker demographics
+      description: >-
+        Scope: /hr/workerInformationManagement/workerManagement/workerProfileManagement/workerDemographic.read
+      parameters:
+        - in: query
+          name: $top
+          schema: { type: integer }
+        - in: query
+          name: $skip
+          schema: { type: integer }
+        - in: query
+          name: $select
+          schema: { type: string }
+        - in: query
+          name: $filter
+          schema: { type: string }
+      responses:
+        "200":
+          description: Worker demographics collection.
+          content:
+            application/json:
+              schema: { type: object }
+
+  /hr/v2/worker-demographics/meta:
+    get:
+      tags: [Worker Demographics]
+      operationId: getWorkerDemographicsMeta
+      summary: Worker demographics meta
+      responses:
+        "200":
+          description: Meta document.
+          content:
+            application/json:
+              schema: { type: object }
+
+  /hr/v2/worker-demographics/{associateOid}:
+    get:
+      tags: [Worker Demographics]
+      operationId: getWorkerDemographic
+      summary: Get worker demographic by associate OID
+      parameters:
+        - $ref: '#/components/parameters/associateOid'
+      responses:
+        "200":
+          description: Single worker demographic.
+          content:
+            application/json:
+              schema: { type: object }
+
+  /events/hr/v1/worker.read/meta:
+    get:
+      tags: [Worker Events]
+      operationId: getWorkerReadMeta
+      summary: Meta for worker.read indicative-data query
+      responses:
+        "200":
+          description: Meta listing resources usable in worker.read.
+          content:
+            application/json:
+              schema: { type: object }
+
+  /events/hr/v1/worker.read:
+    post:
+      tags: [Worker Events]
+      operationId: readWorker
+      summary: Retrieve worker by indicative data
+      description: POST indicative data (e.g. government ID) to locate a worker.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Worker details matching the indicative query.
+          content:
+            application/json:
+              schema: { type: object }
+
+  /events/hr/v1/worker.hire:
+    post:
+      tags: [Worker Events]
+      operationId: hireWorker
+      summary: Hire a worker
+      description: >-
+        Scope: /hr/workerInformationManagement/workerManagement/lifecycleManagement/worker.hire
+        Not supported on WFN Next Gen (use Applicant Onboard V2 there).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Hire event accepted.
+          content:
+            application/json:
+              schema: { type: object }
+
+  /events/hr/v1/worker.legal-name.change:
+    post:
+      tags: [Worker Events]
+      operationId: changeWorkerLegalName
+      summary: Change worker legal name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Name change event accepted.
+          content:
+            application/json:
+              schema: { type: object }
+
+  /events/hr/v1/worker.work-assignment.base-remuneration.change:
+    post:
+      tags: [Worker Events]
+      operationId: changeWorkerBaseRemuneration
+      summary: Change worker base remuneration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Base remuneration change event accepted.
+          content:
+            application/json:
+              schema: { type: object }
+
+  /core/v1/event-notification-messages:
+    get:
+      tags: [Event Notifications]
+      operationId: listEventNotificationMessages
+      summary: List / dequeue event notification messages
+      description: >-
+        Retrieve event notifications from the subscriber FIFO queue.
+        Subscribe to specific events via Partner Self Service / API Central;
+        there is no public REST API to manage webhook subscription configs.
+      responses:
+        "200":
+          description: Event notification list (may be empty).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventNotificationList'
+
+  /core/v1/event-notification-messages/{eventId}:
+    delete:
+      tags: [Event Notifications]
+      operationId: deleteEventNotificationMessage
+      summary: Delete a processed event notification
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string }
+          description: eventID from the notification payload.
+      responses:
+        "200":
+          description: Message deleted.
+        "404":
+          description: Message already deleted or invalid id.
+
+  /events/hr/v1/{eventPath}:
+    get:
+      tags: [Event Notifications]
+      operationId: getEventNotificationDetails
+      summary: Get event notification details via callback URI
+      description: >-
+        Follows links[].href from an event-notification-messages item
+        (e.g. /events/hr/v1/worker.hire/{instanceId}). The client accepts any
+        absolute or relative callback URI returned by ADP.
+      parameters:
+        - in: path
+          name: eventPath
+          required: true
+          schema: { type: string }
+          description: Remainder of the callback path after /events/hr/v1/.
+      responses:
+        "200":
+          description: Full event payload.
+          content:
+            application/json:
+              schema: { type: object }
+
+  /codelists/hr/v3/worker-management/{tableName}/WFN/1:
+    get:
+      tags: [Codelists]
+      operationId: getCodelist
+      summary: Retrieve a worker-management validation table
+      description: >-
+        Scope: /hr/workerInformationManagement/workerManagement/codeListViewing/codelist.read
+        tableName examples from the guide: departments, locations, job titles,
+        business units, cost numbers, pay grades, union codes, union locals,
+        eligibility classes.
+      parameters:
+        - in: path
+          name: tableName
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Codelist values.
+          content:
+            application/json:
+              schema: { type: object }
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: Bearer access_token from the client_credentials grant.
+  parameters:
+    associateOid:
+      in: path
+      name: associateOid
+      required: true
+      schema: { type: string }
+      description: ADP associateOID (unique across ADP).
+  schemas:
+    WorkersResponse:
+      type: object
+      properties:
+        workers:
+          type: array
+          items:
+            type: object
+            properties:
+              associateOID: { type: string }
+              workerID:
+                type: object
+                properties:
+                  idValue: { type: string }
+              person:
+                type: object
+                additionalProperties: true
+              workAssignments:
+                type: array
+                items: { type: object, additionalProperties: true }
+              workerDates: { type: object, additionalProperties: true }
+              workerStatus: { type: object, additionalProperties: true }
+        meta:
+          type: object
+          additionalProperties: true
+    EventNotificationList:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            type: object
+            properties:
+              eventID: { type: string }
+              eventNameCode:
+                type: object
+                properties:
+                  codeValue: { type: string }
+              recordDateTime: { type: string, format: date-time }
+              creationDateTime: { type: string, format: date-time }
+              links:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    rel: { type: string }
+                    href: { type: string }

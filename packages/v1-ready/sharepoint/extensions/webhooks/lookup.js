@@ -16,17 +16,17 @@ async function findIntegrationByTenantId(ctx, tenantId) {
 
     const entities =
         typeof ctx.getEntitiesForModule === 'function'
-            ? await ctx.getEntitiesForModule('sharepoint')
+            ? await ctx.getEntitiesForModule('microsoft-sharepoint')
             : typeof ctx.findEntitiesByExternalId === 'function'
               ? await ctx.findEntitiesByExternalId(
-                    'sharepoint',
+                    'microsoft-sharepoint',
                     String(tenantId)
                 )
               : null;
 
     if (!entities) {
         throw new Error(
-            'sharepoint-webhooks: host does not expose entity lookup helpers'
+            'microsoft-sharepoint-webhooks: host does not expose entity lookup helpers'
         );
     }
 
@@ -41,7 +41,7 @@ async function findIntegrationByTenantId(ctx, tenantId) {
     if (matches.length === 0) return null;
     if (matches.length > 1) {
         throw new Error(
-            `sharepoint-webhooks: ambiguous tenantId=${tenantId} matched ${matches.length} entities`
+            `microsoft-sharepoint-webhooks: ambiguous tenantId=${tenantId} matched ${matches.length} entities`
         );
     }
 

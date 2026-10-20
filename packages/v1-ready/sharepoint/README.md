@@ -1,6 +1,6 @@
-# Microsoft SharePoint (`@friggframework/api-module-sharepoint`)
+# Microsoft SharePoint (`@friggframework/api-module-microsoft-sharepoint`)
 
-Frigg v2 API module for SharePoint via [Microsoft Graph v1.0](https://learn.microsoft.com/en-us/graph/api/resources/sharepoint).
+Frigg v2 API module for SharePoint via [Microsoft Graph v1.0](https://learn.microsoft.com/en-us/graph/api/resources/sharepoint). `moduleName`: `microsoft-sharepoint`.
 
 ## Auth
 
@@ -12,7 +12,7 @@ OAuth 2.0 authorization code against the [Microsoft identity platform](https://l
 | `SHAREPOINT_CLIENT_SECRET` | Client secret |
 | `SHAREPOINT_SCOPE` | Space-separated Graph scopes (include `offline_access`) |
 | `SHAREPOINT_TENANT_ID` | Optional tenant segment (`common` default) |
-| `REDIRECT_URI` | Base redirect host; module appends `/sharepoint` |
+| `REDIRECT_URI` | Base redirect host; module appends `/microsoft-sharepoint` |
 | `SHAREPOINT_WEBHOOK_CLIENT_STATE` | Opaque `clientState` for Graph change notifications |
 
 Recommended delegated scopes (from Graph permission tables for the covered endpoints): `offline_access`, `User.Read`, `Sites.Read.All` / `Sites.ReadWrite.All`, `Files.ReadWrite.All`. Exact least-privilege sets vary by operation — see each operation on Microsoft Learn.

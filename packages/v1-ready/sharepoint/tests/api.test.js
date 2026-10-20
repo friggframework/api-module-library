@@ -4,7 +4,7 @@ function makeApi(overrides = {}) {
     const api = new Api({
         client_id: 'cid',
         client_secret: 'csec',
-        redirect_uri: 'https://app.example/redirect/sharepoint',
+        redirect_uri: 'https://app.example/redirect/microsoft-sharepoint',
         scope: 'offline_access User.Read Sites.Read.All',
         access_token: 'tok',
         ...overrides,

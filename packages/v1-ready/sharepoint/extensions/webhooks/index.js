@@ -20,7 +20,7 @@ const {
  *   https://github.com/friggframework/frigg/blob/next/packages/core/integrations/EXTENSIONS.md
  */
 module.exports = {
-    name: 'sharepoint-webhooks',
+    name: 'microsoft-sharepoint-webhooks',
     useDatabase: false,
     routes: [
         {

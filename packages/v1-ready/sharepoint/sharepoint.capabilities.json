@@ -1,8 +1,8 @@
 {
   "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
-  "module": "sharepoint",
+  "module": "microsoft-sharepoint",
   "label": "Microsoft SharePoint",
-  "package": "@friggframework/api-module-sharepoint",
+  "package": "@friggframework/api-module-microsoft-sharepoint",
   "version": "1.0.0",
   "auth": "oauth2",
   "account": {

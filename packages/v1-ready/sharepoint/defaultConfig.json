@@ -1,5 +1,5 @@
 {
-  "name": "sharepoint",
+  "name": "microsoft-sharepoint",
   "config": {
     "oauth": true,
     "batch": {

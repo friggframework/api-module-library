@@ -1,5 +1,5 @@
 {
-  "name": "@friggframework/api-module-sharepoint",
+  "name": "@friggframework/api-module-microsoft-sharepoint",
   "version": "1.0.0",
   "description": "Microsoft SharePoint API module that lets the Frigg Framework interact with SharePoint sites, drives, drive items, lists, list items, and Graph change-notification subscriptions via Microsoft Graph",
   "main": "index.js",
@@ -10,6 +10,7 @@
   "keywords": [
     "frigg",
     "sharepoint",
+    "microsoft-sharepoint",
     "microsoft-graph",
     "api-module",
     "sites",

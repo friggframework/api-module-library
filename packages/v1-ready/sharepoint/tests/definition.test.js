@@ -2,9 +2,9 @@ const { Definition } = require('../definition');
 const { Api } = require('../api');
 
 describe('SharePoint Definition', () => {
-    it('is an oauth2 module named sharepoint wired to the Api class', () => {
-        expect(Definition.moduleName).toBe('sharepoint');
-        expect(Definition.getName()).toBe('sharepoint');
+    it('is an oauth2 module named microsoft-sharepoint wired to the Api class', () => {
+        expect(Definition.moduleName).toBe('microsoft-sharepoint');
+        expect(Definition.getName()).toBe('microsoft-sharepoint');
         expect(Definition.API).toBe(Api);
         expect(Definition.modelName).toBe('SharePoint');
         expect(Definition.moduleName).toMatch(/^[a-zA-Z][a-zA-Z0-9_-]*$/);

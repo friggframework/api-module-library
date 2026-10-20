@@ -24,7 +24,8 @@ LIMIT=0
 BASE_BRANCH="next"
 TIDY_UP_BRANCH="${TIDY_UP_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-REPORT_FILE="${REPORT_FILE:-$REPO_ROOT/rebase-open-prs-dry-run.md}"
+# Keep the report outside the worktree so checkouts during the loop cannot fail.
+REPORT_FILE="${REPORT_FILE:-${TMPDIR:-/tmp}/aml-rebase-open-prs-dry-run.md}"
 WORKDIR="${TMPDIR:-/tmp}/aml-rebase-$$"
 ORIGINAL_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 ORIGINAL_HEAD="$(git rev-parse HEAD)"
@@ -187,6 +188,13 @@ for num in "${PR_NUMBERS[@]}"; do
   if [[ "$head_ref" == "$TIDY_UP_BRANCH" ]]; then
     rebase_status="skip"
     notes="tidy-up branch itself"
+    echo "| #$num | $module_guess | \`$head_ref\` | $is_fork | $pushable | $rebase_status | $test_status | $notes |" >> "$REPORT_FILE"
+    continue
+  fi
+  # Also skip PRs that only touch repo meta (no module paths) when title matches reorganize
+  if [[ "$title" == *reorganize modules* ]]; then
+    rebase_status="skip"
+    notes="tidy-up PR"
     echo "| #$num | $module_guess | \`$head_ref\` | $is_fork | $pushable | $rebase_status | $test_status | $notes |" >> "$REPORT_FILE"
     continue
   fi

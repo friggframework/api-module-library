@@ -1,0 +1,144 @@
+{
+  "schema": "capability-manifest/v0.1",
+  "module": "klaviyo",
+  "package": "@friggframework/api-module-klaviyo",
+  "version": "1.0.0",
+  "auth": {
+    "type": "apiKey",
+    "header": "Authorization",
+    "format": "Klaviyo-API-Key {api_key}",
+    "revisionHeader": "revision",
+    "revisionDefault": "2026-10-15",
+    "identityMethod": "listAccounts",
+    "scopesDocumented": [
+      "accounts:read",
+      "profiles:read",
+      "profiles:write",
+      "lists:read",
+      "lists:write",
+      "events:read",
+      "events:write",
+      "segments:read",
+      "campaigns:read",
+      "metrics:read",
+      "webhooks:read",
+      "webhooks:write"
+    ],
+    "notes": "Private API key auth for server-side /api endpoints. OAuth (PKCE) is required for App Marketplace listing and is an open question for a follow-up."
+  },
+  "objects": {
+    "account": {
+      "methods": ["listAccounts", "getAccount"],
+      "fields": [
+        { "name": "id", "tags": ["identifier", "externalId"] },
+        { "name": "attributes.test_account", "tags": ["boolean"] },
+        { "name": "attributes.industry", "tags": ["string"] },
+        { "name": "attributes.timezone", "tags": ["string"] },
+        { "name": "attributes.contact_information.organization_name", "tags": ["string", "displayName"] },
+        { "name": "attributes.contact_information.default_sender_email", "tags": ["email"] },
+        { "name": "attributes.contact_information.default_sender_name", "tags": ["string"] },
+        { "name": "attributes.contact_information.website_url", "tags": ["url"] }
+      ]
+    },
+    "profile": {
+      "methods": ["listProfiles", "getProfile", "createProfile", "updateProfile"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "attributes.email", "tags": ["email", "pii"] },
+        { "name": "attributes.phone_number", "tags": ["phone", "pii"] },
+        { "name": "attributes.external_id", "tags": ["identifier", "external"] },
+        { "name": "attributes.first_name", "tags": ["string", "pii"] },
+        { "name": "attributes.last_name", "tags": ["string", "pii"] },
+        { "name": "attributes.organization", "tags": ["string"] },
+        { "name": "attributes.title", "tags": ["string"] },
+        { "name": "attributes.image", "tags": ["url"] },
+        { "name": "attributes.locale", "tags": ["string"] },
+        { "name": "attributes.created", "tags": ["datetime"] },
+        { "name": "attributes.updated", "tags": ["datetime"] },
+        { "name": "attributes.last_event_date", "tags": ["datetime"] },
+        { "name": "attributes.location", "tags": ["object"] },
+        { "name": "attributes.properties", "tags": ["object", "custom"] }
+      ]
+    },
+    "list": {
+      "methods": [
+        "listLists",
+        "getList",
+        "createList",
+        "updateList",
+        "deleteList",
+        "addProfilesToList",
+        "removeProfilesFromList"
+      ],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "attributes.name", "tags": ["string", "displayName"] },
+        { "name": "attributes.created", "tags": ["datetime"] },
+        { "name": "attributes.updated", "tags": ["datetime"] },
+        { "name": "attributes.profile_count", "tags": ["number"] }
+      ]
+    },
+    "event": {
+      "methods": ["listEvents", "getEvent", "createEvent"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "attributes.timestamp", "tags": ["number"] },
+        { "name": "attributes.datetime", "tags": ["datetime"] },
+        { "name": "attributes.uuid", "tags": ["identifier"] },
+        { "name": "attributes.event_properties", "tags": ["object"] },
+        { "name": "relationships.profile", "tags": ["relation", "profile"] },
+        { "name": "relationships.metric", "tags": ["relation", "metric"] }
+      ]
+    },
+    "segment": {
+      "methods": ["listSegments", "getSegment"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "attributes.name", "tags": ["string", "displayName"] },
+        { "name": "attributes.created", "tags": ["datetime"] },
+        { "name": "attributes.updated", "tags": ["datetime"] }
+      ]
+    },
+    "campaign": {
+      "methods": ["listCampaigns", "getCampaign"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "attributes.name", "tags": ["string", "displayName"] },
+        { "name": "attributes.status", "tags": ["string"] },
+        { "name": "attributes.archived", "tags": ["boolean"] },
+        { "name": "attributes.created_at", "tags": ["datetime"] },
+        { "name": "attributes.scheduled_at", "tags": ["datetime"] }
+      ]
+    },
+    "metric": {
+      "methods": ["listMetrics", "getMetric"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "attributes.name", "tags": ["string", "displayName"] },
+        { "name": "attributes.created", "tags": ["datetime"] },
+        { "name": "attributes.updated", "tags": ["datetime"] }
+      ]
+    },
+    "webhook": {
+      "methods": [
+        "listWebhooks",
+        "getWebhook",
+        "createWebhook",
+        "updateWebhook",
+        "deleteWebhook",
+        "listWebhookTopics",
+        "getWebhookTopic"
+      ],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "attributes.name", "tags": ["string", "displayName"] },
+        { "name": "attributes.description", "tags": ["string"] },
+        { "name": "attributes.endpoint_url", "tags": ["url"] },
+        { "name": "attributes.enabled", "tags": ["boolean"] },
+        { "name": "attributes.created_at", "tags": ["datetime"] },
+        { "name": "attributes.updated_at", "tags": ["datetime"] },
+        { "name": "relationships.webhook-topics", "tags": ["relation"] }
+      ]
+    }
+  }
+}

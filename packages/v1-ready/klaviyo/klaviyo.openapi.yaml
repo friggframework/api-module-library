@@ -1,0 +1,753 @@
+openapi: 3.0.3
+info:
+  title: Klaviyo API (Frigg curated subset)
+  version: "2026-10-15"
+  description: >-
+    Curated subset of the Klaviyo REST API for @friggframework/api-module-klaviyo.
+    Endpoints, fields, scopes, and the revision header are taken from Klaviyo's
+    official OpenAPI (https://github.com/klaviyo/openapi, revision 2026-10-15)
+    and docs (https://developers.klaviyo.com/en/reference/api_overview).
+    operationIds are camelCase to match Api method names 1:1; official snake_case
+    operationIds are noted in each operation description.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://a.klaviyo.com
+    description: Klaviyo production API
+security:
+  - KlaviyoApiKey: []
+tags:
+  - name: Accounts
+  - name: Profiles
+  - name: Lists
+  - name: Events
+  - name: Segments
+  - name: Campaigns
+  - name: Metrics
+  - name: Webhooks
+paths:
+  /api/accounts/:
+    get:
+      tags: [Accounts]
+      operationId: listAccounts
+      summary: Get Accounts
+      description: >-
+        Official operationId `get_accounts`. Scope `accounts:read`.
+        Returns the account(s) for the authenticated private key / token.
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+        - name: fields[account]
+          in: query
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Account collection
+        "401":
+          description: Unauthorized
+  /api/accounts/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+      - $ref: "#/components/parameters/Revision"
+    get:
+      tags: [Accounts]
+      operationId: getAccount
+      summary: Get Account
+      description: Official operationId `get_account`. Scope `accounts:read`.
+      responses:
+        "200":
+          description: Account
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+  /api/profiles/:
+    get:
+      tags: [Profiles]
+      operationId: listProfiles
+      summary: Get Profiles
+      description: Official operationId `get_profiles`. Scope `profiles:read`.
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+        - name: filter
+          in: query
+          schema: { type: string }
+        - name: page[cursor]
+          in: query
+          schema: { type: string }
+        - name: page[size]
+          in: query
+          schema: { type: integer }
+        - name: sort
+          in: query
+          schema: { type: string }
+        - name: fields[profile]
+          in: query
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - name: additional-fields[profile]
+          in: query
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - name: include
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Profile collection
+        "401":
+          description: Unauthorized
+    post:
+      tags: [Profiles]
+      operationId: createProfile
+      summary: Create Profile
+      description: Official operationId `create_profile`. Scope `profiles:write`.
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: object
+                  required: [type, attributes]
+                  properties:
+                    type: { type: string, enum: [profile] }
+                    attributes:
+                      type: object
+                      properties:
+                        email: { type: string, nullable: true }
+                        phone_number: { type: string, nullable: true }
+                        external_id: { type: string, nullable: true }
+                        first_name: { type: string, nullable: true }
+                        last_name: { type: string, nullable: true }
+                        organization: { type: string, nullable: true }
+                        title: { type: string, nullable: true }
+                        image: { type: string, nullable: true }
+                        location: { type: object, additionalProperties: true }
+                        properties: { type: object, additionalProperties: true }
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized
+  /api/profiles/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+      - $ref: "#/components/parameters/Revision"
+    get:
+      tags: [Profiles]
+      operationId: getProfile
+      summary: Get Profile
+      description: Official operationId `get_profile`. Scope `profiles:read`.
+      parameters:
+        - name: fields[profile]
+          in: query
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - name: additional-fields[profile]
+          in: query
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - name: include
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Profile
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+    patch:
+      tags: [Profiles]
+      operationId: updateProfile
+      summary: Update Profile
+      description: Official operationId `update_profile`. Scope `profiles:write`.
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type: { type: string, enum: [profile] }
+                    id: { type: string }
+                    attributes: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: Updated
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized
+  /api/lists/:
+    get:
+      tags: [Lists]
+      operationId: listLists
+      summary: Get Lists
+      description: Official operationId `get_lists`. Scope `lists:read`.
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+        - name: filter
+          in: query
+          schema: { type: string }
+        - name: page[cursor]
+          in: query
+          schema: { type: string }
+        - name: fields[list]
+          in: query
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: List collection
+        "401":
+          description: Unauthorized
+    post:
+      tags: [Lists]
+      operationId: createList
+      summary: Create List
+      description: Official operationId `create_list`. Scope `lists:write`.
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: object
+                  required: [type, attributes]
+                  properties:
+                    type: { type: string, enum: [list] }
+                    attributes:
+                      type: object
+                      required: [name]
+                      properties:
+                        name: { type: string }
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Unauthorized
+  /api/lists/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+      - $ref: "#/components/parameters/Revision"
+    get:
+      tags: [Lists]
+      operationId: getList
+      summary: Get List
+      description: Official operationId `get_list`. Scope `lists:read`.
+      responses:
+        "200":
+          description: List
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+    patch:
+      tags: [Lists]
+      operationId: updateList
+      summary: Update List
+      description: Official operationId `update_list`. Scope `lists:write`.
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type: { type: string, enum: [list] }
+                    id: { type: string }
+                    attributes:
+                      type: object
+                      properties:
+                        name: { type: string }
+      responses:
+        "200":
+          description: Updated
+        "401":
+          description: Unauthorized
+    delete:
+      tags: [Lists]
+      operationId: deleteList
+      summary: Delete List
+      description: Official operationId `delete_list`. Scope `lists:write`.
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Unauthorized
+  /api/lists/{id}/relationships/profiles/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+      - $ref: "#/components/parameters/Revision"
+    post:
+      tags: [Lists]
+      operationId: addProfilesToList
+      summary: Add Profiles to List
+      description: Official operationId `add_profiles_to_list`. Scope `lists:write`.
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required: [type, id]
+                    properties:
+                      type: { type: string, enum: [profile] }
+                      id: { type: string }
+      responses:
+        "204":
+          description: Added
+        "401":
+          description: Unauthorized
+    delete:
+      tags: [Lists]
+      operationId: removeProfilesFromList
+      summary: Remove Profiles from List
+      description: Official operationId `remove_profiles_from_list`. Scope `lists:write`.
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required: [type, id]
+                    properties:
+                      type: { type: string, enum: [profile] }
+                      id: { type: string }
+      responses:
+        "204":
+          description: Removed
+        "401":
+          description: Unauthorized
+  /api/events/:
+    get:
+      tags: [Events]
+      operationId: listEvents
+      summary: Get Events
+      description: Official operationId `get_events`. Scope `events:read`.
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+        - name: filter
+          in: query
+          schema: { type: string }
+        - name: page[cursor]
+          in: query
+          schema: { type: string }
+        - name: sort
+          in: query
+          schema: { type: string }
+        - name: fields[event]
+          in: query
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - name: include
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Event collection
+        "401":
+          description: Unauthorized
+    post:
+      tags: [Events]
+      operationId: createEvent
+      summary: Create Event
+      description: Official operationId `create_event`. Scope `events:write`.
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: object
+                  required: [type, attributes]
+                  properties:
+                    type: { type: string, enum: [event] }
+                    attributes: { type: object, additionalProperties: true }
+      responses:
+        "202":
+          description: Accepted
+        "401":
+          description: Unauthorized
+  /api/events/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+      - $ref: "#/components/parameters/Revision"
+    get:
+      tags: [Events]
+      operationId: getEvent
+      summary: Get Event
+      description: Official operationId `get_event`. Scope `events:read`.
+      responses:
+        "200":
+          description: Event
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+  /api/segments/:
+    get:
+      tags: [Segments]
+      operationId: listSegments
+      summary: Get Segments
+      description: Official operationId `get_segments`. Scope `segments:read`.
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+        - name: filter
+          in: query
+          schema: { type: string }
+        - name: page[cursor]
+          in: query
+          schema: { type: string }
+        - name: fields[segment]
+          in: query
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Segment collection
+        "401":
+          description: Unauthorized
+  /api/segments/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+      - $ref: "#/components/parameters/Revision"
+    get:
+      tags: [Segments]
+      operationId: getSegment
+      summary: Get Segment
+      description: Official operationId `get_segment`. Scope `segments:read`.
+      responses:
+        "200":
+          description: Segment
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+  /api/campaigns/:
+    get:
+      tags: [Campaigns]
+      operationId: listCampaigns
+      summary: Get Campaigns
+      description: >-
+        Official operationId `get_campaigns`. Scope `campaigns:read`.
+        The official API requires a `filter` (e.g. equals(messages.channel,'email')).
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+        - name: filter
+          in: query
+          required: true
+          schema: { type: string }
+        - name: page[cursor]
+          in: query
+          schema: { type: string }
+        - name: fields[campaign]
+          in: query
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Campaign collection
+        "401":
+          description: Unauthorized
+  /api/campaigns/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+      - $ref: "#/components/parameters/Revision"
+    get:
+      tags: [Campaigns]
+      operationId: getCampaign
+      summary: Get Campaign
+      description: Official operationId `get_campaign`. Scope `campaigns:read`.
+      responses:
+        "200":
+          description: Campaign
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+  /api/metrics/:
+    get:
+      tags: [Metrics]
+      operationId: listMetrics
+      summary: Get Metrics
+      description: Official operationId `get_metrics`. Scope `metrics:read`.
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+        - name: filter
+          in: query
+          schema: { type: string }
+        - name: page[cursor]
+          in: query
+          schema: { type: string }
+        - name: fields[metric]
+          in: query
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Metric collection
+        "401":
+          description: Unauthorized
+  /api/metrics/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+      - $ref: "#/components/parameters/Revision"
+    get:
+      tags: [Metrics]
+      operationId: getMetric
+      summary: Get Metric
+      description: Official operationId `get_metric`. Scope `metrics:read`.
+      responses:
+        "200":
+          description: Metric
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+  /api/webhooks/:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: Get Webhooks
+      description: >-
+        Official operationId `get_webhooks`. Scope `webhooks:read`.
+        System webhooks API — Advanced KDP / app partners.
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+      responses:
+        "200":
+          description: Webhook collection
+        "401":
+          description: Unauthorized
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create Webhook
+      description: Official operationId `create_webhook`. Scope `webhooks:write`.
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: object
+                  required: [type, attributes, relationships]
+                  properties:
+                    type: { type: string, enum: [webhook] }
+                    attributes:
+                      type: object
+                      required: [name, endpoint_url, secret_key]
+                      properties:
+                        name: { type: string }
+                        description: { type: string, nullable: true }
+                        endpoint_url: { type: string, format: uri }
+                        secret_key: { type: string, minLength: 16 }
+                    relationships:
+                      type: object
+                      required: [webhook-topics]
+                      properties:
+                        webhook-topics:
+                          type: object
+                          properties:
+                            data:
+                              type: array
+                              items:
+                                type: object
+                                required: [type, id]
+                                properties:
+                                  type: { type: string, enum: [webhook-topic] }
+                                  id: { type: string }
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Unauthorized
+  /api/webhooks/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+      - $ref: "#/components/parameters/Revision"
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Get Webhook
+      description: Official operationId `get_webhook`. Scope `webhooks:read`.
+      responses:
+        "200":
+          description: Webhook
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+    patch:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update Webhook
+      description: Official operationId `update_webhook`. Scope `webhooks:write`.
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type: { type: string, enum: [webhook] }
+                    id: { type: string }
+                    attributes:
+                      type: object
+                      properties:
+                        name: { type: string, nullable: true }
+                        description: { type: string, nullable: true }
+                        endpoint_url: { type: string, nullable: true }
+                        secret_key: { type: string, nullable: true }
+                        enabled: { type: boolean, nullable: true }
+      responses:
+        "200":
+          description: Updated
+        "401":
+          description: Unauthorized
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete Webhook
+      description: Official operationId `delete_webhook`. Scope `webhooks:write`.
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Unauthorized
+  /api/webhook-topics/:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookTopics
+      summary: Get Webhook Topics
+      description: Official operationId `get_webhook_topics`. Scope `webhooks:read`.
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+      responses:
+        "200":
+          description: Webhook topic collection
+        "401":
+          description: Unauthorized
+  /api/webhook-topics/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+      - $ref: "#/components/parameters/Revision"
+    get:
+      tags: [Webhooks]
+      operationId: getWebhookTopic
+      summary: Get Webhook Topic
+      description: Official operationId `get_webhook_topic`. Scope `webhooks:read`.
+      responses:
+        "200":
+          description: Webhook topic
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+components:
+  securitySchemes:
+    KlaviyoApiKey:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >-
+        Private key authentication for /api endpoints.
+        Set `Authorization: Klaviyo-API-Key your-private-api-key`.
+        See https://developers.klaviyo.com/en/docs/authenticate_
+  parameters:
+    Revision:
+      name: revision
+      in: header
+      required: true
+      description: API endpoint revision (format YYYY-MM-DD[.suffix]).
+      schema:
+        type: string
+        default: "2026-10-15"
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }

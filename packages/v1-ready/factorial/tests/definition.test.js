@@ -23,6 +23,11 @@ describe('Factorial Definition', () => {
         expect(Definition.env).toHaveProperty('client_id');
         expect(Definition.env).toHaveProperty('client_secret');
         expect(Definition.env).toHaveProperty('redirect_uri');
+        expect(Definition.env.redirect_uri).toBe(
+            process.env.REDIRECT_URI
+                ? `${process.env.REDIRECT_URI}/factorial`
+                : undefined
+        );
         expect(Definition.env).toHaveProperty('scope');
     });
 

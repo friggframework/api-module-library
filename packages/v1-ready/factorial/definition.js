@@ -79,7 +79,10 @@ const Definition = {
         client_id: process.env.FACTORIAL_CLIENT_ID,
         client_secret: process.env.FACTORIAL_CLIENT_SECRET,
         scope: process.env.FACTORIAL_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/factorial`,
+        // Omit when unset so schema validation does not see the string "undefined/factorial".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/factorial`
+            : undefined,
         base_url: process.env.FACTORIAL_BASE_URL,
         auth_base_url: process.env.FACTORIAL_AUTH_BASE_URL,
     },

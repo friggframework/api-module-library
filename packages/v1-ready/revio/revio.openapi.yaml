@@ -1,0 +1,501 @@
+openapi: 3.0.3
+info:
+  title: Rev.io Public API (subset)
+  version: "1.0.0"
+  description: >-
+    Rev.io (rev.io) is a usage-based billing and customer management platform.
+    This is Left Hook's curated subset of the public REST API used by
+    @friggframework/api-module-revio, authored from Rev.io's published developer
+    documentation (https://developers.rev.io/). It is the source of truth the
+    hand-written client in api.js mirrors (one method per operationId).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://restapi.rev.io/v1
+    description: >-
+      Rev.io REST API host from Getting Started and Basic Authentication docs.
+      Some newer OpenAPI embeds also list https://api.revioapi.com — override
+      via base_url / REVIO_BASE_URL when required.
+security:
+  - BasicAuth: []
+tags:
+  - name: BillProfiles
+  - name: Customers
+  - name: Contacts
+  - name: Bills
+  - name: Payments
+  - name: Charges
+  - name: WebhookReceivers
+  - name: WebhookSubscriptions
+paths:
+  /BillProfiles:
+    get:
+      tags: [BillProfiles]
+      operationId: listBillProfiles
+      summary: Search bill profiles
+      parameters:
+        - $ref: '#/components/parameters/SearchPage'
+        - $ref: '#/components/parameters/SearchPageSize'
+      responses:
+        "200": { $ref: '#/components/responses/SearchResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /BillProfiles/{id}:
+    get:
+      tags: [BillProfiles]
+      operationId: getBillProfile
+      summary: View a bill profile
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        "200": { $ref: '#/components/responses/ObjectResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /Customers:
+    get:
+      tags: [Customers]
+      operationId: listCustomers
+      summary: Search customers
+      parameters:
+        - $ref: '#/components/parameters/SearchPage'
+        - $ref: '#/components/parameters/SearchPageSize'
+        - in: query
+          name: search.status
+          schema:
+            type: string
+            enum: [ALL, PROSPECT, PENDING, CLOSED, OPEN]
+        - in: query
+          name: search.updated_date_start
+          schema: { type: string, format: date-time }
+      responses:
+        "200": { $ref: '#/components/responses/SearchResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: Create a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomerCreate' }
+      responses:
+        "201": { $ref: '#/components/responses/CreateResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /Customers/{id}:
+    get:
+      tags: [Customers]
+      operationId: getCustomer
+      summary: View a customer
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        "200": { $ref: '#/components/responses/ObjectResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      tags: [Customers]
+      operationId: updateCustomer
+      summary: Partially update a customer (JSON Patch)
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json-patch+json:
+            schema:
+              type: array
+              items: { $ref: '#/components/schemas/JsonPatchOp' }
+      responses:
+        "200": { $ref: '#/components/responses/SuccessResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /Contacts:
+    get:
+      tags: [Contacts]
+      operationId: listContacts
+      summary: Search contacts
+      parameters:
+        - $ref: '#/components/parameters/SearchPage'
+        - $ref: '#/components/parameters/SearchPageSize'
+        - in: query
+          name: search.customer_id
+          schema:
+            type: array
+            items: { type: integer }
+      responses:
+        "200": { $ref: '#/components/responses/SearchResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Contacts]
+      operationId: createContact
+      summary: Create a contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Contact' }
+      responses:
+        "201": { $ref: '#/components/responses/CreateResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /Contacts/{id}:
+    get:
+      tags: [Contacts]
+      operationId: getContact
+      summary: View a contact
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        "200": { $ref: '#/components/responses/ObjectResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      tags: [Contacts]
+      operationId: updateContact
+      summary: Partially update a contact (JSON Patch)
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json-patch+json:
+            schema:
+              type: array
+              items: { $ref: '#/components/schemas/JsonPatchOp' }
+      responses:
+        "200": { $ref: '#/components/responses/SuccessResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [Contacts]
+      operationId: deleteContact
+      summary: Delete a contact
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        "200": { $ref: '#/components/responses/SuccessResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /Bills:
+    get:
+      tags: [Bills]
+      operationId: listBills
+      summary: Search bills
+      parameters:
+        - $ref: '#/components/parameters/SearchPage'
+        - $ref: '#/components/parameters/SearchPageSize'
+        - in: query
+          name: search.customer_id
+          schema:
+            type: array
+            items: { type: integer }
+      responses:
+        "200": { $ref: '#/components/responses/SearchResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /Bills/{id}:
+    get:
+      tags: [Bills]
+      operationId: getBill
+      summary: View a bill
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        "200": { $ref: '#/components/responses/ObjectResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /Payments:
+    get:
+      tags: [Payments]
+      operationId: listPayments
+      summary: Search payments
+      parameters:
+        - $ref: '#/components/parameters/SearchPage'
+        - $ref: '#/components/parameters/SearchPageSize'
+        - in: query
+          name: search.customer_id
+          schema:
+            type: array
+            items: { type: integer }
+      responses:
+        "200": { $ref: '#/components/responses/SearchResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Payments]
+      operationId: createPayment
+      summary: Create a payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PaymentCreate' }
+      responses:
+        "201": { $ref: '#/components/responses/CreateResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /Payments/{id}:
+    get:
+      tags: [Payments]
+      operationId: getPayment
+      summary: View a payment
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        "200": { $ref: '#/components/responses/ObjectResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /Charges:
+    get:
+      tags: [Charges]
+      operationId: listCharges
+      summary: Search charges
+      parameters:
+        - $ref: '#/components/parameters/SearchPage'
+        - $ref: '#/components/parameters/SearchPageSize'
+      responses:
+        "200": { $ref: '#/components/responses/SearchResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /Charges/{id}:
+    get:
+      tags: [Charges]
+      operationId: getCharge
+      summary: View a charge
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        "200": { $ref: '#/components/responses/ObjectResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /WebhookReceivers:
+    get:
+      tags: [WebhookReceivers]
+      operationId: listWebhookReceivers
+      summary: Search webhook receivers
+      parameters:
+        - $ref: '#/components/parameters/SearchPage'
+        - $ref: '#/components/parameters/SearchPageSize'
+      responses:
+        "200": { $ref: '#/components/responses/SearchResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [WebhookReceivers]
+      operationId: createWebhookReceiver
+      summary: Register a webhook receiver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WebhookReceiver' }
+      responses:
+        "201": { $ref: '#/components/responses/CreateResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /WebhookReceivers/{id}:
+    get:
+      tags: [WebhookReceivers]
+      operationId: getWebhookReceiver
+      summary: View a webhook receiver
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        "200": { $ref: '#/components/responses/ObjectResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [WebhookReceivers]
+      operationId: deleteWebhookReceiver
+      summary: Delete a webhook receiver
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        "200": { $ref: '#/components/responses/SuccessResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /WebhookReceivers/{id}/activate:
+    post:
+      tags: [WebhookReceivers]
+      operationId: activateWebhookReceiver
+      summary: Activate a webhook receiver
+      description: >-
+        Include the confirmation code from the X-Hook-Secret header Rev.io
+        sent to the receiver URL.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        "200": { $ref: '#/components/responses/SuccessResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /WebhookSubscriptions:
+    get:
+      tags: [WebhookSubscriptions]
+      operationId: listWebhookSubscriptions
+      summary: Search webhook subscriptions
+      parameters:
+        - $ref: '#/components/parameters/SearchPage'
+        - $ref: '#/components/parameters/SearchPageSize'
+        - in: query
+          name: search.webhook_receiver_id
+          schema:
+            type: array
+            items: { type: integer }
+        - in: query
+          name: search.event_type
+          schema:
+            type: array
+            items: { type: string }
+      responses:
+        "200": { $ref: '#/components/responses/SearchResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [WebhookSubscriptions]
+      operationId: createWebhookSubscription
+      summary: Create a webhook subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WebhookSubscription' }
+      responses:
+        "201": { $ref: '#/components/responses/CreateResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+  /WebhookSubscriptions/{id}:
+    get:
+      tags: [WebhookSubscriptions]
+      operationId: getWebhookSubscription
+      summary: View a webhook subscription
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        "200": { $ref: '#/components/responses/ObjectResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [WebhookSubscriptions]
+      operationId: deleteWebhookSubscription
+      summary: Delete a webhook subscription
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        "200": { $ref: '#/components/responses/SuccessResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: >-
+        Base64(username@client_code:password). See
+        https://developers.rev.io/docs/basic-authentication
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, format: int32 }
+    SearchPage:
+      name: search.page
+      in: query
+      schema: { type: integer, format: int32 }
+      description: Page number (1-based).
+    SearchPageSize:
+      name: search.page_size
+      in: query
+      schema: { type: integer, format: int32 }
+      description: Page size.
+  schemas:
+    JsonPatchOp:
+      type: object
+      required: [op, path]
+      properties:
+        op: { type: string, enum: [replace, add, remove] }
+        path: { type: string }
+        value: {}
+    CustomerCreate:
+      type: object
+      description: >-
+        Customer create body. Getting Started example uses billing_address,
+        service_address, profile, and finance.bill_profile_id.
+      properties:
+        billing_address: { type: object }
+        service_address: { type: object }
+        listing_address: { type: object }
+        profile: { type: object }
+        finance:
+          type: object
+          properties:
+            bill_profile_id: { type: integer }
+        email: { type: string, format: email }
+        status:
+          type: string
+          enum: [PROSPECT, PENDING, CLOSED, OPEN]
+    Contact:
+      type: object
+      properties:
+        contact_id: { type: integer, readOnly: true }
+        name: { type: string }
+        email: { type: string, format: email }
+        company: { type: string }
+        customer_id: { type: integer }
+        phone: { type: string }
+        mobile: { type: string }
+        title: { type: string }
+        position: { type: string }
+        comments: { type: string }
+        contact_type_id: { type: integer }
+        created_date: { type: string, format: date-time, readOnly: true }
+    PaymentCreate:
+      type: object
+      properties:
+        payment_account_id: { type: integer }
+        bill_id: { type: integer }
+        customer_id: { type: integer }
+        amount: { type: number }
+        reference_number: { type: string }
+        received_date: { type: string, format: date-time }
+    WebhookReceiver:
+      type: object
+      required: [url]
+      properties:
+        webhook_receiver_id: { type: integer, readOnly: true }
+        url: { type: string, minLength: 1, maxLength: 4000 }
+        description: { type: string, maxLength: 8000 }
+        require_xhook_header_confirmation_flag: { type: boolean }
+    WebhookSubscription:
+      type: object
+      required: [webhook_receiver_id, event_type]
+      properties:
+        webhook_subscription_id: { type: integer, readOnly: true }
+        webhook_receiver_id: { type: integer }
+        event_type:
+          type: string
+          description: >-
+            Event type enum from the API Explorer (e.g. CUSTOMER_CREATED,
+            BILL_CREATED, PAYMENT_CREATED, CONTACT_CREATED).
+  responses:
+    SearchResponse:
+      description: Paginated search result
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              ok: { type: boolean }
+              has_more: { type: boolean }
+              record_count: { type: integer }
+              records: { type: array, items: { type: object } }
+    ObjectResponse:
+      description: Single object wrapper
+      content:
+        application/json:
+          schema: { type: object }
+    CreateResponse:
+      description: Create result
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              ok: { type: boolean }
+              id: { type: integer }
+    SuccessResponse:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              ok: { type: boolean }
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              ok: { type: boolean }
+              error: { type: string }
+              message: { type: string }

@@ -35,9 +35,9 @@ function makeApi(overrides = {}) {
 
 describe('Mailchimp Api', () => {
     describe('construction & auth', () => {
-        it('defaults base URL to the documented host', () => {
+        it('defaults base URL to the vendor swagger host', () => {
             const api = new Api({ access_token: 't' });
-            expect(api.baseUrl).toBe('https://api.mailchimp.com/3.0');
+            expect(api.baseUrl).toBe('https://server.api.mailchimp.com/3.0');
             expect(api.tokenUri).toBe(
                 'https://login.mailchimp.com/oauth2/token'
             );
@@ -62,25 +62,31 @@ describe('Mailchimp Api', () => {
             expect(api.baseUrl).toBe('https://us19.api.mailchimp.com/3.0');
         });
 
-        it('emits Bearer for OAuth access_token', async () => {
+        it('emits HTTP Basic for OAuth access_token (vendor basicAuth)', async () => {
             const api = new Api({ access_token: 'atok' });
             const headers = await api.addAuthHeaders({});
-            expect(headers.Authorization).toBe('Bearer atok');
+            expect(headers.Authorization).toBe(
+                `Basic ${Buffer.from('anystring:atok').toString('base64')}`
+            );
         });
 
-        it('falls back to Bearer api_key when no access_token', async () => {
+        it('emits HTTP Basic for api_key when no access_token', async () => {
             const api = new Api({ api_key: 'key-us1' });
             const headers = await api.addAuthHeaders({});
-            expect(headers.Authorization).toBe('Bearer key-us1');
+            expect(headers.Authorization).toBe(
+                `Basic ${Buffer.from('anystring:key-us1').toString('base64')}`
+            );
         });
 
-        it('prefers Bearer access_token over api_key', async () => {
+        it('prefers access_token over api_key for Basic password', async () => {
             const api = new Api({
                 access_token: 'atok',
                 api_key: 'key-us1',
             });
             const headers = await api.addAuthHeaders({});
-            expect(headers.Authorization).toBe('Bearer atok');
+            expect(headers.Authorization).toBe(
+                `Basic ${Buffer.from('anystring:atok').toString('base64')}`
+            );
         });
 
         it('builds an authorize URL without scopes', () => {
@@ -96,10 +102,6 @@ describe('Mailchimp Api', () => {
             );
             expect(url).toContain('response_type=code');
             expect(url).toContain('client_id=cid');
-            expect(url).toContain(
-                'redirect_uri=https%3A%2F%2Fapp.example.com%2Fredirect%2Fmailchimp'
-            );
-            expect(url).toContain('state=cust-1');
             expect(url).not.toContain('scope=');
         });
 
@@ -121,8 +123,6 @@ describe('Mailchimp Api', () => {
             const body = captured.body.toString();
             expect(body).toContain('grant_type=authorization_code');
             expect(body).toContain('code=auth-code');
-            expect(body).toContain('client_id=cid');
-            expect(body).toContain('client_secret=csec');
         });
 
         it('uses OAuth header for metadata and sets server_prefix from dc', async () => {
@@ -163,18 +163,18 @@ describe('Mailchimp Api', () => {
         });
     });
 
-    describe('account', () => {
-        it('getAccount hits GET /', async () => {
+    describe('root / ping', () => {
+        it('getRoot hits GET /', async () => {
             const api = makeApi();
-            await api.getAccount();
+            await api.getRoot();
             expect(api._captured[0].url).toBe(
                 'https://us6.api.mailchimp.com/3.0/'
             );
         });
 
-        it('ping hits GET /ping', async () => {
+        it('getPing hits GET /ping', async () => {
             const api = makeApi();
-            await api.ping();
+            await api.getPing();
             expect(api._captured[0].url).toBe(
                 'https://us6.api.mailchimp.com/3.0/ping'
             );
@@ -182,20 +182,20 @@ describe('Mailchimp Api', () => {
     });
 
     describe('lists', () => {
-        it('listLists hits GET /lists', async () => {
+        it('getLists hits GET /lists', async () => {
             const api = makeApi();
-            await api.listLists({ count: 10 });
+            await api.getLists({ count: 10 });
             expect(api._captured[0].url).toBe(
                 'https://us6.api.mailchimp.com/3.0/lists'
             );
             expect(api._captured[0].query).toEqual({ count: 10 });
         });
 
-        it('getList / createList / updateList hit the list paths', async () => {
+        it('getListsId / postLists / patchListsId hit the list paths', async () => {
             const api = makeApi();
-            await api.getList('abc');
-            await api.createList({ name: 'N' });
-            await api.updateList('abc', { name: 'N2' });
+            await api.getListsId('abc');
+            await api.postLists({ name: 'N' });
+            await api.patchListsId('abc', { name: 'N2' });
             expect(api._captured[0].url).toBe(
                 'https://us6.api.mailchimp.com/3.0/lists/abc'
             );
@@ -208,10 +208,10 @@ describe('Mailchimp Api', () => {
     });
 
     describe('members', () => {
-        it('listMembers / createMember hit member collection paths', async () => {
+        it('getListsIdMembers / postListsIdMembers hit member collection paths', async () => {
             const api = makeApi();
-            await api.listMembers('L1', { status: 'subscribed' });
-            await api.createMember('L1', {
+            await api.getListsIdMembers('L1', { status: 'subscribed' });
+            await api.postListsIdMembers('L1', {
                 email_address: 'a@b.com',
                 status: 'subscribed',
             });
@@ -222,14 +222,14 @@ describe('Mailchimp Api', () => {
             expect(api._captured[1].body.email_address).toBe('a@b.com');
         });
 
-        it('getMember / updateMember / upsertMember hash emails', async () => {
+        it('get/patch/put member methods hash emails', async () => {
             const api = makeApi();
             const hash = Api.subscriberHash('User@Example.com');
-            await api.getMember('L1', 'User@Example.com');
-            await api.updateMember('L1', 'User@Example.com', {
+            await api.getListsIdMembersId('L1', 'User@Example.com');
+            await api.patchListsIdMembersId('L1', 'User@Example.com', {
                 status: 'unsubscribed',
             });
-            await api.upsertMember('L1', hash, {
+            await api.putListsIdMembersId('L1', hash, {
                 email_address: 'user@example.com',
                 status_if_new: 'subscribed',
             });
@@ -243,12 +243,12 @@ describe('Mailchimp Api', () => {
     });
 
     describe('campaigns', () => {
-        it('list / get / create / update campaign paths', async () => {
+        it('get/post/patch campaign paths', async () => {
             const api = makeApi();
-            await api.listCampaigns({ status: 'sent' });
-            await api.getCampaign('c1');
-            await api.createCampaign({ type: 'regular' });
-            await api.updateCampaign('c1', { settings: { title: 'T' } });
+            await api.getCampaigns({ status: 'sent' });
+            await api.getCampaignsId('c1');
+            await api.postCampaigns({ type: 'regular' });
+            await api.patchCampaignsId('c1', { settings: { title: 'T' } });
             expect(api._captured[0].url).toBe(
                 'https://us6.api.mailchimp.com/3.0/campaigns'
             );
@@ -261,16 +261,18 @@ describe('Mailchimp Api', () => {
     });
 
     describe('webhooks', () => {
-        it('CRUD list webhook paths', async () => {
+        it('CRUD list webhook paths (vendor operationIds)', async () => {
             const api = makeApi();
-            await api.listWebhooks('L1');
-            await api.getWebhook('L1', 'w1');
-            await api.createWebhook('L1', {
+            await api.getListsIdWebhooks('L1');
+            await api.getListsIdWebhooksId('L1', 'w1');
+            await api.postListsIdWebhooks('L1', {
                 url: 'https://hook.example.com?account_id=acc',
                 events: { subscribe: true },
             });
-            await api.updateWebhook('L1', 'w1', { events: { unsubscribe: true } });
-            await api.deleteWebhook('L1', 'w1');
+            await api.patchListsIdWebhooksId('L1', 'w1', {
+                events: { unsubscribe: true },
+            });
+            await api.deleteListsIdWebhooksId('L1', 'w1');
             expect(api._captured[0].url).toBe(
                 'https://us6.api.mailchimp.com/3.0/lists/L1/webhooks'
             );

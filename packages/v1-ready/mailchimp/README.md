@@ -2,15 +2,15 @@
 
 A [Frigg](https://friggframework.org) API module for the
 [Mailchimp Marketing API](https://mailchimp.com/developer/marketing/api/)
-(v3.0). It wraps account identity, audiences/lists, members, campaigns, and
-list webhook management so a Frigg integration can connect a Mailchimp account
-and sync core marketing objects.
+aligned to the official codegen Swagger **3.0.91**:
+
+https://raw.githubusercontent.com/mailchimp/mailchimp-client-lib-codegen/main/spec/marketing.json
 
 Integrations consume it the standard Frigg way:
 
 ```javascript
-const lists = await this.mailchimp.api.listLists({ count: 10 });
-await this.mailchimp.api.createMember(listId, {
+const lists = await this.mailchimp.api.getLists({ count: 10 });
+await this.mailchimp.api.postListsIdMembers(listId, {
     email_address: 'user@example.com',
     status: 'subscribed',
 });
@@ -18,80 +18,62 @@ await this.mailchimp.api.createMember(listId, {
 
 ## Authentication
 
-**Primary (Marketplace):** OAuth 2.0 authorization code.
+**Vendor swagger:** `securityDefinitions.basicAuth` — HTTP Basic with username
+`anystring` and password = API key or OAuth access token. This client uses
+Basic on Marketing API calls to match that swagger.
+
+**OAuth 2 (Marketplace):** authorization code on `login.mailchimp.com`
+(not part of the Marketing swagger host). Access tokens do not expire; there
+is no `refresh_token`. After code exchange the client calls
+`/oauth2/metadata` (`Authorization: OAuth <token>`) to discover `dc` and set
+`server_prefix`.
 
 | Step | URL |
 |---|---|
 | Authorize | `https://login.mailchimp.com/oauth2/authorize` |
 | Token | `https://login.mailchimp.com/oauth2/token` |
-| Metadata (DC discovery) | `GET https://login.mailchimp.com/oauth2/metadata` with `Authorization: OAuth <token>` |
+| Metadata | `GET https://login.mailchimp.com/oauth2/metadata` |
 
-- Access tokens **do not expire**; there is no `refresh_token`.
-- After code exchange the client calls metadata and sets `server_prefix` (`dc`)
-  so API calls go to `https://{dc}.api.mailchimp.com/3.0`.
-- Docs: [OAuth 2 guide](https://mailchimp.com/developer/marketing/guides/access-user-data-oauth-2/),
-  [OAuth concepts](https://mailchimp.com/developer/marketing/api-concepts/authentication/oauth-2/).
-
-**Secondary:** API key (`Authorization: Bearer <api_key>`). The key suffix
-after `-` is the data center (e.g. `…-us6`). See
-[Fundamentals](https://mailchimp.com/developer/marketing/docs/fundamentals/).
-
-Set `MAILCHIMP_CLIENT_ID` / `MAILCHIMP_CLIENT_SECRET` (and optional
-`MAILCHIMP_API_KEY`) — see `.env.example`.
+Env: see `.env.example`.
 
 ## Base URL
 
-- Default (matches current API reference examples): `https://api.mailchimp.com/3.0`
-- With `server_prefix`: `https://{dc}.api.mailchimp.com/3.0`
+Vendor swagger: `host: server.api.mailchimp.com`, `basePath: /3.0`
+→ default `https://server.api.mailchimp.com/3.0` (`server` = DC placeholder).
 
-## API Methods
+With known DC: `https://{dc}.api.mailchimp.com/3.0`.
+
+## API Methods (vendor operationIds)
 
 | Method | HTTP | Purpose |
 |---|---|---|
-| `getAccount(params)` | `GET /` | Account identity + resource links |
-| `ping()` | `GET /ping` | Auth health check |
-| `listLists` / `getList` / `createList` / `updateList` | `/lists` | Audiences |
-| `listMembers` / `getMember` / `createMember` / `updateMember` / `upsertMember` | `/lists/{id}/members` | Contacts |
-| `listCampaigns` / `getCampaign` / `createCampaign` / `updateCampaign` | `/campaigns` | Campaigns |
-| `listWebhooks` / `getWebhook` / `createWebhook` / `updateWebhook` / `deleteWebhook` | `/lists/{id}/webhooks` | List webhooks |
+| `getRoot` | `GET /` | Account identity + resource links |
+| `getPing` | `GET /ping` | Auth health check |
+| `getLists` / `postLists` / `getListsId` / `patchListsId` | `/lists` | Audiences |
+| `getListsIdMembers` / `postListsIdMembers` / `getListsIdMembersId` / `patchListsIdMembersId` / `putListsIdMembersId` | `/lists/{id}/members` | Contacts |
+| `getCampaigns` / `postCampaigns` / `getCampaignsId` / `patchCampaignsId` | `/campaigns` | Campaigns |
+| `getListsIdWebhooks` / `postListsIdWebhooks` / `getListsIdWebhooksId` / `patchListsIdWebhooksId` / `deleteListsIdWebhooksId` | `/lists/{id}/webhooks` | List webhooks |
 
 `Api.subscriberHash(email)` helpers MD5(lowercase email) for member path params.
 
-The OpenAPI subset in `mailchimp.openapi.yaml` is the 1:1 contract for these
-methods (`tests/spec-sync.test.js`).
+OpenAPI subset: `mailchimp.openapi.yaml` (`tests/spec-sync.test.js`).
 
 ## Capability manifest
 
-See `mailchimp.capabilities.json` (`capability-manifest/v0.1`). Every
-`capabilities.*.method` maps to a real `Api` method.
+`mailchimp.capabilities.json` (`capability-manifest/v0.1`). Every
+`capabilities.*.method` is a vendor operationId implemented on `Api`.
 
 ## Webhooks extension
 
-Tier 3 bundle at `extensions/webhooks/` (HubSpot-shaped):
-
-1. `MAILCHIMP_WEBHOOK_RECEIVED` — verifies `X-Mailchimp-Signature` when
-   `MAILCHIMP_WEBHOOK_SECRET` is set, then queues resolve.
-2. `MAILCHIMP_WEBHOOK_RESOLVE` — looks up integration by `account_id`.
-3. `MAILCHIMP_WEBHOOK` — default no-op; override via `binding.handlers`.
-
-Classic payloads include `data.list_id` but not `account_id`. When calling
-`createWebhook`, append `?account_id={account_id}` (from `getAccount`) to the
-callback URL.
-
-Signature algorithm (official):
-`HMAC-SHA256(signing_secret, "{timestamp}.{raw_body}")` vs
-`X-Mailchimp-Signature: t={ts},v1={hex}` — reject if skew > 5 minutes.
+Tier 3 bundle at `extensions/webhooks/` (HubSpot-shaped). Classic payloads
+include `data.list_id` but not `account_id` — append `?account_id=` when
+calling `postListsIdWebhooks`. Signature verification follows the developer
+guide (`X-Mailchimp-Signature`); note marketing.json v3.0.91 webhook schemas
+omit `signing_secret` / `signing_enabled`.
 
 ## Fenestra
 
-No `mailchimp.fenestra.yaml`. The Marketing API and Registered Apps / Marketplace
-flow do not expose in-app UI extension points of the kind Fenestra describes
-(unlike HubSpot/Shopify app UI). OAuth + REST + list webhooks are the
-integration surface.
-
-## Identity
-
-`getEntityDetails` / `getCredentialDetails` use `account_id` from `GET /`.
+No `mailchimp.fenestra.yaml` — no in-app UI extension points for Marketing API.
 
 ## Testing
 
@@ -101,10 +83,9 @@ npm install
 npm test
 ```
 
-`frigg auth test .` requires real sandbox credentials — not faked here.
-
 ## Sources
 
+- Official Swagger: https://raw.githubusercontent.com/mailchimp/mailchimp-client-lib-codegen/main/spec/marketing.json
 - https://mailchimp.com/developer/marketing/api/
 - https://mailchimp.com/developer/marketing/docs/fundamentals/
 - https://mailchimp.com/developer/marketing/guides/access-user-data-oauth-2/

@@ -316,184 +316,297 @@
     "verify": "extensions/webhooks/signature-verifier.verifyMailchimpSignature"
   },
   "capabilities": {
-    "account.get": {
+    "account.getRoot": {
       "kind": "read",
-      "method": "getAccount",
+      "method": "getRoot",
       "input": {},
       "output": "account"
     },
-    "account.ping": {
+    "account.getPing": {
       "kind": "read",
-      "method": "ping",
+      "method": "getPing",
       "input": {},
       "output": "void"
     },
     "list.list": {
       "kind": "read",
-      "method": "listLists",
+      "method": "getLists",
       "input": {
-        "count": { "type": "number" },
-        "offset": { "type": "number" },
-        "email": { "type": "string" }
+        "count": {
+          "type": "number"
+        },
+        "offset": {
+          "type": "number"
+        },
+        "email": {
+          "type": "string"
+        }
       },
       "output": "page<list>"
     },
     "list.get": {
       "kind": "read",
-      "method": "getList",
+      "method": "getListsId",
       "input": {
-        "listId": { "type": "string", "required": true }
+        "listId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "list"
     },
     "list.create": {
       "kind": "write",
-      "method": "createList",
+      "method": "postLists",
       "input": {
-        "body": { "type": "object", "required": true }
+        "body": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "list"
     },
     "list.update": {
       "kind": "write",
-      "method": "updateList",
+      "method": "patchListsId",
       "input": {
-        "listId": { "type": "string", "required": true },
-        "body": { "type": "object", "required": true }
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "body": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "list"
     },
     "member.list": {
       "kind": "read",
-      "method": "listMembers",
+      "method": "getListsIdMembers",
       "input": {
-        "listId": { "type": "string", "required": true },
-        "count": { "type": "number" },
-        "offset": { "type": "number" },
-        "status": { "type": "string" },
-        "since_last_changed": { "type": "string" }
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "count": {
+          "type": "number"
+        },
+        "offset": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string"
+        },
+        "since_last_changed": {
+          "type": "string"
+        }
       },
       "output": "page<member>"
     },
     "member.get": {
       "kind": "read",
-      "method": "getMember",
+      "method": "getListsIdMembersId",
       "input": {
-        "listId": { "type": "string", "required": true },
-        "subscriberHashOrEmail": { "type": "string", "required": true }
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "subscriberHashOrEmail": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "member"
     },
     "member.create": {
       "kind": "write",
-      "method": "createMember",
+      "method": "postListsIdMembers",
       "input": {
-        "listId": { "type": "string", "required": true },
-        "body": { "type": "object", "required": true }
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "body": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "member"
     },
     "member.update": {
       "kind": "write",
-      "method": "updateMember",
+      "method": "patchListsIdMembersId",
       "input": {
-        "listId": { "type": "string", "required": true },
-        "subscriberHashOrEmail": { "type": "string", "required": true },
-        "body": { "type": "object", "required": true }
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "subscriberHashOrEmail": {
+          "type": "string",
+          "required": true
+        },
+        "body": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "member"
     },
     "member.upsert": {
       "kind": "write",
-      "method": "upsertMember",
+      "method": "putListsIdMembersId",
       "input": {
-        "listId": { "type": "string", "required": true },
-        "subscriberHashOrEmail": { "type": "string", "required": true },
-        "body": { "type": "object", "required": true }
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "subscriberHashOrEmail": {
+          "type": "string",
+          "required": true
+        },
+        "body": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "member"
     },
     "campaign.list": {
       "kind": "read",
-      "method": "listCampaigns",
+      "method": "getCampaigns",
       "input": {
-        "count": { "type": "number" },
-        "offset": { "type": "number" },
-        "status": { "type": "string" },
-        "list_id": { "type": "string" }
+        "count": {
+          "type": "number"
+        },
+        "offset": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string"
+        },
+        "list_id": {
+          "type": "string"
+        }
       },
       "output": "page<campaign>"
     },
     "campaign.get": {
       "kind": "read",
-      "method": "getCampaign",
+      "method": "getCampaignsId",
       "input": {
-        "campaignId": { "type": "string", "required": true }
+        "campaignId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "campaign"
     },
     "campaign.create": {
       "kind": "write",
-      "method": "createCampaign",
+      "method": "postCampaigns",
       "input": {
-        "body": { "type": "object", "required": true }
+        "body": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "campaign"
     },
     "campaign.update": {
       "kind": "write",
-      "method": "updateCampaign",
+      "method": "patchCampaignsId",
       "input": {
-        "campaignId": { "type": "string", "required": true },
-        "body": { "type": "object", "required": true }
+        "campaignId": {
+          "type": "string",
+          "required": true
+        },
+        "body": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "campaign"
     },
     "webhook.list": {
       "kind": "read",
-      "method": "listWebhooks",
+      "method": "getListsIdWebhooks",
       "input": {
-        "listId": { "type": "string", "required": true }
+        "listId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "webhook[]"
     },
     "webhook.get": {
       "kind": "read",
-      "method": "getWebhook",
+      "method": "getListsIdWebhooksId",
       "input": {
-        "listId": { "type": "string", "required": true },
-        "webhookId": { "type": "string", "required": true }
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "webhookId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "webhook"
     },
     "webhook.create": {
       "kind": "subscribe",
-      "method": "createWebhook",
+      "method": "postListsIdWebhooks",
       "input": {
-        "listId": { "type": "string", "required": true },
-        "url": { "type": "string", "required": true },
-        "events": { "type": "object" },
-        "sources": { "type": "object" }
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "url": {
+          "type": "string",
+          "required": true
+        },
+        "events": {
+          "type": "object"
+        },
+        "sources": {
+          "type": "object"
+        }
       },
       "output": "webhook",
       "notes": "Append ?account_id={account_id} to url so extensions/webhooks can reverse-look up the owning integration (classic payloads carry list_id only)."
     },
     "webhook.update": {
       "kind": "write",
-      "method": "updateWebhook",
+      "method": "patchListsIdWebhooksId",
       "input": {
-        "listId": { "type": "string", "required": true },
-        "webhookId": { "type": "string", "required": true },
-        "body": { "type": "object", "required": true }
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "webhookId": {
+          "type": "string",
+          "required": true
+        },
+        "body": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "webhook"
     },
     "webhook.delete": {
       "kind": "delete",
-      "method": "deleteWebhook",
+      "method": "deleteListsIdWebhooksId",
       "input": {
-        "listId": { "type": "string", "required": true },
-        "webhookId": { "type": "string", "required": true }
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "webhookId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "void"
     }
@@ -506,10 +619,10 @@
     }
   },
   "openQuestions": {
-    "oauthScopes": "Mailchimp Marketing OAuth authorize URL has no scope parameter in the official guide — access is full-account for the authorizing user. Confirm whether Marketplace listing requires additional partner approval beyond Registered Apps.",
-    "webhookAccountLookup": "Classic list webhook payloads include data.list_id but not account_id. Extension resolve expects ?account_id= on the callback URL (recommended at createWebhook time) matching GET / account_id.",
-    "signedWebhookBodyEncoding": "Official sync guide documents application/x-www-form-urlencoded bodies; signature examples also json_decode the raw body. Verify whether signed deliveries are JSON, form-urlencoded, or both before enabling strict content-type checks.",
-    "apiHostRouting": "Current API reference examples use https://api.mailchimp.com/3.0/; Fundamentals still describe https://{dc}.api.mailchimp.com/3.0. Client defaults to the former and switches to the DC host when server_prefix is known.",
-    "lefthookManifest": "lefthookhq/lefthook-bots was not publicly accessible from this environment; no draft manifest was available to start from."
+    "webhookAccountLookup": "Classic list webhook payloads include data.list_id but not account_id. Extension resolve expects ?account_id= on the callback URL (recommended at postListsIdWebhooks time) matching GET / account_id. Not addressed by the Marketing swagger.",
+    "signedWebhookBodyEncoding": "Official sync guide documents application/x-www-form-urlencoded bodies; signature examples also json_decode the raw body. Not specified in marketing.json.",
+    "lefthookManifest": "lefthookhq/lefthook-bots was not publicly accessible from this environment; no draft manifest was available to start from.",
+    "vendorSpec": "Aligned to official codegen Swagger 2.0 v3.0.91 (https://raw.githubusercontent.com/mailchimp/mailchimp-client-lib-codegen/main/spec/marketing.json): host server.api.mailchimp.com + /3.0, securityDefinitions.basicAuth only (no OAuth scopes on Marketing API), vendor operationIds.",
+    "webhookSigningFields": "marketing.json v3.0.91 list-webhook schemas do not include signing_secret / signing_enabled; those appear in the developer webhook guide. Extension signature verification follows the guide; confirm against live create responses whether secrets are returned outside this swagger revision."
   }
 }

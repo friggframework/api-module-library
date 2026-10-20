@@ -8,7 +8,7 @@ const config = require('./defaultConfig.json');
  * API key remains supported on the Api class when `api_key` is set and no
  * access_token is present (see api.js addAuthHeaders).
  *
- * Identity: GET / (API root) → `account_id` as externalId.
+ * Identity: GET / (`getRoot`) → `account_id` as externalId.
  *
  * After OAuth code exchange, Api.getTokenFromCode calls the OAuth metadata
  * endpoint to discover `dc` / server_prefix and sets baseUrl to
@@ -21,10 +21,10 @@ const config = require('./defaultConfig.json');
  *   https://mailchimp.com/developer/marketing/docs/fundamentals/
  */
 async function resolveAccountIdentity(api) {
-    const account = await api.getAccount({});
+    const account = await api.getRoot({});
     if (!account?.account_id) {
         throw new Error(
-            'Mailchimp: GET / returned no account_id — cannot derive a stable entity identifier. Response: ' +
+            'Mailchimp: GET / (getRoot) returned no account_id — cannot derive a stable entity identifier. Response: ' +
                 JSON.stringify(account)
         );
     }
@@ -105,7 +105,7 @@ const Definition = {
             entity: [],
         },
         testAuthRequest: async function (api) {
-            return api.ping();
+            return api.getPing();
         },
     },
     env: {

@@ -10,6 +10,17 @@ const spec = yaml.load(
     )
 );
 
+const vendor = JSON.parse(
+    fs.readFileSync(
+        path.join(
+            __dirname,
+            'fixtures',
+            'vendor-marketing-3.0.91.subset.json'
+        ),
+        'utf8'
+    )
+);
+
 const specOperationIds = Object.values(spec.paths).flatMap((item) =>
     Object.entries(item)
         .filter(([m]) => ['get', 'post', 'patch', 'put', 'delete'].includes(m))
@@ -32,12 +43,56 @@ describe('OpenAPI spec ↔ client sync', () => {
         const api = new Api({ access_token: 'x' });
         expect(spec.servers[0].url).toBe(api.baseUrl);
         expect(spec.servers[0].url).toBe(Api.DEFAULT_BASE_URL);
+        expect(spec.servers[0].url).toBe(
+            `https://${vendor.host}${vendor.basePath}`
+        );
     });
 
-    it('declares Bearer security matching the client', () => {
-        const scheme = spec.components.securitySchemes.BearerAuth;
+    it('declares basicAuth security matching the vendor swagger', () => {
+        const scheme = spec.components.securitySchemes.basicAuth;
         expect(scheme.type).toBe('http');
-        expect(scheme.scheme).toBe('bearer');
+        expect(scheme.scheme).toBe('basic');
+        expect(vendor.securityDefinitions.basicAuth.type).toBe('basic');
+    });
+
+    it('info.version matches the vendor swagger version', () => {
+        expect(spec.info.version).toBe(vendor.info.version);
+        expect(spec.info.version).toBe('3.0.91');
+    });
+
+    it('every curated path/method/operationId matches the vendor swagger', () => {
+        for (const [p, item] of Object.entries(spec.paths)) {
+            expect(vendor.paths[p]).toBeDefined();
+            for (const [m, op] of Object.entries(item)) {
+                if (
+                    !['get', 'post', 'patch', 'put', 'delete'].includes(m)
+                ) {
+                    continue;
+                }
+                const vendorOp = vendor.paths[p][m];
+                expect(vendorOp).toBeDefined();
+                expect(op.operationId).toBe(vendorOp.operationId);
+            }
+        }
+    });
+
+    it('required request body fields match the vendor swagger', () => {
+        for (const [p, item] of Object.entries(spec.paths)) {
+            for (const [m, op] of Object.entries(item)) {
+                if (!['post', 'patch', 'put'].includes(m)) continue;
+                const vendorOp = vendor.paths[p][m];
+                const vendorBody = (vendorOp.parameters || []).find(
+                    (prm) => prm.in === 'body'
+                );
+                if (!vendorBody || !vendorBody.required_body_fields) continue;
+                const schema =
+                    op.requestBody?.content?.['application/json']?.schema ||
+                    {};
+                expect(schema.required || []).toEqual(
+                    vendorBody.required_body_fields
+                );
+            }
+        }
     });
 
     it('capability methods all exist on Api', () => {

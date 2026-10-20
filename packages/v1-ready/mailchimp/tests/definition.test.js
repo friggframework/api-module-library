@@ -61,9 +61,9 @@ describe('Mailchimp Definition', () => {
         expect(api.baseUrl).toBe('https://us6.api.mailchimp.com/3.0');
     });
 
-    it('getEntityDetails derives externalId from account_id', async () => {
+    it('getEntityDetails derives externalId from account_id via getRoot', async () => {
         const api = new Api({ access_token: 't', server_prefix: 'us1' });
-        api.getAccount = async () => ({
+        api.getRoot = async () => ({
             account_id: 'acc-123',
             account_name: 'Acme Co',
             email: 'owner@acme.com',
@@ -82,7 +82,7 @@ describe('Mailchimp Definition', () => {
 
     it('getCredentialDetails uses the same account_id', async () => {
         const api = new Api({ access_token: 't' });
-        api.getAccount = async () => ({
+        api.getRoot = async () => ({
             account_id: 'acc-99',
             account_name: 'Zed',
         });
@@ -96,16 +96,16 @@ describe('Mailchimp Definition', () => {
 
     it('throws when account_id is missing', async () => {
         const api = new Api({ access_token: 't' });
-        api.getAccount = async () => ({ account_name: 'No Id' });
+        api.getRoot = async () => ({ account_name: 'No Id' });
         await expect(
             Definition.requiredAuthMethods.getEntityDetails(api, {}, {}, 'u')
         ).rejects.toThrow(/account_id/i);
     });
 
-    it('testAuthRequest pings the API', async () => {
+    it('testAuthRequest calls getPing', async () => {
         const api = new Api({ access_token: 't' });
         let called = false;
-        api.ping = async () => {
+        api.getPing = async () => {
             called = true;
             return { health_status: "Everything's Chimpy!" };
         };

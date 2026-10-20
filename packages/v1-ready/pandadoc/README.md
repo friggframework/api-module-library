@@ -38,13 +38,16 @@ Identity for entity/credential external ids comes from
 
 - Docs: https://developers.pandadoc.com/
 - Auth: https://developers.pandadoc.com/reference/auth-overview
-- Official OpenAPI: https://github.com/PandaDoc/pandadoc-openapi-specification
+- Official OpenAPI (v8.23.0): https://developers.pandadoc.com/openapi/pandadoc-public-api.json
+- GitHub mirror: https://github.com/PandaDoc/pandadoc-openapi-specification
 - Webhook verification: https://developers.pandadoc.com/docs/webhook-verification
 - Embedded editor: https://developers.pandadoc.com/docs/editor-embed
 - Embedded signing: https://developers.pandadoc.com/docs/embedded-signing
 
-`pandadoc.openapi.yaml` is a curated subset of the official OpenAPI — every
-`operationId` maps 1:1 to an `Api` method.
+`pandadoc.openapi.yaml` is a curated subset of the official OpenAPI above —
+every `operationId` maps 1:1 to an `Api` method. Paths, methods, params,
+request/response schemas, auth/scopes, and server URL are taken verbatim from
+v8.23.0 (not from older APIs.io copies).
 
 ## API Methods (core)
 

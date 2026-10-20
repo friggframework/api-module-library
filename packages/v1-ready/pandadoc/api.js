@@ -16,8 +16,9 @@ const { OAuth2Requester, get } = require('@friggframework/core');
  * Base URL: https://api.pandadoc.com
  *
  * Official docs:  https://developers.pandadoc.com/
- * Official OpenAPI:
- *   https://github.com/PandaDoc/pandadoc-openapi-specification
+ * Official OpenAPI (v8.23.0):
+ *   https://developers.pandadoc.com/openapi/pandadoc-public-api.json
+ *   (GitHub mirror: https://github.com/PandaDoc/pandadoc-openapi-specification)
  */
 class Api extends OAuth2Requester {
     constructor(params = {}) {

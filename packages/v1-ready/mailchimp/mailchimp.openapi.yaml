@@ -1,0 +1,542 @@
+openapi: 3.0.3
+info:
+  title: Mailchimp Marketing API (subset)
+  version: "3.0.0"
+  description: >-
+    Mailchimp Marketing API v3.0 curated subset used by
+    @friggframework/api-module-mailchimp. Authored from Mailchimp's published
+    OpenAPI/docs at https://mailchimp.com/developer/marketing/api/ — one
+    operationId per client method in api.js. Do not invent endpoints.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Mailchimp Marketing API reference
+    url: https://mailchimp.com/developer/marketing/api/
+servers:
+  - url: https://api.mailchimp.com/3.0
+    description: >-
+      Default host shown in current API reference examples. When the account
+      data center (`dc` / server_prefix) is known — from OAuth metadata or the
+      API-key suffix — the client routes to https://{dc}.api.mailchimp.com/3.0
+      instead (see Fundamentals).
+security:
+  - BearerAuth: []
+tags:
+  - name: Account
+  - name: Lists
+  - name: Members
+  - name: Campaigns
+  - name: Webhooks
+paths:
+  /:
+    get:
+      tags: [Account]
+      operationId: getAccount
+      summary: List API root resources / account info
+      description: >-
+        GET / returns account identity (account_id, account_name, email, …)
+        and links to other resources.
+        https://mailchimp.com/developer/marketing/api/root/list
+      parameters:
+        - $ref: "#/components/parameters/Fields"
+        - $ref: "#/components/parameters/ExcludeFields"
+      responses:
+        "200":
+          description: Account root
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /ping:
+    get:
+      tags: [Account]
+      operationId: ping
+      summary: Health check
+      description: >-
+        A health check for the API that won't return any account-specific
+        information. https://mailchimp.com/developer/marketing/api/ping/
+      responses:
+        "200":
+          description: Ping response (e.g. health_status)
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /lists:
+    get:
+      tags: [Lists]
+      operationId: listLists
+      summary: Get lists info
+      description: >-
+        Get information about all lists (audiences) in the account.
+        https://mailchimp.com/developer/marketing/api/lists/list
+      parameters:
+        - $ref: "#/components/parameters/Fields"
+        - $ref: "#/components/parameters/ExcludeFields"
+        - in: query
+          name: count
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+        - in: query
+          name: before_date_created
+          schema: { type: string }
+        - in: query
+          name: since_date_created
+          schema: { type: string }
+        - in: query
+          name: before_campaign_last_sent
+          schema: { type: string }
+        - in: query
+          name: since_campaign_last_sent
+          schema: { type: string }
+        - in: query
+          name: email
+          schema: { type: string, format: email }
+        - in: query
+          name: sort_field
+          schema: { type: string }
+        - in: query
+          name: sort_dir
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lists collection
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Lists]
+      operationId: createList
+      summary: Add list
+      description: >-
+        Create a new list in your Mailchimp account.
+        https://mailchimp.com/developer/marketing/api/lists/create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - contact
+                - permission_reminder
+                - campaign_defaults
+                - email_type_option
+              properties:
+                name: { type: string }
+                contact: { type: object }
+                permission_reminder: { type: string }
+                campaign_defaults: { type: object }
+                email_type_option: { type: boolean }
+                double_optin: { type: boolean }
+                marketing_permissions: { type: boolean }
+      responses:
+        "200":
+          description: Created list
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /lists/{list_id}:
+    parameters:
+      - $ref: "#/components/parameters/ListId"
+    get:
+      tags: [Lists]
+      operationId: getList
+      summary: Get list info
+      description: https://mailchimp.com/developer/marketing/api/lists/get
+      parameters:
+        - $ref: "#/components/parameters/Fields"
+        - $ref: "#/components/parameters/ExcludeFields"
+      responses:
+        "200":
+          description: List
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Lists]
+      operationId: updateList
+      summary: Update list
+      description: https://mailchimp.com/developer/marketing/api/lists/update-list-settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated list
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /lists/{list_id}/members:
+    parameters:
+      - $ref: "#/components/parameters/ListId"
+    get:
+      tags: [Members]
+      operationId: listMembers
+      summary: List members
+      description: https://mailchimp.com/developer/marketing/api/list-members/
+      parameters:
+        - $ref: "#/components/parameters/Fields"
+        - $ref: "#/components/parameters/ExcludeFields"
+        - in: query
+          name: count
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum:
+              - subscribed
+              - unsubscribed
+              - cleaned
+              - pending
+              - transactional
+              - archived
+        - in: query
+          name: since_last_changed
+          schema: { type: string, format: date-time }
+        - in: query
+          name: before_last_changed
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Members collection
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Members]
+      operationId: createMember
+      summary: Add member to list
+      description: https://mailchimp.com/developer/marketing/api/list-members/add-member-to-list
+      parameters:
+        - in: query
+          name: skip_merge_validation
+          schema: { type: boolean }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email_address, status]
+              properties:
+                email_address: { type: string, format: email }
+                status:
+                  type: string
+                  enum:
+                    - subscribed
+                    - unsubscribed
+                    - cleaned
+                    - pending
+                    - transactional
+                merge_fields: { type: object }
+                tags:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          description: Created member
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /lists/{list_id}/members/{subscriber_hash}:
+    parameters:
+      - $ref: "#/components/parameters/ListId"
+      - $ref: "#/components/parameters/SubscriberHash"
+    get:
+      tags: [Members]
+      operationId: getMember
+      summary: Get member info
+      description: >-
+        subscriber_hash is the MD5 hash of the lowercase email address.
+        https://mailchimp.com/developer/marketing/api/list-members/get-member-info
+      parameters:
+        - $ref: "#/components/parameters/Fields"
+        - $ref: "#/components/parameters/ExcludeFields"
+      responses:
+        "200":
+          description: Member
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Members]
+      operationId: updateMember
+      summary: Update member
+      description: https://mailchimp.com/developer/marketing/api/list-members/update-list-member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated member
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      tags: [Members]
+      operationId: upsertMember
+      summary: Add or update member
+      description: https://mailchimp.com/developer/marketing/api/list-members/add-or-update-list-member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email_address, status_if_new]
+              properties:
+                email_address: { type: string, format: email }
+                status_if_new:
+                  type: string
+                  enum:
+                    - subscribed
+                    - unsubscribed
+                    - cleaned
+                    - pending
+                    - transactional
+                status:
+                  type: string
+                merge_fields: { type: object }
+      responses:
+        "200":
+          description: Upserted member
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /campaigns:
+    get:
+      tags: [Campaigns]
+      operationId: listCampaigns
+      summary: List campaigns
+      description: https://mailchimp.com/developer/marketing/api/campaigns/list-campaigns
+      parameters:
+        - $ref: "#/components/parameters/Fields"
+        - $ref: "#/components/parameters/ExcludeFields"
+        - in: query
+          name: count
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: before_send_time
+          schema: { type: string, format: date-time }
+        - in: query
+          name: since_send_time
+          schema: { type: string, format: date-time }
+        - in: query
+          name: list_id
+          schema: { type: string }
+      responses:
+        "200":
+          description: Campaigns collection
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Campaigns]
+      operationId: createCampaign
+      summary: Add campaign
+      description: https://mailchimp.com/developer/marketing/api/campaigns/add-campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type:
+                  type: string
+                  enum: [regular, plaintext, absplit, rss, variate]
+                recipients: { type: object }
+                settings: { type: object }
+      responses:
+        "200":
+          description: Created campaign
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /campaigns/{campaign_id}:
+    parameters:
+      - $ref: "#/components/parameters/CampaignId"
+    get:
+      tags: [Campaigns]
+      operationId: getCampaign
+      summary: Get campaign info
+      description: https://mailchimp.com/developer/marketing/api/campaigns/get-campaign-info
+      parameters:
+        - $ref: "#/components/parameters/Fields"
+        - $ref: "#/components/parameters/ExcludeFields"
+      responses:
+        "200":
+          description: Campaign
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Campaigns]
+      operationId: updateCampaign
+      summary: Update campaign settings
+      description: https://mailchimp.com/developer/marketing/api/campaigns/update-campaign-settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated campaign
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /lists/{list_id}/webhooks:
+    parameters:
+      - $ref: "#/components/parameters/ListId"
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List webhooks
+      description: https://mailchimp.com/developer/marketing/api/list-webhooks/
+      responses:
+        "200":
+          description: Webhooks collection
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Add webhook
+      description: >-
+        Create a list webhook. Response may include `signing_secret` exactly
+        once. https://mailchimp.com/developer/marketing/api/list-webhooks/add-webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url: { type: string, format: uri }
+                events:
+                  type: object
+                  properties:
+                    subscribe: { type: boolean }
+                    unsubscribe: { type: boolean }
+                    profile: { type: boolean }
+                    cleaned: { type: boolean }
+                    upemail: { type: boolean }
+                    campaign: { type: boolean }
+                sources:
+                  type: object
+                  properties:
+                    user: { type: boolean }
+                    admin: { type: boolean }
+                    api: { type: boolean }
+      responses:
+        "200":
+          description: Created webhook (may include signing_secret)
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /lists/{list_id}/webhooks/{webhook_id}:
+    parameters:
+      - $ref: "#/components/parameters/ListId"
+      - $ref: "#/components/parameters/WebhookId"
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Get webhook info
+      description: https://mailchimp.com/developer/marketing/api/list-webhooks/get-webhook-info
+      responses:
+        "200":
+          description: Webhook
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update webhook
+      description: https://mailchimp.com/developer/marketing/api/list-webhooks/update-webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated webhook
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete webhook
+      description: https://mailchimp.com/developer/marketing/api/list-webhooks/delete-webhook
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        Mailchimp accepts Bearer for both OAuth access tokens and API keys.
+        OAuth authorize/token live on login.mailchimp.com (not this server).
+  parameters:
+    ListId:
+      name: list_id
+      in: path
+      required: true
+      schema: { type: string }
+      description: The unique ID for the list (audience).
+    SubscriberHash:
+      name: subscriber_hash
+      in: path
+      required: true
+      schema: { type: string }
+      description: MD5 hash of the lowercase version of the list member's email address.
+    CampaignId:
+      name: campaign_id
+      in: path
+      required: true
+      schema: { type: string }
+    WebhookId:
+      name: webhook_id
+      in: path
+      required: true
+      schema: { type: string }
+    Fields:
+      name: fields
+      in: query
+      schema:
+        type: array
+        items: { type: string }
+      style: form
+      explode: false
+      description: Comma-separated fields to return (dot notation for sub-objects).
+    ExcludeFields:
+      name: exclude_fields
+      in: query
+      schema:
+        type: array
+        items: { type: string }
+      style: form
+      explode: false
+  responses:
+    Unauthorized:
+      description: Unauthorized
+    NotFound:
+      description: Resource not found

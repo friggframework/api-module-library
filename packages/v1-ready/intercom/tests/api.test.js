@@ -70,11 +70,11 @@ describe('Intercom Api', () => {
         it('adds Bearer + Intercom-Version auth headers', async () => {
             const api = new Api({
                 access_token: 'secret-token',
-                apiVersion: '2.15',
+                apiVersion: '2.17',
             });
             const headers = await api.addAuthHeaders({});
             expect(headers.Authorization).toBe('Bearer secret-token');
-            expect(headers['Intercom-Version']).toBe('2.15');
+            expect(headers['Intercom-Version']).toBe('2.17');
             expect(headers.Accept).toBe('application/json');
         });
 
@@ -124,18 +124,20 @@ describe('Intercom Api', () => {
     describe('contacts', () => {
         it('listContacts hits GET /contacts with query', async () => {
             const api = makeApi();
-            await api.listContacts({ per_page: 10, starting_after: 'c1' });
+            await api.listContacts({ include_merge_history: true });
             const { url } = api._captured[0];
             expect(url).toContain('https://api.intercom.io/contacts?');
-            expect(url).toContain('per_page=10');
-            expect(url).toContain('starting_after=c1');
+            expect(url).toContain('include_merge_history=true');
         });
 
         it('getContact hits the by-id path', async () => {
             const api = makeApi();
-            await api.getContact('ct_1');
-            expect(api._captured[0].url).toBe(
-                'https://api.intercom.io/contacts/ct_1'
+            await api.getContact('ct_1', { include_merge_history: true });
+            expect(api._captured[0].url).toContain(
+                'https://api.intercom.io/contacts/ct_1?'
+            );
+            expect(api._captured[0].url).toContain(
+                'include_merge_history=true'
             );
         });
 
@@ -179,16 +181,33 @@ describe('Intercom Api', () => {
             );
         });
 
-        it('getConversation forwards display_as / include_translations', async () => {
+        it('getConversation forwards display_as / include_* flags', async () => {
             const api = makeApi();
             await api.getConversation(123, {
                 display_as: 'plaintext',
                 include_translations: true,
+                include_monitors: true,
+                include_scorecards: true,
             });
             const { url } = api._captured[0];
             expect(url).toContain('/conversations/123?');
             expect(url).toContain('display_as=plaintext');
             expect(url).toContain('include_translations=true');
+            expect(url).toContain('include_monitors=true');
+            expect(url).toContain('include_scorecards=true');
+        });
+
+        it('listConversations forwards include_monitors / include_scorecards', async () => {
+            const api = makeApi();
+            await api.listConversations({
+                per_page: 5,
+                include_monitors: true,
+                include_scorecards: true,
+            });
+            const { url } = api._captured[0];
+            expect(url).toContain('per_page=5');
+            expect(url).toContain('include_monitors=true');
+            expect(url).toContain('include_scorecards=true');
         });
 
         it('createConversation POSTs JSON', async () => {

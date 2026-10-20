@@ -4,12 +4,12 @@ const { OAuth2Requester, get } = require('@friggframework/core');
 const DEFAULT_BASE_URL = 'https://api.intercom.io';
 const DEFAULT_AUTH_HOST = 'https://app.intercom.com';
 const TOKEN_PATH = '/auth/eagle/token';
-const DEFAULT_API_VERSION = '2.15';
+const DEFAULT_API_VERSION = '2.17';
 
 const SIGNATURE_HEADER = 'x-hub-signature';
 
 /**
- * Intercom REST API client (API version 2.15).
+ * Intercom REST API client (API version 2.17).
  *
  * Auth: OAuth 2.0 authorization-code for public marketplace apps, or a
  * workspace Access Token (Bearer) for private apps. Token exchange uses
@@ -20,7 +20,8 @@ const SIGNATURE_HEADER = 'x-hub-signature';
  * Authorize: https://app.intercom.com/oauth?client_id=…&state=…
  * Token: POST https://api.intercom.io/auth/eagle/token
  *
- * Official OpenAPI (pinned): https://raw.githubusercontent.com/intercom/Intercom-OpenAPI/main/descriptions/2.15/api.intercom.io.yaml
+ * Official OpenAPI (pinned — newest stable under descriptions/): 
+ * https://raw.githubusercontent.com/intercom/Intercom-OpenAPI/main/descriptions/2.17/api.intercom.io.yaml
  * Docs: https://developers.intercom.com/docs/references/rest-api/api.intercom.io
  * OAuth: https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/setting-up-oauth
  *
@@ -203,9 +204,8 @@ class Api extends OAuth2Requester {
     /**
      * List contacts.
      * GET /contacts
-     * Official 2.15 OpenAPI documents no query params on this operation; the
-     * response still uses cursor_pages (`pages.next.starting_after`). Extra
-     * query keys are forwarded if the caller supplies them.
+     * Optional query (official 2.17): include_merge_history.
+     * Response uses cursor_pages (`pages.next.starting_after`).
      */
     async listContacts(params = {}) {
         return this._get({
@@ -216,10 +216,14 @@ class Api extends OAuth2Requester {
     /**
      * Fetch a contact by id.
      * GET /contacts/{contact_id}
+     * Optional query (official 2.17): include_merge_history.
      */
-    async getContact(contactId) {
+    async getContact(contactId, params = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.contactById(contactId),
+            url:
+                this.baseUrl +
+                this.URLs.contactById(contactId) +
+                this._buildQuery(params),
         });
     }
 
@@ -240,11 +244,15 @@ class Api extends OAuth2Requester {
     /**
      * Update a contact.
      * PUT /contacts/{contact_id}
+     * Optional query (official 2.17): include_merge_history.
      */
-    async updateContact(contactId, body) {
+    async updateContact(contactId, body, params = {}) {
         return this._put(
             this.addJsonHeaders({
-                url: this.baseUrl + this.URLs.contactById(contactId),
+                url:
+                    this.baseUrl +
+                    this.URLs.contactById(contactId) +
+                    this._buildQuery(params),
                 body,
             })
         );
@@ -255,7 +263,8 @@ class Api extends OAuth2Requester {
     /**
      * List conversations.
      * GET /conversations
-     * Optional query: per_page, starting_after
+     * Optional query (official 2.17): per_page, starting_after,
+     * include_monitors, include_scorecards.
      */
     async listConversations(params = {}) {
         return this._get({
@@ -269,7 +278,8 @@ class Api extends OAuth2Requester {
     /**
      * Retrieve a conversation (includes conversation parts).
      * GET /conversations/{conversation_id}
-     * Optional query (official 2.15): display_as, include_translations.
+     * Optional query (official 2.17): display_as, include_translations,
+     * include_monitors, include_scorecards.
      * Path conversation_id is an integer in the official spec.
      */
     async getConversation(conversationId, params = {}) {
@@ -297,7 +307,7 @@ class Api extends OAuth2Requester {
     /**
      * Update a conversation (custom attributes, title, company_id, …).
      * PUT /conversations/{conversation_id}
-     * Optional query (official 2.15): display_as.
+     * Optional query (official 2.17): display_as.
      * For reply / assign / open / close / snooze use replyConversation
      * or the manage parts endpoint (not modeled in this cut).
      */
@@ -331,7 +341,7 @@ class Api extends OAuth2Requester {
     /**
      * List admins (teammates).
      * GET /admins
-     * Optional query (official 2.15): display_avatar.
+     * Optional query (official 2.17): display_avatar.
      */
     async listAdmins(params = {}) {
         return this._get({
@@ -354,7 +364,7 @@ class Api extends OAuth2Requester {
     /**
      * List all companies (POST list endpoint).
      * POST /companies/list
-     * Official 2.15 query params: page, per_page, order (asc|desc). No body.
+     * Official 2.17 query params: page, per_page, order (asc|desc). No body.
      */
     async listCompanies(params = {}) {
         return this._post(
@@ -437,7 +447,7 @@ class Api extends OAuth2Requester {
      *
      * Webhook *subscriptions* (topics + HTTPS endpoint) are configured in the
      * Developer Hub for the app — there is no REST CRUD for them in the public
-     * OpenAPI (2.15).
+     * OpenAPI (2.17).
      *
      * @param {Object} args
      * @param {Object} [args.headers]

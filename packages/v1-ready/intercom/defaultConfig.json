@@ -2,7 +2,7 @@
   "name": "intercom",
   "label": "Intercom",
   "productUrl": "https://www.intercom.com",
-  "apiDocs": "https://raw.githubusercontent.com/intercom/Intercom-OpenAPI/main/descriptions/2.15/api.intercom.io.yaml",
+  "apiDocs": "https://raw.githubusercontent.com/intercom/Intercom-OpenAPI/main/descriptions/2.17/api.intercom.io.yaml",
   "logoUrl": "https://friggframework.org/assets/img/intercom-icon.jpeg",
   "categories": [
     "Customer Support",

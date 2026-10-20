@@ -1,7 +1,7 @@
 # Intercom API Module (`@friggframework/api-module-intercom`)
 
 A [Frigg](https://friggframework.org) API module for [Intercom](https://www.intercom.com)
-— customer messaging and support. It wraps Intercom's public REST API (**v2.15**) so
+— customer messaging and support. It wraps Intercom's public REST API (**v2.17**) so
 a Frigg integration can identify the workspace, manage contacts / conversations /
 companies / admins / tags, verify inbound webhooks, and (optionally) render
 Canvas Kit UI via the Fenestra draft.
@@ -21,7 +21,7 @@ await this.intercom.api.replyConversation(conversationId, {
 
 Public marketplace apps use **OAuth 2.0** (authorization code via Intercom's
 Eagle token endpoint). Private apps may use a workspace **Access Token**; both
-are sent as `Authorization: Bearer <token>` with `Intercom-Version: 2.15`.
+are sent as `Authorization: Bearer <token>` with `Intercom-Version: 2.17`.
 
 | Step | Detail |
 |---|---|
@@ -47,7 +47,7 @@ Set `INTERCOM_CLIENT_ID`, `INTERCOM_CLIENT_SECRET`, and `REDIRECT_URI` (see
 | `verifyWebhookSignature` | — | Local HMAC-SHA1 (`X-Hub-Signature`) |
 
 Webhook **topic subscriptions** are configured in the Developer Hub — Intercom
-does not expose REST CRUD for them in OpenAPI 2.15.
+does not expose REST CRUD for them in OpenAPI 2.17.
 
 ## Webhooks extension
 
@@ -65,7 +65,7 @@ Tests are fully offline — HTTP methods are stubbed. No credentials required.
 
 ## Sources
 
-- Official OpenAPI 2.15 (pinned) — https://raw.githubusercontent.com/intercom/Intercom-OpenAPI/main/descriptions/2.15/api.intercom.io.yaml
+- Official OpenAPI 2.17 (pinned — newest stable under `descriptions/`) — https://raw.githubusercontent.com/intercom/Intercom-OpenAPI/main/descriptions/2.17/api.intercom.io.yaml
 - REST API reference — https://developers.intercom.com/docs/references/rest-api/api.intercom.io
 - Official OpenAPI repo — https://github.com/intercom/Intercom-OpenAPI
 - Authentication — https://developers.intercom.com/docs/build-an-integration/learn-more/authentication

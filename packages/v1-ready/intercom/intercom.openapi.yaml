@@ -1,11 +1,12 @@
 openapi: 3.0.3
 info:
   title: Intercom REST API (Frigg curated subset)
-  version: "2.15"
+  version: "2.17"
   description: >-
     Intercom is a customer messaging and support platform. This file is Left Hook's
-    curated subset of Intercom's official OpenAPI 2.15
-    (https://raw.githubusercontent.com/intercom/Intercom-OpenAPI/main/descriptions/2.15/api.intercom.io.yaml),
+    curated subset of Intercom's official OpenAPI 2.17 (newest stable under
+    descriptions/ — folders: 2.7–2.17; Unstable skipped)
+    (https://raw.githubusercontent.com/intercom/Intercom-OpenAPI/main/descriptions/2.17/api.intercom.io.yaml),
     covering exactly the endpoints `@friggframework/api-module-intercom` implements
     in api.js. It is the source of truth the hand-written client mirrors 1:1
     (one method per operationId). Official operationIds are noted in each
@@ -55,11 +56,11 @@ paths:
       operationId: listContacts
       summary: List all contacts
       description: >-
-        Official operationId: ListContacts. Official 2.15 OpenAPI documents no
-        query parameters on this operation; the response uses cursor_pages
-        (`pages.next.starting_after`).
+        Official operationId: ListContacts. Optional query include_merge_history
+        (2.17). Response uses cursor_pages (`pages.next.starting_after`).
       parameters:
         - $ref: "#/components/parameters/Intercom-Version"
+        - $ref: "#/components/parameters/include_merge_history"
       responses:
         "200":
           description: Contact list page
@@ -96,6 +97,8 @@ paths:
       operationId: getContact
       summary: Get a contact
       description: Official operationId ShowContact.
+      parameters:
+        - $ref: "#/components/parameters/include_merge_history"
       responses:
         "200":
           description: Contact
@@ -109,6 +112,8 @@ paths:
       operationId: updateContact
       summary: Update a contact
       description: Official operationId UpdateContact.
+      parameters:
+        - $ref: "#/components/parameters/include_merge_history"
       requestBody:
         required: true
         content:
@@ -137,6 +142,8 @@ paths:
           name: starting_after
           schema: { type: string }
           description: Cursor from a previous response's pages.next.starting_after.
+        - $ref: "#/components/parameters/include_monitors"
+        - $ref: "#/components/parameters/include_scorecards"
       responses:
         "200":
           description: Conversation list page
@@ -181,6 +188,8 @@ paths:
         - in: query
           name: include_translations
           schema: { type: boolean }
+        - $ref: "#/components/parameters/include_monitors"
+        - $ref: "#/components/parameters/include_scorecards"
       responses:
         "200":
           description: Conversation with parts
@@ -279,8 +288,8 @@ paths:
       operationId: listCompanies
       summary: List all companies
       description: >-
-        Official operationId listAllCompanies. Pagination is via query params
-        (page, per_page, order); no request body.
+        Official operationId listAllCompanies (2.17). Pagination is via query
+        params (page, per_page, order); no request body.
       parameters:
         - $ref: "#/components/parameters/Intercom-Version"
         - in: query
@@ -405,7 +414,7 @@ components:
       scheme: bearer
       description: >-
         Access Token or OAuth access_token sent as Authorization: Bearer <token>
-        (official scheme name: bearerAuth). Also send Intercom-Version (2.15)
+        (official scheme name: bearerAuth). Also send Intercom-Version (2.17)
         to pin the API version.
   parameters:
     Intercom-Version:
@@ -413,7 +422,7 @@ components:
       name: Intercom-Version
       schema:
         type: string
-        default: "2.15"
+        default: "2.17"
         enum:
           - "1.0"
           - "1.1"
@@ -436,7 +445,28 @@ components:
           - "2.13"
           - "2.14"
           - "2.15"
+          - "2.16"
+          - "2.17"
       description: Intercom API version. Defaults to the version set on the app package.
+    include_merge_history:
+      in: query
+      name: include_merge_history
+      required: false
+      schema: { type: boolean, default: false }
+      description: >-
+        Pass true to include merge_history on contacts (user role only).
+    include_monitors:
+      in: query
+      name: include_monitors
+      required: false
+      schema: { type: boolean, default: false }
+      description: Include monitor_evaluations (QA monitor results) on conversations.
+    include_scorecards:
+      in: query
+      name: include_scorecards
+      required: false
+      schema: { type: boolean, default: false }
+      description: Include scorecards (QA scorecard results) on conversations.
     contact_id:
       in: path
       name: contact_id
@@ -448,7 +478,7 @@ components:
       required: true
       schema: { type: integer }
       description: >-
-        Official 2.15 types conversation_id as integer on retrieve/update.
+        Official 2.17 types conversation_id as integer on retrieve/update.
         Reply uses a string path param (see conversation_id_string).
     conversation_id_string:
       in: path
@@ -518,6 +548,7 @@ components:
           type: array
           items: { type: integer }
         avatar: { type: string, nullable: true }
+        role: { type: object, additionalProperties: true, nullable: true }
     AdminWithApp:
       allOf:
         - $ref: "#/components/schemas/Admin"
@@ -549,8 +580,10 @@ components:
         updated_at: { type: integer }
         signed_up_at: { type: integer, nullable: true }
         last_seen_at: { type: integer, nullable: true }
+        email_verified: { type: boolean, nullable: true }
         custom_attributes: { type: object, additionalProperties: true }
         avatar: { type: string, nullable: true }
+        merge_history: { type: array, items: { type: object, additionalProperties: true } }
     ContactList:
       type: object
       properties:
@@ -574,6 +607,7 @@ components:
         last_seen_at: { type: integer }
         owner_id: { type: integer }
         unsubscribed_from_emails: { type: boolean }
+        email_verified: { type: boolean }
         custom_attributes: { type: object, additionalProperties: true }
     UpdateContactRequest:
       type: object
@@ -613,7 +647,13 @@ components:
         conversation_parts: { type: object, additionalProperties: true }
         company: { type: object, additionalProperties: true, nullable: true }
         tags: { type: object, additionalProperties: true }
+        channel: { type: object, additionalProperties: true, nullable: true }
         ai_agent_participated: { type: boolean }
+        sales_agent_participated: { type: boolean }
+        sales_agent: { type: object, additionalProperties: true, nullable: true }
+        monitor_evaluations: { type: array, items: { type: object, additionalProperties: true } }
+        scorecards: { type: array, items: { type: object, additionalProperties: true } }
+        external_references: { type: array, items: { type: object, additionalProperties: true } }
     ConversationList:
       type: object
       properties:
@@ -637,6 +677,7 @@ components:
         body: { type: string }
         subject: { type: string }
         created_at: { type: integer }
+        brand_id: { type: string }
         attachment_urls:
           type: array
           items: { type: string, format: uri }
@@ -692,6 +733,7 @@ components:
         session_count: { type: integer }
         user_count: { type: integer }
         custom_attributes: { type: object, additionalProperties: true }
+        notes: { type: object, additionalProperties: true, nullable: true }
     CompanyList:
       type: object
       properties:
@@ -714,6 +756,7 @@ components:
         plan: { type: string }
         remote_created_at: { type: integer }
         monthly_spend: { type: integer }
+        update_last_request_at: { type: boolean }
         custom_attributes: { type: object, additionalProperties: true }
     Tag:
       type: object

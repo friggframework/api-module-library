@@ -1,0 +1,24 @@
+{
+  "prereleaseBranches": ["next"],
+  "versionBranches": true,
+  "onlyPublishWithReleaseLabel": true,
+  "plugins": [
+    [
+      "npm",
+      {
+        "monorepoChangelog": true
+      }
+    ],
+    "all-contributors",
+    "conventional-commits",
+    "first-time-contributor",
+    "released",
+    [
+      "slack",
+      {
+        "auth": "app",
+        "channels": ["C017RNCQV70", "C02F2NT7F0R"]
+      }
+    ]
+  ]
+}

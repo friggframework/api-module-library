@@ -19,8 +19,8 @@
   "author": "seanspeaks <sean.matthews@lefthook.co>",
   "license": "MIT",
   "workspaces": [
-    "packages/needs-updating/*",
-    "packages/v1-ready/*"
+    "modules/*",
+    "tools/scale-test/frigg-scale-test-lambda"
   ],
   "devDependencies": {
     "@auto-it/all-contributors": "11.3.0",
@@ -29,7 +29,8 @@
     "@auto-it/slack": "11.3.0",
     "auto": "11.3.0",
     "lerna": "8.1.9",
-    "nx": "20.4.0"
+    "nx": "20.4.0",
+    "pure-rand": "^8.4.2"
   },
   "repository": "friggframework/api-module-library",
   "auto": {
@@ -39,7 +40,12 @@
     "versionBranches": true,
     "onlyPublishWithReleaseLabel": true,
     "plugins": [
-      "npm",
+      [
+        "npm",
+        {
+          "monorepoChangelog": true
+        }
+      ],
       "all-contributors",
       "conventional-commits",
       "first-time-contributor",

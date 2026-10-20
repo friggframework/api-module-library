@@ -1,6 +1,7 @@
 {
-  "$schema": "capability-manifest/v0.1",
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
   "module": "github",
+  "label": "GitHub",
   "package": "@friggframework/api-module-github",
   "version": "1.0.0",
   "auth": {
@@ -17,16 +18,24 @@
       "read:org"
     ]
   },
+  "source": {
+    "lefthookBotsDraft": "definitions/manifests/github.json (private lefthook-bots)",
+    "notes": [
+      "This manifest implements the lefthook-bots draft for issue + pullRequest surfaces where the OAuth App REST client covers them.",
+      "Draft method names that differ from this package are remapped under capabilities.*.method to the real Api prototype methods.",
+      "Draft assumed GitHub App installation webhooks (installation.id); this package is OAuth App + repository hooks (see skipped.webhook)."
+    ]
+  },
   "objects": {
     "user": {
-      "description": "Authenticated GitHub user (GET /user)",
+      "label": "Authenticated user",
       "fields": [
-        { "name": "id", "type": "integer", "tags": ["identifier", "externalId"] },
+        { "name": "id", "type": "integer", "tags": ["identifier", "externalId"], "readOnly": true },
         { "name": "login", "type": "string", "tags": ["identifier", "display"] },
         { "name": "name", "type": "string", "tags": ["display"], "nullable": true },
         { "name": "email", "type": "string", "tags": ["pii"], "nullable": true },
         { "name": "avatar_url", "type": "string", "tags": ["media"] },
-        { "name": "html_url", "type": "string", "tags": ["link"] },
+        { "name": "html_url", "type": "string", "tags": ["link"], "readOnly": true },
         { "name": "type", "type": "string", "tags": [] }
       ],
       "operations": {
@@ -34,9 +43,9 @@
       }
     },
     "organization": {
-      "description": "Organizations the authenticated user belongs to",
+      "label": "Organization",
       "fields": [
-        { "name": "id", "type": "integer", "tags": ["identifier"] },
+        { "name": "id", "type": "integer", "tags": ["identifier"], "readOnly": true },
         { "name": "login", "type": "string", "tags": ["identifier", "display"] },
         { "name": "description", "type": "string", "tags": ["display"], "nullable": true }
       ],
@@ -48,22 +57,23 @@
       }
     },
     "repository": {
-      "description": "GitHub repository",
+      "label": "Repository",
       "fields": [
-        { "name": "id", "type": "integer", "tags": ["identifier"] },
+        { "name": "id", "type": "integer", "tags": ["identifier"], "readOnly": true },
         { "name": "name", "type": "string", "tags": ["identifier", "display"] },
         { "name": "full_name", "type": "string", "tags": ["identifier", "display"] },
         { "name": "private", "type": "boolean", "tags": ["access"] },
-        { "name": "html_url", "type": "string", "tags": ["link"] },
+        { "name": "html_url", "type": "string", "tags": ["link"], "readOnly": true },
         { "name": "description", "type": "string", "tags": ["display"], "nullable": true },
         { "name": "default_branch", "type": "string", "tags": [] },
-        { "name": "owner.id", "type": "integer", "tags": ["identifier", "relation"] },
+        { "name": "owner.id", "type": "integer", "tags": ["identifier", "relation"], "readOnly": true },
         { "name": "owner.login", "type": "string", "tags": ["identifier", "relation"] }
       ],
       "operations": {
         "list": {
           "method": "listReposForAuthenticatedUser",
-          "officialOperationId": "repos/list-for-authenticated-user"
+          "officialOperationId": "repos/list-for-authenticated-user",
+          "lefthookBotsDraft": "Draft capability repo.list pointed at listInstallationRepos (GitHub App); OAuth App equivalent is listReposForAuthenticatedUser."
         },
         "get": { "method": "getRepository", "officialOperationId": "repos/get" },
         "create": {
@@ -74,18 +84,50 @@
       }
     },
     "issue": {
-      "description": "Repository issue (may also represent a pull request)",
+      "label": "Issue",
       "fields": [
-        { "name": "id", "type": "integer", "tags": ["identifier"] },
-        { "name": "number", "type": "integer", "tags": ["identifier"] },
-        { "name": "title", "type": "string", "tags": ["display"] },
-        { "name": "body", "type": "string", "tags": ["content"], "nullable": true },
-        { "name": "state", "type": "string", "tags": ["status"] },
-        { "name": "state_reason", "type": "string", "tags": ["status"], "nullable": true, "enum": ["completed", "not_planned", "duplicate", "reopened"] },
-        { "name": "html_url", "type": "string", "tags": ["link"] },
+        { "name": "id", "type": "id", "tags": ["identifier"], "readOnly": true },
+        { "name": "number", "type": "number", "tag": "record.displayId", "tags": ["identifier"], "readOnly": true },
+        { "name": "title", "type": "string", "tag": "task.title", "tags": ["display"] },
+        { "name": "body", "type": "text", "tag": "task.description", "tags": ["content"], "nullable": true },
+        {
+          "name": "state",
+          "type": "enum",
+          "tag": "task.state",
+          "tags": ["status"],
+          "values": ["open", "closed"]
+        },
+        {
+          "name": "state_reason",
+          "type": "enum",
+          "tags": ["status"],
+          "nullable": true,
+          "values": ["completed", "not_planned", "duplicate", "reopened"],
+          "notes": "Draft omitted `duplicate`; official OpenAPI includes it."
+        },
+        { "name": "labels", "type": "label[]", "tag": "record.tags", "tags": ["relation"] },
+        { "name": "labels[0].name", "type": "string", "tags": ["display"] },
+        { "name": "assignee.login", "type": "string", "tag": "record.owner", "tags": ["relation"] },
+        { "name": "html_url", "type": "string", "tag": "record.url", "tags": ["link"], "readOnly": true },
+        { "name": "pull_request", "type": "json", "tags": ["relation"], "nullable": true, "readOnly": true },
         { "name": "user.login", "type": "string", "tags": ["relation"] },
-        { "name": "pull_request", "type": "object", "tags": ["relation"], "nullable": true }
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "tags": ["timestamp"], "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "tags": ["timestamp"], "readOnly": true }
       ],
+      "sync": {
+        "id": "number",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "issue.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "since": "since",
+          "paging": "page"
+        },
+        "get": { "capability": "issue.get", "id": "issue_number" },
+        "create": { "capability": "issue.create" },
+        "update": { "capability": "issue.update", "id": "issue_number" }
+      },
       "operations": {
         "list": { "method": "listRepositoryIssues", "officialOperationId": "issues/list-for-repo" },
         "get": { "method": "getIssue", "officialOperationId": "issues/get" },
@@ -93,17 +135,20 @@
         "update": { "method": "updateIssue", "officialOperationId": "issues/update" }
       }
     },
-    "pull_request": {
-      "description": "Pull request. Create requires head+base; title XOR issue per official OpenAPI.",
+    "pullRequest": {
+      "label": "Pull request",
+      "aliasOf": "pull_request",
       "fields": [
-        { "name": "id", "type": "integer", "tags": ["identifier"] },
-        { "name": "number", "type": "integer", "tags": ["identifier"] },
+        { "name": "id", "type": "id", "tags": ["identifier"], "readOnly": true },
+        { "name": "number", "type": "number", "tags": ["identifier"], "readOnly": true },
         { "name": "title", "type": "string", "tags": ["display"] },
-        { "name": "body", "type": "string", "tags": ["content"], "nullable": true },
-        { "name": "state", "type": "string", "tags": ["status"] },
-        { "name": "html_url", "type": "string", "tags": ["link"] },
-        { "name": "head.ref", "type": "string", "tags": [] },
-        { "name": "base.ref", "type": "string", "tags": [] }
+        { "name": "body", "type": "text", "tags": ["content"], "nullable": true },
+        { "name": "state", "type": "enum", "tags": ["status"], "values": ["open", "closed"] },
+        { "name": "merged", "type": "boolean", "tags": ["status"], "readOnly": true },
+        { "name": "merged_at", "type": "datetime", "tags": ["timestamp"], "nullable": true, "readOnly": true },
+        { "name": "head.ref", "type": "string", "tag": "git.branch", "tags": [] },
+        { "name": "base.ref", "type": "string", "tags": [] },
+        { "name": "html_url", "type": "string", "tag": "record.url", "tags": ["link"], "readOnly": true }
       ],
       "operations": {
         "list": { "method": "listPullRequests", "officialOperationId": "pulls/list" },
@@ -113,16 +158,16 @@
       }
     },
     "repository_webhook": {
-      "description": "Repository webhook (hook) subscription. Update supports add_events/remove_events.",
+      "label": "Repository webhook",
       "fields": [
-        { "name": "id", "type": "integer", "tags": ["identifier"] },
+        { "name": "id", "type": "integer", "tags": ["identifier"], "readOnly": true },
         { "name": "name", "type": "string", "tags": [] },
         { "name": "active", "type": "boolean", "tags": ["status"] },
         { "name": "events", "type": "array", "tags": ["events"] },
         { "name": "config.url", "type": "string", "tags": ["link"] },
         { "name": "config.content_type", "type": "string", "tags": [] },
-        { "name": "created_at", "type": "string", "tags": ["timestamp"] },
-        { "name": "updated_at", "type": "string", "tags": ["timestamp"] }
+        { "name": "created_at", "type": "string", "tags": ["timestamp"], "readOnly": true },
+        { "name": "updated_at", "type": "string", "tags": ["timestamp"], "readOnly": true }
       ],
       "operations": {
         "list": { "method": "listRepositoryWebhooks", "officialOperationId": "repos/list-webhooks" },
@@ -132,5 +177,186 @@
         "delete": { "method": "deleteRepositoryWebhook", "officialOperationId": "repos/delete-webhook" }
       }
     }
-  }
+  },
+  "capabilities": {
+    "issue.get": {
+      "kind": "read",
+      "method": "getIssue",
+      "officialOperationId": "issues/get",
+      "input": {
+        "owner": { "type": "string", "required": true },
+        "repo": { "type": "string", "required": true },
+        "issue_number": { "type": "number", "required": true }
+      },
+      "output": "issue"
+    },
+    "issue.list": {
+      "kind": "read",
+      "method": "listRepositoryIssues",
+      "lefthookBotsDraftMethod": "listIssuesForRepo",
+      "officialOperationId": "issues/list-for-repo",
+      "input": {
+        "owner": { "type": "string", "required": true },
+        "repo": { "type": "string", "required": true },
+        "state": { "type": "string" },
+        "since": { "type": "string" },
+        "per_page": { "type": "number" },
+        "page": { "type": "number" }
+      },
+      "output": "issue[]"
+    },
+    "issue.create": {
+      "kind": "write",
+      "method": "createIssue",
+      "officialOperationId": "issues/create",
+      "input": {
+        "owner": { "type": "string", "required": true },
+        "repo": { "type": "string", "required": true },
+        "title": { "type": "string", "required": true },
+        "body": { "type": "string" },
+        "labels": { "type": "array" },
+        "assignees": { "type": "array" }
+      },
+      "output": "issue"
+    },
+    "issue.update": {
+      "kind": "write",
+      "method": "updateIssue",
+      "officialOperationId": "issues/update",
+      "input": {
+        "owner": { "type": "string", "required": true },
+        "repo": { "type": "string", "required": true },
+        "issue_number": { "type": "number", "required": true },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "state": { "type": "string" },
+        "state_reason": { "type": "string" },
+        "labels": { "type": "array" }
+      },
+      "output": "issue"
+    },
+    "repo.list": {
+      "kind": "read",
+      "method": "listReposForAuthenticatedUser",
+      "lefthookBotsDraftMethod": "listInstallationRepos",
+      "officialOperationId": "repos/list-for-authenticated-user",
+      "input": {
+        "visibility": { "type": "string" },
+        "affiliation": { "type": "string" },
+        "type": { "type": "string" },
+        "per_page": { "type": "number" },
+        "page": { "type": "number" },
+        "since": { "type": "string" },
+        "before": { "type": "string" }
+      },
+      "output": "repository[]",
+      "notes": "Draft named listInstallationRepos (GitHub App). This OAuth App module maps repo.list to listReposForAuthenticatedUser instead."
+    },
+    "pullRequest.list": {
+      "kind": "read",
+      "method": "listPullRequests",
+      "officialOperationId": "pulls/list",
+      "output": "pullRequest[]"
+    },
+    "pullRequest.get": {
+      "kind": "read",
+      "method": "getPullRequest",
+      "officialOperationId": "pulls/get",
+      "output": "pullRequest"
+    },
+    "pullRequest.create": {
+      "kind": "write",
+      "method": "createPullRequest",
+      "officialOperationId": "pulls/create",
+      "output": "pullRequest"
+    },
+    "pullRequest.update": {
+      "kind": "write",
+      "method": "updatePullRequest",
+      "officialOperationId": "pulls/update",
+      "output": "pullRequest"
+    }
+  },
+  "events": {
+    "issue.opened": {
+      "delivery": "webhook",
+      "object": "issue",
+      "match": "issues.opened",
+      "headers": { "x-github-event": "issues" },
+      "status": "supported-inbound",
+      "implementation": "extensions/webhooks (GITHUB_WEBHOOK after signature verify)",
+      "apiMethod": null,
+      "notes": "Inbound event, not an Api method. Draft routes by installation.id; this package resolves by repository.owner.id (OAuth App repo hooks)."
+    },
+    "issue.edited": {
+      "delivery": "webhook",
+      "object": "issue",
+      "match": "issues.edited",
+      "headers": { "x-github-event": "issues" },
+      "status": "supported-inbound",
+      "implementation": "extensions/webhooks",
+      "apiMethod": null
+    },
+    "issue.closed": {
+      "delivery": "webhook",
+      "object": "issue",
+      "match": "issues.closed",
+      "headers": { "x-github-event": "issues" },
+      "status": "supported-inbound",
+      "implementation": "extensions/webhooks",
+      "apiMethod": null
+    },
+    "issue.labeled": {
+      "delivery": "webhook",
+      "object": "issue",
+      "match": "issues.labeled",
+      "headers": { "x-github-event": "issues" },
+      "status": "supported-inbound",
+      "implementation": "extensions/webhooks",
+      "apiMethod": null
+    },
+    "pullRequest.closed": {
+      "delivery": "webhook",
+      "object": "pullRequest",
+      "match": "pull_request.closed",
+      "headers": { "x-github-event": "pull_request" },
+      "status": "supported-inbound",
+      "implementation": "extensions/webhooks",
+      "apiMethod": null
+    }
+  },
+  "webhook": {
+    "scope": "repository",
+    "lefthookBotsDraftScope": "app",
+    "topic": "{{headers.x-github-event}}.{{body.action}}",
+    "eventId": "{{headers.x-github-delivery}}",
+    "account": "{{body.repository.owner.id}}",
+    "lefthookBotsDraftAccount": "{{body.installation.id}}",
+    "verify": "extensions/webhooks/signature-verifier.verifyGitHubSignature",
+    "lefthookBotsDraftVerify": "verifyWebhookSignature",
+    "notes": "Draft is GitHub App (installation) scoped. This module manages repo hooks via Api and verifies X-Hub-Signature-256 in the Tier-3 extension."
+  },
+  "options": {
+    "repo": {
+      "capability": "repo.list",
+      "label": "{{item.full_name}}",
+      "value": "$.item.full_name"
+    }
+  },
+  "skipped": [
+    {
+      "from": "lefthook-bots draft capabilities.issue.comment",
+      "draftMethod": "createIssueComment",
+      "reason": "Out of current module scope (issue/PR/repo/webhook CRUD). Official endpoint would be POST /repos/{owner}/{repo}/issues/{issue_number}/comments (issues/create-comment). Not implemented on Api."
+    },
+    {
+      "from": "lefthook-bots draft capabilities.repo.list → listInstallationRepos",
+      "draftMethod": "listInstallationRepos",
+      "reason": "GitHub App installation endpoint (GET /installation/repositories). This module is OAuth App auth; repo.list is mapped to listReposForAuthenticatedUser instead. listInstallationRepos is not implemented."
+    },
+    {
+      "from": "lefthook-bots draft webhook.account = installation.id",
+      "reason": "Requires GitHub App installations. OAuth App receiver keys entities by authenticated user id / repository.owner.id. See open question on org-owned webhook routing."
+    }
+  ]
 }

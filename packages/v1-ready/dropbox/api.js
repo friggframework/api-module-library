@@ -29,21 +29,31 @@ class Api extends OAuth2Requester {
         this.access_token = get(params, 'access_token', null);
         this.refresh_token = get(params, 'refresh_token', null);
 
+        // Default scopes cover OpenID identity (v1 lefthookhq/dropbox--frigg),
+        // account + files CRUD, and shared-folder listing. Override via
+        // DROPBOX_SCOPE / constructor `scope`.
         const scope =
             this.scope ||
             process.env.DROPBOX_SCOPE ||
             [
+                'openid',
+                'profile',
+                'email',
                 'account_info.read',
                 'files.metadata.read',
                 'files.metadata.write',
                 'files.content.read',
                 'files.content.write',
+                'sharing.read',
             ].join(' ');
 
         const authParams = new URLSearchParams({
             response_type: 'code',
             client_id: this.client_id || '',
             redirect_uri: this.redirect_uri || '',
+            // Offline access yields a long-lived refresh_token (Dropbox OAuth guide).
+            // Refresh responses often omit refresh_token; OAuth2Requester.setTokens
+            // already preserves the existing one (same intent as v1's custom refresh).
             token_access_type: 'offline',
             scope,
         });
@@ -53,10 +63,15 @@ class Api extends OAuth2Requester {
         this.tokenUri = 'https://api.dropboxapi.com/oauth2/token';
 
         this.URLs = {
+            // OpenID (v1 identity) — Stone openid/userinfo, scope openid
+            getUserDetails: '/openid/userinfo',
             getCurrentAccount: '/users/get_current_account',
             getSpaceUsage: '/users/get_space_usage',
             listFolder: '/files/list_folder',
             listFolderContinue: '/files/list_folder/continue',
+            // Sharing (v1) — Stone sharing/list_folders*, scope sharing.read
+            listSharedFolders: '/sharing/list_folders',
+            listSharedFoldersContinue: '/sharing/list_folders/continue',
             getMetadata: '/files/get_metadata',
             createFolderV2: '/files/create_folder_v2',
             deleteV2: '/files/delete_v2',
@@ -109,6 +124,19 @@ class Api extends OAuth2Requester {
     // ---- Identity ----------------------------------------------------------
 
     /**
+     * OpenID userinfo — POST /openid/userinfo
+     * Official route: openid/userinfo (Stone; is_preview). Scope: openid.
+     * Also request `profile` / `email` scopes for given_name, family_name, email.
+     * Arg: empty UserInfoArgs — JSON null body.
+     *
+     * `sub` is the Dropbox account_id (stable identity). This was the v1
+     * lefthookhq/dropbox--frigg identity path (getUserDetails / getTokenIdentity).
+     */
+    async getUserDetails() {
+        return this._rpc(this.URLs.getUserDetails, null);
+    }
+
+    /**
      * Get current account — POST /users/get_current_account
      * Official route: users/get_current_account. Scope: account_info.read.
      * Arg: Void (JSON null body).
@@ -132,19 +160,50 @@ class Api extends OAuth2Requester {
      * List folder contents — POST /files/list_folder
      * Official route: files/list_folder. Scope: files.metadata.read.
      * Body: ListFolderArg { path, recursive?, include_deleted?, limit?, … }
-     * Root is path "".
+     * Root is path "". Defaults mirror the v1 module when callers pass overrides only.
      */
     async listFolder(data = {}) {
-        return this._rpc(this.URLs.listFolder, data);
+        const body = {
+            path: '',
+            include_deleted: false,
+            include_has_explicit_shared_members: false,
+            include_mounted_folders: true,
+            include_non_downloadable_files: true,
+            recursive: false,
+            ...data,
+        };
+        return this._rpc(this.URLs.listFolder, body);
     }
 
     /**
      * Continue listing a folder — POST /files/list_folder/continue
      * Official route: files/list_folder/continue. Scope: files.metadata.read.
-     * Body: { cursor } from a prior listFolder / listFolderContinue response.
+     * Accepts a cursor string (v1 signature) or `{ cursor }` object.
      */
     async listFolderContinue(data) {
-        return this._rpc(this.URLs.listFolderContinue, data);
+        const body =
+            typeof data === 'string' ? { cursor: data } : data || {};
+        return this._rpc(this.URLs.listFolderContinue, body);
+    }
+
+    /**
+     * List shared folders — POST /sharing/list_folders
+     * Official route: sharing/list_folders. Scope: sharing.read.
+     * Body: ListFoldersArgs (optional limit / actions). Empty `{}` lists all.
+     */
+    async listSharedFolders(data = {}) {
+        return this._rpc(this.URLs.listSharedFolders, data);
+    }
+
+    /**
+     * Continue listing shared folders — POST /sharing/list_folders/continue
+     * Official route: sharing/list_folders/continue. Scope: sharing.read.
+     * Accepts a cursor string (v1 signature) or `{ cursor }` object.
+     */
+    async listSharedFoldersContinue(data) {
+        const body =
+            typeof data === 'string' ? { cursor: data } : data || {};
+        return this._rpc(this.URLs.listSharedFoldersContinue, body);
     }
 
     /**

@@ -3,7 +3,7 @@
   "label": "Dropbox",
   "productUrl": "https://www.dropbox.com",
   "apiDocs": "https://www.dropbox.com/developers/documentation/http/documentation",
-  "logoUrl": "https://friggframework.org/assets/img/dropbox-icon.png",
+  "logoUrl": "https://friggframework.org/assets/img/dropbox.jpeg",
   "categories": [
     "Content Management",
     "File Storage",

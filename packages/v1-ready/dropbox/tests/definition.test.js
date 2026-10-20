@@ -49,18 +49,22 @@ describe('Dropbox Definition', () => {
         expect(seen).toBe('nested');
     });
 
-    it('getEntityDetails uses account_id and display_name', async () => {
+    it('getEntityDetails prefers OpenID sub and given/family name (v1 identity)', async () => {
         const api = new Api({
             client_id: 'c',
             client_secret: 's',
             redirect_uri: 'https://ex.com/r/dropbox',
             access_token: 't',
         });
-        api.getCurrentAccount = async () => ({
-            account_id: 'dbid:AAH4f99T0taONIb-OurWxbNQ6ywGRopQngc',
-            name: { display_name: 'Franz Ferdinand (Personal)' },
+        api.getUserDetails = async () => ({
+            sub: 'dbid:AAH4f99T0taONIb-OurWxbNQ6ywGRopQngc',
+            given_name: 'Franz',
+            family_name: 'Ferdinand',
             email: 'franz@dropbox.com',
         });
+        api.getCurrentAccount = async () => {
+            throw new Error('should not be called');
+        };
         const details = await Definition.requiredAuthMethods.getEntityDetails(
             api,
             {},
@@ -71,20 +75,45 @@ describe('Dropbox Definition', () => {
             'dbid:AAH4f99T0taONIb-OurWxbNQ6ywGRopQngc'
         );
         expect(details.identifiers.userId).toBe('user-1');
-        expect(details.details.name).toBe('Franz Ferdinand (Personal)');
+        expect(details.details.name).toBe('Franz Ferdinand');
     });
 
-    it('getCredentialDetails uses the same account_id', async () => {
+    it('getEntityDetails falls back to get_current_account when OpenID fails', async () => {
         const api = new Api({
             client_id: 'c',
             client_secret: 's',
             redirect_uri: 'https://ex.com/r/dropbox',
             access_token: 't',
         });
+        api.getUserDetails = async () => {
+            throw new Error('no openid scope');
+        };
         api.getCurrentAccount = async () => ({
-            account_id: 'dbid:AA',
-            name: { display_name: 'A' },
+            account_id: 'dbid:FALLBACK',
+            name: { display_name: 'Fallback Name' },
             email: 'a@x.com',
+        });
+        const details = await Definition.requiredAuthMethods.getEntityDetails(
+            api,
+            {},
+            {},
+            'user-2'
+        );
+        expect(details.identifiers.externalId).toBe('dbid:FALLBACK');
+        expect(details.details.name).toBe('Fallback Name');
+    });
+
+    it('getCredentialDetails uses the same OpenID sub', async () => {
+        const api = new Api({
+            client_id: 'c',
+            client_secret: 's',
+            redirect_uri: 'https://ex.com/r/dropbox',
+            access_token: 't',
+        });
+        api.getUserDetails = async () => ({
+            sub: 'dbid:AA',
+            given_name: 'A',
+            family_name: 'B',
         });
         const details =
             await Definition.requiredAuthMethods.getCredentialDetails(
@@ -95,13 +124,14 @@ describe('Dropbox Definition', () => {
         expect(details.identifiers.userId).toBe('user-c');
     });
 
-    it('throws when get_current_account has no account_id', async () => {
+    it('throws when neither OpenID nor get_current_account yields an id', async () => {
         const api = new Api({
             client_id: 'c',
             client_secret: 's',
             redirect_uri: 'https://ex.com/r/dropbox',
             access_token: 't',
         });
+        api.getUserDetails = async () => ({ given_name: 'No Id' });
         api.getCurrentAccount = async () => ({
             name: { display_name: 'No Id' },
         });
@@ -110,7 +140,7 @@ describe('Dropbox Definition', () => {
         ).rejects.toThrow(/stable account identity/i);
     });
 
-    it('testAuthRequest calls getCurrentAccount', async () => {
+    it('testAuthRequest calls getUserDetails (v1 Manager.testAuth)', async () => {
         const api = new Api({
             client_id: 'c',
             client_secret: 's',
@@ -118,9 +148,9 @@ describe('Dropbox Definition', () => {
             access_token: 't',
         });
         let called = false;
-        api.getCurrentAccount = async () => {
+        api.getUserDetails = async () => {
             called = true;
-            return { account_id: 'dbid:1' };
+            return { sub: 'dbid:1' };
         };
         await Definition.requiredAuthMethods.testAuthRequest(api);
         expect(called).toBe(true);

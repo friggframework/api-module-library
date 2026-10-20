@@ -5,9 +5,28 @@ const config = require('./defaultConfig.json');
 
 /**
  * Resolve the connected Dropbox account for entity/credential identity.
- * Prefer POST /users/get_current_account; never fall back to a shared constant.
+ *
+ * Prefer OpenID userinfo `sub` (v1 lefthookhq/dropbox--frigg getTokenIdentity),
+ * which Stone documents as the Dropbox account_id. Fall back to
+ * users/get_current_account.account_id. Never use a shared constant.
  */
 async function resolveAccountIdentity(api) {
+    try {
+        const userInfo = await api.getUserDetails();
+        if (userInfo?.sub) {
+            const parts = [userInfo.given_name, userInfo.family_name]
+                .filter(Boolean)
+                .join(' ')
+                .trim();
+            return {
+                externalId: String(userInfo.sub),
+                name: parts || userInfo.email || String(userInfo.sub),
+            };
+        }
+    } catch (e) {
+        // Fall through to get_current_account (e.g. token without openid scope).
+    }
+
     const account = await api.getCurrentAccount();
     if (account?.account_id) {
         const displayName =
@@ -20,7 +39,7 @@ async function resolveAccountIdentity(api) {
         };
     }
     throw new Error(
-        'Dropbox: cannot derive a stable account identity — get_current_account returned no account_id.'
+        'Dropbox: cannot derive a stable account identity — openid/userinfo and get_current_account returned no id.'
     );
 }
 
@@ -49,12 +68,17 @@ const Definition = {
                 details: {},
             };
         },
+        // access_token + refresh_token match v1 Credential schema fields used
+        // for auth. v1 also stored expires_at on the Mongoose model; v2 relies
+        // on OAuth2Requester.accessTokenExpire (set from expires_in) rather
+        // than duplicating a custom expires_at field here.
         apiPropertiesToPersist: {
             credential: ['access_token', 'refresh_token'],
             entity: [],
         },
         testAuthRequest: async (api) => {
-            return api.getCurrentAccount();
+            // v1 Manager.testAuth used getUserDetails (OpenID userinfo).
+            return api.getUserDetails();
         },
     },
     env: {

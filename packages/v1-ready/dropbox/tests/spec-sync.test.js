@@ -44,8 +44,12 @@ describe('OpenAPI spec ↔ client sync', () => {
             'https://api.dropboxapi.com/oauth2/token'
         );
         const scopes = scheme.flows.authorizationCode.scopes;
+        expect(scopes.openid).toBeDefined();
+        expect(scopes.profile).toBeDefined();
+        expect(scopes.email).toBeDefined();
         expect(scopes['account_info.read']).toBeDefined();
         expect(scopes['files.metadata.read']).toBeDefined();
         expect(scopes['files.content.write']).toBeDefined();
+        expect(scopes['sharing.read']).toBeDefined();
     });
 });

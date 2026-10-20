@@ -6,11 +6,12 @@ info:
     Curated subset of Dropbox's official HTTP API (documented at
     https://www.dropbox.com/developers/documentation/http/documentation and
     specified in Stone at https://github.com/dropbox/dropbox-api-spec). Covers
-    current-account identity, folder listing/metadata, create/delete/move/copy,
-    content download/upload, and search. Dropbox does not publish an OpenAPI
-    document; this file is Left Hook's hand-curated subset matching the
-    @friggframework/api-module-dropbox client 1:1 (one method per operationId).
-    Paths and scopes are taken from the official Stone routes — nothing invented.
+    OpenID userinfo + current-account identity, folder listing/metadata,
+    shared folders, create/delete/move/copy, content download/upload, and
+    search. Dropbox does not publish an OpenAPI document; this file is Left
+    Hook's hand-curated subset matching the @friggframework/api-module-dropbox
+    client 1:1 (one method per operationId). Paths and scopes are taken from
+    the official Stone routes — nothing invented.
     Note: Dropbox webhooks are registered in the App Console (no HTTP CRUD);
     signature verification is a local helper, not an OpenAPI operation.
   contact:
@@ -22,9 +23,30 @@ servers:
 security:
   - oauth2: []
 tags:
+  - name: OpenID
   - name: Users
   - name: Files
+  - name: Sharing
 paths:
+  /openid/userinfo:
+    post:
+      tags: [OpenID]
+      operationId: getUserDetails
+      summary: OpenID userinfo
+      description: >-
+        Official route openid/userinfo (Stone; is_preview). Scope openid
+        (plus profile/email for name/email claims). `sub` is the Dropbox
+        account_id. Arg is empty UserInfoArgs — send JSON null as the body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              nullable: true
+      responses:
+        "200":
+          description: UserInfoResult
+
   /users/get_current_account:
     post:
       tags: [Users]
@@ -94,6 +116,40 @@ paths:
       responses:
         "200":
           description: ListFolderResult
+
+  /sharing/list_folders:
+    post:
+      tags: [Sharing]
+      operationId: listSharedFolders
+      summary: List shared folders
+      description: >-
+        Official route sharing/list_folders. Scope sharing.read.
+        Body is ListFoldersArgs (optional); empty object lists accessible folders.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: ListFoldersResult
+
+  /sharing/list_folders/continue:
+    post:
+      tags: [Sharing]
+      operationId: listSharedFoldersContinue
+      summary: Continue listing shared folders
+      description: >-
+        Official route sharing/list_folders/continue. Scope sharing.read.
+        Body is { cursor }.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: ListFoldersResult
 
   /files/get_metadata:
     post:
@@ -256,8 +312,12 @@ components:
           authorizationUrl: https://www.dropbox.com/oauth2/authorize
           tokenUrl: https://api.dropboxapi.com/oauth2/token
           scopes:
+            openid: OpenID Connect — enables /openid/userinfo (`sub` is account_id)
+            profile: OpenID profile claims (given_name, family_name, …)
+            email: OpenID email claims (email, email_verified)
             account_info.read: View basic information about your Dropbox account such as your username, email address, and country
             files.metadata.read: View information about your Dropbox files and folders
             files.metadata.write: View and edit information about your Dropbox files and folders
             files.content.read: View the content from your Dropbox files and folders
             files.content.write: Edit content of your Dropbox files and folders
+            sharing.read: View shared folders and sharing metadata

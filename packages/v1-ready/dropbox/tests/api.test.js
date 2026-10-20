@@ -44,7 +44,7 @@ describe('Dropbox Api', () => {
                 client_id: 'cid',
                 client_secret: 's',
                 redirect_uri: 'https://ex.com/r/dropbox',
-                scope: 'account_info.read files.metadata.read',
+                scope: 'openid profile account_info.read files.metadata.read',
                 state: 'xyz',
             });
             const uri = api.getAuthUri();
@@ -54,11 +54,25 @@ describe('Dropbox Api', () => {
             expect(uri).toContain('client_id=cid');
             expect(uri).toContain('response_type=code');
             expect(uri).toContain('token_access_type=offline');
-            expect(uri).toContain('scope=account_info.read+files.metadata.read');
+            expect(uri).toContain(
+                'scope=openid+profile+account_info.read+files.metadata.read'
+            );
             expect(uri).toContain(
                 'redirect_uri=https%3A%2F%2Fex.com%2Fr%2Fdropbox'
             );
             expect(uri).toContain('state=xyz');
+        });
+
+        it('defaults include openid, files, and sharing.read scopes', () => {
+            const api = new Api({
+                client_id: 'c',
+                client_secret: 's',
+                redirect_uri: 'https://ex.com/r',
+            });
+            const uri = api.getAuthUri();
+            expect(uri).toContain('openid');
+            expect(uri).toContain('sharing.read');
+            expect(uri).toContain('files.content.write');
         });
 
         it('adds Bearer Authorization header', async () => {
@@ -74,6 +88,15 @@ describe('Dropbox Api', () => {
     });
 
     describe('users', () => {
+        it('getUserDetails POSTs null to /openid/userinfo', async () => {
+            const api = makeApi();
+            await api.getUserDetails();
+            expect(api._captured[0].url).toBe(
+                'https://api.dropboxapi.com/2/openid/userinfo'
+            );
+            expect(api._captured[0].body).toBeNull();
+        });
+
         it('getCurrentAccount POSTs null to /users/get_current_account', async () => {
             const api = makeApi();
             await api.getCurrentAccount();
@@ -94,26 +117,50 @@ describe('Dropbox Api', () => {
     });
 
     describe('files metadata', () => {
-        it('listFolder POSTs ListFolderArg', async () => {
+        it('listFolder POSTs ListFolderArg with v1-compatible defaults', async () => {
             const api = makeApi();
-            await api.listFolder({ path: '', recursive: false, limit: 100 });
+            await api.listFolder({ limit: 100 });
             expect(api._captured[0].url).toBe(
                 'https://api.dropboxapi.com/2/files/list_folder'
             );
             expect(api._captured[0].body).toEqual({
                 path: '',
+                include_deleted: false,
+                include_has_explicit_shared_members: false,
+                include_mounted_folders: true,
+                include_non_downloadable_files: true,
                 recursive: false,
                 limit: 100,
             });
         });
 
-        it('listFolderContinue POSTs cursor', async () => {
+        it('listFolderContinue POSTs cursor object or string', async () => {
             const api = makeApi();
             await api.listFolderContinue({ cursor: 'cur-1' });
+            await api.listFolderContinue('cur-2');
             expect(api._captured[0].url).toBe(
                 'https://api.dropboxapi.com/2/files/list_folder/continue'
             );
             expect(api._captured[0].body).toEqual({ cursor: 'cur-1' });
+            expect(api._captured[1].body).toEqual({ cursor: 'cur-2' });
+        });
+
+        it('listSharedFolders POSTs to /sharing/list_folders', async () => {
+            const api = makeApi();
+            await api.listSharedFolders({});
+            expect(api._captured[0].url).toBe(
+                'https://api.dropboxapi.com/2/sharing/list_folders'
+            );
+            expect(api._captured[0].body).toEqual({});
+        });
+
+        it('listSharedFoldersContinue accepts cursor string', async () => {
+            const api = makeApi();
+            await api.listSharedFoldersContinue('shared-cur');
+            expect(api._captured[0].url).toBe(
+                'https://api.dropboxapi.com/2/sharing/list_folders/continue'
+            );
+            expect(api._captured[0].body).toEqual({ cursor: 'shared-cur' });
         });
 
         it('getMetadata POSTs path', async () => {

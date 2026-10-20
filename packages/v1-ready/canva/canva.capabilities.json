@@ -1,0 +1,418 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "canva",
+  "label": "Canva",
+  "package": "@friggframework/api-module-canva",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Canva user/team identity from GET /v1/users/me (team_user).",
+    "fields": [
+      {
+        "name": "team_id",
+        "type": "string",
+        "description": "Canva team id from usersMe.team_user.team_id, persisted on the entity"
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "user_id", "type": "id", "readOnly": true },
+        { "name": "team_id", "type": "string", "readOnly": true },
+        {
+          "name": "display_name",
+          "type": "string",
+          "tag": "person.displayName"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "contact.email",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "user_id",
+        "get": {
+          "capability": "user.get"
+        }
+      }
+    },
+    "design": {
+      "label": "Design",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "title",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "created_at",
+          "type": "integer",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_at",
+          "type": "integer",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        { "name": "page_count", "type": "integer", "readOnly": true },
+        { "name": "urls", "type": "json", "readOnly": true },
+        { "name": "thumbnail", "type": "json", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "design.list",
+          "cursor": "continuation",
+          "items": "items",
+          "next": "continuation"
+        },
+        "get": {
+          "capability": "design.get",
+          "id": "designId"
+        },
+        "create": {
+          "capability": "design.create",
+          "body": "data"
+        }
+      }
+    },
+    "folder": {
+      "label": "Folder",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName",
+          "required": true
+        },
+        {
+          "name": "created_at",
+          "type": "integer",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_at",
+          "type": "integer",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        { "name": "thumbnail", "type": "json", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "get": {
+          "capability": "folder.get",
+          "id": "folderId"
+        },
+        "create": {
+          "capability": "folder.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "folder.update",
+          "id": "folderId",
+          "body": "data"
+        },
+        "delete": {
+          "capability": "folder.delete",
+          "id": "folderId"
+        }
+      }
+    },
+    "asset": {
+      "label": "Asset",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        { "name": "type", "type": "string", "readOnly": true },
+        { "name": "tags", "type": "json", "tag": "record.tags" },
+        {
+          "name": "created_at",
+          "type": "integer",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_at",
+          "type": "integer",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "get": {
+          "capability": "asset.get",
+          "id": "assetId"
+        },
+        "update": {
+          "capability": "asset.update",
+          "id": "assetId",
+          "body": "data"
+        },
+        "delete": {
+          "capability": "asset.delete",
+          "id": "assetId"
+        }
+      }
+    },
+    "exportJob": {
+      "label": "Design export job",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "status", "type": "string", "readOnly": true },
+        { "name": "urls", "type": "json", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "get": {
+          "capability": "exportJob.get",
+          "id": "exportId"
+        },
+        "create": {
+          "capability": "exportJob.create",
+          "body": "data"
+        }
+      }
+    },
+    "assetUploadJob": {
+      "label": "Asset upload job",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "status", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "get": {
+          "capability": "assetUploadJob.get",
+          "id": "jobId"
+        },
+        "create": {
+          "capability": "assetUploadJob.create",
+          "body": "binary"
+        }
+      }
+    }
+  },
+  "capabilities": {
+    "user.get": {
+      "kind": "read",
+      "method": "usersMe",
+      "input": {},
+      "output": "user"
+    },
+    "user.profile": {
+      "kind": "read",
+      "method": "getUserProfile",
+      "input": {},
+      "output": "user"
+    },
+    "user.info": {
+      "kind": "read",
+      "method": "userInfo",
+      "input": {},
+      "output": "user"
+    },
+    "design.list": {
+      "kind": "read",
+      "method": "listDesigns",
+      "input": {
+        "query": { "type": "string" },
+        "continuation": { "type": "string" },
+        "ownership": { "type": "string" },
+        "sort_by": { "type": "string" },
+        "limit": { "type": "integer" }
+      },
+      "output": "page<design>"
+    },
+    "design.get": {
+      "kind": "read",
+      "method": "getDesign",
+      "input": {
+        "designId": { "type": "string", "required": true }
+      },
+      "output": "design",
+      "args": ["designId"]
+    },
+    "design.create": {
+      "kind": "write",
+      "method": "createDesign",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "design",
+      "args": ["data"]
+    },
+    "exportJob.create": {
+      "kind": "write",
+      "method": "createDesignExportJob",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "exportJob",
+      "args": ["data"]
+    },
+    "exportJob.get": {
+      "kind": "read",
+      "method": "getDesignExportJob",
+      "input": {
+        "exportId": { "type": "string", "required": true }
+      },
+      "output": "exportJob",
+      "args": ["exportId"]
+    },
+    "folder.create": {
+      "kind": "write",
+      "method": "createFolder",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "folder",
+      "args": ["data"]
+    },
+    "folder.get": {
+      "kind": "read",
+      "method": "getFolder",
+      "input": {
+        "folderId": { "type": "string", "required": true }
+      },
+      "output": "folder",
+      "args": ["folderId"]
+    },
+    "folder.update": {
+      "kind": "write",
+      "method": "updateFolder",
+      "input": {
+        "folderId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "folder",
+      "args": ["folderId", "data"]
+    },
+    "folder.delete": {
+      "kind": "delete",
+      "method": "deleteFolder",
+      "input": {
+        "folderId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["folderId"]
+    },
+    "folder.listItems": {
+      "kind": "read",
+      "method": "listFolderItems",
+      "input": {
+        "folderId": { "type": "string", "required": true },
+        "continuation": { "type": "string" },
+        "limit": { "type": "integer" },
+        "item_types": { "type": "string" },
+        "sort_by": { "type": "string" },
+        "pin_status": { "type": "string" }
+      },
+      "output": "page<folderItem>",
+      "args": ["folderId"]
+    },
+    "folder.moveItem": {
+      "kind": "write",
+      "method": "moveFolderItem",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "void",
+      "args": ["data"]
+    },
+    "asset.get": {
+      "kind": "read",
+      "method": "getAsset",
+      "input": {
+        "assetId": { "type": "string", "required": true }
+      },
+      "output": "asset",
+      "args": ["assetId"]
+    },
+    "asset.update": {
+      "kind": "write",
+      "method": "updateAsset",
+      "input": {
+        "assetId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "asset",
+      "args": ["assetId", "data"]
+    },
+    "asset.delete": {
+      "kind": "delete",
+      "method": "deleteAsset",
+      "input": {
+        "assetId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["assetId"]
+    },
+    "assetUploadJob.create": {
+      "kind": "write",
+      "method": "createAssetUploadJob",
+      "input": {
+        "binary": { "type": "binary", "required": true },
+        "metadata": { "type": "object", "required": true }
+      },
+      "output": "assetUploadJob",
+      "args": ["binary", "metadata"]
+    },
+    "assetUploadJob.get": {
+      "kind": "read",
+      "method": "getAssetUploadJob",
+      "input": {
+        "jobId": { "type": "string", "required": true }
+      },
+      "output": "assetUploadJob",
+      "args": ["jobId"]
+    },
+    "webhook.signingKeys": {
+      "kind": "read",
+      "method": "getSigningPublicKeys",
+      "input": {},
+      "output": "json"
+    },
+    "oauth.introspect": {
+      "kind": "read",
+      "method": "introspectToken",
+      "input": {
+        "token": { "type": "string", "required": true }
+      },
+      "output": "json",
+      "args": ["token"]
+    },
+    "oauth.revoke": {
+      "kind": "delete",
+      "method": "revokeTokens",
+      "input": {
+        "token": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["token"]
+    },
+    "oauth.exchange": {
+      "kind": "write",
+      "method": "exchangeAccessToken",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "json",
+      "args": ["body"]
+    }
+  }
+}

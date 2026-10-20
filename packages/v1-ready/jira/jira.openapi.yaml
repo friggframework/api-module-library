@@ -474,6 +474,128 @@ paths:
       responses:
         "201":
           description: Created comment
+  /issue/{issueIdOrKey}/transitions:
+    get:
+      tags: [Issues]
+      operationId: getTransitions
+      summary: Get transitions
+      description: >-
+        Official swagger operationId getTransitions.
+        OAuth classic scope: read:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+        - in: query
+          name: expand
+          schema: { type: string }
+        - in: query
+          name: transitionId
+          schema: { type: string }
+        - in: query
+          name: skipRemoteOnlyCondition
+          schema: { type: boolean, default: false }
+        - in: query
+          name: includeUnavailableTransitions
+          schema: { type: boolean, default: false }
+        - in: query
+          name: sortByOpsBarAndStatus
+          schema: { type: boolean, default: false }
+      security:
+        - OAuth2: [read:jira-work]
+      responses:
+        "200":
+          description: Transitions of the issue
+    post:
+      tags: [Issues]
+      operationId: doTransition
+      summary: Transition issue
+      description: >-
+        Official swagger operationId doTransition.
+        Body schema IssueUpdateDetails — include `transition.id`.
+        OAuth classic scope: write:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transition:
+                  type: object
+                  properties:
+                    id: { type: string }
+                fields: { type: object, additionalProperties: true }
+                update: { type: object, additionalProperties: true }
+                historyMetadata: { type: object }
+                properties:
+                  type: array
+                  items: { type: object }
+      security:
+        - OAuth2: [write:jira-work]
+      responses:
+        "204":
+          description: Transition performed
+  /issue/{issueIdOrKey}/remotelink:
+    post:
+      tags: [Issues]
+      operationId: createOrUpdateRemoteIssueLink
+      summary: Create or update remote issue link
+      description: >-
+        Official swagger operationId createOrUpdateRemoteIssueLink.
+        Body schema RemoteIssueLinkRequest — required `object` with `title` and `url`.
+        OAuth classic scope: write:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [object]
+              properties:
+                globalId: { type: string }
+                application: { type: object }
+                relationship: { type: string }
+                object:
+                  type: object
+                  required: [title, url]
+                  properties:
+                    url: { type: string }
+                    title: { type: string }
+                    summary: { type: string }
+                    icon: { type: object }
+                    status: { type: object }
+      security:
+        - OAuth2: [write:jira-work]
+      responses:
+        "200":
+          description: Updated remote link
+        "201":
+          description: Created remote link
+  /issuetype:
+    get:
+      tags: [Issues]
+      operationId: getIssueAllTypes
+      summary: Get all issue types for user
+      description: >-
+        Official swagger operationId getIssueAllTypes.
+        OAuth classic scope: read:jira-work.
+      security:
+        - OAuth2: [read:jira-work]
+      responses:
+        "200":
+          description: Array of issue types
   /user/search:
     get:
       tags: [Users]

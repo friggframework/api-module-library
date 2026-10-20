@@ -136,6 +136,28 @@
         { "name": "updated", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
       ]
     },
+    "remoteLink": {
+      "label": "Remote issue link",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "self", "type": "string", "readOnly": true },
+        { "name": "globalId", "type": "string" },
+        { "name": "relationship", "type": "string" },
+        { "name": "object.url", "type": "string", "required": true },
+        { "name": "object.title", "type": "string", "required": true },
+        { "name": "object.summary", "type": "string" }
+      ]
+    },
+    "issueType": {
+      "label": "Issue type",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "description", "type": "text" },
+        { "name": "subtask", "type": "boolean" },
+        { "name": "hierarchyLevel", "type": "integer" }
+      ]
+    },
     "webhook": {
       "label": "Dynamic webhook",
       "fields": [
@@ -228,6 +250,23 @@
       "output": "comment",
       "args": ["issueIdOrKey", "body", "params"]
     },
+    "issue.transition": {
+      "kind": "write",
+      "method": "doTransition",
+      "input": {
+        "issueIdOrKey": { "type": "string", "required": true },
+        "transitionId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["issueIdOrKey", "body"],
+      "note": "Call with body { transition: { id: transitionId }, ... }. Use getTransitions to list available ids."
+    },
+    "issue.getTransitions": {
+      "kind": "read",
+      "method": "getTransitions",
+      "output": "transition",
+      "args": ["issueIdOrKey", "params"]
+    },
     "issue.search": {
       "kind": "search",
       "method": "searchAndReconsileIssuesUsingJql",
@@ -245,6 +284,18 @@
       "method": "deleteIssue",
       "args": ["issueIdOrKey", "params"]
     },
+    "remoteLink.create": {
+      "kind": "write",
+      "method": "createOrUpdateRemoteIssueLink",
+      "input": {
+        "issueIdOrKey": { "type": "string", "required": true },
+        "url": { "type": "string", "required": true },
+        "title": { "type": "string", "required": true }
+      },
+      "output": "remoteLink",
+      "args": ["issueIdOrKey", "body"],
+      "note": "Body is RemoteIssueLinkRequest: { object: { url, title }, ... }."
+    },
     "project.list": {
       "kind": "read",
       "method": "searchProjects",
@@ -252,6 +303,16 @@
       "output": "project[]",
       "args": ["params"],
       "note": "Draft named method listProjects; Api uses official swagger operationId searchProjects (GET /project/search)."
+    },
+    "issueType.list": {
+      "kind": "read",
+      "method": "getIssueAllTypes",
+      "input": {
+        "projectKey": { "type": "string" }
+      },
+      "output": "issueType[]",
+      "args": [],
+      "note": "Draft named method listIssueTypes / optional projectKey filter; Api uses official getIssueAllTypes (GET /issuetype) which returns all types visible to the user. Project-scoped createmeta is not wired."
     },
     "project.get": {
       "kind": "read",
@@ -331,29 +392,6 @@
       "args": ["issueIdOrKey", "params"]
     }
   },
-  "skipped": {
-    "issue.transition": {
-      "method": "transitionIssue",
-      "officialOperationId": "doTransition",
-      "path": "POST /rest/api/3/issue/{issueIdOrKey}/transitions",
-      "scope": "write:jira-work",
-      "reason": "Present in lefthook-bots draft and swagger-v3, but out of this module's initial CRUD/search/webhook cut. Not implemented on Api."
-    },
-    "remoteLink.create": {
-      "method": "createRemoteLink",
-      "officialOperationId": "createOrUpdateRemoteIssueLink",
-      "path": "POST /rest/api/3/issue/{issueIdOrKey}/remotelink",
-      "scope": "write:jira-work",
-      "reason": "Present in lefthook-bots draft and swagger-v3 (remote issue links). Out of initial scope — not implemented on Api."
-    },
-    "issueType.list": {
-      "method": "listIssueTypes",
-      "officialOperationId": "getIssueAllTypes (or getCreateIssueMetaIssueTypes for project-scoped)",
-      "path": "GET /rest/api/3/issuetype (alt: GET /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes)",
-      "scope": "read:jira-work",
-      "reason": "Present in lefthook-bots draft (options.issueType) and swagger-v3. Out of initial scope — not implemented on Api. Draft method name listIssueTypes does not match either official operationId."
-    }
-  },
   "options": {
     "project": {
       "capability": "project.list",
@@ -363,12 +401,10 @@
     "issueType": {
       "capability": "issueType.list",
       "label": "{{item.name}}",
-      "value": "$.item.id",
-      "status": "unimplemented",
-      "note": "Blocked on skipped.issueType.list"
+      "value": "$.item.id"
     }
   },
   "credits": {
-    "lefthookBotsDraft": "definitions/manifests/jira (private lefthook-bots) — issue object/tags, account.site+cloudId, events, webhook.register/refresh/delete, issue.* and project.list capability keys adopted; transition/remoteLink/issueType listed under skipped."
+    "lefthookBotsDraft": "definitions/manifests/jira (private lefthook-bots) — issue object/tags, account.site+cloudId, events, webhook.register/refresh/delete, and all draft capabilities including issue.transition, remoteLink.create, issueType.list mapped to official swagger operationIds."
   }
 }

@@ -68,6 +68,10 @@ describe('OpenAPI spec ↔ client sync', () => {
                 'searchAndReconsileIssuesUsingJql',
                 'getComments',
                 'addComment',
+                'getTransitions',
+                'doTransition',
+                'createOrUpdateRemoteIssueLink',
+                'getIssueAllTypes',
                 'findUsers',
                 'getDynamicWebhooksForApp',
                 'registerDynamicWebhooks',
@@ -106,37 +110,34 @@ describe('Capability manifest ↔ client sync', () => {
         expect(missing).toEqual([]);
     });
 
-    it('covers lefthook-bots draft capabilities (mapped or skipped)', () => {
-        // Draft keys from lefthook-bots definitions/manifests/jira
-        const draftCaps = [
-            'issue.create',
-            'issue.get',
-            'issue.update',
-            'issue.addComment',
-            'issue.transition',
-            'issue.search',
-            'remoteLink.create',
-            'project.list',
-            'issueType.list',
-            'webhook.register',
-            'webhook.refresh',
-            'webhook.delete',
-        ];
-        for (const key of draftCaps) {
-            const wired = manifest.capabilities[key];
-            const skipped = manifest.skipped && manifest.skipped[key];
-            expect(wired || skipped).toBeTruthy();
-            if (wired) {
-                expect(clientMethods).toContain(wired.method);
-            } else {
-                expect(skipped.reason).toMatch(/\S/);
-                expect(clientMethods).not.toContain(skipped.method);
-            }
+    it('covers lefthook-bots draft capabilities (all mapped to Api)', () => {
+        const draftCaps = {
+            'issue.create': 'createIssue',
+            'issue.get': 'getIssue',
+            'issue.update': 'editIssue',
+            'issue.addComment': 'addComment',
+            'issue.transition': 'doTransition',
+            'issue.search': 'searchAndReconsileIssuesUsingJql',
+            'remoteLink.create': 'createOrUpdateRemoteIssueLink',
+            'project.list': 'searchProjects',
+            'issueType.list': 'getIssueAllTypes',
+            'webhook.register': 'registerDynamicWebhooks',
+            'webhook.refresh': 'refreshWebhooks',
+            'webhook.delete': 'deleteWebhookById',
+        };
+        expect(manifest.skipped).toBeUndefined();
+        for (const [key, method] of Object.entries(draftCaps)) {
+            expect(manifest.capabilities[key].method).toBe(method);
+            expect(clientMethods).toContain(method);
         }
+        expect(clientMethods).toContain('getTransitions');
         expect(manifest.account.fields.map((f) => f.name)).toEqual(
             expect.arrayContaining(['site', 'cloudId'])
         );
         expect(manifest.objects.issue).toBeTruthy();
+        expect(manifest.objects.remoteLink).toBeTruthy();
+        expect(manifest.objects.issueType).toBeTruthy();
+        expect(manifest.options.issueType.capability).toBe('issueType.list');
         expect(manifest.webhook.verify).toBe('verifyWebhookSignature');
     });
 

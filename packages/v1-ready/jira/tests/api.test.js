@@ -254,6 +254,40 @@ describe('Jira Api', () => {
         });
     });
 
+    describe('transitions, remote links, issue types', () => {
+        it('getTransitions and doTransition hit /transitions', async () => {
+            const api = makeApi();
+            await api.getTransitions('DEMO-1', { expand: 'transitions.fields' });
+            await api.doTransition('DEMO-1', { transition: { id: '21' } });
+            expect(api._captured[0].url).toContain('/issue/DEMO-1/transitions');
+            expect(api._captured[0].query).toEqual({ expand: 'transitions.fields' });
+            expect(api._captured[1].method).toBe('POST');
+            expect(api._captured[1].body).toEqual({ transition: { id: '21' } });
+        });
+
+        it('createOrUpdateRemoteIssueLink POSTs RemoteIssueLinkRequest', async () => {
+            const api = makeApi();
+            const body = {
+                object: {
+                    url: 'https://example.com/t/1',
+                    title: 'Ticket 1',
+                },
+            };
+            await api.createOrUpdateRemoteIssueLink('DEMO-1', body);
+            expect(api._captured[0].method).toBe('POST');
+            expect(api._captured[0].url).toContain('/issue/DEMO-1/remotelink');
+            expect(api._captured[0].body).toEqual(body);
+        });
+
+        it('getIssueAllTypes hits GET /issuetype', async () => {
+            const api = makeApi();
+            await api.getIssueAllTypes();
+            expect(api._captured[0].url).toBe(
+                'https://api.atlassian.com/ex/jira/cloud-123/rest/api/3/issuetype'
+            );
+        });
+    });
+
     describe('webhooks', () => {
         it('get/register/delete/refresh hit /webhook paths', async () => {
             const api = makeApi();

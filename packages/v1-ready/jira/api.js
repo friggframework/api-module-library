@@ -160,6 +160,11 @@ class Api extends OAuth2Requester {
             searchJql: '/search/jql',
             issueComments: (issueIdOrKey) =>
                 `/issue/${encodeURIComponent(issueIdOrKey)}/comment`,
+            issueTransitions: (issueIdOrKey) =>
+                `/issue/${encodeURIComponent(issueIdOrKey)}/transitions`,
+            issueRemoteLink: (issueIdOrKey) =>
+                `/issue/${encodeURIComponent(issueIdOrKey)}/remotelink`,
+            issueType: '/issuetype',
             userSearch: '/user/search',
             webhook: '/webhook',
             webhookRefresh: '/webhook/refresh',
@@ -505,6 +510,65 @@ class Api extends OAuth2Requester {
             url: this.baseUrl + this.URLs.issueComments(issueIdOrKey),
             query: params,
             body,
+        });
+    }
+
+    // ---- Transitions -------------------------------------------------------
+
+    /**
+     * Get transitions available for an issue.
+     * GET /rest/api/3/issue/{issueIdOrKey}/transitions
+     * operationId: getTransitions
+     * Scope: read:jira-work
+     */
+    async getTransitions(issueIdOrKey, params = {}) {
+        return this._get({
+            url: this.baseUrl + this.URLs.issueTransitions(issueIdOrKey),
+            query: params,
+        });
+    }
+
+    /**
+     * Transition an issue.
+     * POST /rest/api/3/issue/{issueIdOrKey}/transitions
+     * operationId: doTransition
+     * Body: IssueUpdateDetails with required `transition.id`
+     * Scope: write:jira-work
+     */
+    async doTransition(issueIdOrKey, body) {
+        return this._post({
+            url: this.baseUrl + this.URLs.issueTransitions(issueIdOrKey),
+            body,
+        });
+    }
+
+    // ---- Remote issue links ------------------------------------------------
+
+    /**
+     * Create or update a remote issue link.
+     * POST /rest/api/3/issue/{issueIdOrKey}/remotelink
+     * operationId: createOrUpdateRemoteIssueLink
+     * Body: RemoteIssueLinkRequest — required `object` with `title` + `url`
+     * Scope: write:jira-work
+     */
+    async createOrUpdateRemoteIssueLink(issueIdOrKey, body) {
+        return this._post({
+            url: this.baseUrl + this.URLs.issueRemoteLink(issueIdOrKey),
+            body,
+        });
+    }
+
+    // ---- Issue types -------------------------------------------------------
+
+    /**
+     * Get all issue types for the user.
+     * GET /rest/api/3/issuetype
+     * operationId: getIssueAllTypes
+     * Scope: read:jira-work
+     */
+    async getIssueAllTypes() {
+        return this._get({
+            url: this.baseUrl + this.URLs.issueType,
         });
     }
 

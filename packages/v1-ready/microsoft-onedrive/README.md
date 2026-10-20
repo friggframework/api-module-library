@@ -23,7 +23,7 @@ Register an app in the [Microsoft Entra admin center](https://learn.microsoft.co
 
 - Identity: `getUser`
 - Drives: `getMyDrive`, `listMyDrives`, `getDrive`
-- Drive items: `listDriveItemChildren`, `getDriveItem`, `createFolder`, `updateDriveItem`, `deleteDriveItem`, `uploadDriveItemContent` (`PUT .../items/{driveItem-id}/content`), `createUploadSession`, `searchDriveItems` (`GET .../search(q='...')`)
+- Drive items: `listDriveItemChildren`, `getDriveItem`, `createFolder` (optional `@microsoft.graph.conflictBehavior`), `updateDriveItem`, `deleteDriveItem`, `uploadDriveItemContent` (`PUT .../items/{driveItem-id}/content`), `createUploadSession`, `uploadByPath` / `createUploadSessionByPath` (Learn path addressing), `searchDriveItems` (`GET .../search(q='...')`)
 - Subscriptions: `listSubscriptions`, `getSubscription`, `createSubscription`, `updateSubscription`, `deleteSubscription`
 
 Webhook receiver: `extensions/webhooks/` (Graph validationToken handshake + `clientState` check). Notifications do not identify changed files — call [delta](https://learn.microsoft.com/en-us/graph/api/driveitem-delta) after receiving.
@@ -45,4 +45,17 @@ npm test
 - Change notifications: https://learn.microsoft.com/en-us/graph/change-notifications-delivery-webhooks
 - Graph Explorer: https://developer.microsoft.com/en-us/graph/graph-explorer
 
-Path templates and `{drive-id}` / `{driveItem-id}` / `{subscription-id}` parameter names match the vendor OpenAPI. Colon path templates for upload (`items/{parent}:/{name}:/content`) are **not** in the vendor OpenAPI — use path-addressed `driveItem-id` values (e.g. `root:/folder/file.txt:`) against the official `/content` and `/createUploadSession` paths instead.
+Path templates and `{drive-id}` / `{driveItem-id}` / `{subscription-id}` parameter names match the vendor OpenAPI.
+
+### Docs-only helpers (Learn, not vendor OpenAPI)
+
+Colon path templates are real Graph behavior documented on Learn but **absent** from the vendor OpenAPI. This module exposes them as extra Api helpers (also listed in the curated OpenAPI with `x-frigg-docs-only: true`):
+
+| Helper | HTTP | Docs |
+|---|---|---|
+| `uploadByPath(driveId, itemPath, content)` | `PUT /drives/{drive-id}/root:/{path}:/content` | [driveitem-put-content](https://learn.microsoft.com/en-us/graph/api/driveitem-put-content) |
+| `createUploadSessionByPath(driveId, itemPath, data)` | `POST /drives/{drive-id}/root:/{path}:/createUploadSession` | [driveitem-createuploadsession](https://learn.microsoft.com/en-us/graph/api/driveitem-createuploadsession) |
+
+Vendor-aligned alternatives remain: `uploadDriveItemContent` / `createUploadSession` on `/items/{driveItem-id}/…`.
+
+`createFolder` accepts optional `@microsoft.graph.conflictBehavior` (`fail` \| `replace` \| `rename`) per [driveitem-post-children](https://learn.microsoft.com/en-us/graph/api/driveitem-post-children) (on the body or as the 4th argument). That annotation is also not in the vendor OpenAPI schema.

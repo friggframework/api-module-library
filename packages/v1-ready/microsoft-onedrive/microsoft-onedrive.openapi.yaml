@@ -211,8 +211,12 @@ paths:
       description: >-
         Official operationId drives.items.CreateChildren. Request body is a
         microsoft.graph.driveItem. To create a folder, include name and a folder
-        facet (see Learn driveitem-post-children). The Learn-only annotation
-        @microsoft.graph.conflictBehavior is not present in the vendor OpenAPI.
+        facet (see Learn driveitem-post-children). Optional
+        @microsoft.graph.conflictBehavior (fail|replace|rename) is documented
+        on Learn for create-folder but is not in the vendor OpenAPI schema —
+        callers may still send it; Api.createFolder accepts it on the body or
+        as a 4th argument.
+        https://learn.microsoft.com/en-us/graph/api/driveitem-post-children
       parameters:
         - $ref: "#/components/parameters/drive-id"
         - $ref: "#/components/parameters/driveItem-id"
@@ -222,12 +226,19 @@ paths:
           application/json:
             schema:
               type: object
-              description: microsoft.graph.driveItem (vendor schema)
+              description: microsoft.graph.driveItem (vendor schema) + Learn annotations
               properties:
                 name: { type: string }
                 folder: { type: object }
                 file: { type: object }
                 description: { type: string }
+                "@microsoft.graph.conflictBehavior":
+                  type: string
+                  enum: [fail, replace, rename]
+                  description: >-
+                    Learn-documented annotation (not in vendor OpenAPI).
+                    https://learn.microsoft.com/en-us/graph/api/driveitem-post-children
+                  x-frigg-docs-only: true
       responses:
         "201":
           description: created driveItem (vendor uses 2XX)
@@ -340,6 +351,64 @@ paths:
                 item:
                   type: object
                   description: microsoft.graph.driveItemUploadableProperties
+                  nullable: true
+      responses:
+        "200":
+          description: uploadSession
+  /drives/{drive-id}/root:/{path}:/content:
+    put:
+      tags: [DriveItems]
+      operationId: uploadByPath
+      x-frigg-docs-only: true
+      summary: Upload / create file content by path under drive root (Learn)
+      description: >-
+        Documented on Microsoft Learn but absent from the vendor Graph OpenAPI
+        (no colon path templates). Frigg helper Api.uploadByPath.
+        PUT /drives/{drive-id}/root:/{path}:/content
+        https://learn.microsoft.com/en-us/graph/api/driveitem-put-content
+      parameters:
+        - $ref: "#/components/parameters/drive-id"
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+          description: Path relative to the drive root (e.g. folder/file.txt)
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        "200":
+          description: driveItem
+        "201":
+          description: created driveItem
+  /drives/{drive-id}/root:/{path}:/createUploadSession:
+    post:
+      tags: [DriveItems]
+      operationId: createUploadSessionByPath
+      x-frigg-docs-only: true
+      summary: Create upload session by path under drive root (Learn)
+      description: >-
+        Documented on Microsoft Learn but absent from the vendor Graph OpenAPI.
+        Frigg helper Api.createUploadSessionByPath.
+        POST /drives/{drive-id}/root:/{path}:/createUploadSession
+        https://learn.microsoft.com/en-us/graph/api/driveitem-createuploadsession
+      parameters:
+        - $ref: "#/components/parameters/drive-id"
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+          description: Path relative to the drive root (e.g. folder/big.bin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                item:
+                  type: object
                   nullable: true
       responses:
         "200":

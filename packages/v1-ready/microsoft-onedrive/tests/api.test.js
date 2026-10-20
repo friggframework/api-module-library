@@ -138,6 +138,21 @@ describe('OneDrive Api', () => {
             expect(captured.body).toEqual(body);
         });
 
+        it('createFolder accepts optional conflictBehavior as 4th arg', async () => {
+            const api = makeApi();
+            await api.createFolder(
+                'd1',
+                'root',
+                { name: 'Docs', folder: {} },
+                'fail'
+            );
+            expect(api._captured[0].body).toEqual({
+                name: 'Docs',
+                folder: {},
+                '@microsoft.graph.conflictBehavior': 'fail',
+            });
+        });
+
         it('updateDriveItem PATCHes metadata', async () => {
             const api = makeApi();
             await api.updateDriveItem('d1', 'item-1', { name: 'renamed.docx' });
@@ -189,6 +204,41 @@ describe('OneDrive Api', () => {
             expect(api._captured[0].url).toBe(
                 "https://graph.microsoft.com/v1.0/drives/d1/search(q='O''Brien')"
             );
+        });
+
+        it('uploadByPath PUTs to Learn root:/{path}:/content', async () => {
+            const api = makeApi();
+            await api.uploadByPath(
+                'd1',
+                'folder/hello.txt',
+                Buffer.from('hi'),
+                'text/plain'
+            );
+            const captured = api._captured[0];
+            expect(captured.method).toBe('PUT');
+            expect(captured.url).toBe(
+                'https://graph.microsoft.com/v1.0/drives/d1/root:/folder/hello.txt:/content'
+            );
+            expect(captured.headers['Content-Type']).toBe('text/plain');
+        });
+
+        it('uploadByPath encodes path segments', async () => {
+            const api = makeApi();
+            await api.uploadByPath('d1', 'My Docs/a b.txt', 'x');
+            expect(api._captured[0].url).toBe(
+                'https://graph.microsoft.com/v1.0/drives/d1/root:/My%20Docs/a%20b.txt:/content'
+            );
+        });
+
+        it('createUploadSessionByPath POSTs to Learn root:/{path}:/createUploadSession', async () => {
+            const api = makeApi();
+            const body = { item: { name: 'big.bin' } };
+            await api.createUploadSessionByPath('d1', 'folder/big.bin', body);
+            expect(api._captured[0].method).toBe('POST');
+            expect(api._captured[0].url).toBe(
+                'https://graph.microsoft.com/v1.0/drives/d1/root:/folder/big.bin:/createUploadSession'
+            );
+            expect(api._captured[0].body).toEqual(body);
         });
     });
 

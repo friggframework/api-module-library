@@ -2,6 +2,19 @@ const { OAuth2Requester, get } = require('@friggframework/core');
 const querystring = require('querystring');
 
 /**
+ * Encode a drive-relative path for Graph root:/{path}: addressing.
+ * Each segment is URI-encoded; slashes are preserved as path separators.
+ */
+function encodeDriveItemPath(itemPath) {
+    return String(itemPath)
+        .replace(/^\/+/, '')
+        .split('/')
+        .filter((seg) => seg.length > 0)
+        .map((seg) => encodeURIComponent(seg))
+        .join('/');
+}
+
+/**
  * Microsoft OneDrive client via Microsoft Graph v1.0 (OAuth 2.0).
  *
  * Auth: Authorization code flow against the Microsoft identity platform.
@@ -16,6 +29,10 @@ const querystring = require('querystring');
  * This client covers the signed-in user's drive(s), driveItems (list/get/create
  * folder/update/delete/upload), search, and Graph change-notification
  * subscriptions for OneDrive folders (resource e.g. /me/drive/root).
+ *
+ * Path-addressed upload helpers (`uploadByPath`, `createUploadSessionByPath`)
+ * follow Microsoft Learn (colon path templates) and are not in the vendor
+ * OpenAPI — see README / x-frigg-docs-only paths.
  */
 class Api extends OAuth2Requester {
     constructor(params = {}) {
@@ -42,12 +59,19 @@ class Api extends OAuth2Requester {
             driveItemChildren: (driveId, itemId) =>
                 `/drives/${driveId}/items/${itemId}/children`,
             // Official OpenAPI: /drives/{drive-id}/items/{driveItem-id}/content
-            // Path-addressed ids (e.g. root:/folder/file.txt:) are valid driveItem-id values.
             driveItemContent: (driveId, driveItemId) =>
                 `/drives/${driveId}/items/${driveItemId}/content`,
             // Official OpenAPI: /drives/{drive-id}/items/{driveItem-id}/createUploadSession
             createUploadSessionPath: (driveId, driveItemId) =>
                 `/drives/${driveId}/items/${driveItemId}/createUploadSession`,
+            // Learn docs (not in vendor OpenAPI): /drives/{drive-id}/root:/{path}:/content
+            rootPathContent: (driveId, itemPath) =>
+                `/drives/${driveId}/root:/${encodeDriveItemPath(itemPath)}:/content`,
+            // Learn docs (not in vendor OpenAPI): /drives/{drive-id}/root:/{path}:/createUploadSession
+            rootPathUploadSession: (driveId, itemPath) =>
+                `/drives/${driveId}/root:/${encodeDriveItemPath(
+                    itemPath
+                )}:/createUploadSession`,
             // Official OpenAPI: /drives/{drive-id}/search(q='{q}')
             driveSearch: (driveId, q) =>
                 `/drives/${driveId}/search(q='${String(q).replace(/'/g, "''")}')`,
@@ -171,13 +195,25 @@ class Api extends OAuth2Requester {
      * Create a folder (or other driveItem) under a parent.
      * POST /drives/{drive-id}/items/{parent-id}/children
      * https://learn.microsoft.com/en-us/graph/api/driveitem-post-children
-     * Body example: { name, folder: {}, "@microsoft.graph.conflictBehavior": "rename" }
+     *
+     * Optional `@microsoft.graph.conflictBehavior` (`fail` | `replace` | `rename`)
+     * is documented on Learn for create-folder; not in the vendor OpenAPI.
+     * Pass it on `data`, or via the optional 4th argument.
+     *
+     * @param {string} driveId
+     * @param {string} parentId - parent item id (or `root`)
+     * @param {object} data - driveItem body (name, folder, …)
+     * @param {string} [conflictBehavior] - fail | replace | rename
      */
-    async createFolder(driveId, parentId, data) {
+    async createFolder(driveId, parentId, data, conflictBehavior) {
+        const body = { ...(data || {}) };
+        if (conflictBehavior) {
+            body['@microsoft.graph.conflictBehavior'] = conflictBehavior;
+        }
         return this._post({
             url: this.baseUrl + this.URLs.driveItemChildren(driveId, parentId),
             headers: { 'Content-Type': 'application/json' },
-            body: data,
+            body,
         });
     }
 
@@ -250,6 +286,56 @@ class Api extends OAuth2Requester {
             url:
                 this.baseUrl +
                 this.URLs.createUploadSessionPath(driveId, driveItemId),
+            headers: { 'Content-Type': 'application/json' },
+            body: data,
+        });
+    }
+
+    /**
+     * Upload / create a file by path under the drive root (Learn docs).
+     * PUT /drives/{drive-id}/root:/{path}:/content
+     * https://learn.microsoft.com/en-us/graph/api/driveitem-put-content
+     *
+     * Not in the vendor OpenAPI (colon path templates). Prefer this helper
+     * when callers have a relative path rather than an item id.
+     *
+     * @param {string} driveId
+     * @param {string} itemPath - path relative to root, e.g. `folder/file.txt`
+     * @param {Buffer|string} content
+     * @param {string} [contentType='application/octet-stream']
+     */
+    async uploadByPath(
+        driveId,
+        itemPath,
+        content,
+        contentType = 'application/octet-stream'
+    ) {
+        return this._put(
+            {
+                url: this.baseUrl + this.URLs.rootPathContent(driveId, itemPath),
+                headers: { 'Content-Type': contentType },
+                body: content,
+            },
+            false
+        );
+    }
+
+    /**
+     * Create an upload session by path under the drive root (Learn docs).
+     * POST /drives/{drive-id}/root:/{path}:/createUploadSession
+     * https://learn.microsoft.com/en-us/graph/api/driveitem-createuploadsession
+     *
+     * Not in the vendor OpenAPI (colon path templates).
+     *
+     * @param {string} driveId
+     * @param {string} itemPath - path relative to root, e.g. `folder/big.bin`
+     * @param {object} [data={}] - typically `{ item: { name, ... } }`
+     */
+    async createUploadSessionByPath(driveId, itemPath, data = {}) {
+        return this._post({
+            url:
+                this.baseUrl +
+                this.URLs.rootPathUploadSession(driveId, itemPath),
             headers: { 'Content-Type': 'application/json' },
             body: data,
         });

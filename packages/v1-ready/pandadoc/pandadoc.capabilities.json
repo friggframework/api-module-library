@@ -1,0 +1,469 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "pandadoc",
+  "label": "PandaDoc",
+  "package": "@friggframework/api-module-pandadoc",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "objects": {
+    "document": {
+      "label": "Document",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "agreement.title"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "tag": "agreement.status",
+          "values": [
+            "document.draft",
+            "document.sent",
+            "document.completed",
+            "document.uploaded",
+            "document.error",
+            "document.viewed",
+            "document.waiting_approval",
+            "document.approved",
+            "document.rejected",
+            "document.waiting_pay",
+            "document.paid",
+            "document.voided",
+            "document.declined",
+            "document.external_review",
+            "document.scheduled"
+          ],
+          "readOnly": true
+        },
+        {
+          "name": "date_created",
+          "type": "datetime",
+          "readOnly": true
+        },
+        {
+          "name": "date_modified",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        {
+          "name": "date_completed",
+          "type": "datetime",
+          "tag": "agreement.completedAt",
+          "readOnly": true
+        },
+        {
+          "name": "date_sent",
+          "type": "datetime",
+          "readOnly": true
+        },
+        {
+          "name": "expiration_date",
+          "type": "datetime",
+          "readOnly": true
+        },
+        {
+          "name": "created_by.email",
+          "type": "email",
+          "tag": "record.owner",
+          "readOnly": true
+        },
+        {
+          "name": "recipients",
+          "type": "json",
+          "tag": "agreement.signers"
+        },
+        {
+          "name": "metadata",
+          "type": "json"
+        },
+        {
+          "name": "grand_total.amount",
+          "type": "string"
+        },
+        {
+          "name": "grand_total.currency",
+          "type": "string"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "date_modified",
+        "list": {
+          "capability": "document.list",
+          "cursor": "page",
+          "limit": "count",
+          "items": "results",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "document.get"
+        },
+        "create": {
+          "capability": "document.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "document.update",
+          "id": "id",
+          "body": "data"
+        }
+      }
+    },
+    "template": {
+      "label": "Template",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "agreement.templateName"
+        },
+        {
+          "name": "date_created",
+          "type": "datetime",
+          "readOnly": true
+        },
+        {
+          "name": "date_modified",
+          "type": "datetime",
+          "readOnly": true
+        },
+        {
+          "name": "created_by.email",
+          "type": "email",
+          "readOnly": true
+        }
+      ]
+    },
+    "contact": {
+      "label": "Contact",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "person.email"
+        },
+        {
+          "name": "first_name",
+          "type": "string",
+          "tag": "person.firstName"
+        },
+        {
+          "name": "last_name",
+          "type": "string",
+          "tag": "person.lastName"
+        },
+        {
+          "name": "company",
+          "type": "string",
+          "tag": "organization.name"
+        }
+      ]
+    },
+    "member": {
+      "label": "Workspace member",
+      "fields": [
+        {
+          "name": "membership_id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "user_id",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "person.email",
+          "readOnly": true
+        },
+        {
+          "name": "first_name",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "last_name",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "workspace",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "workspace_name",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "readOnly": true
+        }
+      ]
+    }
+  },
+  "events": {
+    "document.state_changed": {
+      "delivery": "webhook",
+      "object": "document",
+      "subscribe": "webhookSubscription.create",
+      "description": "PandaDoc document_state_changed — document status changed (draft, sent, viewed, completed, …).",
+      "payload": {
+        "event": "document_state_changed",
+        "data": {
+          "id": "eHCjisfzWydzJnbqnBbvAj",
+          "name": "Acme Corp MSA",
+          "status": "document.completed",
+          "date_created": "2026-03-18T15:55:03.090372Z",
+          "date_modified": "2026-03-18T16:26:46.286951Z",
+          "date_completed": "2026-03-18T16:26:46.286951Z",
+          "created_by": {
+            "email": "alex@acme.example",
+            "membership_id": "vk5aRcJG4RTd2J83wNGFT5"
+          },
+          "recipients": [
+            {
+              "email": "priya@acme.example",
+              "has_completed": true,
+              "role": "Client"
+            }
+          ],
+          "grand_total": {
+            "amount": "130.00",
+            "currency": "USD"
+          }
+        }
+      },
+      "record": "data",
+      "match": "document_state_changed"
+    },
+    "document.completed_pdf_ready": {
+      "delivery": "webhook",
+      "object": "document",
+      "subscribe": "webhookSubscription.create",
+      "description": "document_completed_pdf_ready — completed PDF available for download.",
+      "payload": {
+        "event": "document_completed_pdf_ready",
+        "data": {
+          "id": "eHCjisfzWydzJnbqnBbvAj",
+          "name": "Acme Corp MSA",
+          "status": "document.completed"
+        }
+      },
+      "record": "data",
+      "match": "document_completed_pdf_ready"
+    },
+    "recipient.completed": {
+      "delivery": "webhook",
+      "object": "document",
+      "subscribe": "webhookSubscription.create",
+      "payload": {
+        "event": "recipient_completed",
+        "data": {
+          "id": "eHCjisfzWydzJnbqnBbvAj",
+          "name": "Acme Corp MSA",
+          "status": "document.viewed"
+        }
+      },
+      "record": "data",
+      "match": "recipient_completed"
+    }
+  },
+  "webhook": {
+    "scope": "installation",
+    "topic": "{{body.event}}",
+    "eventId": "{{headers.X-PandaDoc-Webhook-Event-Id}}",
+    "verify": "verifyPandaDocSignature"
+  },
+  "capabilities": {
+    "member.current": {
+      "kind": "read",
+      "method": "detailsCurrentMember",
+      "input": {},
+      "output": "member"
+    },
+    "document.list": {
+      "kind": "read",
+      "method": "listDocuments",
+      "input": {
+        "count": { "type": "number" },
+        "page": { "type": "number" },
+        "status": { "type": "number" },
+        "q": { "type": "string" },
+        "template_id": { "type": "string" }
+      },
+      "output": "page<document>"
+    },
+    "document.get": {
+      "kind": "read",
+      "method": "detailsDocument",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "document",
+      "args": ["id"]
+    },
+    "document.status": {
+      "kind": "read",
+      "method": "statusDocument",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "document",
+      "args": ["id"]
+    },
+    "document.create": {
+      "kind": "write",
+      "method": "createDocument",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "document",
+      "args": ["data"]
+    },
+    "document.update": {
+      "kind": "write",
+      "method": "updateDocument",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "document",
+      "args": ["id", "data"]
+    },
+    "document.delete": {
+      "kind": "delete",
+      "method": "deleteDocument",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "document.send": {
+      "kind": "write",
+      "method": "sendDocument",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "data": { "type": "object" }
+      },
+      "output": "document",
+      "args": ["id", "data"]
+    },
+    "document.session": {
+      "kind": "write",
+      "method": "createDocumentLink",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "session",
+      "args": ["id", "data"]
+    },
+    "document.editingSession": {
+      "kind": "write",
+      "method": "createDocumentEditingSession",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "editingSession",
+      "args": ["id", "data"]
+    },
+    "document.download": {
+      "kind": "read",
+      "method": "downloadDocument",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "binary",
+      "args": ["id"]
+    },
+    "template.list": {
+      "kind": "read",
+      "method": "listTemplates",
+      "input": {
+        "count": { "type": "number" },
+        "page": { "type": "number" },
+        "q": { "type": "string" }
+      },
+      "output": "page<template>"
+    },
+    "template.get": {
+      "kind": "read",
+      "method": "detailsTemplate",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "template",
+      "args": ["id"]
+    },
+    "contact.list": {
+      "kind": "read",
+      "method": "listContacts",
+      "input": {
+        "count": { "type": "number" },
+        "page": { "type": "number" }
+      },
+      "output": "page<contact>"
+    },
+    "contact.create": {
+      "kind": "write",
+      "method": "createContact",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "contact",
+      "args": ["data"]
+    },
+    "webhookSubscription.create": {
+      "kind": "subscribe",
+      "method": "createWebhookSubscription",
+      "input": {
+        "name": { "type": "string", "required": true },
+        "url": { "type": "string", "required": true },
+        "triggers": { "type": "array", "required": true },
+        "payload": { "type": "array" },
+        "active": { "type": "boolean" }
+      },
+      "output": "webhookSubscription"
+    },
+    "webhookSubscription.list": {
+      "kind": "read",
+      "method": "listWebhookSubscriptions",
+      "input": {},
+      "output": "webhookSubscription[]"
+    },
+    "webhookSubscription.delete": {
+      "kind": "delete",
+      "method": "deleteWebhookSubscription",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    }
+  }
+}

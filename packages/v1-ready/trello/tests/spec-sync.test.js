@@ -37,11 +37,51 @@ describe('OpenAPI spec ↔ client sync', () => {
         expect(spec.servers[0].url).toBe(api.baseUrl);
     });
 
-    it('declares Authorization apiKey security matching the client header', () => {
-        const scheme = spec.components.securitySchemes.ApiKeyAndToken;
-        expect(scheme.type).toBe('apiKey');
-        expect(scheme.in).toBe('header');
-        expect(scheme.name).toBe('Authorization');
+    it('declares official APIKey+APIToken query security schemes', () => {
+        const key = spec.components.securitySchemes.APIKey;
+        const token = spec.components.securitySchemes.APIToken;
+        expect(key).toEqual(
+            expect.objectContaining({
+                type: 'apiKey',
+                in: 'query',
+                name: 'key',
+            })
+        );
+        expect(token).toEqual(
+            expect.objectContaining({
+                type: 'apiKey',
+                in: 'query',
+                name: 'token',
+            })
+        );
+        expect(spec.security).toEqual([{ APIKey: [], APIToken: [] }]);
+        // Client injects the same query names the OpenAPI securitySchemes declare.
+        const api = new Api({ api_key: 'k', token: 't' });
+        expect(api._withAuth({}).query).toEqual({ key: 'k', token: 't' });
+    });
+
+    it('webhook create/update params are query (not requestBody) per vendor swagger', () => {
+        const create = spec.paths['/webhooks/'].post;
+        const update = spec.paths['/webhooks/{id}'].put;
+        expect(create.requestBody).toBeUndefined();
+        expect(update.requestBody).toBeUndefined();
+        const createNames = create.parameters.map((p) => p.name).sort();
+        expect(createNames).toEqual(
+            ['active', 'callbackURL', 'description', 'idModel'].sort()
+        );
+        expect(
+            create.parameters.find((p) => p.name === 'callbackURL').required
+        ).toBe(true);
+        expect(
+            create.parameters.find((p) => p.name === 'idModel').required
+        ).toBe(true);
+    });
+
+    it('createLabel requires name, color, and idBoard per vendor swagger', () => {
+        const params = spec.paths['/labels'].post.parameters;
+        for (const name of ['name', 'color', 'idBoard']) {
+            expect(params.find((p) => p.name === name).required).toBe(true);
+        }
     });
 });
 

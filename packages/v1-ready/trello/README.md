@@ -23,9 +23,12 @@ Trello uses an **API key + user token** (Trello Auth / Power-Up key):
    and copy the API key.
 2. Authorize a user token:
    `https://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&key={YourAPIKey}`
-3. The module sends both on every request as
-   `Authorization: OAuth oauth_consumer_key="{key}", oauth_token="{token}"`
-   (equivalent to `?key=&token=` query params).
+3. The module sends both on every request as `key` + `token` query parameters,
+   matching the official OpenAPI security schemes (`APIKey` / `APIToken` in
+   [swagger.v3.json](https://developer.atlassian.com/cloud/trello/swagger.v3.json)).
+   The Authorization guide also documents an equivalent
+   `Authorization: OAuth oauth_consumer_key="…", oauth_token="…"` header; this
+   client follows the OpenAPI schemes (query params).
 
 - **Base URL:** `https://api.trello.com/1`
 - **Official OpenAPI:** https://developer.atlassian.com/cloud/trello/swagger.v3.json

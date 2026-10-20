@@ -41,12 +41,21 @@ describe('Trello Api', () => {
             expect(api.token).toBe('tok');
         });
 
-        it('adds the OAuth Authorization header with key and token', async () => {
+        it('injects key+token query params per official OpenAPI securitySchemes', () => {
+            const api = new Api({ api_key: 'akey', token: 'atok' });
+            const withAuth = api._withAuth({ query: { fields: 'id' } });
+            expect(withAuth.query).toEqual({
+                fields: 'id',
+                key: 'akey',
+                token: 'atok',
+            });
+        });
+
+        it('does not put credentials in Authorization headers', async () => {
             const api = new Api({ api_key: 'akey', token: 'atok' });
             const headers = await api.addAuthHeaders({});
-            expect(headers.Authorization).toBe(
-                'OAuth oauth_consumer_key="akey", oauth_token="atok"'
-            );
+            expect(headers.Authorization).toBeUndefined();
+            expect(headers.Accept).toBe('application/json');
         });
 
         it('reports authenticated only with both key and token', () => {
@@ -181,19 +190,20 @@ describe('Trello Api', () => {
     });
 
     describe('webhooks', () => {
-        it('createWebhook POSTs JSON body to /webhooks/', async () => {
+        it('createWebhook POSTs query params to /webhooks/ (official swagger)', async () => {
             const api = makeApi();
-            const body = {
+            const params = {
                 callbackURL: 'https://hook.example.com/trello',
                 idModel: 'model1',
                 description: 'test',
             };
-            await api.createWebhook(body);
+            await api.createWebhook(params);
             expect(api._captured[0].method).toBe('POST');
             expect(api._captured[0].url).toBe(
                 'https://api.trello.com/1/webhooks/'
             );
-            expect(api._captured[0].body).toEqual(body);
+            expect(api._captured[0].query).toEqual(params);
+            expect(api._captured[0].body).toBeUndefined();
         });
 
         it('get / update / delete webhook', async () => {
@@ -205,16 +215,18 @@ describe('Trello Api', () => {
                 'https://api.trello.com/1/webhooks/w1'
             );
             expect(api._captured[1].method).toBe('PUT');
+            expect(api._captured[1].query).toEqual({ active: false });
             expect(api._captured[2].method).toBe('DELETE');
         });
 
-        it('listTokenWebhooks / createTokenWebhook use the token path', async () => {
+        it('listTokenWebhooks / createTokenWebhook use the token path + query', async () => {
             const api = makeApi();
             await api.listTokenWebhooks();
-            await api.createTokenWebhook({
+            const params = {
                 callbackURL: 'https://hook.example.com',
                 idModel: 'm1',
-            });
+            };
+            await api.createTokenWebhook(params);
             expect(api._captured[0].url).toBe(
                 'https://api.trello.com/1/tokens/test-token/webhooks'
             );
@@ -222,6 +234,8 @@ describe('Trello Api', () => {
             expect(api._captured[1].url).toBe(
                 'https://api.trello.com/1/tokens/test-token/webhooks'
             );
+            expect(api._captured[1].query).toEqual(params);
+            expect(api._captured[1].body).toBeUndefined();
         });
 
         it('verifyWebhookSignature accepts a valid HMAC-SHA1 digest', () => {

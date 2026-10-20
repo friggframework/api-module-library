@@ -8,11 +8,12 @@ const SIGNATURE_HEADER = 'x-trello-webhook';
 /**
  * Trello REST API client.
  *
- * Auth: API key + user token (Trello Auth / Power-Up key). Pass both as query
- * params (`key` + `token`) on every request — the documented primary method —
- * or equivalently via
- * `Authorization: OAuth oauth_consumer_key="…", oauth_token="…"`.
- * This client uses the Authorization header so URLs stay free of secrets.
+ * Auth: API key + user token (Trello Auth / Power-Up key), matching the
+ * official OpenAPI security schemes `APIKey` (`key` query) + `APIToken`
+ * (`token` query) in https://developer.atlassian.com/cloud/trello/swagger.v3.json.
+ * Every request injects `key` and `token` as query parameters (the primary
+ * method in the Authorization guide; `Authorization: OAuth …` is an
+ * equivalent alternative documented there but not the OpenAPI security scheme).
  *
  *   - API key: Power-Up admin → Trello Auth (https://trello.com/apps/admin)
  *   - Token:   GET https://trello.com/1/authorize?…&key={APIKey}
@@ -119,12 +120,37 @@ class Api extends Requester {
         };
     }
 
+    /**
+     * Merge official OpenAPI `key` + `token` query credentials onto a request.
+     * @private
+     */
+    _withAuth(options = {}) {
+        const query = { ...(options.query || {}) };
+        if (this.api_key) query.key = this.api_key;
+        if (this.token) query.token = this.token;
+        return { ...options, query };
+    }
+
     async addAuthHeaders(headers = {}) {
-        if (this.api_key && this.token) {
-            headers.Authorization = `OAuth oauth_consumer_key="${this.api_key}", oauth_token="${this.token}"`;
-        }
+        // Credentials travel as query params per swagger.v3.json securitySchemes.
         headers.Accept = headers.Accept || 'application/json';
         return headers;
+    }
+
+    async _get(options) {
+        return super._get(this._withAuth(options));
+    }
+
+    async _post(options, stringify = true) {
+        return super._post(this._withAuth(options), stringify);
+    }
+
+    async _put(options, stringify = true) {
+        return super._put(this._withAuth(options), stringify);
+    }
+
+    async _delete(options) {
+        return super._delete(this._withAuth(options));
     }
 
     isAuthenticated() {
@@ -385,18 +411,18 @@ class Api extends Requester {
      * Create a webhook (key/token auth).
      * POST /webhooks/
      *
-     * Required: callbackURL, idModel. Optional: description, active.
+     * Query params per official OpenAPI (post-webhooks): required
+     * callbackURL, idModel; optional description, active.
      * Trello HEADs callbackURL and expects HTTP 200 before creating.
      *
+     * @see https://developer.atlassian.com/cloud/trello/swagger.v3.json
      * @see https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/
      */
     async createWebhook(params = {}) {
-        return this._post(
-            this.addJsonHeaders({
-                url: this.baseUrl + this.URLs.webhooks,
-                body: params,
-            })
-        );
+        return this._post({
+            url: this.baseUrl + this.URLs.webhooks,
+            query: params,
+        });
     }
 
     /**
@@ -412,14 +438,13 @@ class Api extends Requester {
     /**
      * Update a webhook.
      * PUT /webhooks/{id}
+     * Query params per official OpenAPI (put-webhooks-id).
      */
     async updateWebhook(id, params = {}) {
-        return this._put(
-            this.addJsonHeaders({
-                url: this.baseUrl + this.URLs.webhookById(id),
-                body: params,
-            })
-        );
+        return this._put({
+            url: this.baseUrl + this.URLs.webhookById(id),
+            query: params,
+        });
     }
 
     /**
@@ -446,15 +471,14 @@ class Api extends Requester {
     /**
      * Create a webhook nested under a token.
      * POST /tokens/{token}/webhooks
+     * Query params per official OpenAPI (post-tokens-token-webhooks).
      */
     async createTokenWebhook(params = {}, token) {
         const t = token || this.token;
-        return this._post(
-            this.addJsonHeaders({
-                url: this.baseUrl + this.URLs.tokenWebhooks(t),
-                body: params,
-            })
-        );
+        return this._post({
+            url: this.baseUrl + this.URLs.tokenWebhooks(t),
+            query: params,
+        });
     }
 
     /**

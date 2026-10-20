@@ -1,24 +1,31 @@
 # Frigg API Module Library
 
-Overview
+Welcome to the Frigg API Module Library! This repository contains API modules that connect third-party services with Frigg.
 
-Welcome to the Frigg API Module Library! This repository contains all the API modules ready to connect third-party services with Frigg.
+Browse the generated index: **[MODULES.md](./MODULES.md)** (module, package name, version, auth type, status).
 
-To view our API Modules, please visit the [v1-ready directory](https://github.com/friggframework/api-module-library/tree/main/packages/v1-ready).
+## Directory layout
 
-As part of our efforts to streamline development and prepare for future growth, we’ve made some significant changes to how our API Modules are organized and maintained.
+| Path | Purpose |
+| --- | --- |
+| [`modules/`](./modules/) | All API modules (flat). Publishable npm packages discovered by Lerna / `auto`. |
+| [`archive/`](./archive/) | Retired modules (not published). Example: `qbo` (replaced by `quickbooks`). |
+| [`tools/`](./tools/) | Non-published tooling (e.g. scale-test lambda + OpenAPI). Marked `private`. |
 
-## Directory Structure
+Status in `MODULES.md` records whether a module is `v1-ready`, `needs-updating` (legacy Frigg v0-era), or `archived`.
 
-### v1-ready API Modules
-These [v1-ready API Modules](https://github.com/friggframework/api-module-library/tree/main/packages/v1-ready) are refactored and optimized to align with the new, simplified architecture of Frigg v1. They are designed to be more intuitive, easier to integrate, and provide better performance.
+## Releases
 
-### Older API Modules
+This monorepo uses [intuit/auto](https://github.com/intuit/auto) with Lerna independent versioning.
 
-The [needs-updating directory](https://github.com/friggframework/api-module-library/tree/main/packages/needs-updating) contains our original API modules that were included in the v0 Frigg repository. These modules are not ready to work with Frigg v1. If your project is still using 
-    Frigg v0, these modules should work.
+- Publishable packages: `modules/*` only (`lerna.json` + `.autorc` / `package.json` `"auto"`).
+- Not published: `archive/*`, `tools/*`.
+- Canary / release publishes require the `release` label (`onlyPublishWithReleaseLabel`).
 
+## Contributing
 
-Thank you for your interest in the Frigg project! We’re excited to see how the community will continue to grow and improve these API modules. If you have any questions or need assistance, feel free to [contact us](https://docs.friggframework.org/support/support).
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to add or update a module, regenerate `MODULES.md`, and run tests.
+
+Thank you for your interest in the Frigg project! If you have questions, [contact us](https://docs.friggframework.org/support/support).
 
 **~ The Frigg Maintainers** (Should we start a band?)

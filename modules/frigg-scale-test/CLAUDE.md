@@ -75,7 +75,7 @@ npm run lint  # ESLint check
 
 ### Test Server Setup (test/smoke.test.ts)
 The test suite includes a sophisticated local server setup:
-1. **Lambda Handler Proxy**: Wraps AWS Lambda handler from `services/frigg-scale-test-lambda`
+1. **Lambda Handler Proxy**: Wraps AWS Lambda handler from `tools/scale-test/frigg-scale-test-lambda`
 2. **APIGatewayProxyEventV2 Conversion**: Converts HTTP requests to Lambda events
 3. **Dynamic Port Binding**: Server binds to random port (listen(0))
 4. **Environment Configuration**: Sets `FRIGG_SCALE_TEST_BASE_URL` to local server
@@ -84,8 +84,8 @@ This allows testing against the actual Lambda handler locally without deploying.
 
 ### Path Aliasing
 Both TypeScript and Jest use path mapping:
-- `services/*` resolves to `../../../services/*`
-- Allows importing Lambda handler: `import { handler } from "services/frigg-scale-test-lambda/src/handler"`
+- `tools/scale-test/*` resolves to `../../tools/scale-test/*`
+- Allows importing Lambda handler: `import { handler } from "tools/scale-test/frigg-scale-test-lambda/src/handler"`
 
 ## Environment Variables
 - **FRIGG_SCALE_TEST_BASE_URL**: API base URL (defaults to http://localhost:4000)

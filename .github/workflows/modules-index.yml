@@ -1,0 +1,19 @@
+name: Modules index
+
+on:
+  pull_request:
+    branches: [next, main]
+  push:
+    branches: [next, main]
+
+jobs:
+  modules-index:
+    name: MODULES.md up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Check MODULES.md is not stale
+        run: node scripts/gen-modules-index.js --check

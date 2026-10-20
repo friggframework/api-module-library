@@ -114,7 +114,7 @@ With your `.env` in place, you can test the API from a Node terminal.
     npm run build
     ```
 
-2. Start a `node` terminal in `packages/v1-ready/zoho-crm`
+2. Start a `node` terminal in `modules/zoho-crm`
 
 3. Paste the following code:
     ```js

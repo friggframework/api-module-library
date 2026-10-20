@@ -1,0 +1,135 @@
+{
+  "$schema": "capability-manifest/v0.1",
+  "module": "github",
+  "package": "@friggframework/api-module-github",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "authorizationUri": "https://github.com/login/oauth/authorize",
+    "tokenUri": "https://github.com/login/oauth/access_token",
+    "testAuthRequest": "getAuthenticatedUser",
+    "scopesDocumentedAt": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps",
+    "recommendedScopes": [
+      "read:user",
+      "user:email",
+      "repo",
+      "admin:repo_hook",
+      "read:org"
+    ]
+  },
+  "objects": {
+    "user": {
+      "description": "Authenticated GitHub user (GET /user)",
+      "fields": [
+        { "name": "id", "type": "integer", "tags": ["identifier", "externalId"] },
+        { "name": "login", "type": "string", "tags": ["identifier", "display"] },
+        { "name": "name", "type": "string", "tags": ["display"], "nullable": true },
+        { "name": "email", "type": "string", "tags": ["pii"], "nullable": true },
+        { "name": "avatar_url", "type": "string", "tags": ["media"] },
+        { "name": "html_url", "type": "string", "tags": ["link"] },
+        { "name": "type", "type": "string", "tags": [] }
+      ],
+      "operations": {
+        "get": { "method": "getAuthenticatedUser", "officialOperationId": "users/get-authenticated" }
+      }
+    },
+    "organization": {
+      "description": "Organizations the authenticated user belongs to",
+      "fields": [
+        { "name": "id", "type": "integer", "tags": ["identifier"] },
+        { "name": "login", "type": "string", "tags": ["identifier", "display"] },
+        { "name": "description", "type": "string", "tags": ["display"], "nullable": true }
+      ],
+      "operations": {
+        "list": {
+          "method": "listOrganizationsForAuthenticatedUser",
+          "officialOperationId": "orgs/list-for-authenticated-user"
+        }
+      }
+    },
+    "repository": {
+      "description": "GitHub repository",
+      "fields": [
+        { "name": "id", "type": "integer", "tags": ["identifier"] },
+        { "name": "name", "type": "string", "tags": ["identifier", "display"] },
+        { "name": "full_name", "type": "string", "tags": ["identifier", "display"] },
+        { "name": "private", "type": "boolean", "tags": ["access"] },
+        { "name": "html_url", "type": "string", "tags": ["link"] },
+        { "name": "description", "type": "string", "tags": ["display"], "nullable": true },
+        { "name": "default_branch", "type": "string", "tags": [] },
+        { "name": "owner.id", "type": "integer", "tags": ["identifier", "relation"] },
+        { "name": "owner.login", "type": "string", "tags": ["identifier", "relation"] }
+      ],
+      "operations": {
+        "list": {
+          "method": "listReposForAuthenticatedUser",
+          "officialOperationId": "repos/list-for-authenticated-user"
+        },
+        "get": { "method": "getRepository", "officialOperationId": "repos/get" },
+        "create": {
+          "method": "createRepositoryForAuthenticatedUser",
+          "officialOperationId": "repos/create-for-authenticated-user"
+        },
+        "update": { "method": "updateRepository", "officialOperationId": "repos/update" }
+      }
+    },
+    "issue": {
+      "description": "Repository issue (may also represent a pull request)",
+      "fields": [
+        { "name": "id", "type": "integer", "tags": ["identifier"] },
+        { "name": "number", "type": "integer", "tags": ["identifier"] },
+        { "name": "title", "type": "string", "tags": ["display"] },
+        { "name": "body", "type": "string", "tags": ["content"], "nullable": true },
+        { "name": "state", "type": "string", "tags": ["status"] },
+        { "name": "html_url", "type": "string", "tags": ["link"] },
+        { "name": "user.login", "type": "string", "tags": ["relation"] },
+        { "name": "pull_request", "type": "object", "tags": ["relation"], "nullable": true }
+      ],
+      "operations": {
+        "list": { "method": "listRepositoryIssues", "officialOperationId": "issues/list-for-repo" },
+        "get": { "method": "getIssue", "officialOperationId": "issues/get" },
+        "create": { "method": "createIssue", "officialOperationId": "issues/create" },
+        "update": { "method": "updateIssue", "officialOperationId": "issues/update" }
+      }
+    },
+    "pull_request": {
+      "description": "Pull request",
+      "fields": [
+        { "name": "id", "type": "integer", "tags": ["identifier"] },
+        { "name": "number", "type": "integer", "tags": ["identifier"] },
+        { "name": "title", "type": "string", "tags": ["display"] },
+        { "name": "body", "type": "string", "tags": ["content"], "nullable": true },
+        { "name": "state", "type": "string", "tags": ["status"] },
+        { "name": "html_url", "type": "string", "tags": ["link"] },
+        { "name": "head.ref", "type": "string", "tags": [] },
+        { "name": "base.ref", "type": "string", "tags": [] }
+      ],
+      "operations": {
+        "list": { "method": "listPullRequests", "officialOperationId": "pulls/list" },
+        "get": { "method": "getPullRequest", "officialOperationId": "pulls/get" },
+        "create": { "method": "createPullRequest", "officialOperationId": "pulls/create" },
+        "update": { "method": "updatePullRequest", "officialOperationId": "pulls/update" }
+      }
+    },
+    "repository_webhook": {
+      "description": "Repository webhook (hook) subscription",
+      "fields": [
+        { "name": "id", "type": "integer", "tags": ["identifier"] },
+        { "name": "name", "type": "string", "tags": [] },
+        { "name": "active", "type": "boolean", "tags": ["status"] },
+        { "name": "events", "type": "array", "tags": ["events"] },
+        { "name": "config.url", "type": "string", "tags": ["link"] },
+        { "name": "config.content_type", "type": "string", "tags": [] },
+        { "name": "created_at", "type": "string", "tags": ["timestamp"] },
+        { "name": "updated_at", "type": "string", "tags": ["timestamp"] }
+      ],
+      "operations": {
+        "list": { "method": "listRepositoryWebhooks", "officialOperationId": "repos/list-webhooks" },
+        "get": { "method": "getRepositoryWebhook", "officialOperationId": "repos/get-webhook" },
+        "create": { "method": "createRepositoryWebhook", "officialOperationId": "repos/create-webhook" },
+        "update": { "method": "updateRepositoryWebhook", "officialOperationId": "repos/update-webhook" },
+        "delete": { "method": "deleteRepositoryWebhook", "officialOperationId": "repos/delete-webhook" }
+      }
+    }
+  }
+}

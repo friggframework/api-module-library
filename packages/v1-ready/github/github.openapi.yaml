@@ -1,0 +1,690 @@
+openapi: 3.0.3
+info:
+  title: GitHub REST API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Curated subset of GitHub's official REST API OpenAPI description
+    (https://github.com/github/rest-api-description) covering exactly the
+    endpoints implemented by @friggframework/api-module-github in api.js.
+    operationIds are camelCase Frigg client method names; each maps 1:1 to an
+    official GitHub operationId noted in the description. Source of truth for
+    request/response shapes remains GitHub's published description and docs at
+    https://docs.github.com/en/rest.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  license:
+    name: MIT
+servers:
+  - url: https://api.github.com
+    description: GitHub.com REST API
+security:
+  - BearerAuth: []
+tags:
+  - name: Users
+  - name: Orgs
+  - name: Repos
+  - name: Issues
+  - name: Pulls
+  - name: Webhooks
+paths:
+  /user:
+    get:
+      tags: [Users]
+      operationId: getAuthenticatedUser
+      summary: Get the authenticated user
+      description: >-
+        Official operationId: users/get-authenticated.
+        Docs: https://docs.github.com/rest/users/users#get-the-authenticated-user
+        OAuth tokens need `read:user` (or `user`) for the private-user response.
+      responses:
+        "200":
+          description: Private or public authenticated user
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, login]
+                properties:
+                  id: { type: integer, format: int64 }
+                  login: { type: string }
+                  name: { type: string, nullable: true }
+                  email: { type: string, nullable: true }
+                  avatar_url: { type: string, format: uri }
+                  html_url: { type: string, format: uri }
+                  type: { type: string }
+        "401":
+          description: Requires authentication
+
+  /user/orgs:
+    get:
+      tags: [Orgs]
+      operationId: listOrganizationsForAuthenticatedUser
+      summary: List organizations for the authenticated user
+      description: >-
+        Official operationId: orgs/list-for-authenticated-user.
+        Docs: https://docs.github.com/rest/orgs/orgs#list-organizations-for-the-authenticated-user
+      parameters:
+        - in: query
+          name: per_page
+          schema: { type: integer, default: 30, maximum: 100 }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+      responses:
+        "200":
+          description: Organization list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: integer, format: int64 }
+                    login: { type: string }
+                    description: { type: string, nullable: true }
+
+  /user/repos:
+    get:
+      tags: [Repos]
+      operationId: listReposForAuthenticatedUser
+      summary: List repositories for the authenticated user
+      description: >-
+        Official operationId: repos/list-for-authenticated-user.
+        Docs: https://docs.github.com/rest/repos/repos#list-repositories-for-the-authenticated-user
+      parameters:
+        - in: query
+          name: visibility
+          schema: { type: string, enum: [all, public, private] }
+        - in: query
+          name: affiliation
+          schema: { type: string }
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: sort
+          schema: { type: string, enum: [created, updated, pushed, full_name] }
+        - in: query
+          name: direction
+          schema: { type: string, enum: [asc, desc] }
+        - in: query
+          name: per_page
+          schema: { type: integer, default: 30, maximum: 100 }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+      responses:
+        "200":
+          description: Repository list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Repository" }
+    post:
+      tags: [Repos]
+      operationId: createRepositoryForAuthenticatedUser
+      summary: Create a repository for the authenticated user
+      description: >-
+        Official operationId: repos/create-for-authenticated-user.
+        Docs: https://docs.github.com/rest/repos/repos#create-a-repository-for-the-authenticated-user
+        Scope: public_repo or repo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                homepage: { type: string }
+                private: { type: boolean }
+                has_issues: { type: boolean }
+                has_projects: { type: boolean }
+                has_wiki: { type: boolean }
+                auto_init: { type: boolean }
+      responses:
+        "201":
+          description: Created repository
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Repository" }
+
+  /repos/{owner}/{repo}:
+    get:
+      tags: [Repos]
+      operationId: getRepository
+      summary: Get a repository
+      description: >-
+        Official operationId: repos/get.
+        Docs: https://docs.github.com/rest/repos/repos#get-a-repository
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+      responses:
+        "200":
+          description: Repository
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Repository" }
+        "404":
+          description: Not found
+    patch:
+      tags: [Repos]
+      operationId: updateRepository
+      summary: Update a repository
+      description: >-
+        Official operationId: repos/update.
+        Docs: https://docs.github.com/rest/repos/repos#update-a-repository
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                homepage: { type: string }
+                private: { type: boolean }
+                default_branch: { type: string }
+                archived: { type: boolean }
+      responses:
+        "200":
+          description: Updated repository
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Repository" }
+
+  /repos/{owner}/{repo}/issues:
+    get:
+      tags: [Issues]
+      operationId: listRepositoryIssues
+      summary: List repository issues
+      description: >-
+        Official operationId: issues/list-for-repo.
+        Docs: https://docs.github.com/rest/issues/issues#list-repository-issues
+        GitHub also returns pull requests in this list (every PR is an issue).
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+        - in: query
+          name: state
+          schema: { type: string, enum: [open, closed, all], default: open }
+        - in: query
+          name: labels
+          schema: { type: string }
+        - in: query
+          name: sort
+          schema: { type: string, enum: [created, updated, comments] }
+        - in: query
+          name: direction
+          schema: { type: string, enum: [asc, desc] }
+        - in: query
+          name: since
+          schema: { type: string, format: date-time }
+        - in: query
+          name: per_page
+          schema: { type: integer, default: 30, maximum: 100 }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+      responses:
+        "200":
+          description: Issue list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Issue" }
+    post:
+      tags: [Issues]
+      operationId: createIssue
+      summary: Create an issue
+      description: >-
+        Official operationId: issues/create.
+        Docs: https://docs.github.com/rest/issues/issues#create-an-issue
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string }
+                body: { type: string }
+                assignees:
+                  type: array
+                  items: { type: string }
+                labels:
+                  type: array
+                  items: { type: string }
+                milestone: { type: integer, nullable: true }
+      responses:
+        "201":
+          description: Created issue
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Issue" }
+
+  /repos/{owner}/{repo}/issues/{issue_number}:
+    get:
+      tags: [Issues]
+      operationId: getIssue
+      summary: Get an issue
+      description: >-
+        Official operationId: issues/get.
+        Docs: https://docs.github.com/rest/issues/issues#get-an-issue
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+        - $ref: "#/components/parameters/issue_number"
+      responses:
+        "200":
+          description: Issue
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Issue" }
+    patch:
+      tags: [Issues]
+      operationId: updateIssue
+      summary: Update an issue
+      description: >-
+        Official operationId: issues/update.
+        Docs: https://docs.github.com/rest/issues/issues#update-an-issue
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+        - $ref: "#/components/parameters/issue_number"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                body: { type: string }
+                state: { type: string, enum: [open, closed] }
+                state_reason:
+                  type: string
+                  enum: [completed, not_planned, reopened, null]
+                  nullable: true
+                assignees:
+                  type: array
+                  items: { type: string }
+                labels:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          description: Updated issue
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Issue" }
+
+  /repos/{owner}/{repo}/pulls:
+    get:
+      tags: [Pulls]
+      operationId: listPullRequests
+      summary: List pull requests
+      description: >-
+        Official operationId: pulls/list.
+        Docs: https://docs.github.com/rest/pulls/pulls#list-pull-requests
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+        - in: query
+          name: state
+          schema: { type: string, enum: [open, closed, all], default: open }
+        - in: query
+          name: head
+          schema: { type: string }
+        - in: query
+          name: base
+          schema: { type: string }
+        - in: query
+          name: sort
+          schema: { type: string, enum: [created, updated, popularity, long-running] }
+        - in: query
+          name: direction
+          schema: { type: string, enum: [asc, desc] }
+        - in: query
+          name: per_page
+          schema: { type: integer, default: 30, maximum: 100 }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+      responses:
+        "200":
+          description: Pull request list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PullRequest" }
+    post:
+      tags: [Pulls]
+      operationId: createPullRequest
+      summary: Create a pull request
+      description: >-
+        Official operationId: pulls/create.
+        Docs: https://docs.github.com/rest/pulls/pulls#create-a-pull-request
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, head, base]
+              properties:
+                title: { type: string }
+                head: { type: string }
+                base: { type: string }
+                body: { type: string }
+                draft: { type: boolean }
+                maintainer_can_modify: { type: boolean }
+      responses:
+        "201":
+          description: Created pull request
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PullRequest" }
+
+  /repos/{owner}/{repo}/pulls/{pull_number}:
+    get:
+      tags: [Pulls]
+      operationId: getPullRequest
+      summary: Get a pull request
+      description: >-
+        Official operationId: pulls/get.
+        Docs: https://docs.github.com/rest/pulls/pulls#get-a-pull-request
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+        - $ref: "#/components/parameters/pull_number"
+      responses:
+        "200":
+          description: Pull request
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PullRequest" }
+    patch:
+      tags: [Pulls]
+      operationId: updatePullRequest
+      summary: Update a pull request
+      description: >-
+        Official operationId: pulls/update.
+        Docs: https://docs.github.com/rest/pulls/pulls#update-a-pull-request
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+        - $ref: "#/components/parameters/pull_number"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                body: { type: string }
+                state: { type: string, enum: [open, closed] }
+                base: { type: string }
+                maintainer_can_modify: { type: boolean }
+      responses:
+        "200":
+          description: Updated pull request
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PullRequest" }
+
+  /repos/{owner}/{repo}/hooks:
+    get:
+      tags: [Webhooks]
+      operationId: listRepositoryWebhooks
+      summary: List repository webhooks
+      description: >-
+        Official operationId: repos/list-webhooks.
+        Docs: https://docs.github.com/rest/repos/webhooks#list-repository-webhooks
+        Scope: admin:repo_hook or repo.
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+        - in: query
+          name: per_page
+          schema: { type: integer, default: 30, maximum: 100 }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+      responses:
+        "200":
+          description: Hook list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Hook" }
+    post:
+      tags: [Webhooks]
+      operationId: createRepositoryWebhook
+      summary: Create a repository webhook
+      description: >-
+        Official operationId: repos/create-webhook.
+        Docs: https://docs.github.com/rest/repos/webhooks#create-a-repository-webhook
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Use `web` to create a webhook.
+                  default: web
+                config:
+                  type: object
+                  properties:
+                    url: { type: string, format: uri }
+                    content_type: { type: string, enum: [json, form] }
+                    secret: { type: string }
+                    insecure_ssl: { type: string }
+                events:
+                  type: array
+                  items: { type: string }
+                  default: [push]
+                active: { type: boolean, default: true }
+      responses:
+        "201":
+          description: Created hook
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Hook" }
+
+  /repos/{owner}/{repo}/hooks/{hook_id}:
+    get:
+      tags: [Webhooks]
+      operationId: getRepositoryWebhook
+      summary: Get a repository webhook
+      description: >-
+        Official operationId: repos/get-webhook.
+        Docs: https://docs.github.com/rest/repos/webhooks#get-a-repository-webhook
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+        - $ref: "#/components/parameters/hook_id"
+      responses:
+        "200":
+          description: Hook
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Hook" }
+    patch:
+      tags: [Webhooks]
+      operationId: updateRepositoryWebhook
+      summary: Update a repository webhook
+      description: >-
+        Official operationId: repos/update-webhook.
+        Docs: https://docs.github.com/rest/repos/webhooks#update-a-repository-webhook
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+        - $ref: "#/components/parameters/hook_id"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                config:
+                  type: object
+                  properties:
+                    url: { type: string, format: uri }
+                    content_type: { type: string }
+                    secret: { type: string }
+                    insecure_ssl: { type: string }
+                events:
+                  type: array
+                  items: { type: string }
+                active: { type: boolean }
+      responses:
+        "200":
+          description: Updated hook
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Hook" }
+    delete:
+      tags: [Webhooks]
+      operationId: deleteRepositoryWebhook
+      summary: Delete a repository webhook
+      description: >-
+        Official operationId: repos/delete-webhook.
+        Docs: https://docs.github.com/rest/repos/webhooks#delete-a-repository-webhook
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+        - $ref: "#/components/parameters/hook_id"
+      responses:
+        "204":
+          description: No content
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        OAuth App user access token (or PAT). Sent as
+        `Authorization: Bearer <token>`.
+  parameters:
+    owner:
+      in: path
+      name: owner
+      required: true
+      schema: { type: string }
+      description: The account owner of the repository (user or organization login).
+    repo:
+      in: path
+      name: repo
+      required: true
+      schema: { type: string }
+      description: The name of the repository (without the .git extension).
+    issue_number:
+      in: path
+      name: issue_number
+      required: true
+      schema: { type: integer }
+    pull_number:
+      in: path
+      name: pull_number
+      required: true
+      schema: { type: integer }
+    hook_id:
+      in: path
+      name: hook_id
+      required: true
+      schema: { type: integer }
+  schemas:
+    Repository:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        full_name: { type: string }
+        private: { type: boolean }
+        html_url: { type: string, format: uri }
+        description: { type: string, nullable: true }
+        default_branch: { type: string }
+        owner:
+          type: object
+          properties:
+            id: { type: integer, format: int64 }
+            login: { type: string }
+    Issue:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        number: { type: integer }
+        title: { type: string }
+        body: { type: string, nullable: true }
+        state: { type: string }
+        html_url: { type: string, format: uri }
+        user:
+          type: object
+          properties:
+            id: { type: integer, format: int64 }
+            login: { type: string }
+        pull_request:
+          type: object
+          description: Present when the issue is also a pull request.
+          nullable: true
+    PullRequest:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        number: { type: integer }
+        title: { type: string }
+        body: { type: string, nullable: true }
+        state: { type: string }
+        html_url: { type: string, format: uri }
+        head:
+          type: object
+          properties:
+            ref: { type: string }
+            sha: { type: string }
+        base:
+          type: object
+          properties:
+            ref: { type: string }
+            sha: { type: string }
+    Hook:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        active: { type: boolean }
+        events:
+          type: array
+          items: { type: string }
+        config:
+          type: object
+          properties:
+            url: { type: string }
+            content_type: { type: string }
+            insecure_ssl: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }

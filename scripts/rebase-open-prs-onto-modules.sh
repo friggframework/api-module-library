@@ -192,7 +192,7 @@ for num in "${PR_NUMBERS[@]}"; do
     continue
   fi
   # Also skip PRs that only touch repo meta (no module paths) when title matches reorganize
-  if [[ "$title" == *reorganize modules* ]]; then
+  if [[ "$title" == *"reorganize modules"* ]]; then
     rebase_status="skip"
     notes="tidy-up PR"
     echo "| #$num | $module_guess | \`$head_ref\` | $is_fork | $pushable | $rebase_status | $test_status | $notes |" >> "$REPORT_FILE"

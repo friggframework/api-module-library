@@ -66,7 +66,10 @@ const Definition = {
         client_id: process.env.TYPEFORM_CLIENT_ID,
         client_secret: process.env.TYPEFORM_CLIENT_SECRET,
         scope: process.env.TYPEFORM_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/typeform`,
+        // Omit when unset so schema validation does not see the string "undefined/typeform".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/typeform`
+            : undefined,
         base_url: process.env.TYPEFORM_BASE_URL,
     },
 };

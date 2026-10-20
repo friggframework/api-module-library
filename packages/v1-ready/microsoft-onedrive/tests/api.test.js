@@ -157,12 +157,11 @@ describe('OneDrive Api', () => {
             );
         });
 
-        it('uploadDriveItemContent PUTs binary content by path', async () => {
+        it('uploadDriveItemContent PUTs binary content by driveItem-id', async () => {
             const api = makeApi();
             await api.uploadDriveItemContent(
                 'd1',
-                'root',
-                'hello.txt',
+                'root:/hello.txt:',
                 Buffer.from('hi'),
                 'text/plain'
             );
@@ -174,22 +173,21 @@ describe('OneDrive Api', () => {
             expect(captured.headers['Content-Type']).toBe('text/plain');
         });
 
-        it('createUploadSession POSTs session body', async () => {
+        it('createUploadSession POSTs required session body', async () => {
             const api = makeApi();
-            await api.createUploadSession('d1', 'root', 'big.bin');
+            const body = { item: { name: 'big.bin' } };
+            await api.createUploadSession('d1', 'root:/big.bin:', body);
             expect(api._captured[0].url).toBe(
                 'https://graph.microsoft.com/v1.0/drives/d1/items/root:/big.bin:/createUploadSession'
             );
-            expect(api._captured[0].body).toEqual({
-                item: { name: 'big.bin' },
-            });
+            expect(api._captured[0].body).toEqual(body);
         });
 
-        it('searchDriveItems escapes single quotes in q', async () => {
+        it('searchDriveItems uses official /search(q=...) path and escapes quotes', async () => {
             const api = makeApi();
             await api.searchDriveItems('d1', "O'Brien");
             expect(api._captured[0].url).toBe(
-                "https://graph.microsoft.com/v1.0/drives/d1/root/search(q='O''Brien')"
+                "https://graph.microsoft.com/v1.0/drives/d1/search(q='O''Brien')"
             );
         });
     });

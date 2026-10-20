@@ -49,4 +49,22 @@ describe('OpenAPI spec ↔ client sync', () => {
             Object.keys(scheme.flows.authorizationCode.scopes)
         ).toContain('Files.ReadWrite');
     });
+
+    it('uses vendor OpenAPI path param names (drive-id, driveItem-id, subscription-id)', () => {
+        const paths = Object.keys(spec.paths);
+        expect(paths).toContain('/drives/{drive-id}');
+        expect(paths).toContain(
+            '/drives/{drive-id}/items/{driveItem-id}/children'
+        );
+        expect(paths).toContain(
+            '/drives/{drive-id}/items/{driveItem-id}/content'
+        );
+        expect(paths).toContain(
+            "/drives/{drive-id}/search(q='{q}')"
+        );
+        expect(paths).toContain('/subscriptions/{subscription-id}');
+        expect(paths.some((p) => p.includes('{driveId}'))).toBe(false);
+        expect(paths.some((p) => p.includes('{itemId}'))).toBe(false);
+        expect(paths.some((p) => p.includes('{parentId}'))).toBe(false);
+    });
 });

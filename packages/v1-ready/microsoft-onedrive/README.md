@@ -23,7 +23,7 @@ Register an app in the [Microsoft Entra admin center](https://learn.microsoft.co
 
 - Identity: `getUser`
 - Drives: `getMyDrive`, `listMyDrives`, `getDrive`
-- Drive items: `listDriveItemChildren`, `getDriveItem`, `createFolder`, `updateDriveItem`, `deleteDriveItem`, `uploadDriveItemContent`, `createUploadSession`, `searchDriveItems`
+- Drive items: `listDriveItemChildren`, `getDriveItem`, `createFolder`, `updateDriveItem`, `deleteDriveItem`, `uploadDriveItemContent` (`PUT .../items/{driveItem-id}/content`), `createUploadSession`, `searchDriveItems` (`GET .../search(q='...')`)
 - Subscriptions: `listSubscriptions`, `getSubscription`, `createSubscription`, `updateSubscription`, `deleteSubscription`
 
 Webhook receiver: `extensions/webhooks/` (Graph validationToken handshake + `clientState` check). Notifications do not identify changed files — call [delta](https://learn.microsoft.com/en-us/graph/api/driveitem-delta) after receiving.
@@ -39,8 +39,10 @@ npm test
 ## Sources
 
 - OneDrive / files Graph overview: https://learn.microsoft.com/en-us/graph/api/resources/onedrive
-- Official Graph OpenAPI: https://aka.ms/graph/v1.0/openapi.yaml
+- Official Graph OpenAPI: https://raw.githubusercontent.com/microsoftgraph/msgraph-metadata/master/openapi/v1.0/openapi.yaml (also https://aka.ms/graph/v1.0/openapi.yaml)
 - Auth: https://learn.microsoft.com/en-us/graph/auth-v2-user
 - Webhooks: https://learn.microsoft.com/en-us/onedrive/developer/rest-api/concepts/using-webhooks
 - Change notifications: https://learn.microsoft.com/en-us/graph/change-notifications-delivery-webhooks
 - Graph Explorer: https://developer.microsoft.com/en-us/graph/graph-explorer
+
+Path templates and `{drive-id}` / `{driveItem-id}` / `{subscription-id}` parameter names match the vendor OpenAPI. Colon path templates for upload (`items/{parent}:/{name}:/content`) are **not** in the vendor OpenAPI — use path-addressed `driveItem-id` values (e.g. `root:/folder/file.txt:`) against the official `/content` and `/createUploadSession` paths instead.

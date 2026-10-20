@@ -41,19 +41,16 @@ class Api extends OAuth2Requester {
                 `/drives/${driveId}/items/${itemId}`,
             driveItemChildren: (driveId, itemId) =>
                 `/drives/${driveId}/items/${itemId}/children`,
-            driveItemContentByPath: (driveId, parentId, filename) =>
-                `/drives/${driveId}/items/${parentId}:/${encodeURIComponent(
-                    filename
-                )}:/content`,
-            createUploadSession: (driveId, parentId, filename) =>
-                `/drives/${driveId}/items/${parentId}:/${encodeURIComponent(
-                    filename
-                )}:/createUploadSession`,
-            driveRootSearch: (driveId, q) =>
-                `/drives/${driveId}/root/search(q='${String(q).replace(
-                    /'/g,
-                    "''"
-                )}')`,
+            // Official OpenAPI: /drives/{drive-id}/items/{driveItem-id}/content
+            // Path-addressed ids (e.g. root:/folder/file.txt:) are valid driveItem-id values.
+            driveItemContent: (driveId, driveItemId) =>
+                `/drives/${driveId}/items/${driveItemId}/content`,
+            // Official OpenAPI: /drives/{drive-id}/items/{driveItem-id}/createUploadSession
+            createUploadSessionPath: (driveId, driveItemId) =>
+                `/drives/${driveId}/items/${driveItemId}/createUploadSession`,
+            // Official OpenAPI: /drives/{drive-id}/search(q='{q}')
+            driveSearch: (driveId, q) =>
+                `/drives/${driveId}/search(q='${String(q).replace(/'/g, "''")}')`,
             subscriptions: '/subscriptions',
             subscriptionById: (subscriptionId) =>
                 `/subscriptions/${subscriptionId}`,
@@ -209,21 +206,23 @@ class Api extends OAuth2Requester {
     }
 
     /**
-     * Upload a small file (create or replace) by path under a parent item.
-     * PUT /drives/{drive-id}/items/{parent-id}:/{filename}:/content
+     * Upload / replace file content for a driveItem.
+     * PUT /drives/{drive-id}/items/{driveItem-id}/content
+     * Official OpenAPI operationId: drives.UpdateItemsContent
      * https://learn.microsoft.com/en-us/graph/api/driveitem-put-content
-     * Max 250 MB. For larger files use createUploadSession.
+     *
+     * To create a new file by path, pass a path-addressed driveItem-id such as
+     * `root:/Documents/file.txt:` (Graph item addressing). Max ~250 MB; for
+     * larger files use createUploadSession.
      *
      * @param {string} driveId
-     * @param {string} parentId - parent folder item id (or 'root')
-     * @param {string} filename
+     * @param {string} driveItemId - item id or path-addressed id
      * @param {Buffer|string} content - file body
      * @param {string} [contentType='application/octet-stream']
      */
     async uploadDriveItemContent(
         driveId,
-        parentId,
-        filename,
+        driveItemId,
         content,
         contentType = 'application/octet-stream'
     ) {
@@ -231,11 +230,7 @@ class Api extends OAuth2Requester {
             {
                 url:
                     this.baseUrl +
-                    this.URLs.driveItemContentByPath(
-                        driveId,
-                        parentId,
-                        filename
-                    ),
+                    this.URLs.driveItemContent(driveId, driveItemId),
                 headers: { 'Content-Type': contentType },
                 body: content,
             },
@@ -245,33 +240,32 @@ class Api extends OAuth2Requester {
 
     /**
      * Create an upload session for large files.
-     * POST /drives/{drive-id}/items/{parent-id}:/{filename}:/createUploadSession
+     * POST /drives/{drive-id}/items/{driveItem-id}/createUploadSession
+     * Official OpenAPI operationId: drives.drive.items.driveItem.createUploadSession
+     * Request body is required (typically `{ item: { name, ... } }`).
      * https://learn.microsoft.com/en-us/graph/api/driveitem-createuploadsession
      */
-    async createUploadSession(driveId, parentId, filename, data = {}) {
-        const body =
-            Object.keys(data).length > 0
-                ? data
-                : { item: { name: filename } };
+    async createUploadSession(driveId, driveItemId, data = {}) {
         return this._post({
             url:
                 this.baseUrl +
-                this.URLs.createUploadSession(driveId, parentId, filename),
+                this.URLs.createUploadSessionPath(driveId, driveItemId),
             headers: { 'Content-Type': 'application/json' },
-            body,
+            body: data,
         });
     }
 
     /**
-     * Search for drive items under a drive root.
-     * GET /drives/{drive-id}/root/search(q='{search-text}')
+     * Search for drive items in a drive.
+     * GET /drives/{drive-id}/search(q='{search-text}')
+     * Official OpenAPI operationId: drives.drive.search
      * https://learn.microsoft.com/en-us/graph/api/driveitem-search
      */
     async searchDriveItems(driveId, q, params = {}) {
         return this._get({
             url:
                 this.baseUrl +
-                this.URLs.driveRootSearch(driveId, q) +
+                this.URLs.driveSearch(driveId, q) +
                 this._buildQuery(params),
         });
     }

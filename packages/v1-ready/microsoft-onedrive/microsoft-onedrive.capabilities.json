@@ -88,6 +88,7 @@
         }
       }
     },
+
     "subscription": {
       "label": "Change notification subscription",
       "fields": [
@@ -223,24 +224,22 @@
       "method": "uploadDriveItemContent",
       "input": {
         "driveId": { "type": "string", "required": true },
-        "parentId": { "type": "string", "required": true },
-        "filename": { "type": "string", "required": true },
+        "driveItemId": { "type": "string", "required": true },
         "content": { "type": "string", "required": true }
       },
       "output": "driveItem",
-      "args": ["driveId", "parentId", "filename", "content"]
+      "args": ["driveId", "driveItemId", "content"]
     },
     "driveItem.createUploadSession": {
       "kind": "write",
       "method": "createUploadSession",
       "input": {
         "driveId": { "type": "string", "required": true },
-        "parentId": { "type": "string", "required": true },
-        "filename": { "type": "string", "required": true },
-        "data": { "type": "object" }
+        "driveItemId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
       },
       "output": "uploadSession",
-      "args": ["driveId", "parentId", "filename", "data"]
+      "args": ["driveId", "driveItemId", "data"]
     },
     "driveItem.search": {
       "kind": "read",

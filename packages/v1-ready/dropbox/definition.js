@@ -85,7 +85,10 @@ const Definition = {
         client_id: process.env.DROPBOX_CLIENT_ID,
         client_secret: process.env.DROPBOX_CLIENT_SECRET,
         scope: process.env.DROPBOX_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/dropbox`,
+        // Omit when unset so schema validation does not see the string "undefined/dropbox".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/dropbox`
+            : undefined,
     },
 };
 

@@ -1,0 +1,237 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "miro",
+  "label": "Miro",
+  "package": "@friggframework/api-module-miro",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Miro user authorization. Entity/credential externalId is user.id from GET /v1/oauth-token.",
+    "fields": [
+      {
+        "name": "userId",
+        "type": "string",
+        "description": "Miro user id (externalId)"
+      },
+      {
+        "name": "teamId",
+        "type": "string",
+        "description": "Team id from token context"
+      },
+      {
+        "name": "organizationId",
+        "type": "string",
+        "description": "Organization id from token context"
+      },
+      {
+        "name": "displayName",
+        "type": "string",
+        "description": "Team or user display name"
+      }
+    ]
+  },
+  "objects": {
+    "board": {
+      "label": "Board",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "description", "type": "text" },
+        { "name": "viewLink", "type": "url", "readOnly": true },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "modifiedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "team.id", "type": "string" },
+        { "name": "owner.id", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "modifiedAt",
+        "list": {
+          "capability": "board.list",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "board.get",
+          "id": "boardId"
+        },
+        "create": {
+          "capability": "board.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "board.update",
+          "body": "$"
+        }
+      }
+    },
+    "item": {
+      "label": "Board Item",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "type", "type": "string", "required": true },
+        { "name": "data", "type": "json" },
+        { "name": "position", "type": "json" },
+        { "name": "geometry", "type": "json" },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "modifiedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "modifiedAt",
+        "list": {
+          "capability": "item.listOnBoard",
+          "cursor": "cursor",
+          "limit": "limit",
+          "items": "data",
+          "paging": "cursor"
+        },
+        "get": {
+          "capability": "item.get",
+          "id": "itemId"
+        }
+      }
+    },
+    "sticky_note": {
+      "label": "Sticky Note",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "type", "type": "string", "readOnly": true },
+        { "name": "data.content", "type": "text", "tag": "record.displayName" },
+        { "name": "data.shape", "type": "string" },
+        { "name": "style", "type": "json" },
+        { "name": "position", "type": "json" },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "modifiedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "modifiedAt",
+        "get": {
+          "capability": "sticky_note.get",
+          "id": "itemId"
+        },
+        "create": {
+          "capability": "sticky_note.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "sticky_note.update",
+          "body": "$"
+        }
+      }
+    },
+    "board_member": {
+      "label": "Board Member",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.displayName" },
+        {
+          "name": "role",
+          "type": "enum",
+          "values": ["viewer", "commenter", "editor", "coowner", "owner"]
+        },
+        { "name": "type", "type": "string", "readOnly": true }
+      ]
+    },
+    "token_context": {
+      "label": "Token Context",
+      "fields": [
+        { "name": "user.id", "type": "id", "readOnly": true },
+        { "name": "user.name", "type": "string", "tag": "person.displayName" },
+        { "name": "team.id", "type": "string" },
+        { "name": "team.name", "type": "string", "tag": "organization.name" },
+        { "name": "organization.id", "type": "string" },
+        { "name": "scopes", "type": "string" }
+      ]
+    }
+  },
+  "capabilities": {
+    "token.getInfo": {
+      "kind": "read",
+      "method": "getTokenInfo",
+      "output": "token_context",
+      "args": []
+    },
+    "board.list": {
+      "kind": "read",
+      "method": "listBoards",
+      "output": "board",
+      "args": ["query"]
+    },
+    "board.get": {
+      "kind": "read",
+      "method": "getBoard",
+      "output": "board",
+      "args": ["boardId"]
+    },
+    "board.create": {
+      "kind": "write",
+      "method": "createBoard",
+      "output": "board",
+      "args": ["body"]
+    },
+    "board.update": {
+      "kind": "write",
+      "method": "updateBoard",
+      "output": "board",
+      "args": ["boardId", "body"]
+    },
+    "board.delete": {
+      "kind": "write",
+      "method": "deleteBoard",
+      "args": ["boardId"]
+    },
+    "item.listOnBoard": {
+      "kind": "read",
+      "method": "listBoardItems",
+      "output": "item",
+      "args": ["boardId", "query"]
+    },
+    "item.get": {
+      "kind": "read",
+      "method": "getBoardItem",
+      "output": "item",
+      "args": ["boardId", "itemId"]
+    },
+    "sticky_note.create": {
+      "kind": "write",
+      "method": "createStickyNote",
+      "output": "sticky_note",
+      "args": ["boardId", "body"]
+    },
+    "sticky_note.get": {
+      "kind": "read",
+      "method": "getStickyNote",
+      "output": "sticky_note",
+      "args": ["boardId", "itemId"]
+    },
+    "sticky_note.update": {
+      "kind": "write",
+      "method": "updateStickyNote",
+      "output": "sticky_note",
+      "args": ["boardId", "itemId", "body"]
+    },
+    "sticky_note.delete": {
+      "kind": "write",
+      "method": "deleteStickyNote",
+      "args": ["boardId", "itemId"]
+    },
+    "board_member.list": {
+      "kind": "read",
+      "method": "listBoardMembers",
+      "output": "board_member",
+      "args": ["boardId", "query"]
+    }
+  },
+  "options": {
+    "board": {
+      "capability": "board.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id"
+    }
+  },
+  "notes": {
+    "webhooks": "Miro retired experimental REST board webhooks (/v2-experimental/webhooks/board_subscriptions) effective 2025-12-05. No production REST webhook subscription API is documented as of module authoring. Web SDK board events are in-session only and are not modeled here."
+  }
+}

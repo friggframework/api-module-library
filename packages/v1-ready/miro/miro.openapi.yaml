@@ -1,0 +1,454 @@
+openapi: 3.0.1
+info:
+  title: Miro Developer Platform (Frigg curated subset)
+  version: "2.0.0"
+  description: >-
+    Miro REST API v2 curated subset for `@friggframework/api-module-miro`.
+    Endpoints and fields are taken from Miro's official OpenAPI
+    (https://github.com/miroapp/api-clients/blob/main/packages/generator/spec.json)
+    and docs (https://developers.miro.com/reference/overview).
+    operationIds are camelCase to match Api methods 1:1; official kebab-case
+    operationIds are noted in each operation description.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.miro.com
+    description: Miro Developer Platform API
+security:
+  - OAuth2: []
+tags:
+  - name: Tokens
+  - name: Boards
+  - name: Items
+  - name: Sticky Notes
+  - name: Board Members
+paths:
+  /v1/oauth-token:
+    get:
+      tags: [Tokens]
+      operationId: getTokenInfo
+      summary: Get access token information
+      description: >-
+        Official operationId `token-info`. Returns token type, scopes, team,
+        organization, and user for the current access token.
+      responses:
+        "200":
+          description: Token information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenInformation"
+
+  /v2/boards:
+    get:
+      tags: [Boards]
+      operationId: listBoards
+      summary: Get boards
+      description: Official operationId `get-boards`.
+      parameters:
+        - in: query
+          name: team_id
+          schema: { type: string }
+        - in: query
+          name: project_id
+          schema: { type: string }
+        - in: query
+          name: query
+          schema: { type: string }
+        - in: query
+          name: owner
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: string }
+        - in: query
+          name: offset
+          schema: { type: string }
+        - in: query
+          name: sort
+          schema: { type: string }
+      responses:
+        "200":
+          description: Board search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BoardsPagedResponse"
+    post:
+      tags: [Boards]
+      operationId: createBoard
+      summary: Create board
+      description: Official operationId `create-board`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BoardChanges"
+      responses:
+        "201":
+          description: Board created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
+
+  /v2/boards/{board_id}:
+    parameters:
+      - $ref: "#/components/parameters/BoardId"
+    get:
+      tags: [Boards]
+      operationId: getBoard
+      summary: Get specific board
+      description: Official operationId `get-specific-board`.
+      responses:
+        "200":
+          description: Board retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
+    patch:
+      tags: [Boards]
+      operationId: updateBoard
+      summary: Update board
+      description: Official operationId `update-board`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BoardChanges"
+      responses:
+        "200":
+          description: Board updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
+    delete:
+      tags: [Boards]
+      operationId: deleteBoard
+      summary: Delete board
+      description: Official operationId `delete-board`.
+      responses:
+        "204":
+          description: Board deleted
+
+  /v2/boards/{board_id}/items:
+    parameters:
+      - $ref: "#/components/parameters/BoardId"
+    get:
+      tags: [Items]
+      operationId: listBoardItems
+      summary: Get items on board
+      description: Official operationId `get-items`.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: string }
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: cursor
+          schema: { type: string }
+      responses:
+        "200":
+          description: Items retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemsCursorPaged"
+
+  /v2/boards/{board_id}/items/{item_id}:
+    parameters:
+      - $ref: "#/components/parameters/BoardId"
+      - $ref: "#/components/parameters/ItemId"
+    get:
+      tags: [Items]
+      operationId: getBoardItem
+      summary: Get specific item on board
+      description: Official operationId `get-specific-item`.
+      responses:
+        "200":
+          description: Item retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericItem"
+
+  /v2/boards/{board_id}/sticky_notes:
+    parameters:
+      - $ref: "#/components/parameters/BoardId"
+    post:
+      tags: [Sticky Notes]
+      operationId: createStickyNote
+      summary: Create sticky note item
+      description: Official operationId `create-sticky-note-item`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StickyNoteCreateRequest"
+      responses:
+        "201":
+          description: Sticky note created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StickyNoteItem"
+
+  /v2/boards/{board_id}/sticky_notes/{item_id}:
+    parameters:
+      - $ref: "#/components/parameters/BoardId"
+      - $ref: "#/components/parameters/ItemId"
+    get:
+      tags: [Sticky Notes]
+      operationId: getStickyNote
+      summary: Get sticky note item
+      description: Official operationId `get-sticky-note-item`.
+      responses:
+        "200":
+          description: Sticky note retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StickyNoteItem"
+    patch:
+      tags: [Sticky Notes]
+      operationId: updateStickyNote
+      summary: Update sticky note item
+      description: Official operationId `update-sticky-note-item`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StickyNoteUpdateRequest"
+      responses:
+        "200":
+          description: Sticky note updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StickyNoteItem"
+    delete:
+      tags: [Sticky Notes]
+      operationId: deleteStickyNote
+      summary: Delete sticky note item
+      description: Official operationId `delete-sticky-note-item`.
+      responses:
+        "204":
+          description: Sticky note deleted
+
+  /v2/boards/{board_id}/members:
+    parameters:
+      - $ref: "#/components/parameters/BoardId"
+    get:
+      tags: [Board Members]
+      operationId: listBoardMembers
+      summary: Get all board members
+      description: Official operationId `get-board-members`.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: string }
+        - in: query
+          name: offset
+          schema: { type: string }
+      responses:
+        "200":
+          description: Board members retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BoardMembersPagedResponse"
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        OAuth 2.0 authorization code. See
+        https://developers.miro.com/docs/getting-started-with-oauth
+      flows:
+        authorizationCode:
+          authorizationUrl: https://miro.com/oauth/authorize
+          tokenUrl: https://api.miro.com/v1/oauth/token
+          scopes:
+            boards:read: Retrieve information about boards, board members, or items
+            boards:write: Create, update, or delete boards, board members, or items
+
+  parameters:
+    BoardId:
+      name: board_id
+      in: path
+      required: true
+      schema: { type: string }
+      description: Unique identifier (ID) of the board.
+    ItemId:
+      name: item_id
+      in: path
+      required: true
+      schema: { type: string }
+      description: Unique identifier (ID) of the item.
+
+  schemas:
+    TokenInformation:
+      type: object
+      required: [type, organization, team, createdBy, user]
+      properties:
+        type: { type: string }
+        scopes: { type: string }
+        organization:
+          type: object
+          properties:
+            type: { type: string }
+            name: { type: string }
+            id: { type: string }
+        team:
+          type: object
+          properties:
+            type: { type: string }
+            name: { type: string }
+            id: { type: string }
+        user:
+          type: object
+          properties:
+            type: { type: string }
+            name: { type: string }
+            id: { type: string }
+        createdBy:
+          type: object
+          properties:
+            type: { type: string }
+            name: { type: string }
+            id: { type: string }
+
+    BoardChanges:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 60
+          minLength: 1
+        description:
+          type: string
+          maxLength: 300
+        teamId: { type: string }
+
+    Board:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        type: { type: string }
+        viewLink: { type: string }
+        createdAt: { type: string, format: date-time }
+        modifiedAt: { type: string, format: date-time }
+        team:
+          type: object
+          properties:
+            id: { type: string }
+            name: { type: string }
+        owner:
+          type: object
+          properties:
+            id: { type: string }
+            name: { type: string }
+
+    BoardsPagedResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Board"
+        total: { type: integer, format: int64 }
+        size: { type: integer }
+        offset: { type: integer }
+
+    GenericItem:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string }
+        data: { type: object }
+        position: { type: object }
+        geometry: { type: object }
+        createdAt: { type: string, format: date-time }
+        modifiedAt: { type: string, format: date-time }
+
+    ItemsCursorPaged:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/GenericItem"
+        cursor: { type: string }
+        total: { type: integer, format: int64 }
+
+    StickyNoteData:
+      type: object
+      properties:
+        content: { type: string }
+        shape: { type: string }
+
+    StickyNoteCreateRequest:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/StickyNoteData"
+        style: { type: object }
+        position: { type: object }
+        geometry: { type: object }
+        parent: { type: object }
+
+    StickyNoteUpdateRequest:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/StickyNoteData"
+        style: { type: object }
+        position: { type: object }
+        geometry: { type: object }
+        parent: { type: object }
+
+    StickyNoteItem:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string }
+        data:
+          $ref: "#/components/schemas/StickyNoteData"
+        style: { type: object }
+        position: { type: object }
+        geometry: { type: object }
+        createdAt: { type: string, format: date-time }
+        modifiedAt: { type: string, format: date-time }
+
+    BoardMember:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        role:
+          type: string
+          enum: [viewer, commenter, editor, coowner, owner]
+        type: { type: string }
+
+    BoardMembersPagedResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/BoardMember"
+        total: { type: integer, format: int64 }
+        size: { type: integer }
+        offset: { type: integer }

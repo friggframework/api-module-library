@@ -73,9 +73,11 @@ Set `QUICKBOOKS_WEBHOOK_VERIFIER_TOKEN`.
 ## Capability manifest
 
 `quickbooks.capabilities.json` follows `capability-manifest/v0.1` (see ADR-020).
-Started from the draft in friggframework/frigg
-(`packages/core/integrations/definitions/capabilities/quickbooks.capabilities.json`).
-Version matches this package.
+Reconciled with lefthook-bots `definitions/manifests/quickbooks.json`: every draft
+capability maps to a doc-verified `Api` method already in this package (plus
+`webhook.verify` → `verifyWebhookSignature`). Version equals this package
+version (`1.0.0`). `args` were added so Frigg can bind positional signatures;
+no draft capabilities were dropped.
 
 ## Fenestra
 
@@ -95,5 +97,6 @@ cd packages/v1-ready/quickbooks && npm install && npm test
 
 - Shape copied from `@friggframework/api-module-fathom`
 - Webhook extension patterned on `@friggframework/api-module-hubspot`
-- Capability draft from friggframework/frigg definitions capabilities
+- Capability draft: lefthook-bots `definitions/manifests/quickbooks.json`
+  (same shape as friggframework/frigg definitions capabilities)
 - Replaces (does not modify) `packages/needs-updating/qbo`

@@ -137,11 +137,32 @@ describe('QuickBooks Definition', () => {
         expect(manifest.auth).toBe('oauth2');
         expect(manifest.webhook.verify).toBe('verifyWebhookSignature');
 
+        // lefthook-bots definitions/manifests/quickbooks.json capability set
+        expect(Object.keys(manifest.capabilities).sort()).toEqual(
+            [
+                'account.list',
+                'customer.create',
+                'customer.get',
+                'customer.list',
+                'customer.query',
+                'customer.update',
+                'deposit.create',
+                'invoice.create',
+                'invoice.get',
+                'invoice.send',
+                'item.list',
+                'payment.get',
+                'refundReceipt.create',
+                'salesReceipt.create',
+            ].sort()
+        );
+
         const clientMethods = Object.getOwnPropertyNames(Api.prototype);
         for (const [name, cap] of Object.entries(manifest.capabilities)) {
             expect(clientMethods).toContain(cap.method);
             expect(typeof Api.prototype[cap.method]).toBe('function');
             expect(name).toBeTruthy();
+            expect(Array.isArray(cap.args)).toBe(true);
         }
         expect(
             typeof Api.prototype[manifest.webhook.verify]

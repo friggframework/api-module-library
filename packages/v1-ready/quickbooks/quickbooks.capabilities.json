@@ -450,8 +450,7 @@
     "topic": "{{item.name}}.{{item.operation}}",
     "eventId": "{{parent.realmId}}:{{item.name}}:{{item.id}}:{{item.lastUpdated}}",
     "account": "{{parent.realmId}}",
-    "verify": "verifyWebhookSignature",
-    "note": "Intuit signs the raw body with HMAC-SHA256 (intuit-signature). Legacy payloads use eventNotifications[].realmId; CloudEvents batches use intuitaccountid. Api.verifyWebhookSignature handles both; the Tier-3 extension routes by realmId / intuitaccountid."
+    "verify": "verifyWebhookSignature"
   },
   "capabilities": {
     "customer.get": {

@@ -19,8 +19,16 @@
     "user": {
       "label": "User",
       "fields": [
-        { "name": "user_id", "type": "id", "readOnly": true },
-        { "name": "team_id", "type": "string", "readOnly": true },
+        {
+          "name": "user_id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "team_id",
+          "type": "string",
+          "readOnly": true
+        },
         {
           "name": "display_name",
           "type": "string",
@@ -43,7 +51,11 @@
     "design": {
       "label": "Design",
       "fields": [
-        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
         {
           "name": "title",
           "type": "string",
@@ -61,9 +73,21 @@
           "tag": "record.updatedAt",
           "readOnly": true
         },
-        { "name": "page_count", "type": "integer", "readOnly": true },
-        { "name": "urls", "type": "json", "readOnly": true },
-        { "name": "thumbnail", "type": "json", "readOnly": true }
+        {
+          "name": "page_count",
+          "type": "integer",
+          "readOnly": true
+        },
+        {
+          "name": "urls",
+          "type": "json",
+          "readOnly": true
+        },
+        {
+          "name": "thumbnail",
+          "type": "json",
+          "readOnly": true
+        }
       ],
       "sync": {
         "id": "id",
@@ -86,7 +110,11 @@
     "folder": {
       "label": "Folder",
       "fields": [
-        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
         {
           "name": "name",
           "type": "string",
@@ -105,7 +133,11 @@
           "tag": "record.updatedAt",
           "readOnly": true
         },
-        { "name": "thumbnail", "type": "json", "readOnly": true }
+        {
+          "name": "thumbnail",
+          "type": "json",
+          "readOnly": true
+        }
       ],
       "sync": {
         "id": "id",
@@ -131,14 +163,26 @@
     "asset": {
       "label": "Asset",
       "fields": [
-        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
         {
           "name": "name",
           "type": "string",
           "tag": "record.displayName"
         },
-        { "name": "type", "type": "string", "readOnly": true },
-        { "name": "tags", "type": "json", "tag": "record.tags" },
+        {
+          "name": "type",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "tags",
+          "type": "json",
+          "tag": "record.tags"
+        },
         {
           "name": "created_at",
           "type": "integer",
@@ -172,9 +216,21 @@
     "exportJob": {
       "label": "Design export job",
       "fields": [
-        { "name": "id", "type": "id", "readOnly": true },
-        { "name": "status", "type": "string", "readOnly": true },
-        { "name": "urls", "type": "json", "readOnly": true }
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "urls",
+          "type": "json",
+          "readOnly": true
+        }
       ],
       "sync": {
         "id": "id",
@@ -191,8 +247,16 @@
     "assetUploadJob": {
       "label": "Asset upload job",
       "fields": [
-        { "name": "id", "type": "id", "readOnly": true },
-        { "name": "status", "type": "string", "readOnly": true }
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "readOnly": true
+        }
       ],
       "sync": {
         "id": "id",
@@ -203,6 +267,55 @@
         "create": {
           "capability": "assetUploadJob.create",
           "body": "binary"
+        }
+      }
+    },
+    "brandTemplate": {
+      "label": "Brand template",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "tag": "record.displayName"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "brandTemplate.list",
+          "cursor": "continuation",
+          "items": "items",
+          "next": "continuation"
+        },
+        "get": {
+          "capability": "brandTemplate.get",
+          "id": "brandTemplateId"
+        }
+      }
+    },
+    "commentThread": {
+      "label": "Comment thread",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "get": {
+          "capability": "comment.thread.get",
+          "id": "threadId"
+        },
+        "create": {
+          "capability": "comment.thread.create",
+          "body": "data"
         }
       }
     }
@@ -230,11 +343,21 @@
       "kind": "read",
       "method": "listDesigns",
       "input": {
-        "query": { "type": "string" },
-        "continuation": { "type": "string" },
-        "ownership": { "type": "string" },
-        "sort_by": { "type": "string" },
-        "limit": { "type": "integer" }
+        "query": {
+          "type": "string"
+        },
+        "continuation": {
+          "type": "string"
+        },
+        "ownership": {
+          "type": "string"
+        },
+        "sort_by": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer"
+        }
       },
       "output": "page<design>"
     },
@@ -242,151 +365,251 @@
       "kind": "read",
       "method": "getDesign",
       "input": {
-        "designId": { "type": "string", "required": true }
+        "designId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "design",
-      "args": ["designId"]
+      "args": [
+        "designId"
+      ]
     },
     "design.create": {
       "kind": "write",
       "method": "createDesign",
       "input": {
-        "data": { "type": "object", "required": true }
+        "data": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "design",
-      "args": ["data"]
+      "args": [
+        "data"
+      ]
     },
     "exportJob.create": {
       "kind": "write",
       "method": "createDesignExportJob",
       "input": {
-        "data": { "type": "object", "required": true }
+        "data": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "exportJob",
-      "args": ["data"]
+      "args": [
+        "data"
+      ]
     },
     "exportJob.get": {
       "kind": "read",
       "method": "getDesignExportJob",
       "input": {
-        "exportId": { "type": "string", "required": true }
+        "exportId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "exportJob",
-      "args": ["exportId"]
+      "args": [
+        "exportId"
+      ]
     },
     "folder.create": {
       "kind": "write",
       "method": "createFolder",
       "input": {
-        "data": { "type": "object", "required": true }
+        "data": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "folder",
-      "args": ["data"]
+      "args": [
+        "data"
+      ]
     },
     "folder.get": {
       "kind": "read",
       "method": "getFolder",
       "input": {
-        "folderId": { "type": "string", "required": true }
+        "folderId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "folder",
-      "args": ["folderId"]
+      "args": [
+        "folderId"
+      ]
     },
     "folder.update": {
       "kind": "write",
       "method": "updateFolder",
       "input": {
-        "folderId": { "type": "string", "required": true },
-        "data": { "type": "object", "required": true }
+        "folderId": {
+          "type": "string",
+          "required": true
+        },
+        "data": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "folder",
-      "args": ["folderId", "data"]
+      "args": [
+        "folderId",
+        "data"
+      ]
     },
     "folder.delete": {
       "kind": "delete",
       "method": "deleteFolder",
       "input": {
-        "folderId": { "type": "string", "required": true }
+        "folderId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "void",
-      "args": ["folderId"]
+      "args": [
+        "folderId"
+      ]
     },
     "folder.listItems": {
       "kind": "read",
       "method": "listFolderItems",
       "input": {
-        "folderId": { "type": "string", "required": true },
-        "continuation": { "type": "string" },
-        "limit": { "type": "integer" },
+        "folderId": {
+          "type": "string",
+          "required": true
+        },
+        "continuation": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer"
+        },
         "item_types": {
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["design", "folder", "image", "brand_template"]
+            "enum": [
+              "design",
+              "folder",
+              "image",
+              "brand_template"
+            ]
           },
-          "description": "Official query param is array (form, explode=false → comma-delimited)"
+          "description": "Official query param is array (form, explode=false \u2192 comma-delimited)"
         },
-        "sort_by": { "type": "string" },
-        "pin_status": { "type": "string" }
+        "sort_by": {
+          "type": "string"
+        },
+        "pin_status": {
+          "type": "string"
+        }
       },
       "output": "page<folderItem>",
-      "args": ["folderId"]
+      "args": [
+        "folderId"
+      ]
     },
     "folder.moveItem": {
       "kind": "write",
       "method": "moveFolderItem",
       "input": {
-        "data": { "type": "object", "required": true }
+        "data": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "void",
-      "args": ["data"]
+      "args": [
+        "data"
+      ]
     },
     "asset.get": {
       "kind": "read",
       "method": "getAsset",
       "input": {
-        "assetId": { "type": "string", "required": true }
+        "assetId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "asset",
-      "args": ["assetId"]
+      "args": [
+        "assetId"
+      ]
     },
     "asset.update": {
       "kind": "write",
       "method": "updateAsset",
       "input": {
-        "assetId": { "type": "string", "required": true },
-        "data": { "type": "object", "required": true }
+        "assetId": {
+          "type": "string",
+          "required": true
+        },
+        "data": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "asset",
-      "args": ["assetId", "data"]
+      "args": [
+        "assetId",
+        "data"
+      ]
     },
     "asset.delete": {
       "kind": "delete",
       "method": "deleteAsset",
       "input": {
-        "assetId": { "type": "string", "required": true }
+        "assetId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "void",
-      "args": ["assetId"]
+      "args": [
+        "assetId"
+      ]
     },
     "assetUploadJob.create": {
       "kind": "write",
       "method": "createAssetUploadJob",
       "input": {
-        "binary": { "type": "binary", "required": true },
-        "metadata": { "type": "object", "required": true }
+        "binary": {
+          "type": "binary",
+          "required": true
+        },
+        "metadata": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "assetUploadJob",
-      "args": ["binary", "metadata"]
+      "args": [
+        "binary",
+        "metadata"
+      ]
     },
     "assetUploadJob.get": {
       "kind": "read",
       "method": "getAssetUploadJob",
       "input": {
-        "jobId": { "type": "string", "required": true }
+        "jobId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "assetUploadJob",
-      "args": ["jobId"]
+      "args": [
+        "jobId"
+      ]
     },
     "webhook.signingKeys": {
       "kind": "read",
@@ -398,28 +621,259 @@
       "kind": "read",
       "method": "introspectToken",
       "input": {
-        "token": { "type": "string", "required": true }
+        "token": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "json",
-      "args": ["token"]
+      "args": [
+        "token"
+      ]
     },
     "oauth.revoke": {
       "kind": "delete",
       "method": "revokeTokens",
       "input": {
-        "token": { "type": "string", "required": true }
+        "token": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "void",
-      "args": ["token"]
+      "args": [
+        "token"
+      ]
     },
     "oauth.exchange": {
       "kind": "write",
       "method": "exchangeAccessToken",
       "input": {
-        "body": { "type": "object", "required": true }
+        "body": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "json",
-      "args": ["body"]
+      "args": [
+        "body"
+      ]
+    },
+    "user.capabilities": {
+      "kind": "read",
+      "method": "getUserCapabilities",
+      "input": {},
+      "output": "json"
+    },
+    "design.import.create": {
+      "kind": "write",
+      "method": "createDesignImportJob",
+      "input": {
+        "binary": {
+          "type": "binary",
+          "required": true
+        },
+        "metadata": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "importJob",
+      "args": [
+        "binary",
+        "metadata"
+      ]
+    },
+    "design.import.get": {
+      "kind": "read",
+      "method": "getDesignImportJob",
+      "input": {
+        "jobId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "importJob",
+      "args": [
+        "jobId"
+      ]
+    },
+    "design.generate.create": {
+      "kind": "write",
+      "method": "createDesignGenerationJobV2",
+      "input": {
+        "data": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "generationJob",
+      "args": [
+        "data"
+      ]
+    },
+    "design.generate.get": {
+      "kind": "read",
+      "method": "getDesignGenerationJobV2",
+      "input": {
+        "jobId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "generationJob",
+      "args": [
+        "jobId"
+      ]
+    },
+    "comment.create": {
+      "kind": "write",
+      "method": "createComment",
+      "input": {
+        "data": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "comment",
+      "args": [
+        "data"
+      ]
+    },
+    "comment.thread.create": {
+      "kind": "write",
+      "method": "createThread",
+      "input": {
+        "designId": {
+          "type": "string",
+          "required": true
+        },
+        "data": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "commentThread",
+      "args": [
+        "designId",
+        "data"
+      ]
+    },
+    "comment.thread.get": {
+      "kind": "read",
+      "method": "getThread",
+      "input": {
+        "designId": {
+          "type": "string",
+          "required": true
+        },
+        "threadId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "commentThread",
+      "args": [
+        "designId",
+        "threadId"
+      ]
+    },
+    "comment.reply.list": {
+      "kind": "read",
+      "method": "listReplies",
+      "input": {
+        "designId": {
+          "type": "string",
+          "required": true
+        },
+        "threadId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "page<reply>",
+      "args": [
+        "designId",
+        "threadId"
+      ]
+    },
+    "comment.reply.create": {
+      "kind": "write",
+      "method": "createReply",
+      "input": {
+        "designId": {
+          "type": "string",
+          "required": true
+        },
+        "threadId": {
+          "type": "string",
+          "required": true
+        },
+        "data": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "reply",
+      "args": [
+        "designId",
+        "threadId",
+        "data"
+      ]
+    },
+    "comment.reply.get": {
+      "kind": "read",
+      "method": "getReply",
+      "input": {
+        "designId": {
+          "type": "string",
+          "required": true
+        },
+        "threadId": {
+          "type": "string",
+          "required": true
+        },
+        "replyId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "reply",
+      "args": [
+        "designId",
+        "threadId",
+        "replyId"
+      ]
+    },
+    "brandTemplate.list": {
+      "kind": "read",
+      "method": "listBrandTemplates",
+      "input": {
+        "query": {
+          "type": "string"
+        },
+        "continuation": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer"
+        }
+      },
+      "output": "page<brandTemplate>"
+    },
+    "brandTemplate.get": {
+      "kind": "read",
+      "method": "getBrandTemplate",
+      "input": {
+        "brandTemplateId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "brandTemplate",
+      "args": [
+        "brandTemplateId"
+      ]
     },
     "ui.appsSdk": {
       "kind": "ui",

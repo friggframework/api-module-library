@@ -35,21 +35,34 @@ class Api extends OAuth2Requester {
         this.refresh_token = get(params, 'refresh_token', null);
         this.code_verifier = get(params, 'code_verifier', null);
 
-        // Default scopes cover identity + core design/folder/asset objects.
-        // Callers should override via env CANVA_SCOPE to match Developer Portal.
+        // Default scopes cover identity + core objects used by Left Hook's v1
+        // canva-connect module (comments/imports/brand templates included).
+        // Callers should override via env CANVA_SCOPE / CANVA_CONNECT_SCOPE.
         if (!this.scope) {
             this.scope =
-                'openid profile email profile:read design:meta:read design:content:read design:content:write folder:read folder:write asset:read asset:write collaboration:event';
+                'openid profile email profile:read design:meta:read design:content:read design:content:write folder:read folder:write asset:read asset:write comment:read comment:write brandtemplate:meta:read collaboration:event';
         }
 
         this.URLs = {
             usersMe: '/v1/users/me',
             userProfile: '/v1/users/me/profile',
+            userCapabilities: '/v1/users/me/capabilities',
             userInfo: '/v1/oidc/userinfo',
             designs: '/v1/designs',
             designById: (designId) => `/v1/designs/${designId}`,
+            designComments: (designId) => `/v1/designs/${designId}/comments`,
+            designThread: (designId, threadId) =>
+                `/v1/designs/${designId}/comments/${threadId}`,
+            designReplies: (designId, threadId) =>
+                `/v1/designs/${designId}/comments/${threadId}/replies`,
+            designReply: (designId, threadId, replyId) =>
+                `/v1/designs/${designId}/comments/${threadId}/replies/${replyId}`,
             exports: '/v1/exports',
             exportById: (exportId) => `/v1/exports/${exportId}`,
+            imports: '/v1/imports',
+            importById: (jobId) => `/v1/imports/${jobId}`,
+            generations: '/v1/generations',
+            generationById: (jobId) => `/v1/generations/${jobId}`,
             folders: '/v1/folders',
             folderById: (folderId) => `/v1/folders/${folderId}`,
             folderItems: (folderId) => `/v1/folders/${folderId}/items`,
@@ -57,6 +70,9 @@ class Api extends OAuth2Requester {
             assetById: (assetId) => `/v1/assets/${assetId}`,
             assetUploads: '/v1/asset-uploads',
             assetUploadById: (jobId) => `/v1/asset-uploads/${jobId}`,
+            comments: '/v1/comments',
+            brandTemplates: '/v1/brand-templates',
+            brandTemplateById: (id) => `/v1/brand-templates/${id}`,
             oauthToken: '/v1/oauth/token',
             oauthIntrospect: '/v1/oauth/introspect',
             oauthRevoke: '/v1/oauth/revoke',
@@ -291,9 +307,54 @@ class Api extends OAuth2Requester {
     }
 
     /**
-     * Convenience: prefer usersMe identity; fall back to OIDC userInfo.
+     * v1 Lefthook alias: return team_user from usersMe.
+     */
+    async getMe() {
+        const me = await this.usersMe();
+        return me?.team_user || me;
+    }
+
+    /**
+     * GET /v1/users/me/capabilities — operationId getUserCapabilities
+     * Scope: profile:read
+     */
+    async getUserCapabilities() {
+        return this._get({ url: this.baseUrl + this.URLs.userCapabilities });
+    }
+
+    /**
+     * Identity used by Left Hook's v1 Manager (`getTokenIdentity`):
+     * introspect the access token and take `sub` as the stable external id.
+     */
+    async getTokenIdentity() {
+        const user = await this.introspectToken(this.access_token);
+        if (!user?.sub) {
+            throw new Error(
+                'Canva: introspectToken did not return sub for token identity.'
+            );
+        }
+        return { identifier: user.sub, name: user.sub, user };
+    }
+
+    /**
+     * Prefer v1-compatible introspect `sub`, enrich with usersMe team + profile.
+     * Falls back to usersMe / OIDC userInfo if introspect is unavailable.
      */
     async getUserDetails() {
+        let fromIntrospect = null;
+        try {
+            const identity = await this.getTokenIdentity();
+            fromIntrospect = {
+                id: identity.identifier,
+                user_id: identity.identifier,
+                sub: identity.identifier,
+                name: identity.name,
+                introspect: identity.user,
+            };
+        } catch (e) {
+            // fall through
+        }
+
         try {
             const me = await this.usersMe();
             const teamUser = me?.team_user;
@@ -306,66 +367,97 @@ class Api extends OAuth2Requester {
                     // profile:read may not be granted
                 }
                 return {
-                    id: teamUser.user_id,
-                    user_id: teamUser.user_id,
+                    id: fromIntrospect?.id || teamUser.user_id,
+                    user_id: fromIntrospect?.id || teamUser.user_id,
+                    sub: fromIntrospect?.sub,
                     team_id: teamUser.team_id,
-                    name: displayName || teamUser.user_id,
+                    name:
+                        displayName ||
+                        fromIntrospect?.name ||
+                        teamUser.user_id,
                     team_user: teamUser,
+                    introspect: fromIntrospect?.introspect,
                 };
             }
         } catch (e) {
-            // fall through to OIDC
+            // fall through
         }
+
+        if (fromIntrospect) return fromIntrospect;
+
         const info = await this.userInfo();
         return {
             id: info.sub,
             user_id: info.sub,
+            sub: info.sub,
             name: info.name || info.email || info.sub,
             email: info.email,
             ...info,
         };
     }
 
+    async _basicAuthFormPost(url, params) {
+        // Temporarily clear Bearer so only Basic Auth is sent (token endpoints).
+        const saved = this.access_token;
+        this.access_token = undefined;
+        try {
+            return await this._post(
+                {
+                    url,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        Authorization: this._basicAuthHeader(),
+                    },
+                    body: params,
+                },
+                false
+            );
+        } finally {
+            this.access_token = saved;
+        }
+    }
+
     /**
      * Introspect an access or refresh token.
      * POST /v1/oauth/introspect — operationId introspectToken
+     * @param {string} [token] - defaults to current access_token
      */
     async introspectToken(token) {
         const params = new URLSearchParams();
-        params.append('token', token);
-        delete this.access_token;
-        return this._post(
-            {
-                url: this.baseUrl + this.URLs.oauthIntrospect,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    Authorization: this._basicAuthHeader(),
-                },
-                body: params,
-            },
-            false
+        params.append('token', token || this.access_token);
+        return this._basicAuthFormPost(
+            this.baseUrl + this.URLs.oauthIntrospect,
+            params
         );
+    }
+
+    /** @deprecated typo alias from Left Hook v1 */
+    async instrospectToken(token) {
+        return this.introspectToken(token);
     }
 
     /**
      * Revoke an access or refresh token.
      * POST /v1/oauth/revoke — operationId revokeTokens
+     * @param {string} [token] - defaults to refresh_token (v1 behavior)
      */
     async revokeTokens(token) {
         const params = new URLSearchParams();
-        params.append('token', token);
-        delete this.access_token;
-        return this._post(
-            {
-                url: this.baseUrl + this.URLs.oauthRevoke,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    Authorization: this._basicAuthHeader(),
-                },
-                body: params,
-            },
-            false
+        params.append('token', token || this.refresh_token);
+        return this._basicAuthFormPost(
+            this.baseUrl + this.URLs.oauthRevoke,
+            params
         );
+    }
+
+    /** v1 alias */
+    async revokeToken(token) {
+        return this.revokeTokens(token);
+    }
+
+    /** v1 alias for getTokenFromCode */
+    async getTokenFromCodeVerifier(code, codeVerifier) {
+        return this.getTokenFromCode(code, codeVerifier);
     }
 
     // ---- Designs -----------------------------------------------------------
@@ -580,6 +672,275 @@ class Api extends OAuth2Requester {
         return this._get({
             url: this.baseUrl + this.URLs.assetUploadById(jobId),
         });
+    }
+
+    // ---- Design import (v1 importDesign / getDesignImportJob) ---------------
+
+    /**
+     * Create a design import job (binary + Import-Metadata header).
+     * POST /v1/imports — operationId createDesignImportJob
+     * Scope: design:content:write
+     *
+     * @param {Buffer|string} binary
+     * @param {object|string} metadata - Import-Metadata JSON or object
+     *   (official ImportMetadata; v1 passed `{ title_base64 }`)
+     */
+    async createDesignImportJob(binary, metadata) {
+        const metaHeader =
+            typeof metadata === 'string' ? metadata : JSON.stringify(metadata);
+        return this._post(
+            {
+                url: this.baseUrl + this.URLs.imports,
+                headers: {
+                    'Content-Type': 'application/octet-stream',
+                    'Import-Metadata': metaHeader,
+                },
+                body: binary,
+            },
+            false
+        );
+    }
+
+    /**
+     * Get a design import job.
+     * GET /v1/imports/{jobId} — operationId getDesignImportJob
+     * Scope: design:content:write
+     */
+    async getDesignImportJob(jobId) {
+        return this._get({
+            url: this.baseUrl + this.URLs.importById(jobId),
+        });
+    }
+
+    /**
+     * v1 helper: import a file with a plain title (Base64-encoded into metadata).
+     */
+    async importDesign(buffer, title) {
+        return this.createDesignImportJob(buffer, {
+            title_base64: Buffer.from(String(title)).toString('base64'),
+        });
+    }
+
+    // ---- Design generation (v1 /v1/designs/generate → official /v1/generations)
+
+    /**
+     * Create a design generation job (preview API).
+     * POST /v1/generations — operationId createDesignGenerationJobV2
+     * Scope: design:content:write
+     */
+    async createDesignGenerationJobV2(data) {
+        return this._post({
+            url: this.baseUrl + this.URLs.generations,
+            body: data,
+        });
+    }
+
+    /**
+     * Get a design generation job (preview API).
+     * GET /v1/generations/{jobId} — operationId getDesignGenerationJobV2
+     */
+    async getDesignGenerationJobV2(jobId) {
+        return this._get({
+            url: this.baseUrl + this.URLs.generationById(jobId),
+        });
+    }
+
+    /** v1 alias: generateDesign({ query }) → createDesignGenerationJobV2 */
+    async generateDesign(body) {
+        return this.createDesignGenerationJobV2(body);
+    }
+
+    /** v1 alias: getGenerateDesignJobStatus({ jobId }) */
+    async getGenerateDesignJobStatus(params = {}) {
+        return this.getDesignGenerationJobV2(params.jobId || params);
+    }
+
+    // ---- Comments (v1 createComment / replies; official thread model) -------
+
+    /**
+     * Create a comment (preview API).
+     * POST /v1/comments — operationId createComment
+     * Scope: comment:write
+     */
+    async createComment(data) {
+        return this._post({
+            url: this.baseUrl + this.URLs.comments,
+            body: data,
+        });
+    }
+
+    /**
+     * Create a comment thread on a design (preview API).
+     * POST /v1/designs/{designId}/comments — operationId createThread
+     */
+    async createThread(designId, data) {
+        return this._post({
+            url: this.baseUrl + this.URLs.designComments(designId),
+            body: data,
+        });
+    }
+
+    /**
+     * Get a comment thread (preview API).
+     * GET /v1/designs/{designId}/comments/{threadId} — operationId getThread
+     * Replaces v1 getDesignCommentByCommentId.
+     */
+    async getThread(designId, threadId) {
+        return this._get({
+            url: this.baseUrl + this.URLs.designThread(designId, threadId),
+        });
+    }
+
+    /** v1 alias */
+    async getDesignCommentByCommentId(designId, commentId) {
+        return this.getThread(designId, commentId);
+    }
+
+    /**
+     * List replies on a thread (preview API).
+     * GET .../replies — operationId listReplies
+     */
+    async listReplies(designId, threadId, params = {}) {
+        return this._get({
+            url:
+                this.baseUrl +
+                this.URLs.designReplies(designId, threadId) +
+                this._buildQuery(params),
+        });
+    }
+
+    /**
+     * Create a reply on a thread (preview API).
+     * POST .../replies — operationId createReply
+     * Replaces v1 createCommentReply (which posted to /v1/comments/{id}/replies).
+     */
+    async createReply(designId, threadId, data) {
+        return this._post({
+            url: this.baseUrl + this.URLs.designReplies(designId, threadId),
+            body: data,
+        });
+    }
+
+    /**
+     * Get a reply (preview API).
+     * GET .../replies/{replyId} — operationId getReply
+     */
+    async getReply(designId, threadId, replyId) {
+        return this._get({
+            url:
+                this.baseUrl +
+                this.URLs.designReply(designId, threadId, replyId),
+        });
+    }
+
+    /**
+     * v1-shaped reply helper. Requires designId (official path); pass as
+     * data.design_id or data.attached_to.design_id when only commentId known.
+     */
+    async createCommentReply(body, commentId) {
+        const designId =
+            body?.design_id ||
+            body?.attached_to?.design_id ||
+            body?.designId;
+        if (!designId) {
+            throw new Error(
+                'Canva createCommentReply requires design_id (official path is /v1/designs/{designId}/comments/{threadId}/replies).'
+            );
+        }
+        const { design_id, designId: _d, attached_to, ...rest } = body || {};
+        return this.createReply(designId, commentId, rest);
+    }
+
+    // ---- Brand templates (successor to v1 POST /v1/templates/search) -------
+
+    /**
+     * List brand templates.
+     * GET /v1/brand-templates — operationId listBrandTemplates
+     * Scope: brandtemplate:meta:read
+     */
+    async listBrandTemplates(params = {}) {
+        return this._get({
+            url:
+                this.baseUrl +
+                this.URLs.brandTemplates +
+                this._buildQuery(params),
+        });
+    }
+
+    /**
+     * Get a brand template.
+     * GET /v1/brand-templates/{brandTemplateId} — operationId getBrandTemplate
+     */
+    async getBrandTemplate(brandTemplateId) {
+        return this._get({
+            url: this.baseUrl + this.URLs.brandTemplateById(brandTemplateId),
+        });
+    }
+
+    /**
+     * v1 listCanvaTemplates({ query, limit }) → listBrandTemplates.
+     * Official API has no POST /v1/templates/search.
+     */
+    async listCanvaTemplates(body = {}) {
+        return this.listBrandTemplates({
+            query: body.query,
+            limit: body.limit,
+            continuation: body.continuation,
+            ownership: body.ownership,
+            sort_by: body.sort_by || body.sortBy,
+            dataset: body.dataset,
+        });
+    }
+
+    // ---- v1 method-name aliases (behavior ports; not OpenAPI operationIds) --
+
+    async getListDesigns(params = {}) {
+        const mapped = { ...params };
+        if (mapped.sortBy && !mapped.sort_by) mapped.sort_by = mapped.sortBy;
+        delete mapped.sortBy;
+        return this.listDesigns(mapped);
+    }
+
+    async getDesignById(designId) {
+        return this.getDesign(designId);
+    }
+
+    async getListFolderItems(folderId, continuation = null) {
+        const params =
+            continuation && typeof continuation === 'object'
+                ? continuation
+                : continuation
+                  ? { continuation }
+                  : {};
+        return this.listFolderItems(folderId, params);
+    }
+
+    async getFolderById(folderId) {
+        return this.getFolder(folderId);
+    }
+
+    async getAssetById(assetId) {
+        return this.getAsset(assetId);
+    }
+
+    /**
+     * v1 uploadAsset → createAssetUploadJob.
+     * Official path is POST /v1/asset-uploads (not /v1/assets/upload).
+     * Metadata must use name_base64 (AssetUploadMetadata).
+     */
+    async uploadAsset(buffer, metadata = {}) {
+        let meta = { ...metadata };
+        if (meta.name && !meta.name_base64) {
+            meta.name_base64 = Buffer.from(String(meta.name)).toString(
+                'base64'
+            );
+            delete meta.name;
+        }
+        // parent_folder_id / tags are not part of AssetUploadMetadata in the
+        // current official OpenAPI — strip so we don't invent header fields.
+        delete meta.parent_folder_id;
+        delete meta.tags;
+        return this.createAssetUploadJob(buffer, meta);
     }
 
     // ---- Webhook verification (no subscription CRUD in Connect API) --------

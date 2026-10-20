@@ -34,13 +34,14 @@ describe('Canva Definition', () => {
         expect(seen).toEqual({ code: 'auth-code', verifier: 'pkce-v' });
     });
 
-    it('getEntityDetails uses usersMe team_user.user_id as externalId', async () => {
+    it('getEntityDetails prefers introspect sub (v1 getTokenIdentity) as externalId', async () => {
         const api = new Api({
             client_id: 'c',
             client_secret: 's',
             redirect_uri: 'https://x/canva',
         });
         api.getUserDetails = async () => ({
+            sub: 'introspect_sub',
             user_id: 'u_123',
             team_id: 't_456',
             name: 'Jane Doe',
@@ -52,25 +53,29 @@ describe('Canva Definition', () => {
             {},
             'user-1'
         );
-        expect(details.identifiers.externalId).toBe('u_123');
+        expect(details.identifiers.externalId).toBe('introspect_sub');
         expect(details.identifiers.userId).toBe('user-1');
         expect(details.details.name).toBe('Jane Doe');
         expect(details.details.team_id).toBe('t_456');
     });
 
-    it('getCredentialDetails uses the same user id', async () => {
+    it('getCredentialDetails uses the same introspect sub', async () => {
         const api = new Api({
             client_id: 'c',
             client_secret: 's',
             redirect_uri: 'https://x/canva',
         });
-        api.getUserDetails = async () => ({ user_id: 'u_abc', team_id: 't1' });
+        api.getUserDetails = async () => ({
+            sub: 'cred_sub',
+            user_id: 'u_abc',
+            team_id: 't1',
+        });
         const details =
             await Definition.requiredAuthMethods.getCredentialDetails(
                 api,
                 'user-c'
             );
-        expect(details.identifiers.externalId).toBe('u_abc');
+        expect(details.identifiers.externalId).toBe('cred_sub');
     });
 
     it('testAuthRequest calls usersMe', async () => {

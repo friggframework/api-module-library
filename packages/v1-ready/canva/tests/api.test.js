@@ -259,4 +259,103 @@ describe('Canva Api', () => {
             );
         });
     });
+
+    describe('v1 ports: import / generation / comments / brand templates', () => {
+        it('createDesignImportJob posts octet-stream + Import-Metadata', async () => {
+            const api = makeApi();
+            await api.createDesignImportJob(Buffer.from('pdf'), {
+                title_base64: Buffer.from('x.pdf').toString('base64'),
+            });
+            expect(api._captured[0].url).toBe(
+                'https://api.canva.com/rest/v1/imports'
+            );
+            expect(api._captured[0].headers['Import-Metadata']).toContain(
+                'title_base64'
+            );
+        });
+
+        it('importDesign encodes title into metadata (v1 helper)', async () => {
+            const api = makeApi();
+            await api.importDesign(Buffer.from('x'), 'Holiday.pdf');
+            const meta = JSON.parse(
+                api._captured[0].headers['Import-Metadata']
+            );
+            expect(Buffer.from(meta.title_base64, 'base64').toString()).toBe(
+                'Holiday.pdf'
+            );
+        });
+
+        it('getDesignImportJob hits /v1/imports/{jobId}', async () => {
+            const api = makeApi();
+            await api.getDesignImportJob('job_1');
+            expect(api._captured[0].url).toBe(
+                'https://api.canva.com/rest/v1/imports/job_1'
+            );
+        });
+
+        it('createDesignGenerationJobV2 / getDesignGenerationJobV2 use /v1/generations', async () => {
+            const api = makeApi();
+            await api.createDesignGenerationJobV2({ query: 'poster' });
+            expect(api._captured[0].url).toBe(
+                'https://api.canva.com/rest/v1/generations'
+            );
+            await api.getDesignGenerationJobV2('g1');
+            expect(api._captured[1].url).toBe(
+                'https://api.canva.com/rest/v1/generations/g1'
+            );
+        });
+
+        it('createComment / createThread / getThread / createReply hit official paths', async () => {
+            const api = makeApi();
+            await api.createComment({ message: 'hi' });
+            expect(api._captured[0].url).toBe(
+                'https://api.canva.com/rest/v1/comments'
+            );
+            await api.createThread('D1', { message: 't' });
+            expect(api._captured[1].url).toBe(
+                'https://api.canva.com/rest/v1/designs/D1/comments'
+            );
+            await api.getThread('D1', 'T1');
+            expect(api._captured[2].url).toBe(
+                'https://api.canva.com/rest/v1/designs/D1/comments/T1'
+            );
+            await api.createReply('D1', 'T1', { message: 'r' });
+            expect(api._captured[3].url).toBe(
+                'https://api.canva.com/rest/v1/designs/D1/comments/T1/replies'
+            );
+        });
+
+        it('listBrandTemplates and listCanvaTemplates (v1 alias) hit /v1/brand-templates', async () => {
+            const api = makeApi();
+            await api.listCanvaTemplates({ query: 'sale', limit: 4 });
+            expect(api._captured[0].url).toContain(
+                '/v1/brand-templates?query=sale&limit=4'
+            );
+        });
+
+        it('getTokenIdentity uses introspect sub (v1 Manager identity)', async () => {
+            const api = makeApi({ access_token: 'tok' });
+            api.introspectToken = async () => ({ sub: 'U_SUB', active: true });
+            const id = await api.getTokenIdentity();
+            expect(id.identifier).toBe('U_SUB');
+            expect(id.name).toBe('U_SUB');
+        });
+
+        it('uploadAsset maps name→name_base64 and posts to /v1/asset-uploads', async () => {
+            const api = makeApi();
+            await api.uploadAsset(Buffer.from('img'), {
+                name: 'logo.png',
+                parent_folder_id: 'root',
+                tags: 'x',
+            });
+            expect(api._captured[0].url).toContain('/v1/asset-uploads');
+            const meta = JSON.parse(
+                api._captured[0].headers['Asset-Upload-Metadata']
+            );
+            expect(meta.name_base64).toBe(
+                Buffer.from('logo.png').toString('base64')
+            );
+            expect(meta.parent_folder_id).toBeUndefined();
+        });
+    });
 });

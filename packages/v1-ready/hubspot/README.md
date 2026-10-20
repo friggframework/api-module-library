@@ -113,3 +113,23 @@ colliding.
 - **`HUBSPOT_WEBHOOK`** — queue event (worker, hydrated integration): default no-op;
   override via `binding.handlers.HUBSPOT_WEBHOOK` to run your per-event logic with the
   correct per-account context.
+
+## Rate limits
+
+`Api.rateLimit` tells the Frigg Requester how HubSpot limits calls. The numbers come
+from the [API usage guidelines and limits](https://developers.hubspot.com/docs/developer-tooling/platform/usage-guidelines).
+A `@friggframework/core` release without rate-limit awareness ignores the declaration.
+
+- **Burst:** each account that installs a marketplace OAuth app is limited to 110
+  requests every 10 seconds. A throttled call returns `429` with `policyName`
+  `TEN_SECONDLY_ROLLING`. The Requester waits for `Retry-After` when the response has
+  one, and for the 10 second window when it has none.
+- **Daily:** a `429` with `policyName` `DAILY`. HubSpot resets the daily limit at
+  midnight in the account's time zone, which the module does not know, so it does not
+  compute a reset time. It reports a one hour probe interval: the Requester throws a
+  `RateLimitError` with `reason: 'daily'` and a `retryAt` one hour ahead. It does not
+  sleep for an hour in process.
+- **Any other status** is not a limit and keeps its normal handling.
+
+HubSpot documents no `Retry-After` or reset header for these responses, and the search
+endpoints send no `X-HubSpot-RateLimit-*` headers at all.

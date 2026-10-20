@@ -1,0 +1,33 @@
+{
+  "name": "@friggframework/api-module-sharepoint",
+  "version": "1.0.0",
+  "description": "Microsoft SharePoint API module that lets the Frigg Framework interact with SharePoint sites, drives, drive items, lists, list items, and Graph change-notification subscriptions via Microsoft Graph",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint:fix": "prettier --write --loglevel error . && eslint . --fix"
+  },
+  "keywords": [
+    "frigg",
+    "sharepoint",
+    "microsoft-graph",
+    "api-module",
+    "sites",
+    "drives",
+    "lists"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^2.0.0-next.107"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-scheduler": "^3.1113.0",
+    "dotenv": "^16.0.3",
+    "jest": "^28.1.3",
+    "js-yaml": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

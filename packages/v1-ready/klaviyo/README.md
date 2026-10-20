@@ -88,6 +88,12 @@ Available to Advanced KDP customers and Klaviyo app partners.
 
 See [`klaviyo.capabilities.json`](./klaviyo.capabilities.json) (`capability-manifest/v0.1`).
 
+Started from lefthook-bots `definitions/manifests/klaviyo.json`. Capabilities kept only
+when they map to a real `Api` method (`version` = this package’s `1.0.0`). Dropped
+lefthook capabilities (`profile.upsert`, `profile.lists`, `profile.subscribe`,
+`profile.unsubscribe`) and other mismatches are listed under `openQuestions` in
+the manifest (and in the PR).
+
 ## Fenestra
 
 No `klaviyo.fenestra.yaml`. Klaviyo's App Marketplace is API/OAuth oriented

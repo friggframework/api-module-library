@@ -1,7 +1,7 @@
 {
   "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
   "module": "zendesk",
-  "label": "Zendesk",
+  "label": "Zendesk Support",
   "package": "@friggframework/api-module-zendesk",
   "version": "1.0.0",
   "auth": "oauth2",
@@ -32,7 +32,7 @@
         {
           "name": "name",
           "type": "string",
-          "tag": "record.displayName"
+          "tag": "person.fullName"
         },
         {
           "name": "email",
@@ -58,7 +58,7 @@
         },
         {
           "name": "phone",
-          "type": "string",
+          "type": "phone",
           "tag": "contact.phone"
         },
         {
@@ -101,6 +101,11 @@
           "readOnly": true
         },
         {
+          "name": "url",
+          "type": "string",
+          "readOnly": true
+        },
+        {
           "name": "subject",
           "type": "string",
           "tag": "record.displayName"
@@ -120,7 +125,8 @@
             "hold",
             "solved",
             "closed"
-          ]
+          ],
+          "tag": "ticket.status"
         },
         {
           "name": "priority",
@@ -130,7 +136,8 @@
             "high",
             "normal",
             "low"
-          ]
+          ],
+          "tag": "ticket.priority"
         },
         {
           "name": "type",
@@ -148,6 +155,11 @@
         },
         {
           "name": "assignee_id",
+          "type": "number",
+          "tag": "record.owner"
+        },
+        {
+          "name": "group_id",
           "type": "number"
         },
         {
@@ -157,11 +169,12 @@
         {
           "name": "external_id",
           "type": "string",
-          "tag": "record.displayId"
+          "tag": "record.externalId"
         },
         {
           "name": "tags",
-          "type": "json"
+          "type": "json",
+          "tag": "record.tags"
         },
         {
           "name": "created_at",
@@ -182,6 +195,15 @@
         "list": {
           "capability": "ticket.list",
           "items": "tickets"
+        },
+        "get": {
+          "capability": "ticket.get",
+          "id": "ticketId"
+        },
+        "update": {
+          "capability": "ticket.update",
+          "id": "ticketId",
+          "body": "ticket"
         }
       }
     },
@@ -324,14 +346,41 @@
       "object": "organization",
       "description": "Subscribe via zen:event-type:organization.created.",
       "match": "zen:event-type:organization.created"
+    },
+    "ticket.tagsChanged": {
+      "delivery": "webhook",
+      "object": "ticket",
+      "subscribe": "webhook.create",
+      "description": "Event-subscription webhook zen:event-type:ticket.tags_changed (lefthook-bots draft). $.record is ticket detail; added/removed tags in event.",
+      "record": "detail",
+      "match": "zen:event-type:ticket.tags_changed"
+    },
+    "ticket.priorityChanged": {
+      "delivery": "webhook",
+      "object": "ticket",
+      "subscribe": "webhook.create",
+      "description": "Event-subscription webhook zen:event-type:ticket.priority_changed (lefthook-bots draft).",
+      "record": "detail",
+      "match": "zen:event-type:ticket.priority_changed"
+    },
+    "ticket.statusChanged": {
+      "delivery": "webhook",
+      "object": "ticket",
+      "subscribe": "webhook.create",
+      "description": "Event-subscription webhook zen:event-type:ticket.status_changed (lefthook-bots draft).",
+      "record": "detail",
+      "match": "zen:event-type:ticket.status_changed"
     }
   },
   "webhook": {
     "scope": "account",
-    "note": "Manage via Webhooks API (POST/GET/PUT/DELETE /api/v2/webhooks). These paths are NOT in https://developer.zendesk.com/zendesk/oas.yaml; source is https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/. Verify inbound deliveries with X-Zendesk-Webhook-Signature / X-Zendesk-Webhook-Signature-Timestamp and the per-webhook signing secret (GET /api/v2/webhooks/{id}/signing_secret). See extensions/webhooks/ for a HubSpot-style Tier-3 receiver.",
+    "note": "Manage via Webhooks API (POST/GET/PUT/DELETE /api/v2/webhooks). These paths are NOT in https://developer.zendesk.com/zendesk/oas.yaml; source is https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/. Inbound verify is extensions/webhooks/signature-verifier.js#verifyZendeskSignature (lefthook-bots draft named this verifyWebhookSignature \u2014 not an Api method). Headers: X-Zendesk-Webhook-Signature / X-Zendesk-Webhook-Signature-Timestamp.",
     "subscribe": "createWebhook",
     "unsubscribe": "deleteWebhook",
-    "list": "listWebhooks"
+    "list": "listWebhooks",
+    "topic": "{{body.type}}",
+    "eventId": "{{body.id}}",
+    "verify": "verifyZendeskSignature"
   },
   "capabilities": {
     "user.me": {
@@ -683,6 +732,67 @@
       "args": [
         "webhookId"
       ]
+    }
+  },
+  "options": {
+    "ticket": {
+      "capability": "ticket.list",
+      "label": "{{item.subject}} (#{{item.id}})",
+      "value": "$.item.id",
+      "items": "tickets"
+    },
+    "user": {
+      "capability": "user.list",
+      "label": "{{item.name}} ({{item.email}})",
+      "value": "$.item.id",
+      "items": "users"
+    },
+    "organization": {
+      "capability": "organization.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id",
+      "items": "organizations"
+    }
+  },
+  "skipped": {
+    "source": "lefthookhq/lefthook-bots definitions/manifests/zendesk.json (draft v1.6.0)",
+    "description": "Draft entries from lefthook-bots that do not map to a real Api method in this module. Implemented draft capabilities use this package's Api method names (see draftMethodAliases: showTicket\u2192getTicket, showUser\u2192getUser).",
+    "capabilities": {
+      "ticket.addComment": {
+        "draftMethod": "addTicketComment",
+        "reason": "No dedicated Api method. Zendesk adds comments via UpdateTicket body field ticket.comment; use ticket.update \u2192 updateTicket. Reading comments is ticket.comments.list \u2192 listTicketComments."
+      },
+      "ticket.search": {
+        "draftMethod": "searchTickets",
+        "reason": "Search API (GET /api/v2/search) is outside the curated Ticketing cut for this module."
+      },
+      "group.list": {
+        "draftMethod": "listGroups",
+        "reason": "Groups API (/api/v2/groups) is not in module scope; no group object or client methods."
+      }
+    },
+    "options": {
+      "group": {
+        "reason": "Draft options.group requires group.list / listGroups, which is skipped."
+      }
+    },
+    "webhook.verify": {
+      "draft": "verifyWebhookSignature",
+      "implementedAs": "extensions/webhooks/signature-verifier.js#verifyZendeskSignature",
+      "reason": "Not an Api.prototype method; inbound HMAC verification lives on the Tier-3 webhook extension."
+    },
+    "ui": {
+      "draftPlacements": [
+        "ticket_sidebar",
+        "new_ticket_sidebar",
+        "user_sidebar",
+        "organization_sidebar"
+      ],
+      "reason": "UI placements are not Api capabilities. Declared in zendesk.fenestra.yaml (ZAF), including all four draft placements plus top_bar / nav_bar / modal / ticket_editor."
+    },
+    "draftMethodAliases": {
+      "showTicket": "getTicket",
+      "showUser": "getUser"
     }
   }
 }

@@ -30,7 +30,7 @@ Inbound webhook verification lives under `extensions/webhooks/` (HubSpot-style T
 
 - `api.js` / `definition.js` / `index.js`
 - `zendesk.openapi.yaml` — curated OpenAPI subset (1:1 with `api.js`)
-- `zendesk.capabilities.json` — `capability-manifest/v0.1`
+- `zendesk.capabilities.json` — `capability-manifest/v0.1` (compared to lefthook-bots draft; unimplemented draft entries listed under `skipped`)
 - `zendesk.fenestra.yaml` — Support app UI locations (ZAF)
 - `tests/` — offline Jest (api, definition, spec-sync, webhooks)
 

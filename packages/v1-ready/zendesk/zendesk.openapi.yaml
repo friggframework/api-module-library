@@ -631,6 +631,7 @@ components:
       type: object
       properties:
         id: { type: integer, readOnly: true }
+        url: { type: string, readOnly: true }
         subject: { type: string }
         description: "{ type: string, readOnly: true }"
         status:
@@ -647,6 +648,7 @@ components:
         requester_id: { type: integer }
         submitter_id: { type: integer }
         assignee_id: { type: integer }
+        group_id: { type: integer }
         organization_id: { type: integer }
         tags:
           type: array

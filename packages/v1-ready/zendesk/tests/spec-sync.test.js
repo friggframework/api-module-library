@@ -92,4 +92,29 @@ describe('Capability manifest ↔ client sync', () => {
         );
         expect(userEmail.tag).toBe('contact.email');
     });
+
+    it('maps lefthook-bots draft capabilities to Api methods or skipped', () => {
+        // Draft: ticket.get→showTicket, ticket.update, user.get→showUser,
+        // webhook.create, webhook.delete — implemented under our method names.
+        const mapped = {
+            'ticket.get': 'getTicket',
+            'ticket.update': 'updateTicket',
+            'user.get': 'getUser',
+            'webhook.create': 'createWebhook',
+            'webhook.delete': 'deleteWebhook',
+        };
+        for (const [cap, method] of Object.entries(mapped)) {
+            expect(capabilities.capabilities[cap].method).toBe(method);
+            expect(clientMethods).toContain(method);
+        }
+        // Draft-only capabilities must not appear as live capabilities.
+        for (const key of Object.keys(capabilities.skipped.capabilities)) {
+            expect(capabilities.capabilities[key]).toBeUndefined();
+            expect(capabilities.skipped.capabilities[key].reason).toBeTruthy();
+        }
+        expect(capabilities.skipped.source).toMatch(/lefthook-bots/);
+        expect(capabilities.events['ticket.tagsChanged'].match).toBe(
+            'zen:event-type:ticket.tags_changed'
+        );
+    });
 });

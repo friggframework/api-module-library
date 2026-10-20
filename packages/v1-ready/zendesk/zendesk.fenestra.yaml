@@ -92,12 +92,28 @@ extensionPoints:
       Right-hand sidebar on a ticket. Declared as location
       `support.ticket.sidebar` in the app manifest.
     supportedComponents: []
+  - id: new_ticket_sidebar
+    name: New ticket sidebar
+    type: sidebar
+    extensionType: iframe
+    description: >
+      Sidebar when creating a new ticket. Location
+      `support.new_ticket_sidebar` (lefthook-bots draft ui.placements).
+    supportedComponents: []
   - id: user_sidebar
     name: User sidebar
     type: sidebar
     extensionType: iframe
     description: >
       Sidebar on a user profile. Location `support.user.sidebar`.
+    supportedComponents: []
+  - id: organization_sidebar
+    name: Organization sidebar
+    type: sidebar
+    extensionType: iframe
+    description: >
+      Sidebar on an organization profile. Location
+      `support.organization_sidebar` (lefthook-bots draft ui.placements).
     supportedComponents: []
   - id: top_bar
     name: Top bar

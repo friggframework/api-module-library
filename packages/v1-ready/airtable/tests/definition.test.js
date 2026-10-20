@@ -144,4 +144,13 @@ describe('Airtable Definition', () => {
             true
         );
     });
+
+    it('omits redirect_uri when REDIRECT_URI is unset', () => {
+        expect(Definition.env.redirect_uri).toBe(
+            process.env.REDIRECT_URI
+                ? `${process.env.REDIRECT_URI}/airtable`
+                : undefined
+        );
+    });
+
 });

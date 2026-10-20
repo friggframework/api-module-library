@@ -1,0 +1,449 @@
+openapi: 3.0.3
+info:
+  title: Salesloft Public API
+  version: "1.0.0"
+  description: >-
+    Salesloft sales engagement platform. This is Left Hook's curated subset of
+    the public REST API documented at https://developers.salesloft.com/, covering
+    exactly the endpoints the @friggframework/api-module-salesloft client in
+    api.js implements. It is the source of truth the hand-written client mirrors
+    1:1 (one method per operationId).
+
+    Salesloft does not publish a downloadable OpenAPI file; the interactive
+    reference lives at https://developers.salesloft.com/docs/api/salesloft-platform/.
+    Paths are `/v2/...` with no `.json` suffix.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.salesloft.com/v2
+    description: Salesloft public API v2
+security:
+  - OAuth2: []
+tags:
+  - name: Identity
+  - name: People
+  - name: Accounts
+  - name: Users
+  - name: Tasks
+  - name: Webhooks
+paths:
+  /me:
+    get:
+      tags: [Identity]
+      operationId: getMe
+      summary: Fetch current user
+      description: >-
+        Authenticated user information. Does not accept parameters.
+        https://developers.salesloft.com/docs/api/me-index/
+      responses:
+        "200":
+          description: Current user wrapped in the standard `{ data }` envelope.
+  /team:
+    get:
+      tags: [Identity]
+      operationId: getTeam
+      summary: Fetch current team
+      description: >-
+        Authenticated user's team. `data.id` is the team id used as the Frigg
+        entity externalId.
+        https://developers.salesloft.com/docs/api/team-index/
+      responses:
+        "200":
+          description: Current team wrapped in `{ data }`.
+
+  /people:
+    get:
+      tags: [People]
+      operationId: listPeople
+      summary: List people
+      description: >-
+        Fetches multiple person records. Filterable, pageable, sortable.
+        https://developers.salesloft.com/docs/api/people-index/
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/perPage"
+        - in: query
+          name: email_addresses
+          schema: { type: string }
+        - in: query
+          name: account_id
+          schema: { type: string }
+        - in: query
+          name: updated_at[gt]
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated people list `{ data, metadata }`.
+    post:
+      tags: [People]
+      operationId: createPerson
+      summary: Create a person
+      description: >-
+        Creates a person. Either `email_address` or `phone`/`last_name` must be
+        provided as a unique lookup on the team.
+        https://developers.salesloft.com/docs/api/people-create/
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email_address: { type: string, format: email }
+                first_name: { type: string }
+                last_name: { type: string }
+                phone: { type: string }
+                mobile_phone: { type: string }
+                title: { type: string }
+                account_id: { type: string }
+                owner_id: { type: string }
+                person_company_name: { type: string }
+                linkedin_url: { type: string }
+                city: { type: string }
+                state: { type: string }
+                country: { type: string }
+                tags:
+                  type: array
+                  items: { type: string }
+                custom_fields: { type: object }
+      responses:
+        "200":
+          description: Created person `{ data }`.
+  /people/{id}:
+    get:
+      tags: [People]
+      operationId: getPerson
+      summary: Fetch a person
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: Person `{ data }`.
+    put:
+      tags: [People]
+      operationId: updatePerson
+      summary: Update a person
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated person `{ data }`.
+    delete:
+      tags: [People]
+      operationId: deletePerson
+      summary: Delete a person
+      description: Not reversible without contacting support.
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: Deleted.
+
+  /accounts:
+    get:
+      tags: [Accounts]
+      operationId: listAccounts
+      summary: List accounts
+      description: https://developers.salesloft.com/docs/api/accounts-index/
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/perPage"
+        - in: query
+          name: domain
+          schema: { type: string }
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: updated_at[gt]
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated accounts `{ data, metadata }`.
+    post:
+      tags: [Accounts]
+      operationId: createAccount
+      summary: Create an account
+      description: >-
+        Creates an account. `domain` must be unique on the current team.
+        https://developers.salesloft.com/docs/api/accounts-create/
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                domain: { type: string }
+                conversational_name: { type: string }
+                description: { type: string }
+                phone: { type: string }
+                website: { type: string }
+                linkedin_url: { type: string }
+                street: { type: string }
+                city: { type: string }
+                state: { type: string }
+                postal_code: { type: string }
+                country: { type: string }
+                industry: { type: string }
+                owner_id: { type: string }
+                tags:
+                  type: array
+                  items: { type: string }
+                custom_fields: { type: object }
+      responses:
+        "200":
+          description: Created account `{ data }`.
+  /accounts/{id}:
+    get:
+      tags: [Accounts]
+      operationId: getAccount
+      summary: Fetch an account
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: Account `{ data }`.
+    put:
+      tags: [Accounts]
+      operationId: updateAccount
+      summary: Update an account
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated account `{ data }`.
+    delete:
+      tags: [Accounts]
+      operationId: deleteAccount
+      summary: Delete an account
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: Deleted.
+
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List users
+      description: https://developers.salesloft.com/docs/api/users-index/
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/perPage"
+      responses:
+        "200":
+          description: Paginated users `{ data, metadata }`.
+  /users/{id}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Fetch a user
+      description: Path id accepts User ID or User GUID.
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: User `{ data }`.
+    put:
+      tags: [Users]
+      operationId: updateUser
+      summary: Update a user
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated user `{ data }`.
+
+  /tasks:
+    get:
+      tags: [Tasks]
+      operationId: listTasks
+      summary: List tasks
+      description: >-
+        Cadence-step tasks are excluded.
+        https://developers.salesloft.com/docs/api/tasks-index/
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/perPage"
+      responses:
+        "200":
+          description: Paginated tasks `{ data, metadata }`.
+    post:
+      tags: [Tasks]
+      operationId: createTask
+      summary: Create a task
+      description: https://developers.salesloft.com/docs/api/tasks-create/
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject: { type: string }
+                person_id: { type: string }
+                user_id: { type: string }
+                user_guid: { type: string }
+                task_type: { type: string }
+                due_date: { type: string, format: date }
+                remind_at: { type: string, format: date-time }
+                description: { type: string }
+                idempotency_key: { type: string }
+      responses:
+        "200":
+          description: Created task `{ data }`.
+  /tasks/{id}:
+    get:
+      tags: [Tasks]
+      operationId: getTask
+      summary: Fetch a task
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: Task `{ data }`.
+    put:
+      tags: [Tasks]
+      operationId: updateTask
+      summary: Update a task
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated task `{ data }`.
+    delete:
+      tags: [Tasks]
+      operationId: deleteTask
+      summary: Delete a task
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: Deleted.
+
+  /webhook_subscriptions:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookSubscriptions
+      summary: List webhook subscriptions
+      description: https://developers.salesloft.com/docs/api/webhook-subscriptions/
+      parameters:
+        - in: query
+          name: enabled
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Webhook subscription list `{ data }`.
+    post:
+      tags: [Webhooks]
+      operationId: createWebhookSubscription
+      summary: Create a webhook subscription
+      description: >-
+        Required body: `event_type`, `callback_url`, `callback_token`.
+        Event types: https://developers.salesloft.com/docs/platform/webhooks/event-types/
+        https://developers.salesloft.com/docs/api/webhook-subscriptions-create/
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_type, callback_url, callback_token]
+              properties:
+                event_type: { type: string }
+                callback_url: { type: string, format: uri }
+                callback_token: { type: string }
+      responses:
+        "200":
+          description: Created subscription `{ data }` (includes id, tenant_id, user_guid).
+  /webhook_subscriptions/{id}:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhookSubscription
+      summary: Fetch a webhook subscription
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: Subscription `{ data }`.
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhookSubscription
+      summary: Update a webhook subscription
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                callback_url: { type: string, format: uri }
+      responses:
+        "200":
+          description: Updated subscription `{ data }`.
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhookSubscription
+      summary: Delete a webhook subscription
+      parameters:
+        - $ref: "#/components/parameters/resourceId"
+      responses:
+        "200":
+          description: Deleted.
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Authorization Code grant. Partners must use OAuth (API keys are for
+        customers only).
+        https://developers.salesloft.com/docs/platform/api-basics/oauth-authentication/
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts.salesloft.com/oauth/authorize
+          tokenUrl: https://accounts.salesloft.com/oauth/token
+          scopes: {}
+  parameters:
+    resourceId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1 }
+      description: 1-based page number.
+    perPage:
+      name: per_page
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100 }
+      description: Page size (default typically 25, max 100).

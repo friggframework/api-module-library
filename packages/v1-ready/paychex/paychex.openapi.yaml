@@ -1,0 +1,703 @@
+openapi: 3.0.3
+info:
+  title: Paychex Flex External API
+  version: "1.0"
+  description: >-
+    Curated subset of Paychex Flex External API covering the endpoints
+    implemented by @friggframework/api-module-paychex. Paths, parameters, and
+    fields are taken from Paychex's official OpenAPI and documentation.
+    operationIds are camelCase names that match Api methods 1:1 (spec-sync).
+
+    Production base: https://api.paychex.com
+
+    Auth: OAuth 2.0 client_credentials (form-urlencoded POST to
+    /auth/oauth/v2/token). Bearer access tokens expire in ~600 seconds; there
+    is no refresh_token.
+
+    Official sources:
+      https://developer.paychex.com/documentation
+      https://developer.paychex.com/sites/default/files/apidocument/openapi-merge-develop.210-public_0.json
+      https://developer.paychex.com/partner
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  termsOfService: https://developer.paychex.com/
+servers:
+  - url: https://api.paychex.com
+    description: Paychex production API
+security:
+  - BearerAuth: []
+tags:
+  - name: Auth
+  - name: Companies
+  - name: Workers
+  - name: PayPeriods
+  - name: Webhooks
+paths:
+  /auth/oauth/v2/token:
+    post:
+      tags: [Auth]
+      operationId: getTokenFromClientCredentials
+      summary: Create Bearer token
+      description: >-
+        Request a Bearer token used as an access token for resource calls.
+        Credentials are sent in an application/x-www-form-urlencoded body.
+        Source: official External API "Create Bearer token"
+        (POST /auth/oauth/v2/token).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [grant_type, client_id, client_secret]
+              properties:
+                grant_type:
+                  type: string
+                  description: Send "client_credentials".
+                client_id:
+                  type: string
+                  description: The application's API key.
+                client_secret:
+                  type: string
+                  description: The application's corresponding secret.
+      responses:
+        '200':
+          description: Token response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+
+  /companies:
+    get:
+      tags: [Companies]
+      operationId: listCompanies
+      summary: List companies
+      description: >-
+        Array of companies that the application has been granted access to.
+        Official operationId: getCompanies_1.
+      parameters:
+        - name: displayid
+          in: query
+          required: false
+          description: >-
+            Client account number (no dash or spaces; last 8 characters of the ID).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Collection of companies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompaniesResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /companies/{companyId}:
+    get:
+      tags: [Companies]
+      operationId: getCompany
+      summary: Get a company
+      description: >-
+        Information about a single company. Official operationId: getCompany_1.
+      parameters:
+        - $ref: '#/components/parameters/CompanyId'
+        - name: includelineage
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Company
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+
+  /companies/{companyId}/workers:
+    get:
+      tags: [Workers]
+      operationId: listCompanyWorkers
+      summary: List company workers
+      description: >-
+        Array of workers (employees and contractors) for a company.
+        Official operationId: getCompanyWorkers. Paging and filtering
+        attributes cannot be applied together.
+      parameters:
+        - $ref: '#/components/parameters/CompanyId'
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: givenname
+          in: query
+          schema:
+            type: string
+        - name: familyname
+          in: query
+          schema:
+            type: string
+        - name: legallastfour
+          in: query
+          schema:
+            type: string
+        - name: employeeid
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+        - name: locationid
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Collection of workers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkersResponse'
+    post:
+      tags: [Workers]
+      operationId: createCompanyWorkers
+      summary: Create in-progress workers
+      description: >-
+        Create in-progress worker(s) for a company.
+        Official operationId: createInProgressWorkers.
+        Content-Type: application/vnd.paychex.workers.v1+json
+      parameters:
+        - $ref: '#/components/parameters/CompanyId'
+      requestBody:
+        required: true
+        content:
+          application/vnd.paychex.workers.v1+json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Created worker(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkersResponse'
+        '207':
+          description: Multi-status
+
+  /workers/{workerId}:
+    get:
+      tags: [Workers]
+      operationId: getWorker
+      summary: Get a worker
+      description: >-
+        Information about a unique worker. Official OpenAPI operationId is
+        getWorkerUsersCommunicationsNonpii_1_1_1_1_1_1_1_1; this curated
+        subset uses getWorker to match the Api method.
+      parameters:
+        - $ref: '#/components/parameters/WorkerId'
+      responses:
+        '200':
+          description: Worker
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerResponse'
+        '404':
+          description: Not found
+    patch:
+      tags: [Workers]
+      operationId: updateWorker
+      summary: Update a worker
+      description: >-
+        Update a unique worker. Official operationId: updateWorker.
+        Content-Type: application/vnd.paychex.worker.v1+json
+      parameters:
+        - $ref: '#/components/parameters/WorkerId'
+      requestBody:
+        required: true
+        content:
+          application/vnd.paychex.worker.v1+json:
+            schema:
+              type: object
+              additionalProperties: true
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Updated worker
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerResponse'
+
+  /companies/{companyId}/payperiods:
+    get:
+      tags: [PayPeriods]
+      operationId: listCompanyPayPeriods
+      summary: List company pay periods
+      description: >-
+        Array of pay periods associated with the company.
+        Official operationId: getCompanyPayPeriods_1.
+      parameters:
+        - $ref: '#/components/parameters/CompanyId'
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Collection of pay periods
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayPeriodsResponse'
+
+  /companies/{companyId}/payperiods/{payperiodId}:
+    get:
+      tags: [PayPeriods]
+      operationId: getCompanyPayPeriod
+      summary: Get a company pay period
+      description: >-
+        A single pay period. Official operationId: getCompanyPayPeriodsByPayPeriodId.
+      parameters:
+        - $ref: '#/components/parameters/CompanyId'
+        - name: payperiodId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pay period
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayPeriodsResponse'
+        '404':
+          description: Not found
+
+  /management/domains:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookDomains
+      summary: Get webhook domains
+      description: >-
+        List available webhook domains depending on application type.
+        Official operationId: domains.
+      responses:
+        '200':
+          description: Domains
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  example: WRKR_DEM
+
+  /management/hooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List webhooks
+      description: >-
+        List all webhooks set up for the calling application.
+        Official operationId: getAllHooks.
+      responses:
+        '200':
+          description: Webhooks
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Webhook'
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Add a webhook
+      description: >-
+        Register a webhook for the calling application.
+        Official operationId: addHook. authentication.authType may be
+        NO_AUTH, BASIC_AUTH, APIKEY, OAUTH2, or OAUTH2_BASIC.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookRequest'
+      responses:
+        '200':
+          description: Created webhook
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+
+  /management/hooks/{hookId}:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Get a webhook
+      description: >-
+        Get a specific hook by id. Official operationId: getHook.
+      parameters:
+        - $ref: '#/components/parameters/HookId'
+      responses:
+        '200':
+          description: Webhook
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '404':
+          description: Not found
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook
+      description: >-
+        Delete a specific hook by id. Official operationId: deleteHook.
+      parameters:
+        - $ref: '#/components/parameters/HookId'
+      responses:
+        '200':
+          description: Deleted
+        '404':
+          description: Not found
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: OAuth 2.0 access token from POST /auth/oauth/v2/token
+  parameters:
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      description: Paychex Flex company identifier.
+      schema:
+        type: string
+    WorkerId:
+      name: workerId
+      in: path
+      required: true
+      description: Paychex Flex worker identifier.
+      schema:
+        type: string
+    HookId:
+      name: hookId
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        expires_in:
+          type: integer
+          description: Lifetime in seconds (commonly 600).
+        scope:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+    PageMetadata:
+      type: object
+      properties:
+        contentItemCount:
+          type: integer
+        totalContentItemCount:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+    Link:
+      type: object
+      properties:
+        rel:
+          type: string
+        href:
+          type: string
+    PersonName:
+      type: object
+      properties:
+        givenName:
+          type: string
+        middleName:
+          type: string
+        familyName:
+          type: string
+        preferredName:
+          type: string
+        preferredLastName:
+          type: string
+    Company:
+      type: object
+      properties:
+        companyId:
+          type: string
+        displayId:
+          type: string
+        legalName:
+          type: string
+        hasPermission:
+          type: boolean
+        legalId:
+          type: object
+          properties:
+            legalIdType:
+              type: string
+            legalIdValue:
+              type: string
+        communications:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+    CompaniesResponse:
+      type: object
+      properties:
+        metadata:
+          $ref: '#/components/schemas/PageMetadata'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Company'
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+    CompanyResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Company'
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+    Worker:
+      type: object
+      properties:
+        workerId:
+          type: string
+        employeeId:
+          type: string
+        workerType:
+          type: string
+          description: EMPLOYEE or INDEPENDENT_CONTRACTOR
+        employmentType:
+          type: string
+          description: FULL_TIME or PART_TIME
+        exemptionType:
+          type: string
+        workState:
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        hireDate:
+          type: string
+          format: date-time
+        name:
+          $ref: '#/components/schemas/PersonName'
+        locationId:
+          type: string
+        jobId:
+          type: string
+        currentStatus:
+          type: object
+          properties:
+            workerStatusId:
+              type: string
+            statusType:
+              type: string
+            statusReason:
+              type: string
+            effectiveDate:
+              type: string
+              format: date-time
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+    WorkersResponse:
+      type: object
+      properties:
+        metadata:
+          $ref: '#/components/schemas/PageMetadata'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Worker'
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+    WorkerResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Worker'
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+    PayPeriod:
+      type: object
+      properties:
+        payPeriodId:
+          type: string
+        intervalCode:
+          type: string
+        status:
+          type: string
+        description:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        submitByDate:
+          type: string
+          format: date-time
+        checkDate:
+          type: string
+          format: date-time
+        checkCount:
+          type: integer
+        originalPayPeriodID:
+          type: string
+    PayPeriodsResponse:
+      type: object
+      properties:
+        metadata:
+          $ref: '#/components/schemas/PageMetadata'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayPeriod'
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+    WebhookAuthentication:
+      type: object
+      required: [authType]
+      properties:
+        authType:
+          type: string
+          enum: [NO_AUTH, BASIC_AUTH, APIKEY, OAUTH2, OAUTH2_BASIC]
+        username:
+          type: string
+        password:
+          type: string
+        apiKey:
+          type: string
+        tokenUrl:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+        grantType:
+          type: string
+        contentType:
+          type: string
+    WebhookRequest:
+      type: object
+      required: [uri, authentication, domains]
+      properties:
+        hookId:
+          type: string
+        uri:
+          type: string
+          format: uri
+        companyId:
+          type: string
+          description: >-
+            When omitted, all companies linked to the app receive notifications.
+        authentication:
+          $ref: '#/components/schemas/WebhookAuthentication'
+        domains:
+          type: array
+          items:
+            type: string
+    Webhook:
+      type: object
+      properties:
+        hookId:
+          type: string
+        companyId:
+          type: string
+        uri:
+          type: string
+        authType:
+          type: string
+        createdDate:
+          type: string
+          format: date-time
+        active:
+          type: string
+        domains:
+          type: array
+          items:
+            type: string

@@ -1,0 +1,358 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "paychex",
+  "label": "Paychex Flex",
+  "package": "@friggframework/api-module-paychex",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected Paychex application / company, persisted by the module (apiPropertiesToPersist).",
+    "fields": [
+      {
+        "name": "company_id",
+        "type": "string",
+        "description": "Optional default Paychex Flex companyId bound to this connection (from form input or single-company discovery via GET /companies)."
+      }
+    ]
+  },
+  "objects": {
+    "company": {
+      "label": "Company",
+      "fields": [
+        {
+          "name": "companyId",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "displayId",
+          "type": "string",
+          "tag": "organization.displayId"
+        },
+        {
+          "name": "legalName",
+          "type": "string",
+          "tag": "organization.name"
+        },
+        {
+          "name": "legalId.legalIdType",
+          "type": "string"
+        },
+        {
+          "name": "legalId.legalIdValue",
+          "type": "string",
+          "tag": "organization.ein"
+        },
+        {
+          "name": "hasPermission",
+          "type": "boolean",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "companyId",
+        "list": {
+          "capability": "company.list"
+        },
+        "get": {
+          "capability": "company.get",
+          "id": "companyId"
+        }
+      }
+    },
+    "worker": {
+      "label": "Worker",
+      "fields": [
+        {
+          "name": "workerId",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "employeeId",
+          "type": "string",
+          "tag": "person.employeeId"
+        },
+        {
+          "name": "workerType",
+          "type": "string"
+        },
+        {
+          "name": "employmentType",
+          "type": "string"
+        },
+        {
+          "name": "name.givenName",
+          "type": "string",
+          "tag": "person.givenName"
+        },
+        {
+          "name": "name.familyName",
+          "type": "string",
+          "tag": "person.familyName"
+        },
+        {
+          "name": "name.preferredName",
+          "type": "string",
+          "tag": "person.preferredName"
+        },
+        {
+          "name": "hireDate",
+          "type": "date",
+          "tag": "employment.hireDate"
+        },
+        {
+          "name": "currentStatus.statusType",
+          "type": "string",
+          "tag": "employment.status"
+        },
+        {
+          "name": "locationId",
+          "type": "string"
+        }
+      ],
+      "sync": {
+        "id": "workerId",
+        "list": {
+          "capability": "worker.list",
+          "cursor": "offset",
+          "limit": "limit",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "worker.get",
+          "id": "workerId"
+        },
+        "create": {
+          "capability": "worker.create",
+          "body": "body"
+        },
+        "update": {
+          "capability": "worker.update",
+          "id": "workerId",
+          "body": "body"
+        }
+      }
+    },
+    "payPeriod": {
+      "label": "Pay Period",
+      "fields": [
+        {
+          "name": "payPeriodId",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "intervalCode",
+          "type": "string",
+          "tag": "payroll.interval"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "tag": "payroll.status"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "startDate",
+          "type": "date",
+          "tag": "payroll.periodStart"
+        },
+        {
+          "name": "endDate",
+          "type": "date",
+          "tag": "payroll.periodEnd"
+        },
+        {
+          "name": "checkDate",
+          "type": "date",
+          "tag": "payroll.checkDate"
+        },
+        {
+          "name": "checkCount",
+          "type": "integer",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "payPeriodId",
+        "list": {
+          "capability": "payPeriod.list"
+        },
+        "get": {
+          "capability": "payPeriod.get",
+          "id": "payPeriodId"
+        }
+      }
+    }
+  },
+  "events": {
+    "worker.updated": {
+      "delivery": "webhook",
+      "object": "worker",
+      "subscribe": "webhook.create",
+      "match": "WRKR_DEM",
+      "description": "Worker demographic domain notification (domains may include WRKR_DEM, WRKR_EMPL, WRKR_CMP, etc.).",
+      "payload": {
+        "companyId": "00H2A1IUJXXCQWJ2GHGH",
+        "workerId": "00H2A1IUJXXDIVTGGHGH",
+        "asOfDate": "2022-06-07T10:10:24.000+00:00",
+        "domains": ["WRKR_EMPL"],
+        "action": "UPDATE",
+        "notificationId": "31a271e5-b970-49e6-ac8f-d46f73c061af"
+      },
+      "idPath": "workerId",
+      "recordId": "workerId"
+    },
+    "client.access": {
+      "delivery": "webhook",
+      "object": "company",
+      "subscribe": "webhook.create",
+      "match": "CLT_ACCESS",
+      "description": "Partner apps may register for CLT_ACCESS to learn when a client accepts an integration (see partner docs).",
+      "payload": {
+        "companyId": "00H2A1IUJXXCQWJ2GHGH",
+        "domains": ["CLT_ACCESS"],
+        "action": "UPDATE",
+        "notificationId": "31a271e5-b970-49e6-ac8f-d46f73c061af"
+      },
+      "idPath": "companyId",
+      "recordId": "companyId"
+    }
+  },
+  "webhook": {
+    "scope": "app",
+    "topic": "{{body.domains.0}}",
+    "eventId": "{{body.notificationId}}",
+    "account": "{{body.companyId}}",
+    "verify": "verifyWebhookDelivery",
+    "note": "Paychex delivers JSON notifications with companyId/workerId/domains/action/notificationId. Subscription auth types include NO_AUTH, BASIC_AUTH, APIKEY, OAUTH2, OAUTH2_BASIC. For APIKEY, verifyWebhookDelivery compares the configured shared secret."
+  },
+  "capabilities": {
+    "token.create": {
+      "kind": "read",
+      "method": "getTokenFromClientCredentials",
+      "input": {},
+      "output": "tokenResponse"
+    },
+    "company.list": {
+      "kind": "read",
+      "method": "listCompanies",
+      "input": {
+        "query": { "type": "object" }
+      },
+      "output": "page<company>",
+      "args": ["query"]
+    },
+    "company.get": {
+      "kind": "read",
+      "method": "getCompany",
+      "input": {
+        "companyId": { "type": "string" },
+        "query": { "type": "object" }
+      },
+      "output": "company",
+      "args": ["companyId", "query"]
+    },
+    "worker.list": {
+      "kind": "read",
+      "method": "listCompanyWorkers",
+      "input": {
+        "companyId": { "type": "string" },
+        "query": { "type": "object" }
+      },
+      "output": "page<worker>",
+      "args": ["companyId", "query"]
+    },
+    "worker.get": {
+      "kind": "read",
+      "method": "getWorker",
+      "input": {
+        "workerId": { "type": "string", "required": true }
+      },
+      "output": "worker",
+      "args": ["workerId"]
+    },
+    "worker.create": {
+      "kind": "write",
+      "method": "createCompanyWorkers",
+      "input": {
+        "companyId": { "type": "string" },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "worker",
+      "args": ["companyId", "body"]
+    },
+    "worker.update": {
+      "kind": "write",
+      "method": "updateWorker",
+      "input": {
+        "workerId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "worker",
+      "args": ["workerId", "body"]
+    },
+    "payPeriod.list": {
+      "kind": "read",
+      "method": "listCompanyPayPeriods",
+      "input": {
+        "companyId": { "type": "string" },
+        "query": { "type": "object" }
+      },
+      "output": "page<payPeriod>",
+      "args": ["companyId", "query"]
+    },
+    "payPeriod.get": {
+      "kind": "read",
+      "method": "getCompanyPayPeriod",
+      "input": {
+        "companyId": { "type": "string" },
+        "payPeriodId": { "type": "string", "required": true }
+      },
+      "output": "payPeriod",
+      "args": ["companyId", "payPeriodId"]
+    },
+    "webhook.domains": {
+      "kind": "read",
+      "method": "listWebhookDomains",
+      "input": {},
+      "output": "string[]"
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "input": {},
+      "output": "page<webhook>"
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": {
+        "hookId": { "type": "string", "required": true }
+      },
+      "output": "webhook",
+      "args": ["hookId"]
+    },
+    "webhook.create": {
+      "kind": "subscribe",
+      "method": "createWebhook",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["body"]
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhook",
+      "input": {
+        "hookId": { "type": "string", "required": true }
+      },
+      "args": ["hookId"]
+    }
+  }
+}

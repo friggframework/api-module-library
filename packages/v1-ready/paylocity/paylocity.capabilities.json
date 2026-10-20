@@ -1,0 +1,106 @@
+{
+  "schema": "capability-manifest/v0.1",
+  "module": "paylocity",
+  "package": "@friggframework/api-module-paylocity",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "grant": "client_credentials",
+    "scope": "WebLinkAPI",
+    "methods": {
+      "getToken": "getTokenFromClientCredentials",
+      "testAuth": "listEmployees"
+    },
+    "credentials": ["client_id", "client_secret", "company_id"],
+    "docs": "https://developer.paylocity.com/integrations/reference/authentication-weblink"
+  },
+  "objects": {
+    "employee": {
+      "description": "Paylocity Payroll/HR employee records (Weblink api/v2)",
+      "fields": [
+        { "name": "employeeId", "tags": ["identifier", "required"] },
+        { "name": "firstName", "tags": ["pii", "required"] },
+        { "name": "lastName", "tags": ["pii", "required"] },
+        { "name": "middleName", "tags": ["pii"] },
+        { "name": "preferredName", "tags": ["pii", "display"] },
+        { "name": "birthDate", "tags": ["pii"] },
+        { "name": "ssn", "tags": ["pii", "sensitive"] },
+        { "name": "gender", "tags": [] },
+        { "name": "ethnicity", "tags": [] },
+        { "name": "maritalStatus", "tags": [] },
+        { "name": "status.employeeStatus", "tags": ["enum", "lifecycle"] },
+        { "name": "status.hireDate", "tags": ["timestamp"] },
+        { "name": "status.terminationDate", "tags": ["timestamp"] },
+        { "name": "status.changeReason", "tags": [] },
+        { "name": "statusCode", "tags": ["enum", "lifecycle"] },
+        { "name": "statusTypeCode", "tags": ["enum"] },
+        { "name": "homeAddress", "tags": ["pii"] },
+        { "name": "workAddress", "tags": [] },
+        { "name": "departmentPosition", "tags": [] },
+        { "name": "primaryPayRate", "tags": ["sensitive"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listEmployees",
+          "spec": "paylocity.openapi.yaml#/paths/~1companies~1{companyId}~1employees/get"
+        },
+        "get": {
+          "method": "getEmployee",
+          "spec": "paylocity.openapi.yaml#/paths/~1companies~1{companyId}~1employees~1{employeeId}/get"
+        },
+        "create": {
+          "method": "createEmployee",
+          "spec": "paylocity.openapi.yaml#/paths/~1companies~1{companyId}~1employees/post"
+        },
+        "update": {
+          "method": "updateEmployee",
+          "spec": "paylocity.openapi.yaml#/paths/~1companies~1{companyId}~1employees~1{employeeId}/patch",
+          "notes": "Also used for status changes including termination (employeeStatus=T)"
+        }
+      }
+    },
+    "companyCode": {
+      "description": "Company setup codes (cost centers, deductions, earnings, positions, …)",
+      "fields": [
+        { "name": "code", "tags": ["identifier", "required"] },
+        { "name": "description", "tags": ["display"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listCompanyCodes",
+          "spec": "paylocity.openapi.yaml#/paths/~1companies~1{companyId}~1codes~1{codeResource}/get"
+        }
+      }
+    },
+    "companyOpenApi": {
+      "description": "Company-specific OpenAPI document with enums/required fields for Payroll/HR schemas",
+      "fields": [
+        { "name": "openapi", "tags": [] }
+      ],
+      "capabilities": {
+        "get": {
+          "method": "getCompanyOpenApi",
+          "spec": "paylocity.openapi.yaml#/paths/~1companies~1{companyId}~1openapi/get"
+        }
+      }
+    }
+  },
+  "skipped": {
+    "webhooks": {
+      "reason": "Paylocity webhooks (New Hire, Employee Change, Termination, Payroll Processed, Time Off Approval) are configured via partner/customer access request forms — there is no public REST create/list/delete subscription API. Delivery is HTTPS POST of companyId/employeeId (and related fields); consumers re-fetch via GET Employee.",
+      "docs": "https://developer.paylocity.com/integrations/v2025-08-12/reference/webhooks-overview"
+    },
+    "coreHrEmployeeDemographic": {
+      "reason": "Newer CoreHR Employee Demographic batch/single endpoints (coreHr/v1/… on dc1demogwext) are a separate API surface from Weblink api/v2; deferred until an integration needs them and credentials grant that product.",
+      "docs": "https://developer.paylocity.com/integrations/reference/get_corehr-v1-companies-companyid-employees"
+    },
+    "employeeStatusSearches": {
+      "reason": "POST /employeeStatusSearches is closed beta (marketplace partner early adopter); omitted from this first cut.",
+      "docs": "https://developer.paylocity.com/integrations/reference/search-for-employee-statuses"
+    },
+    "payrollTimeLabor": {
+      "reason": "Pay Entry, Punch Detail/Import, Shifts, deductions/earnings CRUD, local taxes, onboarding, and pay statements are out of scope for the core employee sync surface.",
+      "docs": "https://developer.paylocity.com/integrations/docs/getting-started"
+    }
+  }
+}

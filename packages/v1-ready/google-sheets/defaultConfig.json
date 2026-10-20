@@ -1,0 +1,13 @@
+{
+  "name": "google-sheets",
+  "label": "Google Sheets",
+  "productUrl": "https://sheets.google.com",
+  "apiDocs": "https://developers.google.com/workspace/sheets/api/reference/rest",
+  "logoUrl": "https://friggframework.org/assets/img/google-sheets-icon.png",
+  "categories": [
+    "Spreadsheets",
+    "Productivity",
+    "Google Workspace"
+  ],
+  "description": "Google Sheets is a cloud spreadsheet application in Google Workspace for creating, editing, and collaborating on spreadsheets"
+}

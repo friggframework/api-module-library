@@ -152,5 +152,10 @@ describe('TriNet Definition', () => {
         expect(Definition.env).toHaveProperty('client_secret');
         expect(Definition.env).toHaveProperty('scope');
         expect(Definition.env).toHaveProperty('redirect_uri');
+        expect(Definition.env.redirect_uri).toBe(
+            process.env.REDIRECT_URI
+                ? `${process.env.REDIRECT_URI}/trinet`
+                : undefined
+        );
     });
 });

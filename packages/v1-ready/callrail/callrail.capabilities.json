@@ -1,0 +1,571 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "callrail",
+  "label": "CallRail",
+  "package": "@friggframework/api-module-callrail",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Account identity from GET /v3/a.json (first accessible account id). Persisted as entity/credential externalId.",
+    "fields": [
+      {
+        "name": "accountId",
+        "type": "string",
+        "description": "CallRail account id (ACC…) from listAccounts"
+      }
+    ]
+  },
+  "objects": {
+    "account": {
+      "label": "Account",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "outbound_recording_enabled", "type": "boolean", "readOnly": true },
+        { "name": "hipaa_account", "type": "boolean", "readOnly": true },
+        { "name": "numeric_id", "type": "number", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "account.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "accounts",
+          "paging": "offset"
+        },
+        "get": { "capability": "account.get", "id": "accountId" }
+      }
+    },
+    "company": {
+      "label": "Company",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "status", "type": "string" },
+        { "name": "time_zone", "type": "string" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "disabled_at", "type": "datetime", "readOnly": true },
+        { "name": "script_url", "type": "string", "readOnly": true },
+        { "name": "form_capture", "type": "boolean" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "company.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "companies",
+          "paging": "offset"
+        },
+        "get": { "capability": "company.get", "id": "companyId" },
+        "create": { "capability": "company.create", "body": "data" },
+        "update": { "capability": "company.update", "id": "companyId", "body": "data" }
+      }
+    },
+    "call": {
+      "label": "Call",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "customer_name", "type": "string", "tag": "person.displayName" },
+        { "name": "customer_phone_number", "type": "string", "tag": "contact.phone" },
+        { "name": "customer_email", "type": "email", "tag": "contact.email" },
+        { "name": "customer_city", "type": "string" },
+        { "name": "customer_state", "type": "string" },
+        { "name": "customer_country", "type": "string" },
+        { "name": "tracking_phone_number", "type": "string" },
+        { "name": "business_phone_number", "type": "string" },
+        { "name": "direction", "type": "enum", "values": ["inbound", "outbound"] },
+        { "name": "answered", "type": "boolean" },
+        { "name": "voicemail", "type": "boolean" },
+        { "name": "duration", "type": "number" },
+        { "name": "start_time", "type": "datetime", "tag": "record.createdAt" },
+        { "name": "recording", "type": "string", "readOnly": true },
+        { "name": "agent_email", "type": "email", "tag": "person.email" },
+        { "name": "lead_status", "type": "string" },
+        { "name": "note", "type": "text" },
+        { "name": "value", "type": "string" },
+        { "name": "tags", "type": "json" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "call.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "calls",
+          "paging": "offset"
+        },
+        "get": { "capability": "call.get", "id": "callId" },
+        "create": { "capability": "call.create", "body": "data" },
+        "update": { "capability": "call.update", "id": "callId", "body": "data" }
+      }
+    },
+    "form_submission": {
+      "label": "Form Submission",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "company_id", "type": "string" },
+        { "name": "customer_name", "type": "string", "tag": "person.displayName" },
+        { "name": "customer_email", "type": "email", "tag": "contact.email" },
+        { "name": "customer_phone_number", "type": "string", "tag": "contact.phone" },
+        { "name": "form_url", "type": "string" },
+        { "name": "landing_page_url", "type": "string" },
+        { "name": "submitted_at", "type": "datetime", "tag": "record.createdAt" },
+        { "name": "form_data", "type": "json" },
+        { "name": "source", "type": "string" },
+        { "name": "lead_status", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "form_submission.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "form_submissions",
+          "paging": "offset"
+        },
+        "create": { "capability": "form_submission.create", "body": "data" },
+        "update": { "capability": "form_submission.update", "id": "formSubmissionId", "body": "data" }
+      }
+    },
+    "text_conversation": {
+      "label": "Text Conversation",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "company_id", "type": "string" },
+        { "name": "customer_name", "type": "string", "tag": "person.displayName" },
+        { "name": "customer_phone_number", "type": "string", "tag": "contact.phone" },
+        { "name": "current_tracking_number", "type": "string" },
+        { "name": "last_message_at", "type": "datetime", "tag": "record.updatedAt" },
+        { "name": "state", "type": "enum", "values": ["active", "archived"] }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "text_conversation.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "conversations",
+          "paging": "offset"
+        },
+        "get": { "capability": "text_conversation.get", "id": "conversationId" },
+        "create": { "capability": "text_conversation.send", "body": "data" }
+      }
+    },
+    "tracker": {
+      "label": "Tracker",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "type", "type": "enum", "values": ["source", "session"] },
+        { "name": "status", "type": "string" },
+        { "name": "destination_number", "type": "string" },
+        { "name": "tracking_numbers", "type": "json" },
+        { "name": "company.id", "type": "string" },
+        { "name": "company.name", "type": "string" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "tracker.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "trackers",
+          "paging": "offset"
+        },
+        "get": { "capability": "tracker.get", "id": "trackerId" }
+      }
+    },
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "person.id" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "first_name", "type": "string", "tag": "person.givenName" },
+        { "name": "last_name", "type": "string", "tag": "person.familyName" },
+        { "name": "name", "type": "string", "tag": "person.displayName" },
+        { "name": "role", "type": "string" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "user.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "users",
+          "paging": "offset"
+        },
+        "get": { "capability": "user.get", "id": "userId" }
+      }
+    },
+    "integration": {
+      "label": "Integration",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "type", "type": "string" },
+        { "name": "state", "type": "enum", "values": ["active", "disabled", "pending", "failed"] },
+        { "name": "config", "type": "json" },
+        { "name": "signing_key", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "integration.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "integrations",
+          "paging": "offset"
+        },
+        "get": { "capability": "integration.get", "id": "integrationId" },
+        "create": { "capability": "integration.create", "body": "data" },
+        "update": { "capability": "integration.update", "id": "integrationId", "body": "data" },
+        "delete": { "capability": "integration.delete", "id": "integrationId" }
+      }
+    }
+  },
+  "events": {
+    "pre_call": {
+      "label": "Pre-Call",
+      "description": "Inbound call received before connection (pre_call_webhook)."
+    },
+    "answered_call": {
+      "label": "Call Routing Complete",
+      "description": "Inbound call routed to destination (answered_call_webhook)."
+    },
+    "post_call": {
+      "label": "Post-Call",
+      "description": "Inbound call completed with recording/transcript attached (post_call_webhook)."
+    },
+    "updated_call": {
+      "label": "Call Modified",
+      "description": "Call object updated (updated_call_webhook)."
+    },
+    "sms_received": {
+      "label": "Text Message Received",
+      "description": "Inbound SMS/MMS (sms_received_webhook)."
+    },
+    "sms_sent": {
+      "label": "Text Message Sent",
+      "description": "Outbound SMS/MMS (sms_sent_webhook)."
+    },
+    "form_captured": {
+      "label": "Form Submission",
+      "description": "Form captured (form_captured_webhook)."
+    },
+    "post_outbound_call": {
+      "label": "Outbound Post-Call",
+      "description": "Outbound call completed (post_outbound_call_webhook)."
+    },
+    "updated_outbound_call": {
+      "label": "Outbound Call Modified",
+      "description": "Outbound call updated (updated_outbound_call_webhook)."
+    }
+  },
+  "webhook": {
+    "subscribe": "integration.create",
+    "unsubscribe": "integration.delete",
+    "note": "CallRail models webhooks as Integrations with type Webhooks. Config holds per-event URL arrays. HMAC-SHA1 Signature header validates payloads with the company signing_key."
+  },
+  "capabilities": {
+    "account.list": {
+      "kind": "read",
+      "method": "listAccounts",
+      "input": {
+        "page": { "type": "number" },
+        "per_page": { "type": "number" },
+        "fields": { "type": "string" }
+      },
+      "output": "page<account>",
+      "args": ["$rest"]
+    },
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "fields": { "type": "string" }
+      },
+      "output": "account",
+      "args": ["accountId", "$rest"]
+    },
+    "company.list": {
+      "kind": "read",
+      "method": "listCompanies",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "page": { "type": "number" },
+        "per_page": { "type": "number" }
+      },
+      "output": "page<company>",
+      "args": ["accountId", "$rest"]
+    },
+    "company.get": {
+      "kind": "read",
+      "method": "getCompany",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "companyId": { "type": "string", "required": true }
+      },
+      "output": "company",
+      "args": ["accountId", "companyId", "$rest"]
+    },
+    "company.create": {
+      "kind": "write",
+      "method": "createCompany",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "company",
+      "args": ["accountId", "data"]
+    },
+    "company.update": {
+      "kind": "write",
+      "method": "updateCompany",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "companyId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "company",
+      "args": ["accountId", "companyId", "data"]
+    },
+    "call.list": {
+      "kind": "read",
+      "method": "listCalls",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "page": { "type": "number" },
+        "per_page": { "type": "number" },
+        "company_id": { "type": "string" },
+        "start_date": { "type": "string" },
+        "end_date": { "type": "string" },
+        "direction": { "type": "string" },
+        "answered": { "type": "boolean" }
+      },
+      "output": "page<call>",
+      "args": ["accountId", "$rest"]
+    },
+    "call.get": {
+      "kind": "read",
+      "method": "getCall",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "callId": { "type": "string", "required": true }
+      },
+      "output": "call",
+      "args": ["accountId", "callId", "$rest"]
+    },
+    "call.create": {
+      "kind": "write",
+      "method": "createCall",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "call",
+      "args": ["accountId", "data"]
+    },
+    "call.update": {
+      "kind": "write",
+      "method": "updateCall",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "callId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "call",
+      "args": ["accountId", "callId", "data"]
+    },
+    "form_submission.list": {
+      "kind": "read",
+      "method": "listFormSubmissions",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "page": { "type": "number" },
+        "per_page": { "type": "number" },
+        "company_id": { "type": "string" }
+      },
+      "output": "page<form_submission>",
+      "args": ["accountId", "$rest"]
+    },
+    "form_submission.create": {
+      "kind": "write",
+      "method": "createFormSubmission",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "form_submission",
+      "args": ["accountId", "data"]
+    },
+    "form_submission.update": {
+      "kind": "write",
+      "method": "updateFormSubmission",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "formSubmissionId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "form_submission",
+      "args": ["accountId", "formSubmissionId", "data"]
+    },
+    "text_conversation.list": {
+      "kind": "read",
+      "method": "listTextConversations",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "page": { "type": "number" },
+        "per_page": { "type": "number" }
+      },
+      "output": "page<text_conversation>",
+      "args": ["accountId", "$rest"]
+    },
+    "text_conversation.get": {
+      "kind": "read",
+      "method": "getTextConversation",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "conversationId": { "type": "string", "required": true }
+      },
+      "output": "text_conversation",
+      "args": ["accountId", "conversationId", "$rest"]
+    },
+    "text_conversation.send": {
+      "kind": "write",
+      "method": "sendTextMessage",
+      "label": "Send a text message (SMS/MMS)",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "text_conversation",
+      "args": ["accountId", "data"]
+    },
+    "tracker.list": {
+      "kind": "read",
+      "method": "listTrackers",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "page": { "type": "number" },
+        "per_page": { "type": "number" },
+        "company_id": { "type": "string" }
+      },
+      "output": "page<tracker>",
+      "args": ["accountId", "$rest"]
+    },
+    "tracker.get": {
+      "kind": "read",
+      "method": "getTracker",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "trackerId": { "type": "string", "required": true }
+      },
+      "output": "tracker",
+      "args": ["accountId", "trackerId", "$rest"]
+    },
+    "user.list": {
+      "kind": "read",
+      "method": "listUsers",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "page": { "type": "number" },
+        "per_page": { "type": "number" }
+      },
+      "output": "page<user>",
+      "args": ["accountId", "$rest"]
+    },
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "userId": { "type": "string", "required": true }
+      },
+      "output": "user",
+      "args": ["accountId", "userId", "$rest"]
+    },
+    "integration.list": {
+      "kind": "read",
+      "method": "listIntegrations",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "company_id": { "type": "string", "required": true },
+        "page": { "type": "number" },
+        "per_page": { "type": "number" }
+      },
+      "output": "page<integration>",
+      "args": ["accountId", "$rest"]
+    },
+    "integration.get": {
+      "kind": "read",
+      "method": "getIntegration",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "integrationId": { "type": "string", "required": true }
+      },
+      "output": "integration",
+      "args": ["accountId", "integrationId", "$rest"]
+    },
+    "integration.create": {
+      "kind": "write",
+      "method": "createIntegration",
+      "label": "Create Webhooks or Custom integration",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "integration",
+      "args": ["accountId", "data"]
+    },
+    "integration.update": {
+      "kind": "write",
+      "method": "updateIntegration",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "integrationId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "integration",
+      "args": ["accountId", "integrationId", "data"]
+    },
+    "integration.delete": {
+      "kind": "write",
+      "method": "deleteIntegration",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "integrationId": { "type": "string", "required": true }
+      },
+      "args": ["accountId", "integrationId"]
+    }
+  },
+  "options": {
+    "account": {
+      "capability": "account.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id",
+      "items": "accounts"
+    },
+    "company": {
+      "capability": "company.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id",
+      "items": "companies"
+    },
+    "tracker": {
+      "capability": "tracker.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id",
+      "items": "trackers"
+    },
+    "user": {
+      "capability": "user.list",
+      "label": "{{item.name}} ({{item.email}})",
+      "value": "$.item.id",
+      "items": "users"
+    }
+  }
+}

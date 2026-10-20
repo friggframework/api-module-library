@@ -35,6 +35,8 @@
         { "name": "type", "type": "string", "readOnly": true },
         { "name": "status", "type": "string" },
         { "name": "authorId", "type": "string", "tag": "record.owner", "readOnly": true },
+        { "name": "spaceOwnerId", "type": "string", "readOnly": true },
+        { "name": "currentActiveAlias", "type": "string", "readOnly": true },
         { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
         { "name": "homepageId", "type": "string", "readOnly": true },
         { "name": "description", "type": "json" },
@@ -69,11 +71,14 @@
         { "name": "spaceId", "type": "string" },
         { "name": "parentId", "type": "string" },
         { "name": "parentType", "type": "string", "readOnly": true },
+        { "name": "position", "type": "integer", "readOnly": true },
         { "name": "authorId", "type": "string", "tag": "record.owner", "readOnly": true },
         { "name": "ownerId", "type": "string", "readOnly": true },
+        { "name": "lastOwnerId", "type": "string", "readOnly": true },
         { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
         { "name": "version", "type": "json" },
         { "name": "body", "type": "json" },
+        { "name": "isFavoritedByCurrentUser", "type": "boolean", "readOnly": true },
         { "name": "_links", "type": "json", "readOnly": true }
       ],
       "sync": {
@@ -111,6 +116,7 @@
         { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
         { "name": "version", "type": "json" },
         { "name": "body", "type": "json" },
+        { "name": "isFavoritedByCurrentUser", "type": "boolean", "readOnly": true },
         { "name": "_links", "type": "json", "readOnly": true }
       ],
       "sync": {
@@ -178,7 +184,13 @@
       "args": ["data"],
       "input": {
         "name": { "type": "string", "required": true },
-        "key": { "type": "string", "required": true }
+        "key": { "type": "string" },
+        "alias": { "type": "string" },
+        "description": { "type": "json" },
+        "roleAssignments": { "type": "json" },
+        "copySpaceAccessConfiguration": { "type": "integer" },
+        "createPrivateSpace": { "type": "boolean" },
+        "templateKey": { "type": "string" }
       },
       "output": "space"
     },
@@ -225,7 +237,8 @@
         "title": { "type": "string" },
         "parentId": { "type": "string" },
         "body": { "type": "json" },
-        "status": { "type": "string" }
+        "status": { "type": "string" },
+        "subtype": { "type": "string" }
       },
       "output": "page"
     },
@@ -235,7 +248,13 @@
       "args": ["id", "data"],
       "input": {
         "id": { "type": "string", "required": true },
-        "data": { "type": "json", "required": true }
+        "status": { "type": "string", "required": true },
+        "title": { "type": "string", "required": true },
+        "body": { "type": "json", "required": true },
+        "version": { "type": "json", "required": true },
+        "spaceId": { "type": "string" },
+        "parentId": { "type": "string" },
+        "ownerId": { "type": "string" }
       },
       "output": "page"
     },
@@ -288,7 +307,8 @@
         "spaceId": { "type": "string", "required": true },
         "title": { "type": "string" },
         "body": { "type": "json" },
-        "status": { "type": "string" }
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
       },
       "output": "blogpost"
     },
@@ -298,7 +318,12 @@
       "args": ["id", "data"],
       "input": {
         "id": { "type": "string", "required": true },
-        "data": { "type": "json", "required": true }
+        "status": { "type": "string", "required": true },
+        "title": { "type": "string", "required": true },
+        "body": { "type": "json", "required": true },
+        "version": { "type": "json", "required": true },
+        "spaceId": { "type": "string" },
+        "createdAt": { "type": "string" }
       },
       "output": "blogpost"
     },

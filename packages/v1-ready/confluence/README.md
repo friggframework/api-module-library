@@ -17,7 +17,8 @@ Atlassian OAuth 2.0 (3LO) authorization-code grant.
 |---|---|
 | Authorize | `https://auth.atlassian.com/authorize` (`audience=api.atlassian.com`, `prompt=consent`) |
 | Token | `POST https://auth.atlassian.com/oauth/token` (JSON body with `client_id` / `client_secret`) |
-| Data plane | `https://api.atlassian.com/ex/confluence/{cloudId}/wiki/api/v2` |
+| Data plane (vendor OpenAPI) | `https://{your-domain}/wiki/api/v2` |
+| Data plane (OAuth 3LO) | `https://api.atlassian.com/ex/confluence/{cloudId}/wiki/api/v2` when `cloudId` is set |
 | Entity id | Site `cloudId` from `GET /oauth/token/accessible-resources` |
 
 Include `offline_access` in scopes to receive a refresh token, and `read:me` for `GET https://api.atlassian.com/me`.

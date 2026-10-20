@@ -16,8 +16,11 @@ const ME_URL = `${PLATFORM_BASE}/me`;
  *
  * After exchanging the code, resolve the site `cloudId` via
  * GET https://api.atlassian.com/oauth/token/accessible-resources, then call
- * Confluence v2 at:
+ * Confluence v2. The vendor OpenAPI server is
+ *   https://{your-domain}/wiki/api/v2
+ * For OAuth 2.0 (3LO), Atlassian requires the gateway form instead:
  *   https://api.atlassian.com/ex/confluence/{cloudId}/wiki/api/v2
+ * The client uses the gateway whenever `cloudId` is set.
  *
  * Official REST API v2 docs / OpenAPI:
  *   https://developer.atlassian.com/cloud/confluence/rest/v2/intro/
@@ -41,8 +44,8 @@ class Api extends OAuth2Requester {
         this.siteName =
             get(params, 'siteName', null) || get(params, 'site_name', null);
 
-        // Spec-sync: when cloudId is unset, baseUrl matches the OpenAPI server
-        // template string (variable placeholder left unsubstituted by yaml.load).
+        // Spec-sync: when cloudId is unset, baseUrl matches the vendor OpenAPI
+        // server template (variable placeholder left unsubstituted by yaml.load).
         this.baseUrl = this._resolveBaseUrl();
 
         this.access_token = get(params, 'access_token', null);
@@ -63,10 +66,12 @@ class Api extends OAuth2Requester {
     }
 
     _resolveBaseUrl() {
+        // OAuth 3LO data-plane (Atlassian requirement when cloudId is known).
         if (this.cloudId) {
             return `${PLATFORM_BASE}/ex/confluence/${this.cloudId}/wiki/api/v2`;
         }
-        return `${PLATFORM_BASE}/ex/confluence/{cloudId}/wiki/api/v2`;
+        // Vendor OpenAPI primary server URL.
+        return 'https://{your-domain}/wiki/api/v2';
     }
 
     setCloudId(cloudId, { siteUrl, siteName } = {}) {

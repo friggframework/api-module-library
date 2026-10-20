@@ -43,19 +43,17 @@ function makeApi(overrides = {}) {
 
 describe('Confluence Api', () => {
     describe('construction & auth', () => {
-        it('defaults baseUrl to the OAuth gateway template without cloudId', () => {
+        it('defaults baseUrl to the vendor OpenAPI server template without cloudId', () => {
             const api = new Api({
                 client_id: 'c',
                 client_secret: 's',
                 redirect_uri: 'https://ex.com/r',
             });
-            expect(api.baseUrl).toBe(
-                'https://api.atlassian.com/ex/confluence/{cloudId}/wiki/api/v2'
-            );
+            expect(api.baseUrl).toBe('https://{your-domain}/wiki/api/v2');
             expect(api.tokenUri).toBe('https://auth.atlassian.com/oauth/token');
         });
 
-        it('resolves baseUrl when cloudId is provided', () => {
+        it('uses the OAuth gateway baseUrl when cloudId is provided', () => {
             const api = new Api({ cloudId: CLOUD });
             expect(api.baseUrl).toBe(BASE);
         });
@@ -171,9 +169,9 @@ describe('Confluence Api', () => {
             expect(api._captured[0].url).toBe(`${BASE}/spaces/99`);
         });
 
-        it('createSpace POSTs the body', async () => {
+        it('createSpace POSTs the body (name required; key optional per vendor spec)', async () => {
             const api = makeApi();
-            const body = { name: 'Eng', key: 'ENG' };
+            const body = { name: 'Eng' };
             await api.createSpace(body);
             expect(api._captured[0].method).toBe('POST');
             expect(api._captured[0].url).toBe(`${BASE}/spaces`);

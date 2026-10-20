@@ -33,10 +33,11 @@ describe('OpenAPI spec ↔ client sync', () => {
     it('the base server URL matches the client baseUrl', () => {
         const api = new Api({});
         expect(spec.servers[0].url).toBe(api.baseUrl);
+        expect(api.baseUrl).toBe('https://{your-domain}/wiki/api/v2');
     });
 
-    it('declares OAuth2 authorizationCode security matching the client', () => {
-        const scheme = spec.components.securitySchemes.OAuth2;
+    it('declares oAuthDefinitions authorizationCode security from the vendor spec', () => {
+        const scheme = spec.components.securitySchemes.oAuthDefinitions;
         expect(scheme.type).toBe('oauth2');
         expect(scheme.flows.authorizationCode).toBeDefined();
         expect(scheme.flows.authorizationCode.authorizationUrl).toBe(
@@ -45,5 +46,7 @@ describe('OpenAPI spec ↔ client sync', () => {
         expect(scheme.flows.authorizationCode.tokenUrl).toBe(
             'https://auth.atlassian.com/oauth/token'
         );
+        expect(scheme.flows.authorizationCode.scopes['read:space:confluence']).toBeDefined();
+        expect(spec.components.securitySchemes.basicAuth.type).toBe('http');
     });
 });

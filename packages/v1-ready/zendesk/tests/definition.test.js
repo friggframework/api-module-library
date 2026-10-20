@@ -44,7 +44,7 @@ describe('Zendesk Definition', () => {
             data: { code: 'auth-code', subdomain: 'acme' },
         });
         expect(api.subdomain).toBe('acme');
-        expect(api.baseUrl).toBe('https://acme.zendesk.com/api/v2');
+        expect(api.baseUrl).toBe('https://acme.zendesk.com');
         expect(exchanged).toBe('auth-code');
     });
 

@@ -31,13 +31,11 @@ function makeApi(overrides = {}) {
 
 describe('Zendesk Api', () => {
     describe('construction & auth', () => {
-        it('defaults baseUrl to the curated OpenAPI server template', () => {
+        it('defaults baseUrl to the official OAS server template', () => {
             const api = new Api({});
-            expect(api.baseUrl).toBe(
-                'https://{subdomain}.zendesk.com/api/v2'
-            );
+            expect(api.baseUrl).toBe('https://{subdomain}.{domain}.com');
             expect(api.tokenUri).toBe(
-                'https://{subdomain}.zendesk.com/oauth/tokens'
+                'https://{subdomain}.{domain}.com/oauth/tokens'
             );
         });
 
@@ -47,7 +45,7 @@ describe('Zendesk Api', () => {
                 redirect_uri: 'https://app.example.com/redirect/zendesk',
             });
             api.setSubdomain('acme');
-            expect(api.baseUrl).toBe('https://acme.zendesk.com/api/v2');
+            expect(api.baseUrl).toBe('https://acme.zendesk.com');
             expect(api.tokenUri).toBe(
                 'https://acme.zendesk.com/oauth/tokens'
             );

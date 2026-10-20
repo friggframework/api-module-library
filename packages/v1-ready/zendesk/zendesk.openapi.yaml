@@ -5,33 +5,38 @@ info:
   description: >-
     Zendesk Support (Ticketing) REST API. Official reference:
     https://developer.zendesk.com/api-reference/ticketing/introduction/.
-    Official OpenAPI download: https://developer.zendesk.com/zendesk/oas.yaml
-    (server template `https://{subdomain}.{domain}.com`, paths under `/api/v2`).
-    This file is Left Hook's curated subset covering exactly the endpoints
-    `@friggframework/api-module-zendesk` implements in api.js — one method per
-    operationId. Auth is OAuth2 Bearer (authorization-code + refresh). Webhook
-    management is documented separately at
+    Vendor OpenAPI (source of truth for Ticketing paths):
+    https://developer.zendesk.com/zendesk/oas.yaml — server template
+    `https://{subdomain}.{domain}.com`, paths under `/api/v2`, securitySchemes
+    `basicAuth` + `bearerAuth`. This file is Left Hook's curated subset of
+    that OAS covering exactly the endpoints `@friggframework/api-module-zendesk`
+    implements in api.js (one method per operationId), plus Webhooks API
+    paths which are NOT present in oas.yaml and are taken from
     https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/
-    but shares the same `/api/v2` host.
+    (same host + `/api/v2` prefix). Auth for this module is OAuth2
+    authorization-code + refresh producing a bearer token.
   contact:
     name: Left Hook
     url: https://lefthook.com
 servers:
-  - url: https://{subdomain}.zendesk.com/api/v2
-    description: Per-account Zendesk Support API host
+  - url: https://{subdomain}.{domain}.com
+    description: Official Zendesk Support API server template from oas.yaml
     variables:
       subdomain:
-        default: your-subdomain
+        default: example
         description: Zendesk subdomain (acme from acme.zendesk.com)
+      domain:
+        default: zendesk
+        description: Apex domain (zendesk)
 security:
-  - OAuth2: []
+  - bearerAuth: []
 tags:
   - name: Users
   - name: Tickets
   - name: Organizations
   - name: Webhooks
 paths:
-  /users/me:
+  /api/v2/users/me:
     get:
       tags: [Users]
       operationId: getCurrentUser
@@ -50,7 +55,7 @@ paths:
                   user:
                     $ref: "#/components/schemas/User"
 
-  /tickets:
+  /api/v2/tickets:
     get:
       tags: [Tickets]
       operationId: listTickets
@@ -101,6 +106,8 @@ paths:
               properties:
                 ticket:
                   $ref: "#/components/schemas/TicketWrite"
+                system_metadata:
+                  type: object
       responses:
         "201":
           description: Created ticket
@@ -112,7 +119,7 @@ paths:
                   ticket:
                     $ref: "#/components/schemas/Ticket"
 
-  /tickets/{ticket_id}:
+  /api/v2/tickets/{ticket_id}:
     parameters:
       - $ref: "#/components/parameters/TicketId"
     get:
@@ -134,17 +141,18 @@ paths:
       tags: [Tickets]
       operationId: updateTicket
       summary: Update a ticket
-      description: "Official operationId: UpdateTicket."
+      description: "Official operationId: UpdateTicket. Official response schema TicketUpdateResponse includes ticket + audit."
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               type: object
-              required: [ticket]
               properties:
                 ticket:
                   $ref: "#/components/schemas/TicketWrite"
+                system_metadata:
+                  type: object
+              additionalProperties: true
       responses:
         "200":
           description: Updated ticket
@@ -155,6 +163,8 @@ paths:
                 properties:
                   ticket:
                     $ref: "#/components/schemas/Ticket"
+                  audit:
+                    type: object
     delete:
       tags: [Tickets]
       operationId: deleteTicket
@@ -164,7 +174,7 @@ paths:
         "204":
           description: Deleted
 
-  /tickets/{ticket_id}/comments:
+  /api/v2/tickets/{ticket_id}/comments:
     parameters:
       - $ref: "#/components/parameters/TicketId"
     get:
@@ -192,7 +202,7 @@ paths:
                     items:
                       $ref: "#/components/schemas/TicketComment"
 
-  /users:
+  /api/v2/users:
     get:
       tags: [Users]
       operationId: listUsers
@@ -249,7 +259,7 @@ paths:
                   user:
                     $ref: "#/components/schemas/User"
 
-  /users/{user_id}:
+  /api/v2/users/{user_id}:
     parameters:
       - $ref: "#/components/parameters/UserId"
     get:
@@ -296,12 +306,19 @@ paths:
       tags: [Users]
       operationId: deleteUser
       summary: Delete a user
-      description: "Official operationId: DeleteUser."
+      description: "Official operationId: DeleteUser. Official OAS returns 200 with the deleted user payload."
       responses:
-        "204":
-          description: Deleted
+        "200":
+          description: Deleted user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
 
-  /organizations:
+  /api/v2/organizations:
     get:
       tags: [Organizations]
       operationId: listOrganizations
@@ -316,7 +333,7 @@ paths:
           schema: { type: integer }
       responses:
         "200":
-          description: Organization list
+          description: Organization list (OrganizationsResponse)
           content:
             application/json:
               schema:
@@ -326,6 +343,18 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/Organization"
+                  count:
+                    type: integer
+                  next_page:
+                    type: string
+                    nullable: true
+                  previous_page:
+                    type: string
+                    nullable: true
+                  links:
+                    type: object
+                  meta:
+                    type: object
     post:
       tags: [Organizations]
       operationId: createOrganization
@@ -352,7 +381,7 @@ paths:
                   organization:
                     $ref: "#/components/schemas/Organization"
 
-  /organizations/{organization_id}:
+  /api/v2/organizations/{organization_id}:
     parameters:
       - $ref: "#/components/parameters/OrganizationId"
     get:
@@ -374,14 +403,17 @@ paths:
       tags: [Organizations]
       operationId: updateOrganization
       summary: Update an organization
-      description: "Official operationId: UpdateOrganization."
+      description: >-
+        Official operationId: UpdateOrganization. The vendor oas.yaml documents
+        this operation without a requestBody schema; the official description
+        example uses `{ "organization": { ... } }` which this curated spec
+        records so the client/body stay aligned with Zendesk docs.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [organization]
               properties:
                 organization:
                   $ref: "#/components/schemas/OrganizationWrite"
@@ -404,13 +436,15 @@ paths:
         "204":
           description: Deleted
 
-  /webhooks:
+  /api/v2/webhooks:
     get:
       tags: [Webhooks]
       operationId: listWebhooks
       summary: List webhooks
       description: >-
-        https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/#list-webhooks
+        Not present in https://developer.zendesk.com/zendesk/oas.yaml.
+        Source: https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/#list-webhooks
+        (same host template + /api/v2 prefix as the Ticketing OAS).
       parameters:
         - in: query
           name: filter[name_contains]
@@ -473,7 +507,7 @@ paths:
                   webhook:
                     $ref: "#/components/schemas/Webhook"
 
-  /webhooks/{webhook_id}:
+  /api/v2/webhooks/{webhook_id}:
     parameters:
       - $ref: "#/components/parameters/WebhookId"
     get:
@@ -522,7 +556,7 @@ paths:
         "204":
           description: Deleted
 
-  /webhooks/{webhook_id}/signing_secret:
+  /api/v2/webhooks/{webhook_id}/signing_secret:
     parameters:
       - $ref: "#/components/parameters/WebhookId"
     get:
@@ -552,28 +586,25 @@ paths:
 
 components:
   securitySchemes:
-    OAuth2:
-      type: oauth2
+    bearerAuth:
+      type: http
+      scheme: bearer
       description: >-
-        Authorization-code grant. Authorize at
-        `https://{subdomain}.zendesk.com/oauth/authorizations/new`,
-        token at `https://{subdomain}.zendesk.com/oauth/tokens`.
-        Use `Authorization: Bearer {access_token}` on API requests.
-      flows:
-        authorizationCode:
-          authorizationUrl: https://{subdomain}.zendesk.com/oauth/authorizations/new
-          tokenUrl: https://{subdomain}.zendesk.com/oauth/tokens
-          scopes:
-            tickets:read: View tickets, comments, tags, forms, fields, audits, metrics
-            tickets:write: Create, edit, and delete tickets (includes comments)
-            users:read: View users and related memberships
-            users:write: Create, edit, and delete users
-            organizations:read: View organizations
-            organizations:write: Create, edit, and delete organizations
-            webhooks:read: View webhooks and activity history
-            webhooks:write: Create, edit, test, and delete webhooks
-            read: Broad read access to all resources
-            write: Broad write access to all resources
+        Bearer access token authentication (official oas.yaml `bearerAuth`).
+        Obtain tokens via OAuth authorization-code against
+        `https://{subdomain}.zendesk.com/oauth/authorizations/new` and
+        `https://{subdomain}.zendesk.com/oauth/tokens` (not part of oas.yaml
+        paths). Prefer `Authorization: Bearer {access_token}`. Scopes such as
+        `tickets:read`, `users:write`, `organizations:read`, `webhooks:write`
+        are documented at
+        https://developer.zendesk.com/api-reference/ticketing/oauth/grant_type_tokens/#scope
+        (not enumerated in oas.yaml securitySchemes).
+    basicAuth:
+      type: http
+      scheme: basic
+      description: >-
+        Official oas.yaml also declares basicAuth (email/token). This module
+        uses OAuth bearer tokens; API-token basic auth is deprecated/EOL.
   parameters:
     TicketId:
       name: ticket_id
@@ -607,9 +638,11 @@ components:
           enum: [new, open, pending, hold, solved, closed]
         priority:
           type: string
+          nullable: true
           enum: [urgent, high, normal, low]
         type:
           type: string
+          nullable: true
           enum: [problem, incident, question, task]
         requester_id: { type: integer }
         submitter_id: { type: integer }
@@ -642,17 +675,27 @@ components:
         external_id: { type: string }
     TicketComment:
       type: object
+      description: Subset of official TicketCommentObject
       properties:
         id: { type: integer, readOnly: true }
         type: { type: string }
         body: { type: string }
+        html_body: { type: string }
+        plain_body: { type: string }
         public: { type: boolean }
         author_id: { type: integer }
+        audit_id: { type: integer, readOnly: true }
+        attachments: { type: array, items: { type: object } }
+        via: { type: object }
         created_at: { type: string, format: date-time, readOnly: true }
     User:
       type: object
+      description: >-
+        Subset of fields common to official UserObject (anyOf UserForAdmin |
+        UserForEndUser). Role values per OAS description - end-user, agent, admin.
       properties:
         id: { type: integer, readOnly: true }
+        url: { type: string, readOnly: true }
         name: { type: string }
         email: { type: string, format: email }
         role:
@@ -662,6 +705,7 @@ components:
         external_id: { type: string }
         phone: { type: string }
         active: { type: boolean, readOnly: true }
+        verified: { type: boolean }
         created_at: { type: string, format: date-time, readOnly: true }
         updated_at: { type: string, format: date-time, readOnly: true }
     UserWrite:
@@ -675,8 +719,10 @@ components:
         phone: { type: string }
     Organization:
       type: object
+      description: Subset of official OrganizationObject (required name)
       properties:
         id: { type: integer, readOnly: true }
+        url: { type: string, readOnly: true }
         name: { type: string }
         external_id: { type: string }
         domain_names:
@@ -684,6 +730,10 @@ components:
           items: { type: string }
         details: { type: string }
         notes: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        group_id: { type: integer }
         created_at: { type: string, format: date-time, readOnly: true }
         updated_at: { type: string, format: date-time, readOnly: true }
     OrganizationWrite:
@@ -696,6 +746,9 @@ components:
           items: { type: string }
         details: { type: string }
         notes: { type: string }
+        tags:
+          type: array
+          items: { type: string }
     Webhook:
       type: object
       properties:

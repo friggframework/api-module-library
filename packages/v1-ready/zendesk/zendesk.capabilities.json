@@ -25,6 +25,11 @@
           "readOnly": true
         },
         {
+          "name": "url",
+          "type": "string",
+          "readOnly": true
+        },
+        {
           "name": "name",
           "type": "string",
           "tag": "record.displayName"
@@ -37,7 +42,11 @@
         {
           "name": "role",
           "type": "enum",
-          "values": ["end-user", "agent", "admin"]
+          "values": [
+            "end-user",
+            "agent",
+            "admin"
+          ]
         },
         {
           "name": "organization_id",
@@ -56,6 +65,10 @@
           "name": "active",
           "type": "boolean",
           "readOnly": true
+        },
+        {
+          "name": "verified",
+          "type": "boolean"
         },
         {
           "name": "created_at",
@@ -100,17 +113,34 @@
         {
           "name": "status",
           "type": "enum",
-          "values": ["new", "open", "pending", "hold", "solved", "closed"]
+          "values": [
+            "new",
+            "open",
+            "pending",
+            "hold",
+            "solved",
+            "closed"
+          ]
         },
         {
           "name": "priority",
           "type": "enum",
-          "values": ["urgent", "high", "normal", "low"]
+          "values": [
+            "urgent",
+            "high",
+            "normal",
+            "low"
+          ]
         },
         {
           "name": "type",
           "type": "enum",
-          "values": ["problem", "incident", "question", "task"]
+          "values": [
+            "problem",
+            "incident",
+            "question",
+            "task"
+          ]
         },
         {
           "name": "requester_id",
@@ -164,6 +194,11 @@
           "readOnly": true
         },
         {
+          "name": "url",
+          "type": "string",
+          "readOnly": true
+        },
+        {
           "name": "name",
           "type": "string",
           "tag": "record.displayName"
@@ -184,6 +219,10 @@
         {
           "name": "notes",
           "type": "text"
+        },
+        {
+          "name": "tags",
+          "type": "json"
         },
         {
           "name": "created_at",
@@ -224,7 +263,10 @@
         {
           "name": "status",
           "type": "enum",
-          "values": ["active", "inactive"]
+          "values": [
+            "active",
+            "inactive"
+          ]
         },
         {
           "name": "endpoint",
@@ -286,7 +328,7 @@
   },
   "webhook": {
     "scope": "account",
-    "note": "Manage via Webhooks API (POST/GET/PUT/DELETE /api/v2/webhooks). Verify inbound deliveries with X-Zendesk-Webhook-Signature / X-Zendesk-Webhook-Signature-Timestamp and the per-webhook signing secret (GET /api/v2/webhooks/{id}/signing_secret). See extensions/webhooks/ for a HubSpot-style Tier-3 receiver.",
+    "note": "Manage via Webhooks API (POST/GET/PUT/DELETE /api/v2/webhooks). These paths are NOT in https://developer.zendesk.com/zendesk/oas.yaml; source is https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/. Verify inbound deliveries with X-Zendesk-Webhook-Signature / X-Zendesk-Webhook-Signature-Timestamp and the per-webhook signing secret (GET /api/v2/webhooks/{id}/signing_secret). See extensions/webhooks/ for a HubSpot-style Tier-3 receiver.",
     "subscribe": "createWebhook",
     "unsubscribe": "deleteWebhook",
     "list": "listWebhooks"
@@ -302,204 +344,345 @@
       "kind": "read",
       "method": "listTickets",
       "input": {
-        "external_id": { "type": "string" },
-        "page": { "type": "string" },
-        "per_page": { "type": "number" },
-        "sort_by": { "type": "string" },
-        "sort_order": { "type": "string" }
+        "external_id": {
+          "type": "string"
+        },
+        "page": {
+          "type": "string"
+        },
+        "per_page": {
+          "type": "number"
+        },
+        "sort_by": {
+          "type": "string"
+        },
+        "sort_order": {
+          "type": "string"
+        }
       },
       "output": "page<ticket>",
-      "args": ["$rest"]
+      "args": [
+        "$rest"
+      ]
     },
     "ticket.get": {
       "kind": "read",
       "method": "getTicket",
       "input": {
-        "ticketId": { "type": "number", "required": true }
+        "ticketId": {
+          "type": "number",
+          "required": true
+        }
       },
       "output": "ticket",
-      "args": ["ticketId"]
+      "args": [
+        "ticketId"
+      ]
     },
     "ticket.create": {
       "kind": "write",
       "method": "createTicket",
       "input": {
-        "ticket": { "type": "object", "required": true }
+        "ticket": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "ticket",
-      "args": ["ticket"]
+      "args": [
+        "ticket"
+      ]
     },
     "ticket.update": {
       "kind": "write",
       "method": "updateTicket",
       "input": {
-        "ticketId": { "type": "number", "required": true },
-        "ticket": { "type": "object", "required": true }
+        "ticketId": {
+          "type": "number",
+          "required": true
+        },
+        "ticket": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "ticket",
-      "args": ["ticketId", "ticket"]
+      "args": [
+        "ticketId",
+        "ticket"
+      ]
     },
     "ticket.delete": {
       "kind": "write",
       "method": "deleteTicket",
       "input": {
-        "ticketId": { "type": "number", "required": true }
+        "ticketId": {
+          "type": "number",
+          "required": true
+        }
       },
-      "args": ["ticketId"]
+      "args": [
+        "ticketId"
+      ]
     },
     "ticket.comments.list": {
       "kind": "read",
       "method": "listTicketComments",
       "input": {
-        "ticketId": { "type": "number", "required": true },
-        "page": { "type": "string" },
-        "per_page": { "type": "number" }
+        "ticketId": {
+          "type": "number",
+          "required": true
+        },
+        "page": {
+          "type": "string"
+        },
+        "per_page": {
+          "type": "number"
+        }
       },
-      "args": ["ticketId", "$rest"]
+      "args": [
+        "ticketId",
+        "$rest"
+      ]
     },
     "user.list": {
       "kind": "read",
       "method": "listUsers",
       "input": {
-        "role": { "type": "string" },
-        "external_id": { "type": "string" },
-        "page": { "type": "string" },
-        "per_page": { "type": "number" }
+        "role": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "page": {
+          "type": "string"
+        },
+        "per_page": {
+          "type": "number"
+        }
       },
       "output": "page<user>",
-      "args": ["$rest"]
+      "args": [
+        "$rest"
+      ]
     },
     "user.get": {
       "kind": "read",
       "method": "getUser",
       "input": {
-        "userId": { "type": "number", "required": true }
+        "userId": {
+          "type": "number",
+          "required": true
+        }
       },
       "output": "user",
-      "args": ["userId"]
+      "args": [
+        "userId"
+      ]
     },
     "user.create": {
       "kind": "write",
       "method": "createUser",
       "input": {
-        "user": { "type": "object", "required": true }
+        "user": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "user",
-      "args": ["user"]
+      "args": [
+        "user"
+      ]
     },
     "user.update": {
       "kind": "write",
       "method": "updateUser",
       "input": {
-        "userId": { "type": "number", "required": true },
-        "user": { "type": "object", "required": true }
+        "userId": {
+          "type": "number",
+          "required": true
+        },
+        "user": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "user",
-      "args": ["userId", "user"]
+      "args": [
+        "userId",
+        "user"
+      ]
     },
     "user.delete": {
       "kind": "write",
       "method": "deleteUser",
       "input": {
-        "userId": { "type": "number", "required": true }
+        "userId": {
+          "type": "number",
+          "required": true
+        }
       },
-      "args": ["userId"]
+      "args": [
+        "userId"
+      ]
     },
     "organization.list": {
       "kind": "read",
       "method": "listOrganizations",
       "input": {
-        "page": { "type": "string" },
-        "per_page": { "type": "number" }
+        "page": {
+          "type": "string"
+        },
+        "per_page": {
+          "type": "number"
+        }
       },
       "output": "page<organization>",
-      "args": ["$rest"]
+      "args": [
+        "$rest"
+      ]
     },
     "organization.get": {
       "kind": "read",
       "method": "getOrganization",
       "input": {
-        "organizationId": { "type": "number", "required": true }
+        "organizationId": {
+          "type": "number",
+          "required": true
+        }
       },
       "output": "organization",
-      "args": ["organizationId"]
+      "args": [
+        "organizationId"
+      ]
     },
     "organization.create": {
       "kind": "write",
       "method": "createOrganization",
       "input": {
-        "organization": { "type": "object", "required": true }
+        "organization": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "organization",
-      "args": ["organization"]
+      "args": [
+        "organization"
+      ]
     },
     "organization.update": {
       "kind": "write",
       "method": "updateOrganization",
       "input": {
-        "organizationId": { "type": "number", "required": true },
-        "organization": { "type": "object", "required": true }
+        "organizationId": {
+          "type": "number",
+          "required": true
+        },
+        "organization": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "organization",
-      "args": ["organizationId", "organization"]
+      "args": [
+        "organizationId",
+        "organization"
+      ]
     },
     "organization.delete": {
       "kind": "write",
       "method": "deleteOrganization",
       "input": {
-        "organizationId": { "type": "number", "required": true }
+        "organizationId": {
+          "type": "number",
+          "required": true
+        }
       },
-      "args": ["organizationId"]
+      "args": [
+        "organizationId"
+      ]
     },
     "webhook.list": {
       "kind": "read",
       "method": "listWebhooks",
       "output": "page<webhook>",
-      "args": ["$rest"]
+      "args": [
+        "$rest"
+      ]
     },
     "webhook.get": {
       "kind": "read",
       "method": "getWebhook",
       "input": {
-        "webhookId": { "type": "string", "required": true }
+        "webhookId": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "webhook",
-      "args": ["webhookId"]
+      "args": [
+        "webhookId"
+      ]
     },
     "webhook.create": {
       "kind": "write",
       "method": "createWebhook",
       "input": {
-        "webhook": { "type": "object", "required": true }
+        "webhook": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "webhook",
-      "args": ["webhook"]
+      "args": [
+        "webhook"
+      ]
     },
     "webhook.update": {
       "kind": "write",
       "method": "updateWebhook",
       "input": {
-        "webhookId": { "type": "string", "required": true },
-        "webhook": { "type": "object", "required": true }
+        "webhookId": {
+          "type": "string",
+          "required": true
+        },
+        "webhook": {
+          "type": "object",
+          "required": true
+        }
       },
       "output": "webhook",
-      "args": ["webhookId", "webhook"]
+      "args": [
+        "webhookId",
+        "webhook"
+      ]
     },
     "webhook.delete": {
       "kind": "write",
       "method": "deleteWebhook",
       "input": {
-        "webhookId": { "type": "string", "required": true }
+        "webhookId": {
+          "type": "string",
+          "required": true
+        }
       },
-      "args": ["webhookId"]
+      "args": [
+        "webhookId"
+      ]
     },
     "webhook.signingSecret.get": {
       "kind": "read",
       "method": "getWebhookSigningSecret",
       "input": {
-        "webhookId": { "type": "string", "required": true }
+        "webhookId": {
+          "type": "string",
+          "required": true
+        }
       },
-      "args": ["webhookId"]
+      "args": [
+        "webhookId"
+      ]
     }
   }
 }

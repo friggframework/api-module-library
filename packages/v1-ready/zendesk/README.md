@@ -8,7 +8,7 @@ OAuth 2.0 authorization-code against the account subdomain:
 
 - Authorize: `https://{subdomain}.zendesk.com/oauth/authorizations/new`
 - Token: `https://{subdomain}.zendesk.com/oauth/tokens` (JSON body)
-- API: `Authorization: Bearer {access_token}` on `https://{subdomain}.zendesk.com/api/v2`
+- API: `Authorization: Bearer {access_token}` on host `https://{subdomain}.zendesk.com` (official OAS server template `https://{subdomain}.{domain}.com`), paths under `/api/v2/...`
 
 The auth form collects the Zendesk **subdomain** before redirect. See `.env.example`.
 

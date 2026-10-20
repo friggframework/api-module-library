@@ -38,24 +38,25 @@ describe('OpenAPI spec ↔ client sync', () => {
     it('the base server URL matches the client baseUrl', () => {
         const api = new Api({});
         expect(spec.servers[0].url).toBe(api.baseUrl);
-        expect(api.baseUrl).toBe('https://{subdomain}.zendesk.com/api/v2');
+        expect(api.baseUrl).toBe('https://{subdomain}.{domain}.com');
+        expect(spec.servers[0].variables.domain.default).toBe('zendesk');
     });
 
-    it('declares OAuth2 authorizationCode security matching Zendesk', () => {
-        const scheme = spec.components.securitySchemes.OAuth2;
-        expect(scheme.type).toBe('oauth2');
-        expect(scheme.flows.authorizationCode.authorizationUrl).toContain(
-            '.zendesk.com/oauth/authorizations/new'
-        );
-        expect(scheme.flows.authorizationCode.tokenUrl).toContain(
-            '.zendesk.com/oauth/tokens'
-        );
-        expect(
-            scheme.flows.authorizationCode.scopes['tickets:read']
-        ).toBeTruthy();
-        expect(
-            scheme.flows.authorizationCode.scopes['webhooks:write']
-        ).toBeTruthy();
+    it('declares bearerAuth security matching the vendor OAS', () => {
+        const scheme = spec.components.securitySchemes.bearerAuth;
+        expect(scheme.type).toBe('http');
+        expect(scheme.scheme).toBe('bearer');
+        expect(spec.components.securitySchemes.basicAuth.scheme).toBe('basic');
+        expect(spec.security).toEqual([{ bearerAuth: [] }]);
+        // Paths under /api/v2 match official oas.yaml layout.
+        for (const p of Object.keys(spec.paths)) {
+            expect(p.startsWith('/api/v2/')).toBe(true);
+        }
+    });
+
+    it('marks webhook paths as outside the Ticketing OAS', () => {
+        const list = spec.paths['/api/v2/webhooks'].get.description;
+        expect(list).toMatch(/Not present in https:\/\/developer\.zendesk\.com\/zendesk\/oas\.yaml/);
     });
 });
 

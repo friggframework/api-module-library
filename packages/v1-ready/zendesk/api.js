@@ -16,13 +16,16 @@ const DEFAULT_SCOPE =
  * client_id + client_secret. Access tokens expire (default TTL 30 minutes for
  * new clients); refresh tokens rotate on each refresh.
  *
- * Every API host is per-account: `https://{subdomain}.zendesk.com/api/v2`.
+ * Every API host matches the vendor OAS server template
+ * `https://{subdomain}.{domain}.com` (domain defaults to `zendesk`), with
+ * paths under `/api/v2/...`.
  *
  * Docs: https://developer.zendesk.com/api-reference/ticketing/introduction/
  * Auth: https://developer.zendesk.com/api-reference/introduction/security-and-auth/
  * OAuth: https://support.zendesk.com/hc/en-us/articles/4408845965210
  * Official OpenAPI: https://developer.zendesk.com/zendesk/oas.yaml
  * Webhooks: https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/
+ *   (Webhooks paths are NOT in oas.yaml; same host + `/api/v2` prefix.)
  */
 class Api extends OAuth2Requester {
     constructor(params = {}) {
@@ -32,34 +35,43 @@ class Api extends OAuth2Requester {
 
         this.scope = this.scope || process.env.ZENDESK_SCOPE || DEFAULT_SCOPE;
 
+        // Path strings match official oas.yaml (prefixed with /api/v2).
         this.URLs = {
-            currentUser: '/users/me',
-            tickets: '/tickets',
-            ticketById: (id) => `/tickets/${id}`,
-            ticketComments: (id) => `/tickets/${id}/comments`,
-            users: '/users',
-            userById: (id) => `/users/${id}`,
-            organizations: '/organizations',
-            organizationById: (id) => `/organizations/${id}`,
-            webhooks: '/webhooks',
-            webhookById: (id) => `/webhooks/${id}`,
-            webhookSigningSecret: (id) => `/webhooks/${id}/signing_secret`,
+            currentUser: '/api/v2/users/me',
+            tickets: '/api/v2/tickets',
+            ticketById: (id) => `/api/v2/tickets/${id}`,
+            ticketComments: (id) => `/api/v2/tickets/${id}/comments`,
+            users: '/api/v2/users',
+            userById: (id) => `/api/v2/users/${id}`,
+            organizations: '/api/v2/organizations',
+            organizationById: (id) => `/api/v2/organizations/${id}`,
+            webhooks: '/api/v2/webhooks',
+            webhookById: (id) => `/api/v2/webhooks/${id}`,
+            webhookSigningSecret: (id) =>
+                `/api/v2/webhooks/${id}/signing_secret`,
         };
 
         this._applySubdomain();
     }
 
     _applySubdomain() {
-        // Match the curated OpenAPI server URL when no subdomain is set yet so
-        // spec-sync can assert equality against `https://{subdomain}.zendesk.com/api/v2`.
-        const subdomain = this.subdomain || '{subdomain}';
-        this.baseUrl = `https://${subdomain}.zendesk.com/api/v2`;
-        this.tokenUri = `https://${subdomain}.zendesk.com/oauth/tokens`;
+        // Match official oas.yaml servers[0].url when unset so spec-sync can
+        // assert equality against `https://{subdomain}.{domain}.com`.
+        if (!this.subdomain || this.subdomain === '{subdomain}') {
+            this.baseUrl = 'https://{subdomain}.{domain}.com';
+            this.tokenUri = 'https://{subdomain}.{domain}.com/oauth/tokens';
+        } else {
+            this.baseUrl = `https://${this.subdomain}.zendesk.com`;
+            this.tokenUri = `https://${this.subdomain}.zendesk.com/oauth/tokens`;
+        }
         this.authorizationUri = this._buildAuthorizationUri();
     }
 
     _buildAuthorizationUri() {
-        const subdomain = this.subdomain || '{subdomain}';
+        const host =
+            !this.subdomain || this.subdomain === '{subdomain}'
+                ? 'https://{subdomain}.{domain}.com'
+                : `https://${this.subdomain}.zendesk.com`;
         const params = new URLSearchParams({
             response_type: 'code',
             redirect_uri: this.redirect_uri || '',
@@ -67,7 +79,7 @@ class Api extends OAuth2Requester {
             scope: this.scope || DEFAULT_SCOPE,
             state: this.state || crypto.randomBytes(16).toString('hex'),
         });
-        return `https://${subdomain}.zendesk.com/oauth/authorizations/new?${params.toString()}`;
+        return `${host}/oauth/authorizations/new?${params.toString()}`;
     }
 
     /**

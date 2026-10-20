@@ -303,6 +303,14 @@ class Api extends OAuth2Requester {
     }
 
     /**
+     * Alias for listConversations — matches lefthook-bots capability
+     * `channel.list` / legacy method name `listChannels`.
+     */
+    async listChannels(query = {}) {
+        return this.listConversations(query);
+    }
+
+    /**
      * Retrieve information about a conversation.
      * GET https://slack.com/api/conversations.info
      * @see https://docs.slack.dev/reference/methods/conversations.info
@@ -436,8 +444,13 @@ class Api extends OAuth2Requester {
      * Find a user by email address.
      * GET https://slack.com/api/users.lookupByEmail
      * @see https://docs.slack.dev/reference/methods/users.lookupByEmail
+     * @param {string|Object} emailOrQuery - email string (capability args) or query object
      */
-    async lookupUserByEmail(query) {
+    async lookupUserByEmail(emailOrQuery) {
+        const query =
+            typeof emailOrQuery === 'string'
+                ? { email: emailOrQuery }
+                : emailOrQuery;
         return this._getQuery(this.URLs.lookupUserByEmail, query);
     }
 

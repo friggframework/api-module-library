@@ -6,7 +6,7 @@
   "version": "1.2.0",
   "auth": "oauth2",
   "account": {
-    "description": "Values about the connected workspace, persisted by the module (apiPropertiesToPersist). Definitions read them as $.install.accounts.<module key>.<name>.",
+    "description": "Values about the connected workspace, persisted by the module (apiPropertiesToPersist).",
     "fields": [
       {
         "name": "team_id",
@@ -21,24 +21,57 @@
     ]
   },
   "objects": {
-    "conversation": {
-      "label": "Conversation",
+    "message": {
+      "label": "Message",
+      "fields": [
+        {
+          "name": "ts",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "channel",
+          "type": "string"
+        },
+        {
+          "name": "text",
+          "type": "text"
+        },
+        {
+          "name": "user",
+          "type": "string",
+          "tag": "record.owner"
+        },
+        {
+          "name": "thread_ts",
+          "type": "string"
+        },
+        {
+          "name": "blocks",
+          "type": "json"
+        },
+        {
+          "name": "metadata.event_type",
+          "type": "string"
+        },
+        {
+          "name": "metadata.event_payload",
+          "type": "json"
+        }
+      ]
+    },
+    "channel": {
+      "label": "Channel",
       "fields": [
         {
           "name": "id",
           "type": "id",
-          "tag": "record.id",
           "readOnly": true
         },
         {
           "name": "name",
           "type": "string",
-          "tag": "record.displayName"
-        },
-        {
-          "name": "is_channel",
-          "type": "boolean",
-          "readOnly": true
+          "tag": "channel.name"
         },
         {
           "name": "is_private",
@@ -50,88 +83,8 @@
           "readOnly": true
         },
         {
-          "name": "is_im",
-          "type": "boolean",
-          "readOnly": true
-        },
-        {
-          "name": "is_mpim",
-          "type": "boolean",
-          "readOnly": true
-        },
-        {
-          "name": "topic.value",
-          "type": "text"
-        },
-        {
-          "name": "purpose.value",
-          "type": "text"
-        },
-        {
           "name": "num_members",
           "type": "number",
-          "readOnly": true
-        },
-        {
-          "name": "created",
-          "type": "number",
-          "tag": "record.createdAt",
-          "readOnly": true
-        }
-      ],
-      "sync": {
-        "id": "id",
-        "list": {
-          "capability": "conversation.list",
-          "cursor": "cursor",
-          "limit": "limit",
-          "items": "channels",
-          "paging": "cursor"
-        },
-        "get": {
-          "capability": "conversation.get",
-          "id": "channel"
-        },
-        "create": {
-          "capability": "conversation.create",
-          "body": "body"
-        }
-      }
-    },
-    "message": {
-      "label": "Message",
-      "fields": [
-        {
-          "name": "ts",
-          "type": "id",
-          "tag": "record.id",
-          "readOnly": true
-        },
-        {
-          "name": "channel",
-          "type": "string"
-        },
-        {
-          "name": "user",
-          "type": "string",
-          "tag": "person.id"
-        },
-        {
-          "name": "text",
-          "type": "text",
-          "tag": "message.body"
-        },
-        {
-          "name": "blocks",
-          "type": "json"
-        },
-        {
-          "name": "thread_ts",
-          "type": "string"
-        },
-        {
-          "name": "permalink",
-          "type": "string",
           "readOnly": true
         }
       ]
@@ -142,18 +95,16 @@
         {
           "name": "id",
           "type": "id",
-          "tag": "record.id",
           "readOnly": true
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "tag": "person.username"
         },
         {
           "name": "real_name",
           "type": "string",
-          "tag": "person.displayName"
+          "tag": "person.fullName"
+        },
+        {
+          "name": "profile.display_name",
+          "type": "string"
         },
         {
           "name": "profile.email",
@@ -161,419 +112,289 @@
           "tag": "contact.email"
         },
         {
-          "name": "profile.display_name",
-          "type": "string",
-          "tag": "person.displayName"
-        },
-        {
-          "name": "profile.title",
-          "type": "string"
-        },
-        {
           "name": "profile.phone",
           "type": "phone",
           "tag": "contact.phone"
         },
         {
+          "name": "tz",
+          "type": "string",
+          "tag": "person.timezone"
+        },
+        {
           "name": "is_bot",
           "type": "boolean",
           "readOnly": true
-        },
-        {
-          "name": "deleted",
-          "type": "boolean",
-          "readOnly": true
-        },
-        {
-          "name": "tz",
-          "type": "string"
         }
-      ],
-      "sync": {
-        "id": "id",
-        "list": {
-          "capability": "user.list",
-          "cursor": "cursor",
-          "limit": "limit",
-          "items": "members",
-          "paging": "cursor"
-        },
-        "get": {
-          "capability": "user.get",
-          "id": "user"
-        }
-      }
-    },
-    "file": {
-      "label": "File",
-      "fields": [
-        {
-          "name": "id",
-          "type": "id",
-          "tag": "record.id",
-          "readOnly": true
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "tag": "record.displayName"
-        },
-        {
-          "name": "title",
-          "type": "string"
-        },
-        {
-          "name": "mimetype",
-          "type": "string"
-        },
-        {
-          "name": "filetype",
-          "type": "string"
-        },
-        {
-          "name": "user",
-          "type": "string",
-          "tag": "person.id"
-        },
-        {
-          "name": "size",
-          "type": "number",
-          "readOnly": true
-        },
-        {
-          "name": "url_private",
-          "type": "string",
-          "readOnly": true
-        },
-        {
-          "name": "permalink",
-          "type": "string",
-          "readOnly": true
-        },
-        {
-          "name": "created",
-          "type": "number",
-          "tag": "record.createdAt",
-          "readOnly": true
-        }
-      ],
-      "sync": {
-        "id": "id",
-        "list": {
-          "capability": "file.list",
-          "items": "files",
-          "paging": "page"
-        },
-        "get": {
-          "capability": "file.get",
-          "id": "file"
-        }
-      }
+      ]
     }
   },
   "events": {
-    "message.channels": {
+    "interaction.block_actions": {
       "delivery": "webhook",
       "object": "message",
-      "description": "Events API event_callback when a message is posted to a channel the app is subscribed to. Subscriptions are configured on the Slack app (Event Subscriptions / app manifest), not via Web API CRUD.",
+      "description": "Interactivity request (block_actions) from a button in a message the app posted. App-level: Frigg routes it to the installation by team.id; no per-install subscription.",
       "payload": {
-        "type": "event_callback",
-        "team_id": "T12345678",
-        "event": {
-          "type": "message",
-          "channel": "C12345678",
-          "user": "U12345678",
-          "text": "Hello",
-          "ts": "1355517523.000005"
+        "type": "block_actions",
+        "trigger_id": "8171092340291.5283910.ab4c1f",
+        "team": {
+          "id": "T09B191G5HA",
+          "domain": "lefthook"
         },
-        "event_id": "Ev12345678",
-        "event_time": 1355517523
+        "user": {
+          "id": "U04A8KX2P1Q",
+          "username": "dana",
+          "name": "dana"
+        },
+        "channel": {
+          "id": "D06QX0B7Z3L",
+          "name": "directmessage"
+        },
+        "message": {
+          "type": "message",
+          "ts": "1760800000.001200",
+          "channel": "D06QX0B7Z3L",
+          "text": "Due today: Send renewal quote to Acme",
+          "metadata": {
+            "event_type": "hubspot_task",
+            "event_payload": {
+              "taskId": "94512"
+            }
+          }
+        },
+        "actions": [
+          {
+            "action_id": "frigg.mark-task-done",
+            "block_id": "frigg",
+            "value": "94512",
+            "type": "button",
+            "action_ts": "1760800042.112233"
+          }
+        ]
       },
-      "match": "message"
+      "record": "message",
+      "idPath": "trigger_id"
     },
     "app_mention": {
       "delivery": "webhook",
       "object": "message",
-      "description": "Events API app_mention when the bot is @-mentioned.",
+      "description": "Events API app_mention. App-level, routed by team_id.",
       "payload": {
-        "type": "event_callback",
-        "team_id": "T12345678",
+        "token": "Jhj5dZrVaK7ZwHHjRyZWjbDl",
+        "team_id": "T09B191G5HA",
+        "api_app_id": "A0AS07TUM6H",
         "event": {
           "type": "app_mention",
-          "user": "U12345678",
-          "text": "<@U0LAN0Z89> is it everything a bot could hope for?",
-          "ts": "1515449522.000016",
-          "channel": "C0LAN2Q65"
-        }
+          "user": "U04A8KX2P1Q",
+          "text": "<@U0LAN0Z89> what closes this week?",
+          "ts": "1760800100.000300",
+          "channel": "C08SALES01",
+          "event_ts": "1760800100.000300"
+        },
+        "type": "event_callback",
+        "event_id": "Ev08MFMKH6",
+        "event_time": 1760800100
       },
-      "match": "app_mention"
+      "record": "event",
+      "idPath": "event_id"
     }
   },
   "webhook": {
     "scope": "app",
-    "batch": [],
-    "topic": "{{body.event.type}}",
-    "eventId": "{{body.event_id}}",
-    "account": "{{body.team_id}}",
+    "unwrap": "payload",
+    "topic": [
+      "{{body.event.type}}",
+      "interaction.{{body.type}}"
+    ],
+    "eventId": [
+      "{{body.event_id}}",
+      "{{body.trigger_id}}"
+    ],
+    "account": [
+      "{{body.team_id}}",
+      "{{body.team.id}}"
+    ],
     "verify": "verifyWebhookSignature",
-    "note": "Slack signs the raw body with HMAC-SHA256 (X-Slack-Signature / X-Slack-Request-Timestamp). Events API deliveries include team_id for tenant routing. Event subscriptions are configured in the Slack app (Request URL + subscribed events / app manifest), not via a Web API create-subscription endpoint. Api.verifyWebhookSignature implements the signing-secret check; the Tier-3 extension routes by team_id and answers url_verification challenges."
+    "handshake": {
+      "when": "$.body.type == 'url_verification'",
+      "status": 200,
+      "body": {
+        "challenge": "$.body.challenge"
+      }
+    },
+    "note": "Slack signing secret: v0 HMAC over v0:timestamp:raw body, 5 minutes. Api.verifyWebhookSignature + Tier-3 extensions/webhooks (url_verification + team_id routing)."
   },
   "capabilities": {
-    "auth.test": {
-      "kind": "read",
-      "method": "authTest",
-      "input": {},
-      "output": "object",
-      "args": []
-    },
-    "team.list": {
-      "kind": "read",
-      "method": "listTeams",
-      "input": {
-        "cursor": { "type": "string" },
-        "limit": { "type": "number" },
-        "include_icon": { "type": "boolean" }
-      },
-      "output": "object",
-      "args": ["$rest"]
-    },
-    "conversation.list": {
-      "kind": "read",
-      "method": "listConversations",
-      "input": {
-        "cursor": { "type": "string" },
-        "limit": { "type": "number" },
-        "types": { "type": "string" },
-        "exclude_archived": { "type": "boolean" },
-        "team_id": { "type": "string" }
-      },
-      "output": "page<conversation>",
-      "args": ["$rest"]
-    },
-    "conversation.get": {
-      "kind": "read",
-      "method": "getConversation",
-      "input": {
-        "channel": { "type": "string", "required": true }
-      },
-      "output": "conversation",
-      "args": ["$rest"]
-    },
-    "conversation.create": {
-      "kind": "write",
-      "method": "createConversation",
-      "input": {
-        "body": { "type": "object", "required": true }
-      },
-      "output": "conversation",
-      "args": ["body"]
-    },
-    "conversation.invite": {
-      "kind": "write",
-      "method": "inviteToConversation",
-      "input": {
-        "body": { "type": "object", "required": true }
-      },
-      "output": "conversation",
-      "args": ["body"]
-    },
-    "conversation.history": {
-      "kind": "read",
-      "method": "getConversationHistory",
-      "input": {
-        "channel": { "type": "string", "required": true },
-        "cursor": { "type": "string" },
-        "limit": { "type": "number" }
-      },
-      "output": "message[]",
-      "args": ["$rest"]
-    },
-    "conversation.members": {
-      "kind": "read",
-      "method": "getConversationMembers",
-      "input": {
-        "channel": { "type": "string", "required": true }
-      },
-      "output": "string[]",
-      "args": ["$rest"]
-    },
-    "conversation.rename": {
-      "kind": "write",
-      "method": "renameConversation",
-      "input": {
-        "body": { "type": "object", "required": true }
-      },
-      "output": "conversation",
-      "args": ["body"]
-    },
-    "conversation.archive": {
-      "kind": "write",
-      "method": "archiveConversation",
-      "input": {
-        "body": { "type": "object", "required": true }
-      },
-      "output": "object",
-      "args": ["body"]
-    },
     "message.post": {
       "kind": "write",
       "method": "postMessage",
+      "label": "chat.postMessage",
       "input": {
-        "body": { "type": "object", "required": true }
+        "channel": {
+          "type": "string",
+          "required": true
+        },
+        "text": {
+          "type": "string",
+          "required": true
+        },
+        "blocks": {
+          "type": "array"
+        },
+        "thread_ts": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "unfurl_links": {
+          "type": "boolean"
+        }
       },
       "output": "message",
-      "args": ["body"]
+      "args": [
+        "$rest"
+      ]
     },
     "message.update": {
       "kind": "write",
       "method": "updateMessage",
+      "label": "chat.update",
       "input": {
-        "body": { "type": "object", "required": true }
+        "channel": {
+          "type": "string",
+          "required": true
+        },
+        "ts": {
+          "type": "string",
+          "required": true
+        },
+        "text": {
+          "type": "string",
+          "required": true
+        },
+        "blocks": {
+          "type": "array"
+        }
       },
       "output": "message",
-      "args": ["body"]
-    },
-    "message.delete": {
-      "kind": "write",
-      "method": "deleteMessage",
-      "input": {
-        "body": { "type": "object", "required": true }
-      },
-      "output": "object",
-      "args": ["body"]
+      "args": [
+        "$rest"
+      ]
     },
     "message.postEphemeral": {
       "kind": "write",
       "method": "postEphemeral",
+      "label": "chat.postEphemeral",
       "input": {
-        "body": { "type": "object", "required": true }
+        "channel": {
+          "type": "string",
+          "required": true
+        },
+        "user": {
+          "type": "string",
+          "required": true
+        },
+        "text": {
+          "type": "string",
+          "required": true
+        },
+        "blocks": {
+          "type": "array"
+        }
       },
-      "output": "object",
-      "args": ["body"]
+      "output": "message",
+      "args": [
+        "$rest"
+      ]
     },
     "message.permalink": {
       "kind": "read",
       "method": "getMessagePermalink",
+      "label": "chat.getPermalink",
       "input": {
-        "channel": { "type": "string", "required": true },
-        "message_ts": { "type": "string", "required": true }
+        "channel": {
+          "type": "string",
+          "required": true
+        },
+        "message_ts": {
+          "type": "string",
+          "required": true
+        }
       },
-      "output": "object",
-      "args": ["$rest"]
+      "output": "string",
+      "args": [
+        "$rest"
+      ]
+    },
+    "channel.list": {
+      "kind": "read",
+      "method": "listChannels",
+      "label": "conversations.list",
+      "input": {
+        "types": {
+          "type": "string"
+        },
+        "exclude_archived": {
+          "type": "boolean"
+        },
+        "limit": {
+          "type": "number"
+        }
+      },
+      "output": "channel[]",
+      "args": [
+        "$rest"
+      ]
     },
     "user.list": {
       "kind": "read",
       "method": "listUsers",
+      "label": "users.list",
       "input": {
-        "cursor": { "type": "string" },
-        "limit": { "type": "number" }
+        "limit": {
+          "type": "number"
+        }
       },
-      "output": "page<user>",
-      "args": ["$rest"]
-    },
-    "user.get": {
-      "kind": "read",
-      "method": "getUser",
-      "input": {
-        "user": { "type": "string", "required": true }
-      },
-      "output": "user",
-      "args": ["$rest"]
+      "output": "user[]",
+      "args": [
+        "$rest"
+      ]
     },
     "user.lookupByEmail": {
-      "kind": "search",
+      "kind": "read",
       "method": "lookupUserByEmail",
+      "label": "users.lookupByEmail",
       "input": {
-        "email": { "type": "string", "required": true }
+        "email": {
+          "type": "string",
+          "required": true
+        }
       },
       "output": "user",
-      "args": ["$rest"]
-    },
-    "user.profile.get": {
-      "kind": "read",
-      "method": "getUserProfile",
-      "input": {
-        "user": { "type": "string" }
-      },
-      "output": "object",
-      "args": ["$rest"]
-    },
-    "file.list": {
-      "kind": "read",
-      "method": "listFiles",
-      "input": {
-        "channel": { "type": "string" },
-        "user": { "type": "string" },
-        "types": { "type": "string" }
-      },
-      "output": "page<file>",
-      "args": ["$rest"]
-    },
-    "file.get": {
-      "kind": "read",
-      "method": "getFile",
-      "input": {
-        "file": { "type": "string", "required": true }
-      },
-      "output": "file",
-      "args": ["$rest"]
-    },
-    "event.authorizations.list": {
-      "kind": "read",
-      "method": "listEventAuthorizations",
-      "input": {
-        "event_context": { "type": "string", "required": true }
-      },
-      "output": "object",
-      "args": ["$rest"]
-    },
-    "view.open": {
-      "kind": "write",
-      "method": "openView",
-      "input": {
-        "body": { "type": "object", "required": true }
-      },
-      "output": "object",
-      "args": ["body"]
-    },
-    "view.publish": {
-      "kind": "write",
-      "method": "publishView",
-      "input": {
-        "body": { "type": "object", "required": true }
-      },
-      "output": "object",
-      "args": ["body"]
-    },
-    "view.update": {
-      "kind": "write",
-      "method": "updateView",
-      "input": {
-        "body": { "type": "object", "required": true }
-      },
-      "output": "object",
-      "args": ["body"]
-    },
-    "view.push": {
-      "kind": "write",
-      "method": "pushView",
-      "input": {
-        "body": { "type": "object", "required": true }
-      },
-      "output": "object",
-      "args": ["body"]
+      "args": [
+        "email"
+      ]
     }
   },
   "options": {
-    "conversation": {
-      "capability": "conversation.list",
-      "label": "{{item.name}}",
+    "channel": {
+      "capability": "channel.list",
+      "label": "#{{item.name}}",
       "value": "$.item.id"
     },
     "user": {
       "capability": "user.list",
-      "label": "{{item.real_name}} ({{item.name}})",
+      "label": "{{item.real_name}}",
       "value": "$.item.id"
     }
+  },
+  "ui": {
+    "placements": [
+      "message.actions",
+      "app.home",
+      "modal"
+    ],
+    "renderer": "frigg-slack-blocks"
   }
 }

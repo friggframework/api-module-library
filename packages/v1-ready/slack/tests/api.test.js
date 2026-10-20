@@ -110,6 +110,15 @@ describe('Slack Api', () => {
             expect(api._captured[0].query.types).toBe('public_channel');
         });
 
+        it('listChannels aliases listConversations for lefthook channel.list', async () => {
+            const api = makeApi();
+            await api.listChannels({ limit: 20 });
+            expect(api._captured[0].url).toBe(
+                'https://slack.com/api/conversations.list'
+            );
+            expect(api._captured[0].query.limit).toBe(20);
+        });
+
         it('getConversation / createConversation / inviteToConversation', async () => {
             const api = makeApi();
             await api.getConversation({ channel: 'C1' });
@@ -168,6 +177,7 @@ describe('Slack Api', () => {
             await api.listUsers({ limit: 100 });
             await api.getUser({ user: 'U1' });
             await api.lookupUserByEmail({ email: 'a@b.com' });
+            await api.lookupUserByEmail('b@c.com');
             await api.getUserProfile({ user: 'U1' });
             await api.listFiles({ channel: 'C1' });
             await api.getFile({ file: 'F1' });
@@ -175,10 +185,12 @@ describe('Slack Api', () => {
                 'users.list',
                 'users.info',
                 'users.lookupByEmail',
+                'users.lookupByEmail',
                 'users.profile.get',
                 'files.list',
                 'files.info',
             ]);
+            expect(api._captured[3].query).toEqual({ email: 'b@c.com' });
         });
 
         it('listEventAuthorizations and views', async () => {

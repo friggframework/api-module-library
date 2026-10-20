@@ -1,0 +1,33 @@
+{
+  "name": "@friggframework/api-module-microsoft-onedrive",
+  "version": "1.0.0",
+  "description": "Microsoft OneDrive API module that lets the Frigg Framework interact with OneDrive files and folders via Microsoft Graph, including change-notification subscriptions",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint:fix": "prettier --write --loglevel error . && eslint . --fix"
+  },
+  "keywords": [
+    "frigg",
+    "onedrive",
+    "microsoft-onedrive",
+    "microsoft-graph",
+    "api-module",
+    "files",
+    "drives"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^2.0.0-next.107"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-scheduler": "^3.1113.0",
+    "dotenv": "^16.0.3",
+    "jest": "^28.1.3",
+    "js-yaml": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

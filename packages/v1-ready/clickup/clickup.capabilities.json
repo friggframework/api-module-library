@@ -73,12 +73,13 @@
         { "name": "description", "type": "text" },
         { "name": "status.status", "type": "string" },
         { "name": "priority", "type": "json" },
-        { "name": "due_date", "type": "string" },
+        { "name": "due_date", "type": "number", "description": "Unix timestamp in ms (vendor OpenAPI: integer)" },
         { "name": "date_created", "type": "string", "tag": "record.createdAt", "readOnly": true },
         { "name": "date_updated", "type": "string", "tag": "record.updatedAt", "readOnly": true },
         { "name": "url", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "team_id", "type": "string", "readOnly": true },
         { "name": "list.id", "type": "string" },
-        { "name": "assignees", "type": "json" }
+        { "name": "assignees", "type": "json", "description": "Create: integer[]; Update: { add: integer[], rem: integer[] }" }
       ],
       "sync": {
         "id": "id",
@@ -106,11 +107,17 @@
       "label": "Webhook",
       "fields": [
         { "name": "id", "type": "id", "readOnly": true },
-        { "name": "webhook.id", "type": "id", "readOnly": true },
+        { "name": "userid", "type": "number", "readOnly": true },
+        { "name": "team_id", "type": "number", "required": true, "description": "Workspace id on the webhook object (create/list response)" },
         { "name": "endpoint", "type": "string", "required": true },
+        { "name": "client_id", "type": "string", "readOnly": true },
         { "name": "events", "type": "json", "required": true },
-        { "name": "secret", "type": "string", "readOnly": true },
-        { "name": "team_id", "type": "string" }
+        { "name": "task_id", "type": "string" },
+        { "name": "list_id", "type": "number" },
+        { "name": "folder_id", "type": "number" },
+        { "name": "space_id", "type": "number" },
+        { "name": "health", "type": "json", "readOnly": true },
+        { "name": "secret", "type": "string", "readOnly": true }
       ]
     }
   },
@@ -144,7 +151,7 @@
     "eventId": "{{body.webhook_id}}:{{body.history_items.0.id}}",
     "account": "{{body.team_id}}",
     "verify": "verifyWebhookSignature",
-    "note": "Webhooks are created via createWebhook (POST /team/{team_id}/webhook). Each webhook has a unique secret returned at creation; verify X-Signature with HMAC-SHA256. Inbound payloads often omit team_id — see open questions."
+    "note": "Webhooks are created via createWebhook (POST /v2/team/{team_id}/webhook). The webhook object includes team_id and a unique secret (vendor OpenAPI). Verify X-Signature with HMAC-SHA256. Inbound event bodies may omit team_id — persist webhook.team_id at create time for routing."
   },
   "capabilities": {
     "user.get": {
@@ -233,10 +240,10 @@
         "listId": { "type": "string", "required": true },
         "name": { "type": "string", "required": true },
         "description": { "type": "string" },
-        "assignees": { "type": "array" },
+        "assignees": { "type": "array", "description": "integer[] per vendor OpenAPI" },
         "status": { "type": "string" },
         "priority": { "type": "number" },
-        "due_date": { "type": "string" }
+        "due_date": { "type": "number", "description": "Unix ms integer" }
       },
       "output": "task",
       "args": ["listId", "$rest"]
@@ -250,8 +257,8 @@
         "description": { "type": "string" },
         "status": { "type": "string" },
         "priority": { "type": "number" },
-        "due_date": { "type": "string" },
-        "assignees": { "type": "object" }
+        "due_date": { "type": "number", "description": "Unix ms integer" },
+        "assignees": { "type": "object", "description": "{ add: integer[], rem: integer[] }" }
       },
       "output": "task",
       "args": ["taskId", "$rest"]
@@ -262,7 +269,7 @@
       "input": {
         "teamId": { "type": "string", "required": true },
         "endpoint": { "type": "string", "required": true },
-        "events": { "type": "array", "required": true }
+        "events": { "type": "array", "required": true, "description": "string[] (create body)" }
       },
       "output": "webhook",
       "args": ["teamId", "$rest"]
@@ -281,9 +288,9 @@
       "method": "updateWebhook",
       "input": {
         "webhookId": { "type": "string", "required": true },
-        "endpoint": { "type": "string" },
-        "events": { "type": "array" },
-        "status": { "type": "string" }
+        "endpoint": { "type": "string", "required": true },
+        "events": { "type": "string", "required": true, "description": "Vendor OpenAPI types events as string on update (e.g. \"*\"); description also mentions arrays" },
+        "status": { "type": "string", "required": true }
       },
       "output": "webhook",
       "args": ["webhookId", "$rest"]

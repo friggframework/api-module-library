@@ -1,7 +1,9 @@
 const crypto = require('crypto');
 const { OAuth2Requester, get } = require('@friggframework/core');
 
-const DEFAULT_BASE_URL = 'https://api.clickup.com/api/v2';
+// Official OpenAPI servers[0].url — paths below include the /v2 prefix.
+// https://developer.clickup.com/openapi/clickup-api-v2-reference.json
+const DEFAULT_BASE_URL = 'https://api.clickup.com/api';
 const AUTHORIZE_URI = 'https://app.clickup.com/api';
 const TOKEN_URI = 'https://api.clickup.com/api/v2/oauth/token';
 const SIGNATURE_HEADER = 'x-signature';
@@ -54,10 +56,10 @@ function whSafeEqual(a, b) {
  *   - OAuth: `Authorization: Bearer {access_token}`
  *   - Personal: `Authorization: {personal_token}` (no Bearer prefix)
  *
- * Base URL: https://api.clickup.com/api/v2
+ * Base URL: https://api.clickup.com/api (paths are /v2/…)
  * Docs: https://developer.clickup.com/
  * Auth: https://developer.clickup.com/docs/authentication
- * Official OpenAPI: https://developer.clickup.com/docs/open-api-spec
+ * Official OpenAPI: https://developer.clickup.com/openapi/clickup-api-v2-reference.json
  * Webhooks: https://developer.clickup.com/docs/webhooks
  */
 class Api extends OAuth2Requester {
@@ -81,10 +83,13 @@ class Api extends OAuth2Requester {
             (process.env.REDIRECT_URI
                 ? `${process.env.REDIRECT_URI}/clickup`
                 : null);
+        // Vendor OpenAPI documents no OAuth scopes (Authorization_Token apiKey
+        // header only). Keep env passthrough for future use.
         this.scope =
             this.scope || process.env.CLICKUP_SCOPE || null;
 
         // ClickUp OAuth tokens currently do not expire / refresh.
+        // Token response schema is only `{ access_token }` (no refresh_token).
         this.isRefreshable = false;
 
         this.access_token =
@@ -97,18 +102,18 @@ class Api extends OAuth2Requester {
         this.authorizationUri = this._buildAuthorizationUri();
 
         this.URLs = {
-            oauthToken: '/oauth/token',
-            user: '/user',
-            team: '/team',
-            spaces: (teamId) => `/team/${teamId}/space`,
-            spaceById: (spaceId) => `/space/${spaceId}`,
-            folders: (spaceId) => `/space/${spaceId}/folder`,
-            listsInFolder: (folderId) => `/folder/${folderId}/list`,
-            folderlessLists: (spaceId) => `/space/${spaceId}/list`,
-            tasksInList: (listId) => `/list/${listId}/task`,
-            taskById: (taskId) => `/task/${taskId}`,
-            webhooks: (teamId) => `/team/${teamId}/webhook`,
-            webhookById: (webhookId) => `/webhook/${webhookId}`,
+            oauthToken: '/v2/oauth/token',
+            user: '/v2/user',
+            team: '/v2/team',
+            spaces: (teamId) => `/v2/team/${teamId}/space`,
+            spaceById: (spaceId) => `/v2/space/${spaceId}`,
+            folders: (spaceId) => `/v2/space/${spaceId}/folder`,
+            listsInFolder: (folderId) => `/v2/folder/${folderId}/list`,
+            folderlessLists: (spaceId) => `/v2/space/${spaceId}/list`,
+            tasksInList: (listId) => `/v2/list/${listId}/task`,
+            taskById: (taskId) => `/v2/task/${taskId}`,
+            webhooks: (teamId) => `/v2/team/${teamId}/webhook`,
+            webhookById: (webhookId) => `/v2/webhook/${webhookId}`,
         };
     }
 
@@ -224,7 +229,7 @@ class Api extends OAuth2Requester {
 
     /**
      * Get the authenticated ClickUp user.
-     * GET /user
+     * GET /v2/user
      * Official operationId: GetAuthorizedUser
      * @see https://developer.clickup.com/reference/getauthorizeduser
      */
@@ -234,7 +239,7 @@ class Api extends OAuth2Requester {
 
     /**
      * List Workspaces (teams) authorized for this token.
-     * GET /team
+     * GET /v2/team
      * Official operationId: GetAuthorizedTeams
      * @see https://developer.clickup.com/reference/getauthorizedteams
      */
@@ -246,7 +251,7 @@ class Api extends OAuth2Requester {
 
     /**
      * List Spaces in a Workspace.
-     * GET /team/{team_id}/space
+     * GET /v2/team/{team_id}/space
      * Official operationId: GetSpaces
      * @see https://developer.clickup.com/reference/getspaces
      */
@@ -259,7 +264,7 @@ class Api extends OAuth2Requester {
 
     /**
      * Get one Space.
-     * GET /space/{space_id}
+     * GET /v2/space/{space_id}
      * Official operationId: GetSpace
      * @see https://developer.clickup.com/reference/getspace
      */
@@ -271,7 +276,7 @@ class Api extends OAuth2Requester {
 
     /**
      * List Folders in a Space.
-     * GET /space/{space_id}/folder
+     * GET /v2/space/{space_id}/folder
      * Official operationId: GetFolders
      * @see https://developer.clickup.com/reference/getfolders
      */
@@ -284,7 +289,7 @@ class Api extends OAuth2Requester {
 
     /**
      * List Lists inside a Folder.
-     * GET /folder/{folder_id}/list
+     * GET /v2/folder/{folder_id}/list
      * Official operationId: GetLists
      * @see https://developer.clickup.com/reference/getlists
      */
@@ -297,7 +302,7 @@ class Api extends OAuth2Requester {
 
     /**
      * List folderless Lists in a Space.
-     * GET /space/{space_id}/list
+     * GET /v2/space/{space_id}/list
      * Official operationId: GetFolderlessLists
      * @see https://developer.clickup.com/reference/getfolderlesslists
      */
@@ -312,7 +317,7 @@ class Api extends OAuth2Requester {
 
     /**
      * List tasks in a List.
-     * GET /list/{list_id}/task
+     * GET /v2/list/{list_id}/task
      * Official operationId: GetTasks
      * @see https://developer.clickup.com/reference/gettasks
      */
@@ -325,7 +330,7 @@ class Api extends OAuth2Requester {
 
     /**
      * Get one task.
-     * GET /task/{task_id}
+     * GET /v2/task/{task_id}
      * Official operationId: GetTask
      * @see https://developer.clickup.com/reference/gettask
      */
@@ -338,7 +343,7 @@ class Api extends OAuth2Requester {
 
     /**
      * Create a task in a List.
-     * POST /list/{list_id}/task
+     * POST /v2/list/{list_id}/task
      * Official operationId: CreateTask
      * @see https://developer.clickup.com/reference/createtask
      */
@@ -351,7 +356,7 @@ class Api extends OAuth2Requester {
 
     /**
      * Update a task.
-     * PUT /task/{task_id}
+     * PUT /v2/task/{task_id}
      * Official operationId: UpdateTask
      * @see https://developer.clickup.com/reference/updatetask
      */
@@ -367,7 +372,7 @@ class Api extends OAuth2Requester {
 
     /**
      * Create a Workspace webhook.
-     * POST /team/{team_id}/webhook
+     * POST /v2/team/{team_id}/webhook
      * Official operationId: CreateWebhook
      * Response includes `webhook.secret` for HMAC verification.
      * @see https://developer.clickup.com/reference/createwebhook
@@ -381,7 +386,7 @@ class Api extends OAuth2Requester {
 
     /**
      * List API-created webhooks for a Workspace (current user).
-     * GET /team/{team_id}/webhook
+     * GET /v2/team/{team_id}/webhook
      * Official operationId: GetWebhooks
      * @see https://developer.clickup.com/reference/getwebhooks
      */
@@ -393,7 +398,7 @@ class Api extends OAuth2Requester {
 
     /**
      * Update a webhook.
-     * PUT /webhook/{webhook_id}
+     * PUT /v2/webhook/{webhook_id}
      * Official operationId: UpdateWebhook
      * @see https://developer.clickup.com/reference/updatewebhook
      */
@@ -406,7 +411,7 @@ class Api extends OAuth2Requester {
 
     /**
      * Delete a webhook.
-     * DELETE /webhook/{webhook_id}
+     * DELETE /v2/webhook/{webhook_id}
      * Official operationId: DeleteWebhook
      * @see https://developer.clickup.com/reference/deletewebhook
      */

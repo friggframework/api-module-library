@@ -32,10 +32,18 @@ describe('OpenAPI spec ↔ client sync', () => {
         expect(spec.servers[0].url).toBe(api.baseUrl);
     });
 
-    it('declares Authorization apiKey security matching the client header', () => {
-        const scheme = spec.components.securitySchemes.AuthorizationToken;
+    it('declares Authorization_Token apiKey security matching the vendor OpenAPI', () => {
+        const scheme = spec.components.securitySchemes.Authorization_Token;
         expect(scheme.type).toBe('apiKey');
         expect(scheme.in).toBe('header');
         expect(scheme.name).toBe('Authorization');
+        expect(spec.security).toEqual([{ Authorization_Token: [] }]);
+    });
+
+    it('uses the vendor server URL (not /api/v2 as the server root)', () => {
+        expect(spec.servers[0].url).toBe('https://api.clickup.com/api');
+        const paths = Object.keys(spec.paths);
+        expect(paths.every((p) => p.startsWith('/v2/'))).toBe(true);
     });
 });
+

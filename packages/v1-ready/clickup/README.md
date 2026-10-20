@@ -2,6 +2,8 @@
 
 Frigg v2 API module for the [ClickUp](https://clickup.com) public REST API v2.
 
+Official OpenAPI: https://developer.clickup.com/openapi/clickup-api-v2-reference.json
+
 ## Auth
 
 | Detail | Value |

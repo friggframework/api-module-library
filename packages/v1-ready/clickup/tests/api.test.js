@@ -33,7 +33,7 @@ describe('ClickUp Api', () => {
     describe('construction & auth', () => {
         it('sets the base URL and token URI', () => {
             const api = new Api({ access_token: 'abc' });
-            expect(api.baseUrl).toBe('https://api.clickup.com/api/v2');
+            expect(api.baseUrl).toBe('https://api.clickup.com/api');
             expect(api.tokenUri).toBe(
                 'https://api.clickup.com/api/v2/oauth/token'
             );

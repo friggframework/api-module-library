@@ -7,13 +7,14 @@ const { OAuth2Requester, get } = require('@friggframework/core');
  * `Authorization: Bearer <token>`. Apps may use expiring tokens (1h access +
  * 60d refresh) or non-expiring tokens — chosen at app creation and immutable.
  *
- * Base URL: https://api.miro.com
+ * Base URL: https://api.miro.com/  (trailing slash matches vendor OAS `servers[0].url`)
  * REST:     /v2/...
  * Token context: GET /v1/oauth-token
  * OAuth authorize: https://miro.com/oauth/authorize
  * OAuth token:     https://api.miro.com/v1/oauth/token
  *
- * Official OpenAPI: https://github.com/miroapp/api-clients/blob/main/packages/generator/spec.json
+ * Official OpenAPI:
+ *   https://raw.githubusercontent.com/miroapp/api-clients/main/packages/generator/spec.json
  * Docs: https://developers.miro.com/reference/overview
  * OAuth: https://developers.miro.com/docs/getting-started-with-oauth
  *
@@ -22,7 +23,7 @@ const { OAuth2Requester, get } = require('@friggframework/core');
  * https://developers.miro.com/changelog/removed-experimental-webhooks-support
  */
 
-const API_BASE = 'https://api.miro.com';
+const API_BASE = 'https://api.miro.com/';
 const AUTH_BASE = 'https://miro.com/oauth/authorize';
 const TOKEN_URI = 'https://api.miro.com/v1/oauth/token';
 
@@ -91,6 +92,16 @@ class Api extends OAuth2Requester {
         return this.authorizationUri;
     }
 
+    /**
+     * Join `baseUrl` (vendor trailing slash) with an absolute path (`/v2/...`)
+     * without producing a double slash.
+     */
+    _url(path) {
+        const base = String(this.baseUrl || '').replace(/\/$/, '');
+        const suffix = path.startsWith('/') ? path : `/${path}`;
+        return base + suffix;
+    }
+
     addJsonHeaders(options) {
         const jsonHeaders = {
             'Content-Type': 'application/json',
@@ -120,13 +131,13 @@ class Api extends OAuth2Requester {
     // ---- Auth / identity ---------------------------------------------------
 
     /**
-     * Get access token context (user, team, organization, scopes).
+     * Get access token context (user, team, organization, scopes[]).
      * GET /v1/oauth-token
      * Official operationId: token-info
      */
     async getTokenInfo() {
         return this._get({
-            url: this.baseUrl + this.URLs.tokenInfo,
+            url: this._url(this.URLs.tokenInfo),
         });
     }
 
@@ -137,11 +148,12 @@ class Api extends OAuth2Requester {
      * GET /v2/boards
      * Official operationId: get-boards
      *
-     * Optional query: team_id, project_id, query, owner, limit, offset, sort
+     * Optional query: team_id, project_id, query, owner, limit (1–50),
+     * offset, sort (default|last_modified|last_opened|last_created|alphabetically)
      */
     async listBoards(query = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.boards,
+            url: this._url(this.URLs.boards),
             query,
         });
     }
@@ -151,11 +163,12 @@ class Api extends OAuth2Requester {
      * POST /v2/boards
      * Official operationId: create-board
      *
-     * body: BoardChanges — { name?, description?, teamId?, policy?, ... }
+     * body: BoardChanges — { name?, description?, teamId?, projectId?, policy? }
+     * Request body is optional in the vendor OAS.
      */
     async createBoard(body = {}) {
         return this._post({
-            url: this.baseUrl + this.URLs.boards,
+            url: this._url(this.URLs.boards),
             body,
         });
     }
@@ -167,7 +180,7 @@ class Api extends OAuth2Requester {
      */
     async getBoard(boardId) {
         return this._get({
-            url: this.baseUrl + this.URLs.boardById(boardId),
+            url: this._url(this.URLs.boardById(boardId)),
         });
     }
 
@@ -178,7 +191,7 @@ class Api extends OAuth2Requester {
      */
     async updateBoard(boardId, body = {}) {
         return this._patch({
-            url: this.baseUrl + this.URLs.boardById(boardId),
+            url: this._url(this.URLs.boardById(boardId)),
             body,
         });
     }
@@ -190,7 +203,7 @@ class Api extends OAuth2Requester {
      */
     async deleteBoard(boardId) {
         return this._delete({
-            url: this.baseUrl + this.URLs.boardById(boardId),
+            url: this._url(this.URLs.boardById(boardId)),
         });
     }
 
@@ -201,11 +214,12 @@ class Api extends OAuth2Requester {
      * GET /v2/boards/{board_id}/items
      * Official operationId: get-items
      *
-     * Optional query: limit, type, cursor
+     * Optional query: limit (default 10, min 10, max 50), type (item-type enum),
+     * cursor
      */
     async listBoardItems(boardId, query = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.boardItems(boardId),
+            url: this._url(this.URLs.boardItems(boardId)),
             query,
         });
     }
@@ -217,7 +231,7 @@ class Api extends OAuth2Requester {
      */
     async getBoardItem(boardId, itemId) {
         return this._get({
-            url: this.baseUrl + this.URLs.boardItemById(boardId, itemId),
+            url: this._url(this.URLs.boardItemById(boardId, itemId)),
         });
     }
 
@@ -229,10 +243,11 @@ class Api extends OAuth2Requester {
      * Official operationId: create-sticky-note-item
      *
      * body: StickyNoteCreateRequest — { data?, style?, position?, geometry?, parent? }
+     * data.shape enum: square | rectangle (default square)
      */
     async createStickyNote(boardId, body = {}) {
         return this._post({
-            url: this.baseUrl + this.URLs.stickyNotes(boardId),
+            url: this._url(this.URLs.stickyNotes(boardId)),
             body,
         });
     }
@@ -244,7 +259,7 @@ class Api extends OAuth2Requester {
      */
     async getStickyNote(boardId, itemId) {
         return this._get({
-            url: this.baseUrl + this.URLs.stickyNoteById(boardId, itemId),
+            url: this._url(this.URLs.stickyNoteById(boardId, itemId)),
         });
     }
 
@@ -255,7 +270,7 @@ class Api extends OAuth2Requester {
      */
     async updateStickyNote(boardId, itemId, body = {}) {
         return this._patch({
-            url: this.baseUrl + this.URLs.stickyNoteById(boardId, itemId),
+            url: this._url(this.URLs.stickyNoteById(boardId, itemId)),
             body,
         });
     }
@@ -267,7 +282,7 @@ class Api extends OAuth2Requester {
      */
     async deleteStickyNote(boardId, itemId) {
         return this._delete({
-            url: this.baseUrl + this.URLs.stickyNoteById(boardId, itemId),
+            url: this._url(this.URLs.stickyNoteById(boardId, itemId)),
         });
     }
 
@@ -278,11 +293,11 @@ class Api extends OAuth2Requester {
      * GET /v2/boards/{board_id}/members
      * Official operationId: get-board-members
      *
-     * Optional query: limit, offset
+     * Optional query: limit (1–50), offset
      */
     async listBoardMembers(boardId, query = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.boardMembers(boardId),
+            url: this._url(this.URLs.boardMembers(boardId)),
             query,
         });
     }

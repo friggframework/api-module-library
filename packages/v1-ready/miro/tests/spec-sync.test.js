@@ -17,6 +17,7 @@ const NON_OPERATION_METHODS = new Set([
     'constructor',
     'addJsonHeaders',
     '_buildAuthorizationUri',
+    '_url',
     'getAuthUri',
     '_post',
     '_patch',
@@ -42,8 +43,8 @@ describe('OpenAPI spec ↔ client sync', () => {
         expect(spec.servers[0].url).toBe(api.baseUrl);
     });
 
-    it('declares OAuth2 authorization-code security matching Miro OAuth', () => {
-        const oauth = spec.components.securitySchemes.OAuth2;
+    it('declares oAuth2AuthCode security matching the vendor OAS', () => {
+        const oauth = spec.components.securitySchemes.oAuth2AuthCode;
         expect(oauth.type).toBe('oauth2');
         expect(oauth.flows.authorizationCode.authorizationUrl).toBe(
             'https://miro.com/oauth/authorize'
@@ -51,12 +52,53 @@ describe('OpenAPI spec ↔ client sync', () => {
         expect(oauth.flows.authorizationCode.tokenUrl).toBe(
             'https://api.miro.com/v1/oauth/token'
         );
-        expect(oauth.flows.authorizationCode.scopes).toHaveProperty(
-            'boards:read'
+        // Full vendor scope set (not only boards:*).
+        expect(Object.keys(oauth.flows.authorizationCode.scopes).sort()).toEqual(
+            [
+                'boards:read',
+                'boards:write',
+                'microphone:listen',
+                'organizations:read',
+                'organizations:teams:read',
+                'organizations:teams:write',
+                'screen:record',
+                'webcam:record',
+            ].sort()
         );
-        expect(oauth.flows.authorizationCode.scopes).toHaveProperty(
-            'boards:write'
+    });
+
+    it('aligns server URL and key schema details with the vendor OAS', () => {
+        // Vendor servers[0].url is https://api.miro.com/ (trailing slash).
+        expect(spec.servers[0].url).toBe('https://api.miro.com/');
+
+        const token = spec.components.schemas.TokenInformation;
+        expect(token.properties.scopes.type).toBe('array');
+        expect(token.properties.scopes.items.type).toBe('string');
+
+        const boardChanges = spec.components.schemas.BoardChanges.properties;
+        expect(boardChanges).toHaveProperty('projectId');
+        expect(boardChanges).toHaveProperty('policy');
+
+        const sort = spec.paths['/v2/boards'].get.parameters.find(
+            (p) => p.name === 'sort'
         );
+        expect(sort.schema.enum).toEqual([
+            'default',
+            'last_modified',
+            'last_opened',
+            'last_created',
+            'alphabetically',
+        ]);
+
+        const itemType = spec.paths['/v2/boards/{board_id}/items'].get.parameters.find(
+            (p) => p.name === 'type'
+        );
+        expect(itemType.schema.enum).toContain('sticky_note');
+        expect(itemType.schema.enum).toContain('data_table_format');
+
+        const shape = spec.components.schemas.StickyNoteData.properties.shape;
+        expect(shape.enum).toEqual(['square', 'rectangle']);
+        expect(shape.default).toBe('square');
     });
 
     it('every public Api method is declared in the OpenAPI (1:1)', () => {

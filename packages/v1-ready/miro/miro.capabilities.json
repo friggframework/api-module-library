@@ -36,12 +36,16 @@
       "fields": [
         { "name": "id", "type": "id", "readOnly": true },
         { "name": "name", "type": "string", "tag": "record.displayName", "required": true },
-        { "name": "description", "type": "text" },
+        { "name": "description", "type": "text", "required": true },
+        { "name": "type", "type": "string", "required": true, "readOnly": true },
         { "name": "viewLink", "type": "url", "readOnly": true },
         { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
         { "name": "modifiedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "lastOpenedAt", "type": "datetime", "readOnly": true },
         { "name": "team.id", "type": "string" },
-        { "name": "owner.id", "type": "string" }
+        { "name": "project.id", "type": "string" },
+        { "name": "owner.id", "type": "string" },
+        { "name": "policy", "type": "json" }
       ],
       "sync": {
         "id": "id",
@@ -98,7 +102,12 @@
         { "name": "id", "type": "id", "readOnly": true },
         { "name": "type", "type": "string", "readOnly": true },
         { "name": "data.content", "type": "text", "tag": "record.displayName" },
-        { "name": "data.shape", "type": "string" },
+        {
+          "name": "data.shape",
+          "type": "enum",
+          "values": ["square", "rectangle"]
+        },
+        { "name": "style.fillColor", "type": "string" },
         { "name": "style", "type": "json" },
         { "name": "position", "type": "json" },
         { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
@@ -142,7 +151,11 @@
         { "name": "team.id", "type": "string" },
         { "name": "team.name", "type": "string", "tag": "organization.name" },
         { "name": "organization.id", "type": "string" },
-        { "name": "scopes", "type": "string" }
+        {
+          "name": "scopes",
+          "type": "json",
+          "description": "Vendor token-info returns scopes as a string array"
+        }
       ]
     }
   },
@@ -232,6 +245,7 @@
     }
   },
   "notes": {
-    "webhooks": "Miro retired experimental REST board webhooks (/v2-experimental/webhooks/board_subscriptions) effective 2025-12-05. No production REST webhook subscription API is documented as of module authoring. Web SDK board events are in-session only and are not modeled here."
+    "vendorOpenApi": "https://raw.githubusercontent.com/miroapp/api-clients/main/packages/generator/spec.json",
+    "webhooks": "Miro retired experimental REST board webhooks (/v2-experimental/webhooks/board_subscriptions) effective 2025-12-05. No production REST webhook subscription API appears in the current vendor OpenAPI. Web SDK board events are in-session only and are not modeled here."
   }
 }

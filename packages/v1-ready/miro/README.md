@@ -20,7 +20,7 @@ Miro connected apps use **OAuth 2.0** authorization code:
 |---|---|
 | Authorize | `https://miro.com/oauth/authorize` |
 | Token | `https://api.miro.com/v1/oauth/token` |
-| API | `https://api.miro.com` (`/v2/...`, plus `GET /v1/oauth-token`) |
+| API | `https://api.miro.com/` (`/v2/...`, plus `GET /v1/oauth-token`) |
 | Header | `Authorization: Bearer <access_token>` |
 | Core scopes | `boards:read` `boards:write` (configured on the Miro app) |
 
@@ -59,7 +59,7 @@ example for Miro.
 
 - REST overview: https://developers.miro.com/reference/overview
 - OAuth: https://developers.miro.com/docs/getting-started-with-oauth
-- Official OpenAPI: https://github.com/miroapp/api-clients/blob/main/packages/generator/spec.json
+- Official OpenAPI: https://raw.githubusercontent.com/miroapp/api-clients/main/packages/generator/spec.json
 - Webhooks retirement: https://developers.miro.com/changelog/removed-experimental-webhooks-support
 - Web SDK: https://developers.miro.com/docs/miro-web-sdk-introduction
 

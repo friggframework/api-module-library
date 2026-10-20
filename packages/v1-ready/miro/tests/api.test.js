@@ -31,16 +31,22 @@ function makeApi(overrides = {}) {
 
 describe('Miro Api', () => {
     describe('construction & auth', () => {
-        it('sets the base URL and OAuth token URI', () => {
+        it('sets the base URL (vendor trailing slash) and OAuth token URI', () => {
             const api = new Api({
                 access_token: 't',
                 client_id: 'c',
                 redirect_uri: 'https://x/miro',
             });
-            expect(api.baseUrl).toBe('https://api.miro.com');
+            expect(api.baseUrl).toBe('https://api.miro.com/');
             expect(api.tokenUri).toBe('https://api.miro.com/v1/oauth/token');
             expect(api.access_token).toBe('t');
             expect(api.isRefreshable).toBe(true);
+        });
+
+        it('_url joins baseUrl and absolute paths without a double slash', () => {
+            const api = new Api({ access_token: 't' });
+            expect(api._url('/v2/boards')).toBe('https://api.miro.com/v2/boards');
+            expect(api._url('v2/boards')).toBe('https://api.miro.com/v2/boards');
         });
 
         it('builds the Miro authorize URL without a scope query param', () => {

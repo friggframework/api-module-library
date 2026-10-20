@@ -4,19 +4,22 @@ info:
   version: "2.0.0"
   description: >-
     Miro REST API v2 curated subset for `@friggframework/api-module-miro`.
-    Endpoints and fields are taken from Miro's official OpenAPI
-    (https://github.com/miroapp/api-clients/blob/main/packages/generator/spec.json)
-    and docs (https://developers.miro.com/reference/overview).
+    Paths, methods, parameters, request/response fields, OAuth URLs/scopes, and
+    server URL are aligned with Miro's official OpenAPI at
+    https://raw.githubusercontent.com/miroapp/api-clients/main/packages/generator/spec.json
+    (also https://github.com/miroapp/api-clients/blob/main/packages/generator/spec.json).
     operationIds are camelCase to match Api methods 1:1; official kebab-case
-    operationIds are noted in each operation description.
+    operationIds are noted in each operation description. This file covers only
+    the endpoints the client implements — not the full vendor surface.
   contact:
     name: Left Hook
     url: https://lefthook.com
 servers:
-  - url: https://api.miro.com
+  # Vendor OAS uses a trailing slash; Api.baseUrl matches and normalizes when joining paths.
+  - url: https://api.miro.com/
     description: Miro Developer Platform API
 security:
-  - OAuth2: []
+  - oAuth2AuthCode: []
 tags:
   - name: Tokens
   - name: Boards
@@ -30,8 +33,8 @@ paths:
       operationId: getTokenInfo
       summary: Get access token information
       description: >-
-        Official operationId `token-info`. Returns token type, scopes, team,
-        organization, and user for the current access token.
+        Official operationId `token-info`. Returns token type, scopes (string
+        array), team, organization, and user for the current access token.
       responses:
         "200":
           description: Token information
@@ -61,13 +64,25 @@ paths:
           schema: { type: string }
         - in: query
           name: limit
-          schema: { type: string }
+          schema:
+            type: string
+            minimum: 1
+            maximum: 50
+            description: "The maximum number of boards to retrieve. Default: `20`"
         - in: query
           name: offset
           schema: { type: string }
         - in: query
           name: sort
-          schema: { type: string }
+          schema:
+            type: string
+            default: default
+            enum:
+              - default
+              - last_modified
+              - last_opened
+              - last_created
+              - alphabetically
       responses:
         "200":
           description: Board search results
@@ -81,7 +96,8 @@ paths:
       summary: Create board
       description: Official operationId `create-board`.
       requestBody:
-        required: true
+        # Vendor does not mark create-board requestBody as required.
+        required: false
         content:
           application/json:
             schema:
@@ -92,7 +108,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Board"
+                $ref: "#/components/schemas/BoardWithLinks"
 
   /v2/boards/{board_id}:
     parameters:
@@ -108,7 +124,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Board"
+                $ref: "#/components/schemas/BoardWithLinksAndLastOpened"
     patch:
       tags: [Boards]
       operationId: updateBoard
@@ -126,7 +142,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Board"
+                $ref: "#/components/schemas/BoardWithLinks"
     delete:
       tags: [Boards]
       operationId: deleteBoard
@@ -147,10 +163,28 @@ paths:
       parameters:
         - in: query
           name: limit
-          schema: { type: string }
+          schema:
+            type: string
+            default: "10"
+            minimum: 10
+            maximum: 50
         - in: query
           name: type
-          schema: { type: string }
+          schema:
+            type: string
+            enum:
+              - text
+              - shape
+              - sticky_note
+              - image
+              - document
+              - card
+              - app_card
+              - preview
+              - frame
+              - embed
+              - doc_format
+              - data_table_format
         - in: query
           name: cursor
           schema: { type: string }
@@ -160,7 +194,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ItemsCursorPaged"
+                $ref: "#/components/schemas/GenericItemCursorPaged"
 
   /v2/boards/{board_id}/items/{item_id}:
     parameters:
@@ -195,7 +229,7 @@ paths:
               $ref: "#/components/schemas/StickyNoteCreateRequest"
       responses:
         "201":
-          description: Sticky note created
+          description: Sticky Note item created
           content:
             application/json:
               schema:
@@ -212,7 +246,7 @@ paths:
       description: Official operationId `get-sticky-note-item`.
       responses:
         "200":
-          description: Sticky note retrieved
+          description: Sticky Note item retrieved
           content:
             application/json:
               schema:
@@ -230,7 +264,7 @@ paths:
               $ref: "#/components/schemas/StickyNoteUpdateRequest"
       responses:
         "200":
-          description: Sticky note updated
+          description: Sticky Note item updated
           content:
             application/json:
               schema:
@@ -255,7 +289,11 @@ paths:
       parameters:
         - in: query
           name: limit
-          schema: { type: string }
+          schema:
+            type: string
+            minimum: 1
+            maximum: 50
+            description: "The maximum number of board members to retrieve. Default: `20`."
         - in: query
           name: offset
           schema: { type: string }
@@ -269,11 +307,12 @@ paths:
 
 components:
   securitySchemes:
-    OAuth2:
+    # Name and flow match vendor `oAuth2AuthCode` exactly.
+    oAuth2AuthCode:
       type: oauth2
       description: >-
-        OAuth 2.0 authorization code. See
-        https://developers.miro.com/docs/getting-started-with-oauth
+        For more information, see
+        https://developers.miro.com/reference/authorization-flow-for-expiring-tokens
       flows:
         authorizationCode:
           authorizationUrl: https://miro.com/oauth/authorize
@@ -281,6 +320,18 @@ components:
           scopes:
             boards:read: Retrieve information about boards, board members, or items
             boards:write: Create, update, or delete boards, board members, or items
+            microphone:listen: Access a user's microphone to record audio in an iFrame
+            screen:record: Access a user's screen to record it in an iFrame
+            webcam:record: Allows an iFrame to access a user's camera to record video
+            organizations:read: >-
+              Read information about the organization, such as name, plan,
+              number of licenses, organization settings, or organization members.
+            organizations:teams:read: >-
+              Read team information, such as the list of teams, team settings,
+              team members, for an organization.
+            organizations:teams:write: >-
+              Create or delete teams, update team information, team settings,
+              team members, for an organization.
 
   parameters:
     BoardId:
@@ -298,31 +349,43 @@ components:
 
   schemas:
     TokenInformation:
+      title: Token information
       type: object
       required: [type, organization, team, createdBy, user]
       properties:
         type: { type: string }
-        scopes: { type: string }
+        # Vendor: array of strings (not a single space-delimited string).
+        scopes:
+          type: array
+          items: { type: string }
         organization:
+          title: Organization information
           type: object
+          required: [type, name, id]
           properties:
             type: { type: string }
             name: { type: string }
             id: { type: string }
         team:
+          title: Team information
           type: object
-          properties:
-            type: { type: string }
-            name: { type: string }
-            id: { type: string }
-        user:
-          type: object
+          required: [type, name, id]
           properties:
             type: { type: string }
             name: { type: string }
             id: { type: string }
         createdBy:
+          title: User information
           type: object
+          required: [type, name, id]
+          properties:
+            type: { type: string }
+            name: { type: string }
+            id: { type: string }
+        user:
+          title: User information
+          type: object
+          required: [type, name, id]
           properties:
             type: { type: string }
             name: { type: string }
@@ -331,35 +394,164 @@ components:
     BoardChanges:
       type: object
       properties:
+        description:
+          type: string
+          maxLength: 300
+          minLength: 0
+          description: Description of the board.
         name:
           type: string
           maxLength: 60
           minLength: 1
-        description:
+          default: Untitled
+          description: Name for the board.
+        policy:
+          $ref: "#/components/schemas/BoardPolicyChange"
+        teamId:
           type: string
-          maxLength: 300
-        teamId: { type: string }
+          description: Unique identifier (ID) of the team where the board must be placed.
+        projectId:
+          type: string
+          description: >-
+            Unique identifier (ID) of the project to which the board must be
+            added. Projects have been renamed to Spaces.
 
-    Board:
+    BoardPolicyChange:
       type: object
+      properties:
+        permissionsPolicy:
+          $ref: "#/components/schemas/BoardPermissionsPolicy"
+        sharingPolicy:
+          $ref: "#/components/schemas/BoardSharingPolicyChange"
+
+    BoardPermissionsPolicy:
+      type: object
+      properties:
+        collaborationToolsStartAccess:
+          type: string
+          default: all_editors
+          enum: [all_editors, board_owners_and_coowners]
+        copyAccess:
+          type: string
+          default: anyone
+          enum: [anyone, team_members, team_editors, board_owner]
+        sharingAccess:
+          type: string
+          default: team_members_with_editing_rights
+          enum: [team_members_with_editing_rights, owner_and_coowners]
+
+    BoardSharingPolicyChange:
+      type: object
+      properties:
+        access:
+          type: string
+          default: private
+          enum: [private, view, edit, comment]
+        inviteToAccountAndBoardLinkAccess:
+          type: string
+          default: no_access
+          enum: [viewer, commenter, editor, no_access]
+        organizationAccess:
+          type: string
+          default: private
+          enum: [private, view, comment, edit]
+        teamAccess:
+          type: string
+          enum: [private, view, comment, edit]
+
+    UserInfoShort:
+      type: object
+      required: [id, name, type]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        type: { type: string }
+
+    Team:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        type: { type: string }
+
+    BoardProject:
+      type: object
+      properties:
+        id: { type: string }
+
+    BoardLinks:
+      type: object
+      properties:
+        related: { type: string }
+        self: { type: string }
+
+    PageLinks:
+      type: object
+      properties:
+        first: { type: string }
+        last: { type: string }
+        next: { type: string }
+        prev: { type: string }
+        self: { type: string }
+
+    BoardWithLinks:
+      type: object
+      required: [description, id, name, type]
       properties:
         id: { type: string }
         name: { type: string }
         description: { type: string }
-        type: { type: string }
-        viewLink: { type: string }
-        createdAt: { type: string, format: date-time }
-        modifiedAt: { type: string, format: date-time }
         team:
-          type: object
-          properties:
-            id: { type: string }
-            name: { type: string }
+          $ref: "#/components/schemas/Team"
+        project:
+          $ref: "#/components/schemas/BoardProject"
+        picture: { type: object }
+        policy: { type: object }
+        viewLink: { type: string }
         owner:
-          type: object
-          properties:
-            id: { type: string }
-            name: { type: string }
+          $ref: "#/components/schemas/UserInfoShort"
+        currentUserMembership:
+          $ref: "#/components/schemas/BoardMember"
+        createdAt: { type: string, format: date-time }
+        createdBy:
+          $ref: "#/components/schemas/UserInfoShort"
+        modifiedAt: { type: string, format: date-time }
+        modifiedBy:
+          $ref: "#/components/schemas/UserInfoShort"
+        links:
+          $ref: "#/components/schemas/BoardLinks"
+        type: { type: string }
+
+    BoardWithLinksAndLastOpened:
+      type: object
+      required: [description, id, name, type]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        team:
+          $ref: "#/components/schemas/Team"
+        project:
+          $ref: "#/components/schemas/BoardProject"
+        picture: { type: object }
+        policy: { type: object }
+        viewLink: { type: string }
+        owner:
+          $ref: "#/components/schemas/UserInfoShort"
+        currentUserMembership:
+          $ref: "#/components/schemas/BoardMember"
+        createdAt: { type: string, format: date-time }
+        createdBy:
+          $ref: "#/components/schemas/UserInfoShort"
+        lastOpenedAt: { type: string, format: date-time }
+        lastOpenedBy: { type: object }
+        modifiedAt: { type: string, format: date-time }
+        modifiedBy:
+          $ref: "#/components/schemas/UserInfoShort"
+        links:
+          $ref: "#/components/schemas/BoardLinks"
+        type: { type: string }
 
     BoardsPagedResponse:
       type: object
@@ -367,73 +559,193 @@ components:
         data:
           type: array
           items:
-            $ref: "#/components/schemas/Board"
+            # Vendor BoardsPagedResponse items use Board (includes lastOpened*).
+            $ref: "#/components/schemas/BoardWithLinksAndLastOpened"
         total: { type: integer, format: int64 }
-        size: { type: integer }
-        offset: { type: integer }
+        size: { type: integer, format: int32 }
+        offset: { type: integer, format: int32 }
+        limit: { type: integer, format: int32 }
+        links:
+          $ref: "#/components/schemas/PageLinks"
+        type: { type: string }
 
     GenericItem:
       type: object
+      required: [id, type]
       properties:
         id: { type: string }
         type: { type: string }
         data: { type: object }
-        position: { type: object }
-        geometry: { type: object }
+        geometry:
+          type: object
+          properties:
+            height: { type: number, format: double }
+            rotation: { type: number, format: double }
+            width: { type: number, format: double }
+        position:
+          type: object
+          properties:
+            origin: { type: string }
+            relativeTo: { type: string }
+            x: { type: number, format: double }
+            y: { type: number, format: double }
+        parent:
+          $ref: "#/components/schemas/Parent"
         createdAt: { type: string, format: date-time }
+        createdBy: { type: object }
         modifiedAt: { type: string, format: date-time }
+        modifiedBy: { type: object }
 
-    ItemsCursorPaged:
+    GenericItemCursorPaged:
       type: object
       properties:
         data:
           type: array
           items:
             $ref: "#/components/schemas/GenericItem"
-        cursor: { type: string }
         total: { type: integer, format: int64 }
+        size: { type: integer, format: int32 }
+        cursor: { type: string }
+        limit: { type: integer, format: int32 }
+        links:
+          $ref: "#/components/schemas/PageLinks"
+
+    Parent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: int64
+
+    PositionChange:
+      type: object
+      properties:
+        x: { type: number, format: double, default: 0 }
+        y: { type: number, format: double, default: 0 }
+
+    FixedRatioNoRotationGeometry:
+      type: object
+      properties:
+        height: { type: number, format: double }
+        width: { type: number, format: double }
 
     StickyNoteData:
       type: object
       properties:
         content: { type: string }
-        shape: { type: string }
+        shape:
+          type: string
+          default: square
+          enum: [square, rectangle]
+
+    StickyNoteStyle:
+      type: object
+      properties:
+        fillColor:
+          type: string
+          enum:
+            - gray
+            - light_yellow
+            - yellow
+            - orange
+            - light_green
+            - green
+            - dark_green
+            - cyan
+            - light_pink
+            - pink
+            - violet
+            - red
+            - light_blue
+            - blue
+            - dark_blue
+            - black
+        textAlign:
+          type: string
+          enum: [left, right, center]
+        textAlignVertical:
+          type: string
+          enum: [top, middle, bottom]
+
+    UpdateStickyNoteStyle:
+      type: object
+      properties:
+        fillColor:
+          type: string
+          enum:
+            - gray
+            - light_yellow
+            - yellow
+            - orange
+            - light_green
+            - green
+            - dark_green
+            - cyan
+            - light_pink
+            - pink
+            - violet
+            - red
+            - light_blue
+            - blue
+            - dark_blue
+            - black
+        textAlign:
+          type: string
+          enum: [left, right, center]
+        textAlignVertical:
+          type: string
+          enum: [top, middle, bottom]
 
     StickyNoteCreateRequest:
       type: object
       properties:
         data:
           $ref: "#/components/schemas/StickyNoteData"
-        style: { type: object }
-        position: { type: object }
-        geometry: { type: object }
-        parent: { type: object }
+        style:
+          $ref: "#/components/schemas/StickyNoteStyle"
+        position:
+          $ref: "#/components/schemas/PositionChange"
+        geometry:
+          $ref: "#/components/schemas/FixedRatioNoRotationGeometry"
+        parent:
+          $ref: "#/components/schemas/Parent"
 
     StickyNoteUpdateRequest:
       type: object
       properties:
         data:
           $ref: "#/components/schemas/StickyNoteData"
-        style: { type: object }
-        position: { type: object }
-        geometry: { type: object }
-        parent: { type: object }
+        style:
+          $ref: "#/components/schemas/UpdateStickyNoteStyle"
+        position:
+          $ref: "#/components/schemas/PositionChange"
+        geometry:
+          $ref: "#/components/schemas/FixedRatioNoRotationGeometry"
+        parent:
+          $ref: "#/components/schemas/Parent"
 
     StickyNoteItem:
       type: object
+      required: [id, type]
       properties:
         id: { type: string }
         type: { type: string }
         data:
           $ref: "#/components/schemas/StickyNoteData"
-        style: { type: object }
+        style:
+          $ref: "#/components/schemas/StickyNoteStyle"
         position: { type: object }
         geometry: { type: object }
         createdAt: { type: string, format: date-time }
+        createdBy: { type: object }
         modifiedAt: { type: string, format: date-time }
+        modifiedBy: { type: object }
+        parent: { type: object }
+        links: { type: object }
 
     BoardMember:
       type: object
+      required: [id, name, type]
       properties:
         id: { type: string }
         name: { type: string }
@@ -450,5 +762,9 @@ components:
           items:
             $ref: "#/components/schemas/BoardMember"
         total: { type: integer, format: int64 }
-        size: { type: integer }
-        offset: { type: integer }
+        size: { type: integer, format: int32 }
+        offset: { type: integer, format: int32 }
+        limit: { type: integer, format: int32 }
+        links:
+          $ref: "#/components/schemas/PageLinks"
+        type: { type: string }

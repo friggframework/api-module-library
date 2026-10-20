@@ -97,6 +97,10 @@ describe('Canva Definition', () => {
         expect(Definition.env).toHaveProperty('client_id');
         expect(Definition.env).toHaveProperty('client_secret');
         expect(Definition.env).toHaveProperty('scope');
-        expect(Definition.env.redirect_uri).toMatch(/\/canva$/);
+        expect(Definition.env.redirect_uri).toBe(
+            process.env.REDIRECT_URI
+                ? `${process.env.REDIRECT_URI}/canva`
+                : undefined
+        );
     });
 });

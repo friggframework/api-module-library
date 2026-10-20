@@ -99,7 +99,10 @@ const Definition = {
             process.env.CANVA_SCOPE ||
             process.env.CANVA_CONNECT_SCOPE ||
             DEFAULT_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/canva`,
+        // Omit when unset so schema validation does not see the string "undefined/canva".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/canva`
+            : undefined,
         base_url: process.env.CANVA_BASE_URL,
     },
 };

@@ -1,0 +1,704 @@
+openapi: 3.0.0
+info:
+  title: Xero Accounting API (Frigg curated subset)
+  version: "19.1.0"
+  description: >-
+    Curated subset of the official Xero Accounting OpenAPI
+    (https://github.com/XeroAPI/Xero-OpenAPI/blob/master/xero_accounting.yaml)
+    covering exactly the endpoints @friggframework/api-module-xero implements
+    against the Accounting base URL. Identity endpoints (GET/DELETE /Connections)
+    live on https://api.xero.com and are implemented on the Api class but are
+    intentionally omitted here so servers[0].url matches Api.baseUrl 1:1.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  termsOfService: https://developer.xero.com/xero-developer-platform-terms-conditions/
+servers:
+  - url: https://api.xero.com/api.xro/2.0
+    description: Xero Accounting API
+security:
+  - OAuth2: []
+tags:
+  - name: Accounting
+paths:
+  /Organisation:
+    parameters:
+      - $ref: "#/components/parameters/requiredHeader"
+    get:
+      tags: [Accounting]
+      operationId: getOrganisations
+      summary: Retrieves Xero organisation details
+      security:
+        - OAuth2: [accounting.settings, accounting.settings.read]
+      responses:
+        "200":
+          description: Success — Organisations array
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organisations"
+
+  /Contacts:
+    parameters:
+      - $ref: "#/components/parameters/requiredHeader"
+    get:
+      tags: [Accounting]
+      operationId: getContacts
+      summary: Retrieves all contacts in a Xero organisation
+      security:
+        - OAuth2: [accounting.contacts, accounting.contacts.read]
+      parameters:
+        - $ref: "#/components/parameters/ifModifiedSince"
+        - in: query
+          name: where
+          schema: { type: string }
+        - in: query
+          name: order
+          schema: { type: string }
+        - in: query
+          name: IDs
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: includeArchived
+          schema: { type: boolean }
+        - in: query
+          name: summaryOnly
+          schema: { type: boolean }
+        - in: query
+          name: searchTerm
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success — Contacts array
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contacts"
+    put:
+      tags: [Accounting]
+      operationId: createContacts
+      summary: Creates multiple contacts (bulk)
+      security:
+        - OAuth2: [accounting.contacts]
+      parameters:
+        - $ref: "#/components/parameters/idempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Contacts"
+      responses:
+        "200":
+          description: Success — Contacts created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contacts"
+
+  /Contacts/{ContactID}:
+    parameters:
+      - $ref: "#/components/parameters/requiredHeader"
+      - in: path
+        name: ContactID
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Accounting]
+      operationId: getContact
+      summary: Retrieves a specific contact by ContactID
+      security:
+        - OAuth2: [accounting.contacts, accounting.contacts.read]
+      responses:
+        "200":
+          description: Success — Contacts array with one Contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contacts"
+    post:
+      tags: [Accounting]
+      operationId: updateContact
+      summary: Updates a specific contact
+      security:
+        - OAuth2: [accounting.contacts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Contacts"
+      responses:
+        "200":
+          description: Success — Contacts updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contacts"
+
+  /Invoices:
+    parameters:
+      - $ref: "#/components/parameters/requiredHeader"
+    get:
+      tags: [Accounting]
+      operationId: getInvoices
+      summary: Retrieves invoices
+      security:
+        - OAuth2: [accounting.transactions, accounting.transactions.read]
+      parameters:
+        - $ref: "#/components/parameters/ifModifiedSince"
+        - in: query
+          name: where
+          schema: { type: string }
+        - in: query
+          name: order
+          schema: { type: string }
+        - in: query
+          name: IDs
+          schema: { type: string }
+        - in: query
+          name: InvoiceNumbers
+          schema: { type: string }
+        - in: query
+          name: ContactIDs
+          schema: { type: string }
+        - in: query
+          name: statuses
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: includeArchived
+          schema: { type: boolean }
+        - in: query
+          name: createdByMyApp
+          schema: { type: boolean }
+        - in: query
+          name: unitdp
+          schema: { type: integer }
+        - in: query
+          name: summaryOnly
+          schema: { type: boolean }
+        - in: query
+          name: pageSize
+          schema: { type: integer }
+        - in: query
+          name: searchTerm
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success — Invoices array
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoices"
+    put:
+      tags: [Accounting]
+      operationId: createInvoices
+      summary: Creates multiple invoices (bulk)
+      security:
+        - OAuth2: [accounting.transactions]
+      parameters:
+        - $ref: "#/components/parameters/idempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Invoices"
+      responses:
+        "200":
+          description: Success — Invoices created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoices"
+
+  /Invoices/{InvoiceID}:
+    parameters:
+      - $ref: "#/components/parameters/requiredHeader"
+      - in: path
+        name: InvoiceID
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Accounting]
+      operationId: getInvoice
+      summary: Retrieves a specific invoice
+      security:
+        - OAuth2: [accounting.transactions, accounting.transactions.read]
+      responses:
+        "200":
+          description: Success — Invoices array with one Invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoices"
+    post:
+      tags: [Accounting]
+      operationId: updateInvoice
+      summary: Updates a specific invoice
+      security:
+        - OAuth2: [accounting.transactions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Invoices"
+      responses:
+        "200":
+          description: Success — Invoice updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoices"
+
+  /Accounts:
+    parameters:
+      - $ref: "#/components/parameters/requiredHeader"
+    get:
+      tags: [Accounting]
+      operationId: getAccounts
+      summary: Retrieves the full chart of accounts
+      security:
+        - OAuth2: [accounting.settings, accounting.settings.read]
+      parameters:
+        - $ref: "#/components/parameters/ifModifiedSince"
+        - in: query
+          name: where
+          schema: { type: string }
+        - in: query
+          name: order
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success — Accounts array
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Accounts"
+    put:
+      tags: [Accounting]
+      operationId: createAccount
+      summary: Creates a new chart of accounts entry
+      security:
+        - OAuth2: [accounting.settings]
+      parameters:
+        - $ref: "#/components/parameters/idempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Account"
+      responses:
+        "200":
+          description: Success — Accounts created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Accounts"
+
+  /Accounts/{AccountID}:
+    parameters:
+      - $ref: "#/components/parameters/requiredHeader"
+      - in: path
+        name: AccountID
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Accounting]
+      operationId: getAccount
+      summary: Retrieves a single account
+      security:
+        - OAuth2: [accounting.settings, accounting.settings.read]
+      responses:
+        "200":
+          description: Success — Accounts array with one Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Accounts"
+    post:
+      tags: [Accounting]
+      operationId: updateAccount
+      summary: Updates a chart of accounts entry
+      security:
+        - OAuth2: [accounting.settings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Accounts"
+      responses:
+        "200":
+          description: Success — Account updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Accounts"
+
+  /Payments:
+    parameters:
+      - $ref: "#/components/parameters/requiredHeader"
+    get:
+      tags: [Accounting]
+      operationId: getPayments
+      summary: Retrieves payments
+      security:
+        - OAuth2: [accounting.transactions, accounting.transactions.read]
+      parameters:
+        - $ref: "#/components/parameters/ifModifiedSince"
+        - in: query
+          name: where
+          schema: { type: string }
+        - in: query
+          name: order
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: pageSize
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Success — Payments array
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payments"
+    post:
+      tags: [Accounting]
+      operationId: createPayment
+      summary: Creates a single payment
+      security:
+        - OAuth2: [accounting.transactions]
+      parameters:
+        - $ref: "#/components/parameters/idempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Payment"
+      responses:
+        "200":
+          description: Success — Payments created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payments"
+
+  /Payments/{PaymentID}:
+    parameters:
+      - $ref: "#/components/parameters/requiredHeader"
+      - in: path
+        name: PaymentID
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Accounting]
+      operationId: getPayment
+      summary: Retrieves a specific payment
+      security:
+        - OAuth2: [accounting.transactions, accounting.transactions.read]
+      responses:
+        "200":
+          description: Success — Payments array with one Payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payments"
+
+  /Items:
+    parameters:
+      - $ref: "#/components/parameters/requiredHeader"
+    get:
+      tags: [Accounting]
+      operationId: getItems
+      summary: Retrieves items
+      security:
+        - OAuth2: [accounting.settings, accounting.settings.read]
+      parameters:
+        - $ref: "#/components/parameters/ifModifiedSince"
+        - in: query
+          name: where
+          schema: { type: string }
+        - in: query
+          name: order
+          schema: { type: string }
+        - in: query
+          name: unitdp
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Success — Items array
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Items"
+    put:
+      tags: [Accounting]
+      operationId: createItems
+      summary: Creates items (bulk)
+      security:
+        - OAuth2: [accounting.settings]
+      parameters:
+        - $ref: "#/components/parameters/idempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Items"
+      responses:
+        "200":
+          description: Success — Items created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Items"
+
+  /Items/{ItemID}:
+    parameters:
+      - $ref: "#/components/parameters/requiredHeader"
+      - in: path
+        name: ItemID
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Accounting]
+      operationId: getItem
+      summary: Retrieves a specific item
+      security:
+        - OAuth2: [accounting.settings, accounting.settings.read]
+      responses:
+        "200":
+          description: Success — Items array with one Item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Items"
+    post:
+      tags: [Accounting]
+      operationId: updateItem
+      summary: Updates a specific item
+      security:
+        - OAuth2: [accounting.settings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Items"
+      responses:
+        "200":
+          description: Success — Item updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Items"
+    delete:
+      tags: [Accounting]
+      operationId: deleteItem
+      summary: Deletes a specific item
+      security:
+        - OAuth2: [accounting.settings]
+      responses:
+        "200":
+          description: Success — Item deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Items"
+
+components:
+  parameters:
+    requiredHeader:
+      in: header
+      name: xero-tenant-id
+      required: true
+      description: Xero identifier for Tenant (from GET /Connections tenantId)
+      schema: { type: string }
+      example: YOUR_XERO_TENANT_ID
+    ifModifiedSince:
+      in: header
+      name: If-Modified-Since
+      required: false
+      description: Only records modified since this timestamp
+      schema: { type: string }
+    idempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: false
+      description: Unique key so Xero can safely retry creates
+      schema: { type: string, format: uuid }
+
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: Xero OAuth 2.0 authorization code flow
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.xero.com/identity/connect/authorize
+          tokenUrl: https://identity.xero.com/connect/token
+          scopes:
+            openid: Grant read-only access to your open id
+            profile: your profile information
+            email: Grant read-only access to your email
+            offline_access: Refresh token
+            accounting.transactions: Grant read-write access to invoices and payments
+            accounting.transactions.read: Grant read-only access to invoices
+            accounting.contacts: Grant read-write access to contacts
+            accounting.contacts.read: Grant read-only access to contacts
+            accounting.settings: Grant read-write access to organisation and accounts
+            accounting.settings.read: Grant read-only access to organisation and accounts
+
+  schemas:
+    Organisations:
+      type: object
+      properties:
+        Organisations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Organisation"
+    Organisation:
+      type: object
+      properties:
+        OrganisationID: { type: string, format: uuid }
+        Name: { type: string }
+        LegalName: { type: string }
+        BaseCurrency: { type: string }
+        CountryCode: { type: string }
+        OrganisationType: { type: string }
+        OrganisationStatus: { type: string }
+        ShortCode: { type: string }
+        IsDemoCompany: { type: boolean }
+        CreatedDateUTC: { type: string }
+
+    Contacts:
+      type: object
+      properties:
+        Contacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Contact"
+    Contact:
+      type: object
+      properties:
+        ContactID: { type: string, format: uuid }
+        ContactNumber: { type: string }
+        ContactStatus: { type: string }
+        Name: { type: string }
+        FirstName: { type: string }
+        LastName: { type: string }
+        EmailAddress: { type: string }
+        IsSupplier: { type: boolean }
+        IsCustomer: { type: boolean }
+        UpdatedDateUTC: { type: string }
+        Phones:
+          type: array
+          items: { type: object }
+        Addresses:
+          type: array
+          items: { type: object }
+
+    Invoices:
+      type: object
+      properties:
+        Invoices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Invoice"
+    Invoice:
+      type: object
+      properties:
+        InvoiceID: { type: string, format: uuid }
+        InvoiceNumber: { type: string }
+        Type: { type: string }
+        Status: { type: string }
+        Reference: { type: string }
+        Date: { type: string }
+        DueDate: { type: string }
+        Total: { type: number }
+        AmountDue: { type: number }
+        AmountPaid: { type: number }
+        CurrencyCode: { type: string }
+        UpdatedDateUTC: { type: string }
+        Contact:
+          $ref: "#/components/schemas/Contact"
+        LineItems:
+          type: array
+          items: { type: object }
+
+    Accounts:
+      type: object
+      properties:
+        Accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Account"
+    Account:
+      type: object
+      properties:
+        AccountID: { type: string, format: uuid }
+        Code: { type: string }
+        Name: { type: string }
+        Type: { type: string }
+        Status: { type: string }
+        Description: { type: string }
+        TaxType: { type: string }
+        Class: { type: string }
+        CurrencyCode: { type: string }
+        UpdatedDateUTC: { type: string }
+
+    Payments:
+      type: object
+      properties:
+        Payments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Payment"
+    Payment:
+      type: object
+      properties:
+        PaymentID: { type: string, format: uuid }
+        Date: { type: string }
+        Amount: { type: number }
+        Reference: { type: string }
+        Status: { type: string }
+        PaymentType: { type: string }
+        UpdatedDateUTC: { type: string }
+        Invoice:
+          type: object
+        Account:
+          type: object
+
+    Items:
+      type: object
+      properties:
+        Items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Item"
+    Item:
+      type: object
+      properties:
+        ItemID: { type: string, format: uuid }
+        Code: { type: string }
+        Name: { type: string }
+        Description: { type: string }
+        PurchaseDescription: { type: string }
+        IsSold: { type: boolean }
+        IsPurchased: { type: boolean }
+        IsTrackedAsInventory: { type: boolean }
+        UpdatedDateUTC: { type: string }
+        SalesDetails: { type: object }
+        PurchaseDetails: { type: object }

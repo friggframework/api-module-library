@@ -115,7 +115,10 @@ const Definition = {
         client_id: process.env.PAGERDUTY_CLIENT_ID,
         client_secret: process.env.PAGERDUTY_CLIENT_SECRET,
         scope: process.env.PAGERDUTY_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/pagerduty`,
+        // Omit when unset so schema validation does not see the string "undefined/pagerduty".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/pagerduty`
+            : undefined,
     },
 };
 

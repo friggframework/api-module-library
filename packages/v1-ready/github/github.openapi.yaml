@@ -490,6 +490,45 @@ paths:
         "422":
           description: Validation failed
 
+  /repos/{owner}/{repo}/issues/{issue_number}/comments:
+    post:
+      tags: [Issues]
+      operationId: createIssueComment
+      summary: Create an issue comment
+      description: >-
+        Official operationId: issues/create-comment.
+        Docs: https://docs.github.com/rest/issues/comments#create-an-issue-comment
+        Also works on pull requests (every PR is an issue). Triggers notifications.
+      parameters:
+        - $ref: "#/components/parameters/owner"
+        - $ref: "#/components/parameters/repo"
+        - $ref: "#/components/parameters/issue_number"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:
+                  type: string
+                  description: The contents of the comment.
+      responses:
+        "201":
+          description: Created comment
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IssueComment" }
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+        "410":
+          description: Gone
+        "422":
+          description: Validation failed
+
   /repos/{owner}/{repo}/pulls:
     get:
       tags: [Pulls]
@@ -869,6 +908,25 @@ components:
           type: object
           description: Present when the issue is also a pull request.
           nullable: true
+    IssueComment:
+      type: object
+      description: >-
+        Subset of official issue-comment schema (issues/create-comment response).
+      properties:
+        id: { type: integer, format: int64 }
+        node_id: { type: string }
+        body: { type: string }
+        html_url: { type: string, format: uri }
+        url: { type: string, format: uri }
+        issue_url: { type: string, format: uri }
+        user:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer, format: int64 }
+            login: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
     PullRequest:
       type: object
       properties:

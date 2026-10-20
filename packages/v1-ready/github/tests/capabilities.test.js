@@ -47,19 +47,18 @@ describe('github.capabilities.json ↔ Api methods', () => {
         );
         expect(manifest.capabilities['issue.create'].method).toBe('createIssue');
         expect(manifest.capabilities['issue.update'].method).toBe('updateIssue');
+        expect(manifest.capabilities['issue.comment'].method).toBe(
+            'createIssueComment'
+        );
         expect(manifest.capabilities['repo.list'].method).toBe(
             'listReposForAuthenticatedUser'
         );
     });
 
-    it('lists draft-only capabilities as skipped with reasons', () => {
+    it('keeps GitHub App installation-repos as skipped', () => {
         const skippedMethods = (manifest.skipped || []).map((s) => s.draftMethod);
-        expect(skippedMethods).toEqual(
-            expect.arrayContaining([
-                'createIssueComment',
-                'listInstallationRepos',
-            ])
-        );
+        expect(skippedMethods).toContain('listInstallationRepos');
+        expect(skippedMethods).not.toContain('createIssueComment');
         for (const entry of manifest.skipped) {
             expect(entry.reason).toBeTruthy();
             expect(clientMethods).not.toContain(entry.draftMethod);

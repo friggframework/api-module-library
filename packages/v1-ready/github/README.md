@@ -59,6 +59,7 @@ this module yet — see open questions in the PR.
 | `getIssue(owner, repo, issueNumber)` | `GET /repos/{owner}/{repo}/issues/{issue_number}` | `issues/get` |
 | `createIssue(owner, repo, data)` | `POST /repos/{owner}/{repo}/issues` | `issues/create` |
 | `updateIssue(owner, repo, issueNumber, data)` | `PATCH .../issues/{issue_number}` | `issues/update` |
+| `createIssueComment(owner, repo, issueNumber, data)` | `POST .../issues/{issue_number}/comments` | `issues/create-comment` |
 | `listPullRequests(owner, repo, query)` | `GET /repos/{owner}/{repo}/pulls` | `pulls/list` |
 | `getPullRequest(owner, repo, pullNumber)` | `GET .../pulls/{pull_number}` | `pulls/get` |
 | `createPullRequest(owner, repo, data)` | `POST .../pulls` | `pulls/create` (required: `head`+`base`; `title` XOR `issue`) |

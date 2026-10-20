@@ -132,7 +132,8 @@
         "list": { "method": "listRepositoryIssues", "officialOperationId": "issues/list-for-repo" },
         "get": { "method": "getIssue", "officialOperationId": "issues/get" },
         "create": { "method": "createIssue", "officialOperationId": "issues/create" },
-        "update": { "method": "updateIssue", "officialOperationId": "issues/update" }
+        "update": { "method": "updateIssue", "officialOperationId": "issues/update" },
+        "comment": { "method": "createIssueComment", "officialOperationId": "issues/create-comment" }
       }
     },
     "pullRequest": {
@@ -234,6 +235,18 @@
         "labels": { "type": "array" }
       },
       "output": "issue"
+    },
+    "issue.comment": {
+      "kind": "write",
+      "method": "createIssueComment",
+      "officialOperationId": "issues/create-comment",
+      "input": {
+        "owner": { "type": "string", "required": true },
+        "repo": { "type": "string", "required": true },
+        "issue_number": { "type": "number", "required": true },
+        "body": { "type": "string", "required": true }
+      },
+      "output": "comment"
     },
     "repo.list": {
       "kind": "read",
@@ -344,11 +357,6 @@
     }
   },
   "skipped": [
-    {
-      "from": "lefthook-bots draft capabilities.issue.comment",
-      "draftMethod": "createIssueComment",
-      "reason": "Out of current module scope (issue/PR/repo/webhook CRUD). Official endpoint would be POST /repos/{owner}/{repo}/issues/{issue_number}/comments (issues/create-comment). Not implemented on Api."
-    },
     {
       "from": "lefthook-bots draft capabilities.repo.list → listInstallationRepos",
       "draftMethod": "listInstallationRepos",

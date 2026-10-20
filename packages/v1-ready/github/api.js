@@ -48,6 +48,8 @@ class Api extends OAuth2Requester {
             repoIssues: (owner, repo) => `/repos/${owner}/${repo}/issues`,
             repoIssue: (owner, repo, issueNumber) =>
                 `/repos/${owner}/${repo}/issues/${issueNumber}`,
+            repoIssueComments: (owner, repo, issueNumber) =>
+                `/repos/${owner}/${repo}/issues/${issueNumber}/comments`,
             repoPulls: (owner, repo) => `/repos/${owner}/${repo}/pulls`,
             repoPull: (owner, repo, pullNumber) =>
                 `/repos/${owner}/${repo}/pulls/${pullNumber}`,
@@ -330,6 +332,22 @@ class Api extends OAuth2Requester {
     async updateIssue(owner, repo, issueNumber, data) {
         return this._patch({
             url: this.baseUrl + this.URLs.repoIssue(owner, repo, issueNumber),
+            body: data,
+        });
+    }
+
+    /**
+     * Create an issue comment (also works on pull requests — every PR is an issue).
+     * POST /repos/{owner}/{repo}/issues/{issue_number}/comments
+     * Official operationId: issues/create-comment
+     * Docs: https://docs.github.com/rest/issues/comments#create-an-issue-comment
+     * Body: { body (required) }
+     */
+    async createIssueComment(owner, repo, issueNumber, data) {
+        return this._post({
+            url:
+                this.baseUrl +
+                this.URLs.repoIssueComments(owner, repo, issueNumber),
             body: data,
         });
     }

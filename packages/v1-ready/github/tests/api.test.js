@@ -169,6 +169,18 @@ describe('GitHub Api', () => {
                 'https://api.github.com/repos/o/r/issues/1'
             );
         });
+
+        it('createIssueComment POSTs to .../issues/{n}/comments', async () => {
+            const api = makeApi();
+            await api.createIssueComment('o', 'r', 318, {
+                body: 'Me too',
+            });
+            expect(api._captured[0].method).toBe('POST');
+            expect(api._captured[0].url).toBe(
+                'https://api.github.com/repos/o/r/issues/318/comments'
+            );
+            expect(api._captured[0].body).toEqual({ body: 'Me too' });
+        });
     });
 
     describe('pull requests', () => {

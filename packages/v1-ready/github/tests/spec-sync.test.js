@@ -78,6 +78,7 @@ describe('OpenAPI spec ↔ client sync', () => {
                 'getIssue',
                 'createIssue',
                 'updateIssue',
+                'createIssueComment',
                 'listPullRequests',
                 'getPullRequest',
                 'createPullRequest',

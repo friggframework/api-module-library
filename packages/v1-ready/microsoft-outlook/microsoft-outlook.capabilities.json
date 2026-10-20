@@ -320,6 +320,19 @@
     "note": "Microsoft Graph change notifications authenticate via clientState (not HMAC). Create subscriptions with createSubscription; the Tier-3 extension handles validationToken handshake and tenantId routing."
   },
   "capabilities": {
+    "ui.outlookAddIns": {
+      "kind": "ui",
+      "surface": "ui",
+      "spec": {
+        "kind": "fenestra",
+        "ref": "./microsoft-outlook.fenestra.yaml"
+      },
+      "implementedBy": {
+        "kind": "artifact",
+        "ref": "microsoft-outlook.fenestra.yaml"
+      },
+      "description": "Outlook Add-ins UI surface (Office.js + manifest ExtensionPoints) described by the module Fenestra draft."
+    },
     "me.get": {
       "kind": "read",
       "method": "getMe",

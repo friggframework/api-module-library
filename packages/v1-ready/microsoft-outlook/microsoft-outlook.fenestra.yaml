@@ -1,0 +1,198 @@
+# Fenestra Document: Outlook Add-ins (Office.js) — draft
+#
+# Outlook exposes a real UI surface via Office Add-ins: manifest-defined
+# ExtensionPoints (message read/compose, appointment organizer/attendee,
+# task pane, commands) and the Office.js Mailbox APIs.
+#
+# Modeled on the schema-valid Teams fenestra draft pattern. Outlook Add-ins
+# are decided for Fenestra; PLATFORMS.md update lives on a separate PR against
+# claude/fenestra-spec-draft-Q367t.
+#
+# Docs:
+#   https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/outlook-add-ins-overview
+#   https://learn.microsoft.com/en-us/javascript/api/manifest/extensionpoint
+#   https://learn.microsoft.com/en-us/javascript/api/outlook
+
+fenestra: "0.1.0"
+
+info:
+  title: Outlook Add-ins (Office.js)
+  version: "1.0.0"
+  description: |
+    Outlook Add-ins extend the Outlook client (desktop, web, mobile) using
+    Office.js and an add-in-only (or unified) manifest. Extension points are
+    declared in the manifest (MessageReadCommandSurface, MessageComposeCommandSurface,
+    AppointmentOrganizerCommandSurface, AppointmentAttendeeCommandSurface, Module,
+    and mobile variants). Commands open a task pane (iframe) or run a function.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+
+platform:
+  name: Outlook Add-ins
+  vendor: Microsoft Corporation
+  documentation: https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/outlook-add-ins-overview
+  appMarketplace: https://appsource.microsoft.com/marketplace/apps?product=office%3Boutlook
+  developerPortal: https://aka.ms/outlook-add-ins
+
+sdks:
+  office-js:
+    name: Office JavaScript API
+    packageManager: npm
+    package: "@microsoft/office-js"
+    version: "^1.1.0"
+    repository: https://github.com/OfficeDev/office-js
+    documentation: https://learn.microsoft.com/en-us/javascript/api/outlook
+    description: |
+      Office.js host APIs for Outlook (Mailbox requirement set). Provides item
+      context, display dialogs, roaming settings, and event-based activation.
+    exports:
+      Office:
+        type: utility
+        description: Global Office namespace (onReady, context)
+      Mailbox:
+        type: utility
+        description: Outlook mailbox and item APIs (Office.context.mailbox)
+      mailboxItem:
+        type: utility
+        description: Current message or appointment item (Office.context.mailbox.item)
+
+  office-js-types:
+    name: Office.js TypeScript typings
+    packageManager: npm
+    package: "@types/office-js"
+    version: "^1.0.0"
+    repository: https://github.com/DefinitelyTyped/DefinitelyTyped
+    documentation: https://www.npmjs.com/package/@types/office-js
+    description: TypeScript definitions for Office.js including Outlook Mailbox APIs.
+    exports:
+      Office:
+        type: type
+        description: TypeScript types for the Office namespace
+
+componentCatalog:
+  categories:
+    taskPane:
+      name: Task pane
+      description: HTML/JS surfaces loaded in an Outlook task pane iframe
+      components:
+        - TaskPaneRoot
+    commands:
+      name: Ribbon / command surface
+      description: Manifest-defined buttons that show a task pane or execute a function
+      components:
+        - RibbonButton
+        - FunctionCommand
+
+  components:
+    TaskPaneRoot:
+      name: Task pane root
+      description: Root HTML page hosted in the Outlook task pane iframe
+      category: taskPane
+      sdkBinding:
+        sdk: office-js
+        export: Office
+      webStandardMapping:
+        htmlElement: div
+        ariaRole: main
+        semanticType: display
+      examples:
+        - title: Initialize Office.js
+          language: javascript
+          code: |
+            Office.onReady(() => {
+              const item = Office.context.mailbox.item;
+            });
+
+    RibbonButton:
+      name: Ribbon button (ShowTaskpane)
+      description: Manifest Control that opens a task pane via ShowTaskpane action
+      category: commands
+      sdkBinding:
+        sdk: office-js
+        export: Office
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+
+    FunctionCommand:
+      name: Function command (ExecuteFunction)
+      description: Manifest Control that runs a JS function from FunctionFile
+      category: commands
+      sdkBinding:
+        sdk: office-js
+        export: Office
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+
+policies:
+  componentRequirement:
+    level: required
+    scope: all
+    rationale: |
+      Outlook Add-ins are web views hosted by Outlook. UI must load through
+      Office.js-initialized pages declared in the add-in manifest.
+  customComponents:
+    allowed: true
+    constraints:
+      - sandboxOnly
+    registrationRequired: false
+    approvalRequired: false
+    documentation: https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/outlook-add-ins-overview
+  publishing:
+    privateApps:
+      componentRequirement: optional
+      customComponentsAllowed: true
+      reviewRequired: false
+    publicApps:
+      componentRequirement: required
+      customComponentsAllowed: true
+      reviewRequired: true
+      notes: "AppSource / Microsoft 365 admin center review for organization-wide or public distribution."
+
+extensionPoints:
+  - id: message-read-command-surface
+    name: MessageReadCommandSurface
+    type: toolbar
+    extensionType: iframe
+    description: Ribbon / command surface on the mail read form; typically opens a task pane
+    documentation: https://learn.microsoft.com/en-us/javascript/api/manifest/extensionpoint
+  - id: message-compose-command-surface
+    name: MessageComposeCommandSurface
+    type: toolbar
+    extensionType: iframe
+    description: Ribbon / command surface on the mail compose form
+    documentation: https://learn.microsoft.com/en-us/javascript/api/manifest/extensionpoint
+  - id: appointment-organizer-command-surface
+    name: AppointmentOrganizerCommandSurface
+    type: toolbar
+    extensionType: iframe
+    description: Ribbon commands on the appointment form for the organizer
+    documentation: https://learn.microsoft.com/en-us/javascript/api/manifest/extensionpoint
+  - id: appointment-attendee-command-surface
+    name: AppointmentAttendeeCommandSurface
+    type: toolbar
+    extensionType: iframe
+    description: Ribbon commands on the appointment form for an attendee
+    documentation: https://learn.microsoft.com/en-us/javascript/api/manifest/extensionpoint
+  - id: module-extension
+    name: Module
+    type: fullPage
+    extensionType: iframe
+    description: DesktopFormFactor module that replaces the Outlook reading pane with the add-in
+    documentation: https://learn.microsoft.com/en-us/javascript/api/manifest/extensionpoint
+  - id: task-pane
+    name: Task pane
+    type: panel
+    extensionType: iframe
+    description: Side task pane opened via ShowTaskpane from a command surface
+    documentation: https://learn.microsoft.com/en-us/office/dev/add-ins/develop/create-addin-commands
+  - id: function-command
+    name: Function command
+    type: toolbar
+    extensionType: embeddedSdk
+    description: ExecuteFunction command that runs JS without opening a pane
+    documentation: https://learn.microsoft.com/en-us/office/dev/add-ins/develop/create-addin-commands

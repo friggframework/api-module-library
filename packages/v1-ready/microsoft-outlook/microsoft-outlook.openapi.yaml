@@ -1,23 +1,25 @@
-openapi: 3.0.3
+openapi: 3.0.4
 info:
   title: Microsoft Outlook (Microsoft Graph) API — Frigg subset
   version: "1.0.0"
   description: >-
     Curated subset of Microsoft Graph v1.0 covering Outlook mail and calendar
     objects the @friggframework/api-module-microsoft-outlook client implements.
-    Source of truth is Microsoft Learn Graph docs; this file mirrors api.js 1:1
-    (one method per operationId). Official Graph OpenAPI metadata:
-    https://github.com/microsoftgraph/msgraph-metadata and
-    https://aka.ms/graph/v1.0/openapi.yaml
+    Diffed against the official Graph OpenAPI at
+    https://raw.githubusercontent.com/microsoftgraph/msgraph-metadata/master/openapi/v1.0/openapi.yaml
+    (paths, methods, params, response codes, server URL). operationIds are
+    Frigg client method names (1:1 with api.js), not the vendor's
+    me.ListMessages-style ids. Official metadata does not embed OAuth
+    securitySchemes; scopes below follow Microsoft Learn Graph permissions.
   contact:
     name: Left Hook
     url: https://lefthook.com
   externalDocs:
-    description: Outlook mail API overview
-    url: https://learn.microsoft.com/en-us/graph/api/resources/mail-api-overview
+    description: Official Microsoft Graph OpenAPI (v1.0)
+    url: https://raw.githubusercontent.com/microsoftgraph/msgraph-metadata/master/openapi/v1.0/openapi.yaml
 servers:
   - url: https://graph.microsoft.com/v1.0
-    description: Microsoft Graph v1.0 (global)
+    description: Microsoft Graph v1.0 (global) — matches official servers[0].url
 security:
   - OAuth2: []
 tags:
@@ -35,19 +37,39 @@ paths:
       summary: Get the signed-in user
       externalDocs:
         url: https://learn.microsoft.com/en-us/graph/api/user-get
+      parameters:
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataExpand"
       responses:
-        "200":
-          description: user
+        "2XX":
+          description: user (official opId me.user.GetUser)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
   /organization:
     get:
       tags: [Identity]
       operationId: getOrganization
-      summary: Get organization (tenant) details
+      summary: List organization (client returns value[0])
       externalDocs:
         url: https://learn.microsoft.com/en-us/graph/api/organization-get
+      parameters:
+        - $ref: "#/components/parameters/ODataTop"
+        - $ref: "#/components/parameters/ODataSkip"
+        - $ref: "#/components/parameters/ODataSearch"
+        - $ref: "#/components/parameters/ODataFilter"
+        - $ref: "#/components/parameters/ODataCount"
+        - $ref: "#/components/parameters/ODataOrderby"
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataExpand"
       responses:
-        "200":
-          description: organization (client returns value[0])
+        "2XX":
+          description: organization collection (official opId organization.organization.ListOrganization)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
   /me/messages:
     get:
       tags: [Messages]
@@ -56,14 +78,25 @@ paths:
       externalDocs:
         url: https://learn.microsoft.com/en-us/graph/api/user-list-messages
       parameters:
-        - $ref: "#/components/parameters/ODataSelect"
-        - $ref: "#/components/parameters/ODataFilter"
+        - name: includeHiddenMessages
+          in: query
+          description: Include Hidden Messages
+          schema: { type: string }
         - $ref: "#/components/parameters/ODataTop"
         - $ref: "#/components/parameters/ODataSkip"
+        - $ref: "#/components/parameters/ODataSearch"
+        - $ref: "#/components/parameters/ODataFilter"
+        - $ref: "#/components/parameters/ODataCount"
         - $ref: "#/components/parameters/ODataOrderby"
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataExpand"
       responses:
-        "200":
-          description: message collection
+        "2XX":
+          description: message collection (official opId me.ListMessages)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
     post:
       tags: [Messages]
       operationId: createMessage
@@ -76,8 +109,12 @@ paths:
           application/json:
             schema: { type: object }
       responses:
-        "201":
-          description: message
+        "2XX":
+          description: created message (official opId me.CreateMessages)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
   /me/messages/{message-id}:
     parameters:
       - $ref: "#/components/parameters/MessageId"
@@ -89,9 +126,14 @@ paths:
         url: https://learn.microsoft.com/en-us/graph/api/message-get
       parameters:
         - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataExpand"
       responses:
-        "200":
-          description: message
+        "2XX":
+          description: message (official opId me.GetMessages)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
     patch:
       tags: [Messages]
       operationId: updateMessage
@@ -104,17 +146,27 @@ paths:
           application/json:
             schema: { type: object }
       responses:
-        "200":
-          description: message
+        "2XX":
+          description: message (official opId me.UpdateMessages)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
     delete:
       tags: [Messages]
       operationId: deleteMessage
       summary: Delete a message
       externalDocs:
         url: https://learn.microsoft.com/en-us/graph/api/message-delete
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
       responses:
         "204":
-          description: deleted
+          description: Success (official opId me.DeleteMessages)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
   /me/sendMail:
     post:
       tags: [Messages]
@@ -128,13 +180,20 @@ paths:
           application/json:
             schema:
               type: object
-              required: [message]
+              description: >-
+                Learn HTTP examples use camelCase `message` / `saveToSentItems`.
+                Official OpenAPI action body names these Message / SaveToSentItems
+                (OData generator PascalCase); wire JSON is camelCase.
               properties:
                 message: { type: object }
-                saveToSentItems: { type: boolean }
+                saveToSentItems: { type: boolean, nullable: true, default: false }
       responses:
-        "202":
-          description: accepted
+        "204":
+          description: Success (official opId me.sendMail)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
   /me/mailFolders:
     get:
       tags: [MailFolders]
@@ -143,23 +202,44 @@ paths:
       externalDocs:
         url: https://learn.microsoft.com/en-us/graph/api/user-list-mailfolders
       parameters:
-        - $ref: "#/components/parameters/ODataSelect"
+        - name: includeHiddenFolders
+          in: query
+          description: Include Hidden Folders
+          schema: { type: string }
         - $ref: "#/components/parameters/ODataTop"
+        - $ref: "#/components/parameters/ODataSkip"
+        - $ref: "#/components/parameters/ODataSearch"
+        - $ref: "#/components/parameters/ODataFilter"
+        - $ref: "#/components/parameters/ODataCount"
+        - $ref: "#/components/parameters/ODataOrderby"
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataExpand"
       responses:
-        "200":
-          description: mailFolder collection
-  /me/mailFolders/{folder-id}:
+        "2XX":
+          description: mailFolder collection (official opId me.ListMailFolders)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
+  /me/mailFolders/{mailFolder-id}:
     parameters:
-      - $ref: "#/components/parameters/FolderId"
+      - $ref: "#/components/parameters/MailFolderId"
     get:
       tags: [MailFolders]
       operationId: getMailFolder
       summary: Get a mail folder
       externalDocs:
         url: https://learn.microsoft.com/en-us/graph/api/mailfolder-get
+      parameters:
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataExpand"
       responses:
-        "200":
-          description: mailFolder
+        "2XX":
+          description: mailFolder (official opId me.GetMailFolders)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
   /me/calendars:
     get:
       tags: [Calendars]
@@ -168,11 +248,21 @@ paths:
       externalDocs:
         url: https://learn.microsoft.com/en-us/graph/api/user-list-calendars
       parameters:
-        - $ref: "#/components/parameters/ODataSelect"
         - $ref: "#/components/parameters/ODataTop"
+        - $ref: "#/components/parameters/ODataSkip"
+        - $ref: "#/components/parameters/ODataSearch"
+        - $ref: "#/components/parameters/ODataFilter"
+        - $ref: "#/components/parameters/ODataCount"
+        - $ref: "#/components/parameters/ODataOrderby"
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataExpand"
       responses:
-        "200":
-          description: calendar collection
+        "2XX":
+          description: calendar collection (official opId me.ListCalendars)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
   /me/calendars/{calendar-id}:
     parameters:
       - $ref: "#/components/parameters/CalendarId"
@@ -182,9 +272,16 @@ paths:
       summary: Get a calendar
       externalDocs:
         url: https://learn.microsoft.com/en-us/graph/api/calendar-get
+      parameters:
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataExpand"
       responses:
-        "200":
-          description: calendar
+        "2XX":
+          description: calendar (official opId me.GetCalendars)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
   /me/events:
     get:
       tags: [Events]
@@ -193,13 +290,21 @@ paths:
       externalDocs:
         url: https://learn.microsoft.com/en-us/graph/api/user-list-events
       parameters:
-        - $ref: "#/components/parameters/ODataSelect"
-        - $ref: "#/components/parameters/ODataFilter"
         - $ref: "#/components/parameters/ODataTop"
+        - $ref: "#/components/parameters/ODataSkip"
+        - $ref: "#/components/parameters/ODataSearch"
+        - $ref: "#/components/parameters/ODataFilter"
+        - $ref: "#/components/parameters/ODataCount"
         - $ref: "#/components/parameters/ODataOrderby"
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataExpand"
       responses:
-        "200":
-          description: event collection
+        "2XX":
+          description: event collection (official opId me.ListEvents)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
     post:
       tags: [Events]
       operationId: createEvent
@@ -212,8 +317,12 @@ paths:
           application/json:
             schema: { type: object }
       responses:
-        "201":
-          description: event
+        "2XX":
+          description: event (official opId me.CreateEvents)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
   /me/events/{event-id}:
     parameters:
       - $ref: "#/components/parameters/EventId"
@@ -225,9 +334,14 @@ paths:
         url: https://learn.microsoft.com/en-us/graph/api/event-get
       parameters:
         - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataExpand"
       responses:
-        "200":
-          description: event
+        "2XX":
+          description: event (official opId me.GetEvents)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
     patch:
       tags: [Events]
       operationId: updateEvent
@@ -240,17 +354,27 @@ paths:
           application/json:
             schema: { type: object }
       responses:
-        "200":
-          description: event
+        "2XX":
+          description: event (official opId me.UpdateEvents)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
     delete:
       tags: [Events]
       operationId: deleteEvent
       summary: Delete an event
       externalDocs:
         url: https://learn.microsoft.com/en-us/graph/api/event-delete
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
       responses:
         "204":
-          description: deleted
+          description: Success (official opId me.DeleteEvents)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
   /me/calendarView:
     get:
       tags: [Events]
@@ -262,16 +386,30 @@ paths:
         - in: query
           name: startDateTime
           required: true
-          schema: { type: string, format: date-time }
+          description: >-
+            Start of the time range (ISO 8601). Official schema type is string
+            (not format date-time).
+          schema: { type: string }
         - in: query
           name: endDateTime
           required: true
-          schema: { type: string, format: date-time }
-        - $ref: "#/components/parameters/ODataSelect"
+          description: End of the time range (ISO 8601). Official schema type is string.
+          schema: { type: string }
         - $ref: "#/components/parameters/ODataTop"
+        - $ref: "#/components/parameters/ODataSkip"
+        - $ref: "#/components/parameters/ODataSearch"
+        - $ref: "#/components/parameters/ODataFilter"
+        - $ref: "#/components/parameters/ODataCount"
+        - $ref: "#/components/parameters/ODataOrderby"
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataExpand"
       responses:
-        "200":
-          description: event collection
+        "2XX":
+          description: event collection (official opId me.ListCalendarView)
+        "4XX":
+          description: error
+        "5XX":
+          description: error
   /subscriptions:
     get:
       tags: [Subscriptions]
@@ -279,9 +417,22 @@ paths:
       summary: List change-notification subscriptions
       externalDocs:
         url: https://learn.microsoft.com/en-us/graph/api/subscription-list
+      parameters:
+        - $ref: "#/components/parameters/ODataTop"
+        - $ref: "#/components/parameters/ODataSkip"
+        - $ref: "#/components/parameters/ODataSearch"
+        - $ref: "#/components/parameters/ODataFilter"
+        - $ref: "#/components/parameters/ODataCount"
+        - $ref: "#/components/parameters/ODataOrderby"
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataExpand"
       responses:
-        "200":
+        "2XX":
           description: subscription collection
+        "4XX":
+          description: error
+        "5XX":
+          description: error
     post:
       tags: [Subscriptions]
       operationId: createSubscription
@@ -294,8 +445,12 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/SubscriptionCreate" }
       responses:
-        "201":
+        "2XX":
           description: subscription
+        "4XX":
+          description: error
+        "5XX":
+          description: error
   /subscriptions/{subscription-id}:
     parameters:
       - $ref: "#/components/parameters/SubscriptionId"
@@ -305,9 +460,15 @@ paths:
       summary: Get a subscription
       externalDocs:
         url: https://learn.microsoft.com/en-us/graph/api/subscription-get
+      parameters:
+        - $ref: "#/components/parameters/ODataSelect"
       responses:
-        "200":
+        "2XX":
           description: subscription
+        "4XX":
+          description: error
+        "5XX":
+          description: error
     patch:
       tags: [Subscriptions]
       operationId: renewSubscription
@@ -320,21 +481,34 @@ paths:
           application/json:
             schema: { type: object }
       responses:
-        "200":
+        "2XX":
           description: subscription
+        "4XX":
+          description: error
+        "5XX":
+          description: error
     delete:
       tags: [Subscriptions]
       operationId: deleteSubscription
       summary: Delete a subscription
       externalDocs:
         url: https://learn.microsoft.com/en-us/graph/api/subscription-delete
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
       responses:
         "204":
-          description: deleted
+          description: Success
+        "4XX":
+          description: error
+        "5XX":
+          description: error
 components:
   securitySchemes:
     OAuth2:
       type: oauth2
+      description: >-
+        Not present in the official Graph OpenAPI metadata file. Documented
+        from Microsoft identity platform / Graph permissions reference.
       flows:
         authorizationCode:
           authorizationUrl: https://login.microsoftonline.com/common/oauth2/v2.0/authorize
@@ -352,11 +526,13 @@ components:
       name: message-id
       required: true
       schema: { type: string }
-    FolderId:
+      description: The unique identifier of message
+    MailFolderId:
       in: path
-      name: folder-id
+      name: mailFolder-id
       required: true
       schema: { type: string }
+      description: The unique identifier of mailFolder (official path param name)
     CalendarId:
       in: path
       name: calendar-id
@@ -372,34 +548,81 @@ components:
       name: subscription-id
       required: true
       schema: { type: string }
+    IfMatch:
+      in: header
+      name: If-Match
+      description: ETag
+      schema: { type: string }
     ODataSelect:
       in: query
       name: $select
-      schema: { type: string }
+      description: Select properties to be returned
+      style: form
+      explode: false
+      schema:
+        type: array
+        uniqueItems: true
+        items: { type: string }
+    ODataExpand:
+      in: query
+      name: $expand
+      description: Expand related entities
+      style: form
+      explode: false
+      schema:
+        type: array
+        uniqueItems: true
+        items: { type: string }
     ODataFilter:
       in: query
       name: $filter
+      description: Filter items by property values
       schema: { type: string }
     ODataTop:
       in: query
       name: $top
-      schema: { type: integer, minimum: 1, maximum: 1000 }
+      description: Show only the first n items
+      schema: { type: integer, minimum: 0 }
     ODataSkip:
       in: query
       name: $skip
+      description: Skip the first n items
       schema: { type: integer, minimum: 0 }
     ODataOrderby:
       in: query
       name: $orderby
+      description: Order items by property values
+      style: form
+      explode: false
+      schema:
+        type: array
+        uniqueItems: true
+        items: { type: string }
+    ODataSearch:
+      in: query
+      name: $search
+      description: Search items by search phrases
       schema: { type: string }
+    ODataCount:
+      in: query
+      name: $count
+      description: Include count of items
+      schema: { type: boolean }
   schemas:
     SubscriptionCreate:
       type: object
-      required: [changeType, notificationUrl, resource, expirationDateTime]
+      description: >-
+        Subset of microsoft.graph.subscription. Description text marks
+        changeType, notificationUrl, resource, expirationDateTime as required
+        for create (official schema required array only lists @odata.type).
       properties:
         changeType: { type: string }
-        notificationUrl: { type: string, format: uri }
+        notificationUrl: { type: string }
         resource: { type: string }
         expirationDateTime: { type: string, format: date-time }
-        clientState: { type: string }
-        latestSupportedTlsVersion: { type: string }
+        clientState: { type: string, nullable: true }
+        latestSupportedTlsVersion: { type: string, nullable: true }
+        lifecycleNotificationUrl: { type: string, nullable: true }
+        includeResourceData: { type: boolean, nullable: true }
+        encryptionCertificate: { type: string, nullable: true }
+        encryptionCertificateId: { type: string, nullable: true }

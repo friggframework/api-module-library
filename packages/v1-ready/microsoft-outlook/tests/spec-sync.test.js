@@ -63,11 +63,25 @@ describe('Capability manifest ↔ client sync', () => {
     });
 
     it('every capability method exists on Api', () => {
-        const methods = Object.values(capabilities.capabilities).map(
-            (c) => c.method
-        );
+        const methods = Object.values(capabilities.capabilities)
+            .map((c) => c.method)
+            .filter(Boolean);
         const missing = methods.filter((m) => !clientMethods.includes(m));
         expect(missing).toEqual([]);
+    });
+
+    it('declares a fenestra UI capability pointing at the module fenestra draft', () => {
+        const ui = capabilities.capabilities['ui.outlookAddIns'];
+        expect(ui).toBeDefined();
+        expect(ui.spec).toEqual({
+            kind: 'fenestra',
+            ref: './microsoft-outlook.fenestra.yaml',
+        });
+        expect(
+            fs.existsSync(
+                path.join(__dirname, '..', 'microsoft-outlook.fenestra.yaml')
+            )
+        ).toBe(true);
     });
 
     it('webhook.verify maps to verifyWebhookClientState', () => {

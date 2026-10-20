@@ -66,7 +66,10 @@ const Definition = {
         client_id: process.env.PANDADOC_CLIENT_ID,
         client_secret: process.env.PANDADOC_CLIENT_SECRET,
         scope: process.env.PANDADOC_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/pandadoc`,
+        // Omit when unset so schema validation does not see the string "undefined/pandadoc".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/pandadoc`
+            : undefined,
     },
 };
 

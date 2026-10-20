@@ -1,10 +1,20 @@
-const { ApiKeyRequester, get } = require('@friggframework/core');
+const crypto = require('crypto');
+const { OAuth2Requester, get } = require('@friggframework/core');
 
 /**
  * Klaviyo REST API client.
  *
- * Auth (private key): `Authorization: Klaviyo-API-Key <pk_...>`
+ * Primary auth (App Marketplace / lefthook manifest): OAuth 2.0 authorization
+ * code + PKCE (S256).
+ *   Authorize: https://www.klaviyo.com/oauth/authorize
+ *   Token:     https://a.klaviyo.com/oauth/token  (Basic client_id:client_secret)
+ *   API calls: Authorization: Bearer <access_token>
+ *   Docs: https://developers.klaviyo.com/en/docs/set_up_oauth
+ *
+ * Secondary auth (cleanly alongside): private API key.
+ *   Authorization: Klaviyo-API-Key <pk_...>
  *   Docs: https://developers.klaviyo.com/en/docs/authenticate_
+ *   Used when `api_key` is set and no `access_token` is present.
  *
  * Every server-side `/api` call also requires the `revision` header
  * (YYYY-MM-DD). Default matches the GA OpenAPI revision used to curate
@@ -13,31 +23,38 @@ const { ApiKeyRequester, get } = require('@friggframework/core');
  * Base URL: https://a.klaviyo.com
  * Content: JSON:API (`application/vnd.api+json` on write; `Accept: application/json`).
  *
- * Official OpenAPI: https://github.com/klaviyo/openapi
- * Developer reference: https://developers.klaviyo.com/en/reference/api_overview
- *
  * This client mirrors `./klaviyo.openapi.yaml` 1:1 (one method per operationId).
- * Official operationIds are snake_case (e.g. `get_profiles`); our curated
- * operationIds are camelCase to match Frigg Api method names.
  */
-class Api extends ApiKeyRequester {
+class Api extends OAuth2Requester {
+    // Pack PKCE verifier into OAuth `state` so it survives the redirect (same
+    // idea as the Salesforce module; Klaviyo requires code_verifier on token
+    // exchange and the in-memory verifier is gone after the browser round-trip).
+    static STATE_VERIFIER_DELIMITER = '~';
+
     constructor(params = {}) {
         super(params);
 
-        this.api_key =
-            get(params, 'api_key', null) ||
-            get(params, 'access_token', null) ||
-            get(params, 'apiKey', null);
-
-        // ApiKeyRequester's default header injection is replaced by addAuthHeaders
-        // so we can emit `Klaviyo-API-Key <key>` rather than a bare header value.
-        this.api_key_name = 'Authorization';
-
         this.baseUrl = 'https://a.klaviyo.com';
+        this.tokenUri = 'https://a.klaviyo.com/oauth/token';
+        this.authorizeBase = 'https://www.klaviyo.com/oauth/authorize';
+
         this.revision =
             get(params, 'revision', null) ||
             process.env.KLAVIYO_REVISION ||
             '2026-10-15';
+
+        // Optional private-key path (non-OAuth installs / local tests).
+        this.api_key =
+            get(params, 'api_key', null) ||
+            get(params, 'apiKey', null) ||
+            null;
+
+        this.access_token = get(params, 'access_token', null);
+        this.refresh_token = get(params, 'refresh_token', null);
+        this.code_verifier = get(params, 'code_verifier', null);
+
+        // Built on each getAuthorizationUri() so PKCE is fresh per install.
+        this.authorizationUri = null;
 
         const enc = (id) => encodeURIComponent(String(id));
         this.URLs = {
@@ -45,6 +62,12 @@ class Api extends ApiKeyRequester {
             accountById: (id) => `/api/accounts/${enc(id)}/`,
             profiles: '/api/profiles/',
             profileById: (id) => `/api/profiles/${enc(id)}/`,
+            profileImport: '/api/profile-import/',
+            profileLists: (id) => `/api/profiles/${enc(id)}/lists/`,
+            profileSubscribeJobs:
+                '/api/profile-subscription-bulk-create-jobs/',
+            profileUnsubscribeJobs:
+                '/api/profile-subscription-bulk-delete-jobs/',
             lists: '/api/lists/',
             listById: (id) => `/api/lists/${enc(id)}/`,
             listProfiles: (id) =>
@@ -64,16 +87,152 @@ class Api extends ApiKeyRequester {
         };
     }
 
+    // ---- Auth --------------------------------------------------------------
+
     /**
-     * Emit `Authorization: Klaviyo-API-Key <key>`. The stored credential is the
-     * bare private key; the vendor prefix is added here so it never lives in DB.
+     * Generate a PKCE code_verifier / S256 code_challenge pair per
+     * https://developers.klaviyo.com/en/docs/set_up_oauth
+     */
+    static generatePkce() {
+        const base64URLEncode = (buf) =>
+            buf
+                .toString('base64')
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=/g, '');
+        const codeVerifier = base64URLEncode(crypto.randomBytes(32));
+        const codeChallenge = base64URLEncode(
+            crypto.createHash('sha256').update(codeVerifier).digest()
+        );
+        return { codeVerifier, codeChallenge };
+    }
+
+    /**
+     * Build a fresh authorization URL with PKCE (S256). Packs the verifier
+     * into `state` (optionally prefixed with the caller's state) so
+     * getToken can restore it after redirect.
+     */
+    getAuthorizationUri() {
+        const { codeVerifier, codeChallenge } = Api.generatePkce();
+        this.code_verifier = codeVerifier;
+
+        const callerState = this.state || null;
+        const packedState = callerState
+            ? `${callerState}${Api.STATE_VERIFIER_DELIMITER}${codeVerifier}`
+            : codeVerifier;
+
+        const url = new URL(this.authorizeBase);
+        url.searchParams.set('response_type', 'code');
+        url.searchParams.set('client_id', this.client_id || '');
+        url.searchParams.set('redirect_uri', this.redirect_uri || '');
+        url.searchParams.set('scope', this.scope || '');
+        url.searchParams.set('state', packedState);
+        url.searchParams.set('code_challenge_method', 'S256');
+        url.searchParams.set('code_challenge', codeChallenge);
+
+        this.authorizationUri = url.toString();
+        return this.authorizationUri;
+    }
+
+    getAuthorizationRequirements() {
+        return {
+            url: this.getAuthorizationUri(),
+            type: 'oauth2',
+        };
+    }
+
+    /**
+     * Restore `code_verifier` from the OAuth `state` query param returned by
+     * Klaviyo after authorization.
+     */
+    restorePkceFromState(state) {
+        if (!state) return;
+        const raw = String(state);
+        const at = raw.lastIndexOf(Api.STATE_VERIFIER_DELIMITER);
+        this.code_verifier = at === -1 ? raw : raw.slice(at + 1);
+    }
+
+    /**
+     * Exchange authorization code for tokens. Klaviyo requires:
+     *   - Authorization: Basic base64(client_id:client_secret)
+     *   - body: grant_type, code, code_verifier, redirect_uri
+     * (application/x-www-form-urlencoded)
+     */
+    async getTokenFromCode(code) {
+        const params = new URLSearchParams();
+        params.append('grant_type', 'authorization_code');
+        params.append('code', code);
+        params.append('redirect_uri', this.redirect_uri);
+        if (this.code_verifier) {
+            params.append('code_verifier', this.code_verifier);
+        }
+
+        const options = {
+            body: params,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                Authorization: `Basic ${Buffer.from(
+                    `${this.client_id}:${this.client_secret}`
+                ).toString('base64')}`,
+            },
+            url: this.tokenUri,
+        };
+
+        // Don't send a stale Bearer on the token endpoint.
+        this.access_token = undefined;
+        const response = await this._post(options, false);
+        this.code_verifier = null;
+        await this.setTokens(response);
+        return response;
+    }
+
+    /**
+     * Refresh access token. Klaviyo requires Basic Auth + grant_type=refresh_token
+     * (no client_id/secret in body). Docs: set_up_oauth § Request refresh tokens.
+     */
+    async refreshAccessToken(refreshTokenObject) {
+        this.access_token = undefined;
+        const params = new URLSearchParams();
+        params.append('grant_type', 'refresh_token');
+        params.append('refresh_token', refreshTokenObject.refresh_token);
+
+        const options = {
+            body: params,
+            url: this.tokenUri,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                Authorization: `Basic ${Buffer.from(
+                    `${this.client_id}:${this.client_secret}`
+                ).toString('base64')}`,
+            },
+        };
+        const response = await this._post(options, false);
+        await this.setTokens(response);
+        return response;
+    }
+
+    /**
+     * Prefer OAuth Bearer; fall back to private API key when no access_token.
      */
     async addAuthHeaders(headers = {}) {
         const h = { ...headers };
-        if (this.api_key) {
-            h[this.api_key_name] = `Klaviyo-API-Key ${this.api_key}`;
+        delete h.Authorization;
+        if (this.access_token) {
+            h.Authorization = `Bearer ${this.access_token}`;
+        } else if (this.api_key) {
+            h.Authorization = `Klaviyo-API-Key ${this.api_key}`;
         }
         return h;
+    }
+
+    setApiKey(apiKey) {
+        this.api_key = apiKey;
+    }
+
+    isAuthenticated() {
+        if (this.access_token) return true;
+        if (this.api_key) return true;
+        return false;
     }
 
     /** Headers required on every Klaviyo `/api` request. */
@@ -93,10 +252,8 @@ class Api extends ApiKeyRequester {
     }
 
     /**
-     * Build a query string. Supports scalar values and arrays (serialized as
-     * repeated keys, which Klaviyo uses for sparse fieldsets like
-     * `fields[profile]=email&fields[profile]=first_name`). Bracketed param
-     * names (`page[cursor]`, `fields[profile]`) are passed through as-is.
+     * Build a query string. Supports scalars, arrays (repeated keys), and
+     * nested objects → `key[nested]=value` (page[cursor], fields[profile]).
      */
     _buildQuery(params = {}) {
         const usp = new URLSearchParams();
@@ -108,8 +265,6 @@ class Api extends ApiKeyRequester {
                     usp.append(key, String(v));
                 }
             } else if (typeof value === 'object') {
-                // Allow nested objects for convenience: { page: { cursor, size } }
-                // → page[cursor]=…&page[size]=…
                 for (const [nestedKey, nestedValue] of Object.entries(value)) {
                     if (nestedValue === undefined || nestedValue === null) {
                         continue;
@@ -130,11 +285,7 @@ class Api extends ApiKeyRequester {
 
     // ---- Accounts (identity) -----------------------------------------------
 
-    /**
-     * List accounts for the authenticated private key / token.
-     * Official operationId: get_accounts. Scope: accounts:read.
-     * GET /api/accounts/
-     */
+    /** Official operationId: get_accounts. Scope: accounts:read. */
     async listAccounts(params = {}) {
         return this._get({
             url: this._url(this.URLs.accounts, params),
@@ -142,11 +293,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Get a single account by id.
-     * Official operationId: get_account. Scope: accounts:read.
-     * GET /api/accounts/{id}/
-     */
+    /** Official operationId: get_account. Scope: accounts:read. */
     async getAccount(id, params = {}) {
         return this._get({
             url: this._url(this.URLs.accountById(id), params),
@@ -156,14 +303,7 @@ class Api extends ApiKeyRequester {
 
     // ---- Profiles ----------------------------------------------------------
 
-    /**
-     * List profiles.
-     * Official operationId: get_profiles. Scope: profiles:read.
-     * GET /api/profiles/
-     *
-     * Common params: filter, page[cursor], page[size], sort, fields[profile],
-     * additional-fields[profile], include.
-     */
+    /** Official operationId: get_profiles. Scope: profiles:read. */
     async listProfiles(params = {}) {
         return this._get({
             url: this._url(this.URLs.profiles, params),
@@ -171,11 +311,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Get a profile by id.
-     * Official operationId: get_profile. Scope: profiles:read.
-     * GET /api/profiles/{id}/
-     */
+    /** Official operationId: get_profile. Scope: profiles:read. */
     async getProfile(id, params = {}) {
         return this._get({
             url: this._url(this.URLs.profileById(id), params),
@@ -183,14 +319,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Create a profile (JSON:API body).
-     * Official operationId: create_profile. Scope: profiles:write.
-     * POST /api/profiles/
-     *
-     * body example:
-     *   { data: { type: 'profile', attributes: { email, first_name, ... } } }
-     */
+    /** Official operationId: create_profile. Scope: profiles:write. */
     async createProfile(data) {
         return this._post({
             url: this.baseUrl + this.URLs.profiles,
@@ -199,11 +328,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Update a profile (JSON:API body; id must match path).
-     * Official operationId: update_profile. Scope: profiles:write.
-     * PATCH /api/profiles/{id}/
-     */
+    /** Official operationId: update_profile. Scope: profiles:write. */
     async updateProfile(id, data) {
         return this._patch({
             url: this.baseUrl + this.URLs.profileById(id),
@@ -212,13 +337,66 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    // ---- Lists -------------------------------------------------------------
+    /**
+     * Create or update a profile (upsert).
+     * Official operationId: create_or_update_profile. Scope: profiles:write.
+     * POST /api/profile-import/
+     * body: { data: { type: 'profile', attributes: {…}, id? } }
+     */
+    async createOrUpdateProfile(data) {
+        return this._post({
+            url: this.baseUrl + this.URLs.profileImport,
+            headers: this._jsonApiHeaders(),
+            body: data,
+        });
+    }
 
     /**
-     * List lists.
-     * Official operationId: get_lists. Scope: lists:read.
-     * GET /api/lists/
+     * Get list memberships for a profile.
+     * Official operationId: get_lists_for_profile.
+     * Scopes: lists:read, profiles:read.
+     * GET /api/profiles/{id}/lists/
      */
+    async getProfileLists(id, params = {}) {
+        return this._get({
+            url: this._url(this.URLs.profileLists(id), params),
+            headers: this._klaviyoHeaders(),
+        });
+    }
+
+    /**
+     * Bulk-subscribe profiles (email/SMS/push/WhatsApp).
+     * Official operationId: bulk_subscribe_profiles.
+     * Scopes: subscriptions:write (+ lists:write when attaching a list).
+     * POST /api/profile-subscription-bulk-create-jobs/
+     */
+    async subscribeProfiles(data) {
+        return this._post({
+            url: this.baseUrl + this.URLs.profileSubscribeJobs,
+            headers: this._jsonApiHeaders(),
+            body: data,
+        });
+    }
+
+    /**
+     * Bulk-unsubscribe profiles.
+     * Official operationId: bulk_unsubscribe_profiles.
+     * Scope: subscriptions:write.
+     * POST /api/profile-subscription-bulk-delete-jobs/
+     * Caution (vendor docs): profiles not in the specified list are globally
+     * unsubscribed.
+     */
+    async unsubscribeProfiles(data) {
+        return this._post({
+            url: this.baseUrl + this.URLs.profileUnsubscribeJobs,
+            headers: this._jsonApiHeaders(),
+            body: data,
+        });
+    }
+
+    // ---- Lists -------------------------------------------------------------
+
+    /** Official operationId: get_lists. Scope: lists:read. */
     async listLists(params = {}) {
         return this._get({
             url: this._url(this.URLs.lists, params),
@@ -226,11 +404,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Get a list by id.
-     * Official operationId: get_list. Scope: lists:read.
-     * GET /api/lists/{id}/
-     */
+    /** Official operationId: get_list. Scope: lists:read. */
     async getList(id, params = {}) {
         return this._get({
             url: this._url(this.URLs.listById(id), params),
@@ -238,12 +412,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Create a list.
-     * Official operationId: create_list. Scope: lists:write.
-     * POST /api/lists/
-     * body: { data: { type: 'list', attributes: { name } } }
-     */
+    /** Official operationId: create_list. Scope: lists:write. */
     async createList(data) {
         return this._post({
             url: this.baseUrl + this.URLs.lists,
@@ -252,11 +421,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Update a list.
-     * Official operationId: update_list. Scope: lists:write.
-     * PATCH /api/lists/{id}/
-     */
+    /** Official operationId: update_list. Scope: lists:write. */
     async updateList(id, data) {
         return this._patch({
             url: this.baseUrl + this.URLs.listById(id),
@@ -265,11 +430,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Delete a list.
-     * Official operationId: delete_list. Scope: lists:write.
-     * DELETE /api/lists/{id}/
-     */
+    /** Official operationId: delete_list. Scope: lists:write. */
     async deleteList(id) {
         return this._delete({
             url: this.baseUrl + this.URLs.listById(id),
@@ -277,12 +438,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Add profiles to a list (relationship).
-     * Official operationId: add_profiles_to_list. Scope: lists:write.
-     * POST /api/lists/{id}/relationships/profiles/
-     * body: { data: [ { type: 'profile', id } ] }
-     */
+    /** Official operationId: add_profiles_to_list. Scope: lists:write. */
     async addProfilesToList(listId, data) {
         return this._post({
             url: this.baseUrl + this.URLs.listProfiles(listId),
@@ -291,12 +447,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Remove profiles from a list (relationship).
-     * Official operationId: remove_profiles_from_list. Scope: lists:write.
-     * DELETE /api/lists/{id}/relationships/profiles/
-     * body: { data: [ { type: 'profile', id } ] }
-     */
+    /** Official operationId: remove_profiles_from_list. Scope: lists:write. */
     async removeProfilesFromList(listId, data) {
         return this._delete({
             url: this.baseUrl + this.URLs.listProfiles(listId),
@@ -307,11 +458,7 @@ class Api extends ApiKeyRequester {
 
     // ---- Events ------------------------------------------------------------
 
-    /**
-     * List events.
-     * Official operationId: get_events. Scope: events:read.
-     * GET /api/events/
-     */
+    /** Official operationId: get_events. Scope: events:read. */
     async listEvents(params = {}) {
         return this._get({
             url: this._url(this.URLs.events, params),
@@ -319,11 +466,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Get an event by id.
-     * Official operationId: get_event. Scope: events:read.
-     * GET /api/events/{id}/
-     */
+    /** Official operationId: get_event. Scope: events:read. */
     async getEvent(id, params = {}) {
         return this._get({
             url: this._url(this.URLs.eventById(id), params),
@@ -331,11 +474,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Create an event (track).
-     * Official operationId: create_event. Scope: events:write.
-     * POST /api/events/
-     */
+    /** Official operationId: create_event. Scope: events:write. */
     async createEvent(data) {
         return this._post({
             url: this.baseUrl + this.URLs.events,
@@ -346,11 +485,7 @@ class Api extends ApiKeyRequester {
 
     // ---- Segments ----------------------------------------------------------
 
-    /**
-     * List segments.
-     * Official operationId: get_segments. Scope: segments:read.
-     * GET /api/segments/
-     */
+    /** Official operationId: get_segments. Scope: segments:read. */
     async listSegments(params = {}) {
         return this._get({
             url: this._url(this.URLs.segments, params),
@@ -358,11 +493,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Get a segment by id.
-     * Official operationId: get_segment. Scope: segments:read.
-     * GET /api/segments/{id}/
-     */
+    /** Official operationId: get_segment. Scope: segments:read. */
     async getSegment(id, params = {}) {
         return this._get({
             url: this._url(this.URLs.segmentById(id), params),
@@ -373,10 +504,8 @@ class Api extends ApiKeyRequester {
     // ---- Campaigns ---------------------------------------------------------
 
     /**
-     * List campaigns.
      * Official operationId: get_campaigns. Scope: campaigns:read.
-     * GET /api/campaigns/
-     * Note: filter is required by the official API (e.g. equals(messages.channel,'email')).
+     * Official API requires `filter` (e.g. equals(messages.channel,'email')).
      */
     async listCampaigns(params = {}) {
         return this._get({
@@ -385,11 +514,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Get a campaign by id.
-     * Official operationId: get_campaign. Scope: campaigns:read.
-     * GET /api/campaigns/{id}/
-     */
+    /** Official operationId: get_campaign. Scope: campaigns:read. */
     async getCampaign(id, params = {}) {
         return this._get({
             url: this._url(this.URLs.campaignById(id), params),
@@ -399,11 +524,7 @@ class Api extends ApiKeyRequester {
 
     // ---- Metrics -----------------------------------------------------------
 
-    /**
-     * List metrics.
-     * Official operationId: get_metrics. Scope: metrics:read.
-     * GET /api/metrics/
-     */
+    /** Official operationId: get_metrics. Scope: metrics:read. */
     async listMetrics(params = {}) {
         return this._get({
             url: this._url(this.URLs.metrics, params),
@@ -411,11 +532,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Get a metric by id.
-     * Official operationId: get_metric. Scope: metrics:read.
-     * GET /api/metrics/{id}/
-     */
+    /** Official operationId: get_metric. Scope: metrics:read. */
     async getMetric(id, params = {}) {
         return this._get({
             url: this._url(this.URLs.metricById(id), params),
@@ -423,15 +540,9 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    // ---- Webhooks (system webhooks API) ------------------------------------
-    // Available to Advanced KDP customers and Klaviyo app partners.
-    // Docs: https://developers.klaviyo.com/en/docs/working_with_system_webhooks
+    // ---- Webhooks ----------------------------------------------------------
 
-    /**
-     * List webhooks.
-     * Official operationId: get_webhooks. Scope: webhooks:read.
-     * GET /api/webhooks/
-     */
+    /** Official operationId: get_webhooks. Scope: webhooks:read. */
     async listWebhooks(params = {}) {
         return this._get({
             url: this._url(this.URLs.webhooks, params),
@@ -439,11 +550,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Get a webhook by id.
-     * Official operationId: get_webhook. Scope: webhooks:read.
-     * GET /api/webhooks/{id}/
-     */
+    /** Official operationId: get_webhook. Scope: webhooks:read. */
     async getWebhook(id, params = {}) {
         return this._get({
             url: this._url(this.URLs.webhookById(id), params),
@@ -451,19 +558,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Create a webhook.
-     * Official operationId: create_webhook. Scope: webhooks:write.
-     * POST /api/webhooks/
-     *
-     * body: {
-     *   data: {
-     *     type: 'webhook',
-     *     attributes: { name, endpoint_url, secret_key, description? },
-     *     relationships: { 'webhook-topics': { data: [ { type: 'webhook-topic', id } ] } }
-     *   }
-     * }
-     */
+    /** Official operationId: create_webhook. Scope: webhooks:write. */
     async createWebhook(data) {
         return this._post({
             url: this.baseUrl + this.URLs.webhooks,
@@ -472,11 +567,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Update a webhook.
-     * Official operationId: update_webhook. Scope: webhooks:write.
-     * PATCH /api/webhooks/{id}/
-     */
+    /** Official operationId: update_webhook. Scope: webhooks:write. */
     async updateWebhook(id, data) {
         return this._patch({
             url: this.baseUrl + this.URLs.webhookById(id),
@@ -485,11 +576,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Delete a webhook.
-     * Official operationId: delete_webhook. Scope: webhooks:write.
-     * DELETE /api/webhooks/{id}/
-     */
+    /** Official operationId: delete_webhook. Scope: webhooks:write. */
     async deleteWebhook(id) {
         return this._delete({
             url: this.baseUrl + this.URLs.webhookById(id),
@@ -497,11 +584,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * List webhook topics available for the account.
-     * Official operationId: get_webhook_topics. Scope: webhooks:read.
-     * GET /api/webhook-topics/
-     */
+    /** Official operationId: get_webhook_topics. Scope: webhooks:read. */
     async listWebhookTopics(params = {}) {
         return this._get({
             url: this._url(this.URLs.webhookTopics, params),
@@ -509,11 +592,7 @@ class Api extends ApiKeyRequester {
         });
     }
 
-    /**
-     * Get a webhook topic by id.
-     * Official operationId: get_webhook_topic. Scope: webhooks:read.
-     * GET /api/webhook-topics/{id}/
-     */
+    /** Official operationId: get_webhook_topic. Scope: webhooks:read. */
     async getWebhookTopic(id, params = {}) {
         return this._get({
             url: this._url(this.URLs.webhookTopicById(id), params),

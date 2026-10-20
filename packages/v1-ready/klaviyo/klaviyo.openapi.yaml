@@ -16,6 +16,7 @@ servers:
   - url: https://a.klaviyo.com
     description: Klaviyo production API
 security:
+  - OAuth2: []
   - KlaviyoApiKey: []
 tags:
   - name: Accounts
@@ -204,6 +205,169 @@ paths:
       responses:
         "200":
           description: Updated
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized
+  /api/profile-import/:
+    post:
+      tags: [Profiles]
+      operationId: createOrUpdateProfile
+      summary: Create or Update Profile
+      description: >-
+        Official operationId `create_or_update_profile`. Scope `profiles:write`.
+        Returns 201 if created, 200 if updated.
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: object
+                  required: [type, attributes]
+                  properties:
+                    type: { type: string, enum: [profile] }
+                    id: { type: string, nullable: true }
+                    attributes: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: Updated existing profile
+        "201":
+          description: Created new profile
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized
+  /api/profiles/{id}/lists/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+      - $ref: "#/components/parameters/Revision"
+    get:
+      tags: [Profiles]
+      operationId: getProfileLists
+      summary: Get Lists for Profile
+      description: >-
+        Official operationId `get_lists_for_profile`.
+        Scopes `lists:read` `profiles:read`.
+      responses:
+        "200":
+          description: List collection for the profile
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+  /api/profile-subscription-bulk-create-jobs/:
+    post:
+      tags: [Profiles]
+      operationId: subscribeProfiles
+      summary: Bulk Subscribe Profiles
+      description: >-
+        Official operationId `bulk_subscribe_profiles`.
+        Scope `subscriptions:write` (and `lists:write` when linking a list).
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: object
+                  required: [type, attributes]
+                  properties:
+                    type:
+                      type: string
+                      enum: [profile-subscription-bulk-create-job]
+                    attributes:
+                      type: object
+                      required: [profiles]
+                      properties:
+                        custom_source: { type: string, nullable: true }
+                        historical_import: { type: boolean, nullable: true }
+                        profiles:
+                          type: object
+                          required: [data]
+                          properties:
+                            data:
+                              type: array
+                              items: { type: object, additionalProperties: true }
+                    relationships:
+                      type: object
+                      properties:
+                        list:
+                          type: object
+                          properties:
+                            data:
+                              type: object
+                              properties:
+                                type: { type: string, enum: [list] }
+                                id: { type: string }
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized
+  /api/profile-subscription-bulk-delete-jobs/:
+    post:
+      tags: [Profiles]
+      operationId: unsubscribeProfiles
+      summary: Bulk Unsubscribe Profiles
+      description: >-
+        Official operationId `bulk_unsubscribe_profiles`.
+        Scope `subscriptions:write`. Profiles not in the specified list are
+        globally unsubscribed (per Klaviyo docs).
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: object
+                  required: [type, attributes]
+                  properties:
+                    type:
+                      type: string
+                      enum: [profile-subscription-bulk-delete-job]
+                    attributes:
+                      type: object
+                      required: [profiles]
+                      properties:
+                        profiles:
+                          type: object
+                          required: [data]
+                          properties:
+                            data:
+                              type: array
+                              items: { type: object, additionalProperties: true }
+                    relationships:
+                      type: object
+                      properties:
+                        list:
+                          type: object
+                          properties:
+                            data:
+                              type: object
+                              properties:
+                                type: { type: string, enum: [list] }
+                                id: { type: string }
+      responses:
+        "202":
+          description: Accepted
         "400":
           description: Bad request
         "401":
@@ -729,12 +893,36 @@ paths:
           description: Not found
 components:
   securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        OAuth 2.0 authorization code + PKCE (S256). Primary auth for App
+        Marketplace apps. Access tokens are sent as
+        `Authorization: Bearer <access_token>`.
+        Authorize: https://www.klaviyo.com/oauth/authorize
+        Token: https://a.klaviyo.com/oauth/token
+        See https://developers.klaviyo.com/en/docs/set_up_oauth
+      flows:
+        authorizationCode:
+          authorizationUrl: https://www.klaviyo.com/oauth/authorize
+          tokenUrl: https://a.klaviyo.com/oauth/token
+          scopes:
+            accounts:read: Read accounts
+            profiles:read: Read profiles
+            profiles:write: Write profiles
+            lists:read: Read lists
+            lists:write: Write lists
+            events:read: Read events
+            events:write: Write events
+            subscriptions:write: Write subscriptions
+            webhooks:read: Read webhooks
+            webhooks:write: Write webhooks
     KlaviyoApiKey:
       type: apiKey
       in: header
       name: Authorization
       description: >-
-        Private key authentication for /api endpoints.
+        Private key authentication for /api endpoints (optional alongside OAuth).
         Set `Authorization: Klaviyo-API-Key your-private-api-key`.
         See https://developers.klaviyo.com/en/docs/authenticate_
   parameters:

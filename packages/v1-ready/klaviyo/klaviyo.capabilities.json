@@ -4,7 +4,7 @@
   "label": "Klaviyo",
   "package": "@friggframework/api-module-klaviyo",
   "version": "1.0.0",
-  "auth": "apiKey",
+  "auth": "oauth2",
   "objects": {
     "profile": {
       "label": "Profile",
@@ -189,25 +189,23 @@
     }
   },
   "events": {
-    "list.subscribed": {
+    "profile.subscribed_email_marketing": {
       "delivery": "webhook",
       "object": "profile",
       "subscribe": "webhook.create",
-      "description": "Webhook topic event:klaviyo.subscribed_to_list. $.record is the profile; the list is in data.attributes.event_properties.",
+      "description": "Official common webhook topic event:klaviyo.subscribed_to_email_marketing — when a profile consents to email marketing.",
       "payload": {
         "id": "01JAEXAMPLE7Q9VK3D6M2N8P4R",
-        "topic": "event:klaviyo.subscribed_to_list",
+        "topic": "event:klaviyo.subscribed_to_email_marketing",
         "created_at": "2026-10-18T16:02:11Z",
         "data": {
           "type": "event",
           "id": "4vRpBT",
           "attributes": {
-            "metric_name": "Subscribed to List",
+            "metric_name": "Subscribed to Email Marketing",
             "datetime": "2026-10-18T16:02:10Z",
             "event_properties": {
-              "list_id": "Y6nRLr",
-              "List": "VIP Customers",
-              "method": "Shopify"
+              "method": "Signup form"
             }
           },
           "profile": {
@@ -223,25 +221,24 @@
         }
       },
       "record": "data.profile",
-      "match": "event:klaviyo.subscribed_to_list"
+      "match": "event:klaviyo.subscribed_to_email_marketing"
     },
-    "profile.unsubscribed": {
+    "profile.unsubscribed_email_marketing": {
       "delivery": "webhook",
       "object": "profile",
       "subscribe": "webhook.create",
-      "description": "Webhook topic event:klaviyo.unsubscribed (email marketing). Global unsubscribe, not one list.",
+      "description": "Official common webhook topic event:klaviyo.unsubscribed_from_email_marketing — global email marketing unsubscribe.",
       "payload": {
         "id": "01JAEXAMPLE7Q9VK3D6M2N8P4R",
-        "topic": "event:klaviyo.unsubscribed",
+        "topic": "event:klaviyo.unsubscribed_from_email_marketing",
         "created_at": "2026-10-18T16:02:11Z",
         "data": {
           "type": "event",
           "id": "4vRpBT",
           "attributes": {
-            "metric_name": "Unsubscribed",
+            "metric_name": "Unsubscribed from Email Marketing",
             "datetime": "2026-10-18T16:02:10Z",
             "event_properties": {
-              "channel": "email",
               "method": "Unsubscribe link"
             }
           },
@@ -258,7 +255,7 @@
         }
       },
       "record": "data.profile",
-      "match": "event:klaviyo.unsubscribed"
+      "match": "event:klaviyo.unsubscribed_from_email_marketing"
     },
     "profile.updated": {
       "delivery": "poll",
@@ -356,6 +353,62 @@
       },
       "output": "profile"
     },
+    "profile.upsert": {
+      "kind": "write",
+      "method": "createOrUpdateProfile",
+      "input": {
+        "attributes": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "profile"
+    },
+    "profile.lists": {
+      "kind": "read",
+      "method": "getProfileLists",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "list[]"
+    },
+    "profile.subscribe": {
+      "kind": "write",
+      "method": "subscribeProfiles",
+      "input": {
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "email": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "channels": {
+          "type": "array"
+        }
+      },
+      "output": "void"
+    },
+    "profile.unsubscribe": {
+      "kind": "write",
+      "method": "unsubscribeProfiles",
+      "input": {
+        "email": {
+          "type": "string",
+          "required": true
+        },
+        "listId": {
+          "type": "string"
+        }
+      },
+      "output": "void"
+    },
     "list.list": {
       "kind": "read",
       "method": "listLists",
@@ -447,40 +500,12 @@
     }
   },
   "openQuestions": {
-    "droppedCapabilities": [
-      {
-        "capability": "profile.upsert",
-        "lefthookMethod": "createOrUpdateProfile",
-        "officialOperationId": "create_or_update_profile",
-        "officialPath": "POST /api/profile-import",
-        "reason": "Not implemented on Api yet"
-      },
-      {
-        "capability": "profile.lists",
-        "lefthookMethod": "getProfileLists",
-        "officialOperationId": "get_lists_for_profile",
-        "officialPath": "GET /api/profiles/{id}/lists",
-        "reason": "Not implemented on Api yet"
-      },
-      {
-        "capability": "profile.subscribe",
-        "lefthookMethod": "subscribeProfiles",
-        "officialOperationId": "bulk_subscribe_profiles",
-        "officialPath": "POST /api/profile-subscription-bulk-create-jobs",
-        "reason": "Not implemented on Api yet"
-      },
-      {
-        "capability": "profile.unsubscribe",
-        "lefthookMethod": "unsubscribeProfiles",
-        "officialOperationId": "bulk_unsubscribe_profiles",
-        "officialPath": "POST /api/profile-subscription-bulk-delete-jobs",
-        "reason": "Not implemented on Api yet"
-      }
-    ],
-    "auth": "Lefthook manifest declared auth=oauth2; this module ships private-key apiKey. OAuth (PKCE) still needed for App Marketplace.",
-    "webhookTopicIds": "events.list.subscribed match event:klaviyo.subscribed_to_list and events.profile.unsubscribed match event:klaviyo.unsubscribed are not in Klaviyo's published common-topics table (which lists event:klaviyo.subscribed_to_email_marketing / event:klaviyo.unsubscribed_from_email_marketing). Confirm account-specific topic IDs via listWebhookTopics before wiring.",
-    "webhookVerify": "Lefthook verify=verifyWebhookSignature is not an Api method; wired to extensions/webhooks/signature-verifier.verifyKlaviyoSignature.",
+    "pkceStatePacking": "PKCE code_verifier is packed into OAuth `state` (Salesforce-style) so it survives the browser redirect. Klaviyo docs recommend a server-side store keyed by customer id; confirm whether Frigg auth hosts prefer DB-backed verifier storage over state packing.",
+    "oauthConfidentialClient": "Token exchange uses Basic Auth with client_id:client_secret (verified in set_up_oauth). Public-client-only installs without a secret were not verified.",
+    "listSubscribeTopic": "Lefthook used event:klaviyo.subscribed_to_list; that id is not in Klaviyo's published common topics table. Manifest events now use event:klaviyo.subscribed_to_email_marketing / event:klaviyo.unsubscribed_from_email_marketing. Account-specific topics (including list subscribe) still available via listWebhookTopics.",
     "customProfileProperties": "attributes.properties.lifetime_value / shopify_tags / hubspot_lifecycle_stage are free-form custom properties (not fixed OpenAPI fields); kept from lefthook for ontology tags.",
-    "eventFields": "objects.event.fields (metric_name, properties, value, time, unique_id) mirror create-oriented / lefthook shape; GET event responses use timestamp, datetime, event_properties, uuid per official OpenAPI."
+    "eventFields": "objects.event.fields (metric_name, properties, value, time, unique_id) mirror create-oriented / lefthook shape; GET event responses use timestamp, datetime, event_properties, uuid per official OpenAPI.",
+    "unsubscribeGlobal": "Official bulk_unsubscribe_profiles docs warn that profiles not in the specified list are globally unsubscribed — callers must verify list membership first.",
+    "systemWebhooksAccess": "System Webhooks API is limited to Advanced KDP customers and Klaviyo app partners per vendor docs."
   }
 }

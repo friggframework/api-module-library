@@ -28,23 +28,42 @@ describe('OpenAPI spec ↔ client sync', () => {
     });
 
     it('the base server URL matches the client baseUrl', () => {
-        const api = new Api({ api_key: 'pk_x' });
+        const api = new Api({ access_token: 'x' });
         expect(spec.servers[0].url).toBe(api.baseUrl);
     });
 
-    it('declares Authorization apiKey security matching the client', () => {
-        const scheme = spec.components.securitySchemes.KlaviyoApiKey;
-        const api = new Api({ api_key: 'pk_x' });
-        expect(scheme.type).toBe('apiKey');
-        expect(scheme.in).toBe('header');
-        expect(scheme.name).toBe('Authorization');
-        expect(scheme.name).toBe(api.api_key_name);
+    it('declares OAuth2 and private-key security schemes', () => {
+        expect(spec.components.securitySchemes.OAuth2.type).toBe('oauth2');
+        expect(
+            spec.components.securitySchemes.OAuth2.flows.authorizationCode
+                .authorizationUrl
+        ).toBe('https://www.klaviyo.com/oauth/authorize');
+        expect(
+            spec.components.securitySchemes.OAuth2.flows.authorizationCode
+                .tokenUrl
+        ).toBe('https://a.klaviyo.com/oauth/token');
+
+        const keyScheme = spec.components.securitySchemes.KlaviyoApiKey;
+        expect(keyScheme.type).toBe('apiKey');
+        expect(keyScheme.in).toBe('header');
+        expect(keyScheme.name).toBe('Authorization');
     });
 
     it('pins the revision header default to the client default', () => {
         const revisionParam =
             spec.components.parameters.Revision.schema.default;
-        const api = new Api({ api_key: 'pk_x' });
+        const api = new Api({ access_token: 'x' });
         expect(revisionParam).toBe(api.revision);
+    });
+
+    it('includes the four restored profile capability operations', () => {
+        expect(specOperationIds).toEqual(
+            expect.arrayContaining([
+                'createOrUpdateProfile',
+                'getProfileLists',
+                'subscribeProfiles',
+                'unsubscribeProfiles',
+            ])
+        );
     });
 });

@@ -1,6 +1,7 @@
 {
     "name": "klaviyo",
     "config": {
+        "oauth2": true,
         "apiKey": true,
         "batch": {
             "concurrency": 3,

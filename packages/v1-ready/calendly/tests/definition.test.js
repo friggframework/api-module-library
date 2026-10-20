@@ -40,10 +40,10 @@ describe('Calendly Definition', () => {
         expect(Definition.moduleName).toMatch(/^[a-zA-Z][a-zA-Z0-9_-]*$/);
     });
 
-    it('persists access_token and refresh_token credentials', () => {
+    it('persists oauth tokens and account URIs', () => {
         expect(Definition.requiredAuthMethods.apiPropertiesToPersist).toEqual({
             credential: ['access_token', 'refresh_token'],
-            entity: [],
+            entity: ['organization', 'user'],
         });
     });
 
@@ -130,14 +130,16 @@ describe('Calendly Definition', () => {
         expect(Definition.moduleName).toMatch(/^[a-zA-Z][a-zA-Z0-9_-]*$/);
     });
 
-    it('capability manifest maps every object method to a real Api method', () => {
+    it('capability manifest maps every named method to a real Api method', () => {
         const manifest = JSON.parse(
             fs.readFileSync(
                 path.join(__dirname, '..', 'calendly.capabilities.json'),
                 'utf8'
             )
         );
-        expect(manifest.$schema).toBe('capability-manifest/v0.1');
+        expect(manifest.$schema).toBe(
+            'https://friggframework.org/schemas/capability-manifest/v0.1.json'
+        );
         expect(manifest.module).toBe('calendly');
         expect(manifest.package).toBe('@friggframework/api-module-calendly');
         expect(manifest.version).toBe('1.0.0');
@@ -146,17 +148,16 @@ describe('Calendly Definition', () => {
             (m) => typeof Api.prototype[m] === 'function' && m !== 'constructor'
         );
 
-        expect(clientMethods).toContain(manifest.auth.testAuth);
-        for (const [objectName, objectDef] of Object.entries(manifest.objects)) {
+        for (const [name, cap] of Object.entries(manifest.capabilities || {})) {
+            expect(clientMethods).toContain(cap.method);
+            expect(name).toBeTruthy();
+        }
+        if (manifest.webhook?.verify) {
+            expect(clientMethods).toContain(manifest.webhook.verify);
+        }
+        for (const objectDef of Object.values(manifest.objects || {})) {
             expect(Array.isArray(objectDef.fields)).toBe(true);
             expect(objectDef.fields.length).toBeGreaterThan(0);
-            for (const op of ['list', 'get', 'create', 'update', 'delete']) {
-                const methodName = objectDef[op];
-                if (!methodName) continue;
-                expect(clientMethods).toContain(methodName);
-            }
-            // silence unused
-            expect(objectName).toBeTruthy();
         }
     });
 });

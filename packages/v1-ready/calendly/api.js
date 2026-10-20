@@ -48,6 +48,21 @@ class Api extends OAuth2Requester {
 
         this.access_token = get(params, 'access_token', null);
         this.refresh_token = get(params, 'refresh_token', null);
+        // Persisted account identifiers (see calendly.capabilities.json `account`)
+        this.organization = get(params, 'organization', null);
+        this.user = get(params, 'user', null);
+    }
+
+    /**
+     * Extract a Calendly resource UUID from a full URI or pass-through a bare uuid.
+     * e.g. https://api.calendly.com/scheduled_events/ABC → ABC
+     */
+    _uuidFromUri(uriOrUuid) {
+        if (!uriOrUuid) return uriOrUuid;
+        const s = String(uriOrUuid);
+        if (!s.includes('/')) return s;
+        const parts = s.replace(/\/$/, '').split('/');
+        return parts[parts.length - 1];
     }
 
     getAuthUri() {
@@ -134,7 +149,13 @@ class Api extends OAuth2Requester {
     /** Alias used by Definition auth methods. */
     async getUserDetails() {
         const response = await this.getCurrentUser();
-        return response.resource;
+        const user = response.resource;
+        // Mirror account fields onto the instance for apiPropertiesToPersist.
+        if (user?.uri) this.user = user.uri;
+        if (user?.current_organization) {
+            this.organization = user.current_organization;
+        }
+        return user;
     }
 
     async getTokenIdentity() {
@@ -188,8 +209,10 @@ class Api extends OAuth2Requester {
     /**
      * GET /scheduled_events/{uuid}
      * Required scope: scheduled_events:read
+     * Accepts a bare UUID or a full scheduled-event URI.
      */
-    async getScheduledEvent(uuid) {
+    async getScheduledEvent(uriOrUuid) {
+        const uuid = this._uuidFromUri(uriOrUuid);
         return this._get({
             url: this.baseUrl + this.URLs.scheduledEventByUuid(uuid),
         });
@@ -203,7 +226,7 @@ class Api extends OAuth2Requester {
      */
     async listEventInvitees(uuid, query = {}) {
         return this._get({
-            url: this.baseUrl + this.URLs.eventInvitees(uuid),
+            url: this.baseUrl + this.URLs.eventInvitees(this._uuidFromUri(uuid)),
             query,
         });
     }
@@ -216,8 +239,31 @@ class Api extends OAuth2Requester {
         return this._get({
             url:
                 this.baseUrl +
-                this.URLs.eventInviteeByUuid(eventUuid, inviteeUuid),
+                this.URLs.eventInviteeByUuid(
+                    this._uuidFromUri(eventUuid),
+                    this._uuidFromUri(inviteeUuid)
+                ),
         });
+    }
+
+    /**
+     * Capability alias for `invitee.get`.
+     * Accepts a full invitee URI:
+     *   https://api.calendly.com/scheduled_events/{event_uuid}/invitees/{invitee_uuid}
+     * and GETs that invitee (required scope: scheduled_events:read).
+     */
+    async getInvitee(uri) {
+        const s = String(uri || '');
+        const match = s.match(
+            /\/scheduled_events\/([^/]+)\/invitees\/([^/]+)\/?$/
+        );
+        if (!match) {
+            throw new Error(
+                'getInvitee: expected a Calendly invitee URI of the form ' +
+                    'https://api.calendly.com/scheduled_events/{event_uuid}/invitees/{invitee_uuid}'
+            );
+        }
+        return this.getEventInvitee(match[1], match[2]);
     }
 
     // ---- Webhook subscriptions ---------------------------------------------
@@ -240,7 +286,11 @@ class Api extends OAuth2Requester {
      */
     async getWebhookSubscription(webhookUuid) {
         return this._get({
-            url: this.baseUrl + this.URLs.webhookSubscriptionByUuid(webhookUuid),
+            url:
+                this.baseUrl +
+                this.URLs.webhookSubscriptionByUuid(
+                    this._uuidFromUri(webhookUuid)
+                ),
         });
     }
 
@@ -267,10 +317,34 @@ class Api extends OAuth2Requester {
     /**
      * DELETE /webhook_subscriptions/{webhook_uuid}
      * Required scope: webhooks:write
+     * Accepts a bare UUID or a full webhook-subscription URI.
      */
-    async deleteWebhookSubscription(webhookUuid) {
+    async deleteWebhookSubscription(uriOrUuid) {
+        const uuid = this._uuidFromUri(uriOrUuid);
         return this._delete({
-            url: this.baseUrl + this.URLs.webhookSubscriptionByUuid(webhookUuid),
+            url: this.baseUrl + this.URLs.webhookSubscriptionByUuid(uuid),
+        });
+    }
+
+    /**
+     * Capability / webhook.verify entry point.
+     * Delegates to the Tier 3 signature verifier (Calendly-Webhook-Signature).
+     *
+     * @param {Object} args
+     * @param {import('express').Request|Object} [args.req]
+     * @param {string} [args.signingKey] - defaults to CALENDLY_WEBHOOK_SIGNING_KEY
+     * @returns {{ valid: boolean, reason?: string }}
+     */
+    verifyWebhookSignature(args = {}) {
+        const {
+            verifyCalendlySignature,
+        } = require('./extensions/webhooks/signature-verifier');
+        return verifyCalendlySignature({
+            req: args.req,
+            signingKey:
+                args.signingKey || process.env.CALENDLY_WEBHOOK_SIGNING_KEY,
+            maxSkewSec: args.maxSkewSec,
+            now: args.now,
         });
     }
 }

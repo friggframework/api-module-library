@@ -141,6 +141,23 @@ describe('Calendly Api', () => {
                 'https://api.calendly.com/scheduled_events/SE-UUID/invitees/INV-UUID'
             );
         });
+
+        it('getInvitee parses an invitee URI and hits the invitee path', async () => {
+            const api = makeApi();
+            await api.getInvitee(
+                'https://api.calendly.com/scheduled_events/SE-UUID/invitees/INV-UUID'
+            );
+            expect(api._captured[0].url).toBe(
+                'https://api.calendly.com/scheduled_events/SE-UUID/invitees/INV-UUID'
+            );
+        });
+
+        it('getInvitee rejects a non-invitee URI', async () => {
+            const api = makeApi();
+            await expect(
+                api.getInvitee('https://api.calendly.com/scheduled_events/SE')
+            ).rejects.toThrow(/invitee URI/i);
+        });
     });
 
     describe('webhook subscriptions', () => {
@@ -182,6 +199,35 @@ describe('Calendly Api', () => {
             expect(api._captured[1].method).toBe('DELETE');
             expect(api._captured[1].url).toBe(
                 'https://api.calendly.com/webhook_subscriptions/WH-UUID'
+            );
+        });
+
+        it('deleteWebhookSubscription accepts a full webhook URI', async () => {
+            const api = makeApi();
+            await api.deleteWebhookSubscription(
+                'https://api.calendly.com/webhook_subscriptions/WH-UUID'
+            );
+            expect(api._captured[0].url).toBe(
+                'https://api.calendly.com/webhook_subscriptions/WH-UUID'
+            );
+        });
+    });
+
+    describe('verifyWebhookSignature', () => {
+        it('is exposed on the Api class for capability webhook.verify', () => {
+            const api = makeApi();
+            expect(typeof api.verifyWebhookSignature).toBe('function');
+        });
+    });
+
+    describe('URI helpers', () => {
+        it('getScheduledEvent accepts a full event URI', async () => {
+            const api = makeApi();
+            await api.getScheduledEvent(
+                'https://api.calendly.com/scheduled_events/SE-UUID'
+            );
+            expect(api._captured[0].url).toBe(
+                'https://api.calendly.com/scheduled_events/SE-UUID'
             );
         });
     });

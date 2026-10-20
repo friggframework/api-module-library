@@ -41,7 +41,8 @@ const Definition = {
         },
         apiPropertiesToPersist: {
             credential: ['access_token', 'refresh_token'],
-            entity: [],
+            // Account fields from calendly.capabilities.json (`organization`, `user` URIs)
+            entity: ['organization', 'user'],
         },
         getCredentialDetails: async function (api, userId) {
             const identity = await api.getTokenIdentity();

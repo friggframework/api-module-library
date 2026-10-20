@@ -223,13 +223,11 @@ describe('Canva Api', () => {
             expect(api._captured[2].method).toBe('DELETE');
         });
 
-        it('createAssetUploadJob sends octet-stream + metadata header', async () => {
+        it('createAssetUploadJob sends octet-stream + name_base64 metadata header', async () => {
             const api = makeApi();
             const binary = Buffer.from('fake-image');
-            await api.createAssetUploadJob(binary, {
-                name_base64: Buffer.from('pic.png').toString('base64'),
-                parent_folder_id: 'root',
-            });
+            const name_base64 = Buffer.from('pic.png').toString('base64');
+            await api.createAssetUploadJob(binary, { name_base64 });
             const captured = api._captured[0];
             expect(captured.url).toBe(
                 'https://api.canva.com/rest/v1/asset-uploads'
@@ -237,8 +235,8 @@ describe('Canva Api', () => {
             expect(captured.headers['Content-Type']).toBe(
                 'application/octet-stream'
             );
-            expect(captured.headers['Asset-Upload-Metadata']).toContain(
-                'parent_folder_id'
+            expect(captured.headers['Asset-Upload-Metadata']).toBe(
+                JSON.stringify({ name_base64 })
             );
             expect(Buffer.isBuffer(captured.body)).toBe(true);
         });

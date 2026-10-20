@@ -318,7 +318,14 @@
         "folderId": { "type": "string", "required": true },
         "continuation": { "type": "string" },
         "limit": { "type": "integer" },
-        "item_types": { "type": "string" },
+        "item_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["design", "folder", "image", "brand_template"]
+          },
+          "description": "Official query param is array (form, explode=false → comma-delimited)"
+        },
         "sort_by": { "type": "string" },
         "pin_status": { "type": "string" }
       },
@@ -413,6 +420,15 @@
       },
       "output": "json",
       "args": ["body"]
+    },
+    "ui.appsSdk": {
+      "kind": "ui",
+      "surface": "ui",
+      "spec": {
+        "kind": "fenestra",
+        "ref": "./canva.fenestra.yaml"
+      },
+      "description": "Canva Apps SDK in-editor UI extension points (sidebar/modal + App UI Kit). Separate from Connect REST Api methods; see ADR-020 spec kind fenestra."
     }
   }
 }

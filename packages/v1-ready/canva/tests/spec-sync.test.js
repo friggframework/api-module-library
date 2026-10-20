@@ -46,4 +46,46 @@ describe('OpenAPI spec ↔ client sync', () => {
         expect(spec.components.securitySchemes.basicAuth.type).toBe('http');
         expect(spec.components.securitySchemes.basicAuth.scheme).toBe('basic');
     });
+
+    it('listFolderItems item_types is an array (official form/explode=false)', () => {
+        const param = spec.paths['/v1/folders/{folderId}/items'].get.parameters.find(
+            (p) => p.name === 'item_types'
+        );
+        expect(param.schema.type).toBe('array');
+        expect(param.explode).toBe(false);
+    });
+
+    it('Asset-Upload-Metadata schema requires only name_base64', () => {
+        const meta = spec.components.schemas.AssetUploadMetadata;
+        expect(meta.required).toEqual(['name_base64']);
+        expect(Object.keys(meta.properties)).toEqual(['name_base64']);
+    });
+});
+
+describe('Capability manifest ↔ fenestra (ADR-020)', () => {
+    const capabilities = JSON.parse(
+        fs.readFileSync(
+            path.join(__dirname, '..', 'canva.capabilities.json'),
+            'utf8'
+        )
+    );
+
+    it('declares ui.appsSdk with fenestra spec pointing at canva.fenestra.yaml', () => {
+        const ui = capabilities.capabilities['ui.appsSdk'];
+        expect(ui.spec).toEqual({
+            kind: 'fenestra',
+            ref: './canva.fenestra.yaml',
+        });
+        expect(
+            fs.existsSync(path.join(__dirname, '..', 'canva.fenestra.yaml'))
+        ).toBe(true);
+    });
+
+    it('every non-ui capability method exists on Api', () => {
+        const missing = Object.entries(capabilities.capabilities)
+            .filter(([, cap]) => cap.method)
+            .map(([, cap]) => cap.method)
+            .filter((method) => !clientMethods.includes(method));
+        expect(missing).toEqual([]);
+    });
 });

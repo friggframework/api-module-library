@@ -551,8 +551,9 @@ class Api extends OAuth2Requester {
      * Scope: asset:write
      *
      * @param {Buffer|string} binary - File bytes
-     * @param {object} metadata - JSON for Asset-Upload-Metadata header
-     *   (e.g. { name_base64, parent_folder_id })
+     * @param {object} metadata - JSON for Asset-Upload-Metadata header.
+     *   Official schema requires `name_base64` only
+     *   (https://www.canva.dev/sources/connect/api/latest/api.yml AssetUploadMetadata).
      */
     async createAssetUploadJob(binary, metadata) {
         const metaHeader =

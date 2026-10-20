@@ -74,9 +74,16 @@ Docs: https://www.canva.dev/docs/connect/webhooks/
 ## Sources
 
 - Connect docs: https://www.canva.dev/docs/connect/
-- Official OpenAPI: https://www.canva.dev/sources/connect/api/latest/api.yml
+- Official OpenAPI (vendor source of truth): https://www.canva.dev/sources/connect/api/latest/api.yml
 - Scopes: https://www.canva.dev/docs/connect/appendix/scopes/
 - Starter kit: https://github.com/canva-sdks/canva-connect-api-starter-kit
+
+`canva.openapi.yaml` is extracted from that official description for the
+operations this module implements. Paths, methods, parameters, request/response
+schemas, security/scopes, and `servers[0].url` match the vendor file. The only
+intentional deltas are camelCase aliases of `CreateAssetUploadJob` /
+`GetAssetUploadJob` → `createAssetUploadJob` / `getAssetUploadJob` for Api
+method parity (enforced by `tests/spec-sync.test.js`).
 
 ## Tests
 
@@ -88,17 +95,21 @@ npm test
 
 ## Capability manifest
 
-See `canva.capabilities.json` (`capability-manifest/v0.1`).
+See `canva.capabilities.json` (`capability-manifest/v0.1`). REST capabilities
+map 1:1 to `Api` methods. The Apps SDK UI surface is declared as capability
+`ui.appsSdk` with `spec: { kind: "fenestra", ref: "./canva.fenestra.yaml" }`
+per [ADR-020](https://github.com/friggframework/frigg/blob/next/docs/architecture-decisions/020-capabilities.md).
 
 ## Fenestra
 
 `canva.fenestra.yaml` describes Canva Apps SDK UI extension points (sidebar /
-modal + App UI Kit), listed in Fenestra `PLATFORMS.md`. Validate with:
+modal + App UI Kit), listed in Fenestra `PLATFORMS.md` on branch
+`claude/fenestra-spec-draft-Q367t`. Validate with:
 
 ```bash
 node specs/fenestra/tools/bin/fenestra.js validate packages/v1-ready/canva/canva.fenestra.yaml
 ```
 
 This API module implements **Canva Connect** REST (Outside Canva OAuth). The
-Apps SDK UI surface is documented in the Fenestra file for platform completeness;
-in-editor apps are a separate product from the Connect connector.
+Apps SDK UI surface is a separate product; it is referenced from the capability
+manifest (`ui.appsSdk`) rather than implemented as `Api` methods.

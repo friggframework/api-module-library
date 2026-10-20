@@ -53,6 +53,6 @@ declare module '@friggframework/core' {
             uiSchema?: any;
         };
         refreshEntityOptions?: (api: any, options: any) => Promise<void>;
-        env: Record<string, string | undefined>;
+        env: Record<string, unknown>;
     }
 }

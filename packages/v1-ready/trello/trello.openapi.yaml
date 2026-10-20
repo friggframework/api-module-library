@@ -1,0 +1,676 @@
+openapi: 3.0.3
+info:
+  title: Trello REST API (subset)
+  version: "1.0.0"
+  description: >-
+    Trello (Atlassian) project boards. This is Left Hook's curated subset of
+    the official Trello REST API (https://developer.atlassian.com/cloud/trello/rest/
+    and https://developer.atlassian.com/cloud/trello/swagger.v3.json) covering
+    exactly the endpoints implemented by @friggframework/api-module-trello.
+    One method per operationId — keep in sync with api.js.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.trello.com/1
+    description: Trello REST API v1
+security:
+  - ApiKeyAndToken: []
+tags:
+  - name: Members
+  - name: Boards
+  - name: Lists
+  - name: Cards
+  - name: Organizations
+  - name: Labels
+  - name: Webhooks
+paths:
+  /members/{id}:
+    get:
+      tags: [Members]
+      operationId: getMember
+      summary: Get a Member
+      description: >-
+        Pass `me` for the authenticated member. Official opId: get-members=id.
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+        - in: query
+          name: fields
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Member" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /members/{id}/boards:
+    get:
+      tags: [Boards]
+      operationId: listBoards
+      summary: List boards for a Member
+      description: "Official opId: get-members-id-boards."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+        - in: query
+          name: filter
+          schema: { type: string }
+        - in: query
+          name: fields
+          schema: { type: string }
+        - in: query
+          name: lists
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/BoardList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /boards/{id}:
+    get:
+      tags: [Boards]
+      operationId: getBoard
+      summary: Get a Board
+      description: "Official opId: get-boards-id."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+        - in: query
+          name: fields
+          schema: { type: string }
+        - in: query
+          name: lists
+          schema: { type: string }
+        - in: query
+          name: cards
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Board" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [Boards]
+      operationId: updateBoard
+      summary: Update a Board
+      description: "Official opId: put-boards-id."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: desc
+          schema: { type: string }
+        - in: query
+          name: closed
+          schema: { type: boolean }
+        - in: query
+          name: idOrganization
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Board" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /boards/:
+    post:
+      tags: [Boards]
+      operationId: createBoard
+      summary: Create a Board
+      description: "Official opId: post-boards."
+      parameters:
+        - in: query
+          name: name
+          required: true
+          schema: { type: string }
+        - in: query
+          name: desc
+          schema: { type: string }
+        - in: query
+          name: idOrganization
+          schema: { type: string }
+        - in: query
+          name: defaultLists
+          schema: { type: boolean }
+      responses:
+        "200": { $ref: "#/components/responses/Board" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /boards/{id}/lists:
+    get:
+      tags: [Lists]
+      operationId: listLists
+      summary: List lists on a Board
+      description: "Official opId: get-boards-id-lists."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+        - in: query
+          name: filter
+          schema: { type: string }
+        - in: query
+          name: fields
+          schema: { type: string }
+        - in: query
+          name: cards
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ListList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /boards/{id}/cards:
+    get:
+      tags: [Cards]
+      operationId: listCards
+      summary: List cards on a Board
+      description: "Official opId: get-boards-id-cards."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+      responses:
+        "200": { $ref: "#/components/responses/CardList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /boards/{id}/labels:
+    get:
+      tags: [Labels]
+      operationId: listLabels
+      summary: List labels on a Board
+      description: "Official opId: get-boards-id-labels."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+      responses:
+        "200": { $ref: "#/components/responses/LabelList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /lists:
+    post:
+      tags: [Lists]
+      operationId: createList
+      summary: Create a List
+      description: "Official opId: post-lists."
+      parameters:
+        - in: query
+          name: name
+          required: true
+          schema: { type: string }
+        - in: query
+          name: idBoard
+          required: true
+          schema: { type: string }
+        - in: query
+          name: pos
+          schema:
+            oneOf:
+              - { type: string, enum: [top, bottom] }
+              - { type: number }
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /lists/{id}:
+    get:
+      tags: [Lists]
+      operationId: getList
+      summary: Get a List
+      description: "Official opId: get-lists-id."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+        - in: query
+          name: fields
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [Lists]
+      operationId: updateList
+      summary: Update a List
+      description: "Official opId: put-lists-id."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: closed
+          schema: { type: boolean }
+        - in: query
+          name: idBoard
+          schema: { type: string }
+        - in: query
+          name: pos
+          schema:
+            oneOf:
+              - { type: string, enum: [top, bottom] }
+              - { type: number }
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /lists/{id}/cards:
+    get:
+      tags: [Cards]
+      operationId: listListCards
+      summary: List cards on a List
+      description: "Official opId: get-lists-id-cards."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+      responses:
+        "200": { $ref: "#/components/responses/CardList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /cards:
+    post:
+      tags: [Cards]
+      operationId: createCard
+      summary: Create a Card
+      description: "Official opId: post-cards."
+      parameters:
+        - in: query
+          name: idList
+          required: true
+          schema: { type: string }
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: desc
+          schema: { type: string }
+        - in: query
+          name: pos
+          schema:
+            oneOf:
+              - { type: string, enum: [top, bottom] }
+              - { type: number }
+        - in: query
+          name: due
+          schema: { type: string, format: date-time }
+        - in: query
+          name: idMembers
+          schema: { type: string }
+        - in: query
+          name: idLabels
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Card" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /cards/{id}:
+    get:
+      tags: [Cards]
+      operationId: getCard
+      summary: Get a Card
+      description: "Official opId: get-cards-id."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+        - in: query
+          name: fields
+          schema: { type: string }
+        - in: query
+          name: members
+          schema: { type: boolean }
+        - in: query
+          name: attachments
+          schema: { type: boolean }
+      responses:
+        "200": { $ref: "#/components/responses/Card" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [Cards]
+      operationId: updateCard
+      summary: Update a Card
+      description: "Official opId: put-cards-id."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: desc
+          schema: { type: string }
+        - in: query
+          name: closed
+          schema: { type: boolean }
+        - in: query
+          name: idList
+          schema: { type: string }
+        - in: query
+          name: idBoard
+          schema: { type: string }
+        - in: query
+          name: idMembers
+          schema: { type: string }
+        - in: query
+          name: idLabels
+          schema: { type: string }
+        - in: query
+          name: due
+          schema: { type: string, format: date-time }
+        - in: query
+          name: pos
+          schema:
+            oneOf:
+              - { type: string, enum: [top, bottom] }
+              - { type: number }
+      responses:
+        "200": { $ref: "#/components/responses/Card" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /members/{id}/organizations:
+    get:
+      tags: [Organizations]
+      operationId: listOrganizations
+      summary: List organizations for a Member
+      description: "Official opId: get-members-id-organizations."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+      responses:
+        "200": { $ref: "#/components/responses/OrganizationList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /organizations/{id}:
+    get:
+      tags: [Organizations]
+      operationId: getOrganization
+      summary: Get an Organization (Workspace)
+      description: "Official opId: get-organizations-id."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+      responses:
+        "200": { $ref: "#/components/responses/Organization" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /labels:
+    post:
+      tags: [Labels]
+      operationId: createLabel
+      summary: Create a Label
+      description: "Official opId: post-labels."
+      parameters:
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: color
+          schema: { type: string }
+        - in: query
+          name: idBoard
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Label" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /webhooks/:
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a Webhook
+      description: >-
+        Official opId: post-webhooks. Trello HEADs callbackURL and expects 200
+        before creating. See
+        https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [callbackURL, idModel]
+              properties:
+                description: "{ type: string }"
+                callbackURL: { type: string, format: uri }
+                idModel: { type: string }
+                active: { type: boolean }
+      responses:
+        "200": { $ref: "#/components/responses/Webhook" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /webhooks/{id}:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Get a Webhook
+      description: "Official opId: get-webhooks-id."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+      responses:
+        "200": { $ref: "#/components/responses/Webhook" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update a Webhook
+      description: "Official opId: put-webhooks-id."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description: "{ type: string }"
+                callbackURL: { type: string, format: uri }
+                idModel: { type: string }
+                active: { type: boolean }
+      responses:
+        "200": { $ref: "#/components/responses/Webhook" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a Webhook
+      description: "Official opId: delete-webhooks-id."
+      parameters:
+        - $ref: "#/components/parameters/idPath"
+      responses:
+        "200": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /tokens/{token}/webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listTokenWebhooks
+      summary: Get Webhooks for a Token
+      description: "Official opId: get-tokens-token-webhooks."
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/WebhookList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Webhooks]
+      operationId: createTokenWebhook
+      summary: Create Webhooks for a Token
+      description: "Official opId: post-tokens-token-webhooks."
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [callbackURL, idModel]
+              properties:
+                description: "{ type: string }"
+                callbackURL: { type: string, format: uri }
+                idModel: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Webhook" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+components:
+  securitySchemes:
+    ApiKeyAndToken:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >-
+        Trello accepts `Authorization: OAuth oauth_consumer_key="{apiKey}",
+        oauth_token="{token}"` or the equivalent `key` + `token` query params.
+        See https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/
+  parameters:
+    idPath:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+  schemas:
+    Member:
+      type: object
+      properties:
+        id: { type: string }
+        fullName: { type: string }
+        username: { type: string }
+        url: { type: string }
+        email: { type: string }
+        avatarUrl: { type: string }
+        initials: { type: string }
+    Board:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        desc: { type: string }
+        closed: { type: boolean }
+        idOrganization: { type: string }
+        url: { type: string }
+        shortUrl: { type: string }
+        shortLink: { type: string }
+        dateLastActivity: { type: string, format: date-time }
+    List:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        closed: { type: boolean }
+        idBoard: { type: string }
+        pos: { type: number }
+    Card:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        desc: { type: string }
+        closed: { type: boolean }
+        idBoard: { type: string }
+        idList: { type: string }
+        idMembers:
+          type: array
+          items: { type: string }
+        idLabels:
+          type: array
+          items: { type: string }
+        url: { type: string }
+        shortUrl: { type: string }
+        due: { type: string, format: date-time }
+        dueComplete: { type: boolean }
+        dateLastActivity: { type: string, format: date-time }
+        pos: { type: number }
+    Organization:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        displayName: { type: string }
+        desc: { type: string }
+        url: { type: string }
+        idBoards:
+          type: array
+          items: { type: string }
+    Label:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        color: { type: string }
+        idBoard: { type: string }
+    Webhook:
+      type: object
+      properties:
+        id: { type: string }
+        description: "{ type: string }"
+        idModel: { type: string }
+        callbackURL: { type: string }
+        active: { type: boolean }
+        consecutiveFailures: { type: integer }
+  responses:
+    Member:
+      description: Member object
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Member" }
+    Board:
+      description: Board object
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Board" }
+    BoardList:
+      description: Array of boards
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/Board" }
+    List:
+      description: List object
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/List" }
+    ListList:
+      description: Array of lists
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/List" }
+    Card:
+      description: Card object
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Card" }
+    CardList:
+      description: Array of cards
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/Card" }
+    Organization:
+      description: Organization object
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Organization" }
+    OrganizationList:
+      description: Array of organizations
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/Organization" }
+    Label:
+      description: Label object
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Label" }
+    LabelList:
+      description: Array of labels
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/Label" }
+    Webhook:
+      description: Webhook object
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Webhook" }
+    WebhookList:
+      description: Array of webhooks
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/Webhook" }
+    Unauthorized:
+      description: Invalid or missing credentials

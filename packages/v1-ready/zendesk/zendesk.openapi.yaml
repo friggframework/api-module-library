@@ -1,0 +1,741 @@
+openapi: 3.0.3
+info:
+  title: Zendesk Support API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Zendesk Support (Ticketing) REST API. Official reference:
+    https://developer.zendesk.com/api-reference/ticketing/introduction/.
+    Official OpenAPI download: https://developer.zendesk.com/zendesk/oas.yaml
+    (server template `https://{subdomain}.{domain}.com`, paths under `/api/v2`).
+    This file is Left Hook's curated subset covering exactly the endpoints
+    `@friggframework/api-module-zendesk` implements in api.js — one method per
+    operationId. Auth is OAuth2 Bearer (authorization-code + refresh). Webhook
+    management is documented separately at
+    https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/
+    but shares the same `/api/v2` host.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://{subdomain}.zendesk.com/api/v2
+    description: Per-account Zendesk Support API host
+    variables:
+      subdomain:
+        default: your-subdomain
+        description: Zendesk subdomain (acme from acme.zendesk.com)
+security:
+  - OAuth2: []
+tags:
+  - name: Users
+  - name: Tickets
+  - name: Organizations
+  - name: Webhooks
+paths:
+  /users/me:
+    get:
+      tags: [Users]
+      operationId: getCurrentUser
+      summary: Show the currently authenticated user
+      description: >-
+        Official operationId: ShowCurrentUser.
+        https://developer.zendesk.com/api-reference/ticketing/users/users/#show-the-currently-authenticated-user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+
+  /tickets:
+    get:
+      tags: [Tickets]
+      operationId: listTickets
+      summary: List tickets
+      description: >-
+        Official operationId: ListTickets.
+        https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#list-tickets
+      parameters:
+        - in: query
+          name: external_id
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+        - in: query
+          name: sort_by
+          schema: { type: string }
+        - in: query
+          name: sort_order
+          schema: { type: string, enum: [asc, desc] }
+      responses:
+        "200":
+          description: Ticket list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Ticket"
+    post:
+      tags: [Tickets]
+      operationId: createTicket
+      summary: Create a ticket
+      description: "Official operationId: CreateTicket."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ticket]
+              properties:
+                ticket:
+                  $ref: "#/components/schemas/TicketWrite"
+      responses:
+        "201":
+          description: Created ticket
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+
+  /tickets/{ticket_id}:
+    parameters:
+      - $ref: "#/components/parameters/TicketId"
+    get:
+      tags: [Tickets]
+      operationId: getTicket
+      summary: Show a ticket
+      description: "Official operationId: ShowTicket."
+      responses:
+        "200":
+          description: Ticket
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+    put:
+      tags: [Tickets]
+      operationId: updateTicket
+      summary: Update a ticket
+      description: "Official operationId: UpdateTicket."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ticket]
+              properties:
+                ticket:
+                  $ref: "#/components/schemas/TicketWrite"
+      responses:
+        "200":
+          description: Updated ticket
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+    delete:
+      tags: [Tickets]
+      operationId: deleteTicket
+      summary: Delete a ticket
+      description: "Official operationId: DeleteTicket."
+      responses:
+        "204":
+          description: Deleted
+
+  /tickets/{ticket_id}/comments:
+    parameters:
+      - $ref: "#/components/parameters/TicketId"
+    get:
+      tags: [Tickets]
+      operationId: listTicketComments
+      summary: List ticket comments
+      description: "Official operationId: ListTicketComments."
+      parameters:
+        - in: query
+          name: page
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Comment list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TicketComment"
+
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List users
+      description: "Official operationId: ListUsers."
+      parameters:
+        - in: query
+          name: role
+          schema: { type: string }
+        - in: query
+          name: external_id
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+      responses:
+        "200":
+          description: User list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+    post:
+      tags: [Users]
+      operationId: createUser
+      summary: Create a user
+      description: "Official operationId: CreateUser."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  $ref: "#/components/schemas/UserWrite"
+      responses:
+        "201":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+
+  /users/{user_id}:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Show a user
+      description: "Official operationId: ShowUser."
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+    put:
+      tags: [Users]
+      operationId: updateUser
+      summary: Update a user
+      description: "Official operationId: UpdateUser."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  $ref: "#/components/schemas/UserWrite"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+    delete:
+      tags: [Users]
+      operationId: deleteUser
+      summary: Delete a user
+      description: "Official operationId: DeleteUser."
+      responses:
+        "204":
+          description: Deleted
+
+  /organizations:
+    get:
+      tags: [Organizations]
+      operationId: listOrganizations
+      summary: List organizations
+      description: "Official operationId: ListOrganizations."
+      parameters:
+        - in: query
+          name: page
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Organization list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organizations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Organization"
+    post:
+      tags: [Organizations]
+      operationId: createOrganization
+      summary: Create an organization
+      description: "Official operationId: CreateOrganization."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [organization]
+              properties:
+                organization:
+                  $ref: "#/components/schemas/OrganizationWrite"
+      responses:
+        "201":
+          description: Created organization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization:
+                    $ref: "#/components/schemas/Organization"
+
+  /organizations/{organization_id}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Organizations]
+      operationId: getOrganization
+      summary: Show an organization
+      description: "Official operationId: ShowOrganization."
+      responses:
+        "200":
+          description: Organization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization:
+                    $ref: "#/components/schemas/Organization"
+    put:
+      tags: [Organizations]
+      operationId: updateOrganization
+      summary: Update an organization
+      description: "Official operationId: UpdateOrganization."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [organization]
+              properties:
+                organization:
+                  $ref: "#/components/schemas/OrganizationWrite"
+      responses:
+        "200":
+          description: Updated organization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization:
+                    $ref: "#/components/schemas/Organization"
+    delete:
+      tags: [Organizations]
+      operationId: deleteOrganization
+      summary: Delete an organization
+      description: "Official operationId: DeleteOrganization."
+      responses:
+        "204":
+          description: Deleted
+
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List webhooks
+      description: >-
+        https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/#list-webhooks
+      parameters:
+        - in: query
+          name: filter[name_contains]
+          schema: { type: string }
+        - in: query
+          name: filter[status]
+          schema: { type: string }
+        - in: query
+          name: page[size]
+          schema: { type: integer }
+        - in: query
+          name: page[after]
+          schema: { type: string }
+        - in: query
+          name: page[before]
+          schema: { type: string }
+        - in: query
+          name: sort
+          schema: { type: string }
+      responses:
+        "200":
+          description: Webhook list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Webhook"
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create or clone a webhook
+      description: >-
+        https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/#create-or-clone-webhook
+      parameters:
+        - in: query
+          name: clone_webhook_id
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhook]
+              properties:
+                webhook:
+                  $ref: "#/components/schemas/WebhookWrite"
+      responses:
+        "201":
+          description: Created webhook
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhook:
+                    $ref: "#/components/schemas/Webhook"
+
+  /webhooks/{webhook_id}:
+    parameters:
+      - $ref: "#/components/parameters/WebhookId"
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Show a webhook
+      responses:
+        "200":
+          description: Webhook
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhook:
+                    $ref: "#/components/schemas/Webhook"
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update a webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhook]
+              properties:
+                webhook:
+                  $ref: "#/components/schemas/WebhookWrite"
+      responses:
+        "200":
+          description: Updated webhook
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhook:
+                    $ref: "#/components/schemas/Webhook"
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook
+      responses:
+        "204":
+          description: Deleted
+
+  /webhooks/{webhook_id}/signing_secret:
+    parameters:
+      - $ref: "#/components/parameters/WebhookId"
+    get:
+      tags: [Webhooks]
+      operationId: getWebhookSigningSecret
+      summary: Show webhook signing secret
+      description: >-
+        https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/#show-webhook-signing-secret
+        Used with X-Zendesk-Webhook-Signature verification:
+        https://developer.zendesk.com/documentation/webhooks/verifying/
+      responses:
+        "200":
+          description: Signing secret
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  signing_secret:
+                    type: object
+                    properties:
+                      algorithm:
+                        type: string
+                        example: SHA256
+                      secret:
+                        type: string
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Authorization-code grant. Authorize at
+        `https://{subdomain}.zendesk.com/oauth/authorizations/new`,
+        token at `https://{subdomain}.zendesk.com/oauth/tokens`.
+        Use `Authorization: Bearer {access_token}` on API requests.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://{subdomain}.zendesk.com/oauth/authorizations/new
+          tokenUrl: https://{subdomain}.zendesk.com/oauth/tokens
+          scopes:
+            tickets:read: View tickets, comments, tags, forms, fields, audits, metrics
+            tickets:write: Create, edit, and delete tickets (includes comments)
+            users:read: View users and related memberships
+            users:write: Create, edit, and delete users
+            organizations:read: View organizations
+            organizations:write: Create, edit, and delete organizations
+            webhooks:read: View webhooks and activity history
+            webhooks:write: Create, edit, test, and delete webhooks
+            read: Broad read access to all resources
+            write: Broad write access to all resources
+  parameters:
+    TicketId:
+      name: ticket_id
+      in: path
+      required: true
+      schema: { type: integer }
+    UserId:
+      name: user_id
+      in: path
+      required: true
+      schema: { type: integer }
+    OrganizationId:
+      name: organization_id
+      in: path
+      required: true
+      schema: { type: integer }
+    WebhookId:
+      name: webhook_id
+      in: path
+      required: true
+      schema: { type: string }
+  schemas:
+    Ticket:
+      type: object
+      properties:
+        id: { type: integer, readOnly: true }
+        subject: { type: string }
+        description: "{ type: string, readOnly: true }"
+        status:
+          type: string
+          enum: [new, open, pending, hold, solved, closed]
+        priority:
+          type: string
+          enum: [urgent, high, normal, low]
+        type:
+          type: string
+          enum: [problem, incident, question, task]
+        requester_id: { type: integer }
+        submitter_id: { type: integer }
+        assignee_id: { type: integer }
+        organization_id: { type: integer }
+        tags:
+          type: array
+          items: { type: string }
+        external_id: { type: string }
+        created_at: { type: string, format: date-time, readOnly: true }
+        updated_at: { type: string, format: date-time, readOnly: true }
+    TicketWrite:
+      type: object
+      properties:
+        subject: { type: string }
+        comment:
+          type: object
+          properties:
+            body: { type: string }
+            public: { type: boolean }
+        status: { type: string }
+        priority: { type: string }
+        type: { type: string }
+        requester_id: { type: integer }
+        assignee_id: { type: integer }
+        organization_id: { type: integer }
+        tags:
+          type: array
+          items: { type: string }
+        external_id: { type: string }
+    TicketComment:
+      type: object
+      properties:
+        id: { type: integer, readOnly: true }
+        type: { type: string }
+        body: { type: string }
+        public: { type: boolean }
+        author_id: { type: integer }
+        created_at: { type: string, format: date-time, readOnly: true }
+    User:
+      type: object
+      properties:
+        id: { type: integer, readOnly: true }
+        name: { type: string }
+        email: { type: string, format: email }
+        role:
+          type: string
+          enum: [end-user, agent, admin]
+        organization_id: { type: integer }
+        external_id: { type: string }
+        phone: { type: string }
+        active: { type: boolean, readOnly: true }
+        created_at: { type: string, format: date-time, readOnly: true }
+        updated_at: { type: string, format: date-time, readOnly: true }
+    UserWrite:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string }
+        organization_id: { type: integer }
+        external_id: { type: string }
+        phone: { type: string }
+    Organization:
+      type: object
+      properties:
+        id: { type: integer, readOnly: true }
+        name: { type: string }
+        external_id: { type: string }
+        domain_names:
+          type: array
+          items: { type: string }
+        details: { type: string }
+        notes: { type: string }
+        created_at: { type: string, format: date-time, readOnly: true }
+        updated_at: { type: string, format: date-time, readOnly: true }
+    OrganizationWrite:
+      type: object
+      properties:
+        name: { type: string }
+        external_id: { type: string }
+        domain_names:
+          type: array
+          items: { type: string }
+        details: { type: string }
+        notes: { type: string }
+    Webhook:
+      type: object
+      properties:
+        id: { type: string, readOnly: true }
+        name: { type: string }
+        status:
+          type: string
+          enum: [active, inactive]
+        endpoint: { type: string, format: uri }
+        http_method:
+          type: string
+          enum: [GET, POST, PUT, PATCH, DELETE]
+        request_format:
+          type: string
+          enum: [json, xml, form_encoded]
+        subscriptions:
+          type: array
+          items: { type: string }
+        created_at: { type: string, format: date-time, readOnly: true }
+        updated_at: { type: string, format: date-time, readOnly: true }
+    WebhookWrite:
+      type: object
+      required: [name, endpoint, http_method, request_format, status, subscriptions]
+      properties:
+        name: { type: string }
+        status:
+          type: string
+          enum: [active, inactive]
+        endpoint: { type: string, format: uri }
+        http_method:
+          type: string
+          enum: [GET, POST, PUT, PATCH, DELETE]
+        request_format:
+          type: string
+          enum: [json, xml, form_encoded]
+        subscriptions:
+          type: array
+          items: { type: string }
+        authentication:
+          type: object
+        custom_headers:
+          type: object
+          additionalProperties: { type: string }

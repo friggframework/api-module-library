@@ -1,0 +1,137 @@
+# Fenestra Document: Zendesk Apps Framework (Support locations)
+#
+# Zendesk Support apps run in sandboxed iframes and talk to the host via
+# ZAFClient. Garden Design System (React) is recommended but not required.
+#
+# Sources (official only):
+# - https://developer.zendesk.com/documentation/apps/
+# - https://developer.zendesk.com/api-reference/apps/apps-core-api/client_api/
+# - https://developer.zendesk.com/documentation/apps/app-developer-guide/setup/
+# - Marketplace: https://www.zendesk.com/marketplace/
+#
+# Draft per specs/fenestra on branch claude/fenestra-spec-draft-Q367t.
+# PLATFORMS.md lists Zendesk under Customer Support as "Iframe + Coded"
+# (ZAFClient). A fuller ecosystem example lives at
+# specs/fenestra/examples/0.1.0/zendesk.fenestra.yaml on that branch; this
+# file is the Left Hook module-scoped draft covering Support UI locations
+# an integration commonly targets.
+
+fenestra: "0.1.0"
+
+info:
+  title: Zendesk Support Apps UI Ecosystem
+  version: "1.0.0"
+  description: |
+    Zendesk Apps Framework (ZAF) lets third-party apps extend Zendesk Support
+    (and other Zendesk products) with iframe apps. Apps declare locations in
+    manifest.json and load HTML/JS that initializes ZAFClient for host
+    communication (get/set/invoke/on/request).
+
+    This draft covers the Support agent workspace locations most relevant to
+    a connected-app integration (ticket sidebar, user sidebar, top bar,
+    nav bar, modal, ticket editor). Chat, Sell, and Sunshine locations are
+    out of scope here.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+
+platform:
+  name: Zendesk
+  vendor: Zendesk, Inc.
+  documentation: https://developer.zendesk.com/documentation/apps/
+  appMarketplace: https://www.zendesk.com/marketplace/
+  developerPortal: https://developer.zendesk.com/
+
+sdks:
+  zaf-sdk:
+    name: Zendesk Apps Framework SDK
+    packageManager: npm
+    package: "zendesk_app_framework_sdk"
+    version: "^2.0.0"
+    repository: https://github.com/zendesk/zendesk_app_framework_sdk
+    documentation: https://developer.zendesk.com/api-reference/apps/apps-core-api/client_api/
+    cdn: https://static.zdassets.com/zendesk_app_framework_sdk/2.0/zaf_sdk.min.js
+    description: >
+      ZAFClient for cross-frame messaging between the iframe app and the
+      host Zendesk product.
+    exports:
+      ZAFClient:
+        type: utility
+        description: Main client; call ZAFClient.init() on load.
+      init:
+        type: utility
+        description: Establishes the host connection; fires app.registered.
+      get:
+        type: utility
+        description: Reads host properties (ticket, user, context).
+      set:
+        type: utility
+        description: Writes host properties where allowed.
+      invoke:
+        type: utility
+        description: Invokes host actions (resize, notify, modal).
+      on:
+        type: utility
+        description: Subscribes to host events.
+      request:
+        type: utility
+        description: Authenticated HTTP via the host.
+      metadata:
+        type: utility
+        description: App metadata and installation settings.
+      context:
+        type: context
+        description: Current location, instanceGuid, account.
+
+extensionPoints:
+  - id: ticket_sidebar
+    name: Ticket sidebar
+    type: sidebar
+    extensionType: iframe
+    description: >
+      Right-hand sidebar on a ticket. Declared as location
+      `support.ticket.sidebar` in the app manifest.
+    supportedComponents: []
+  - id: user_sidebar
+    name: User sidebar
+    type: sidebar
+    extensionType: iframe
+    description: >
+      Sidebar on a user profile. Location `support.user.sidebar`.
+    supportedComponents: []
+  - id: top_bar
+    name: Top bar
+    type: toolbar
+    extensionType: iframe
+    description: >
+      Icon in the agent top bar. Location `support.top_bar`.
+    supportedComponents: []
+  - id: nav_bar
+    name: Nav bar
+    type: panel
+    extensionType: iframe
+    description: >
+      Left navigation icon / pane. Location `support.nav_bar`.
+    supportedComponents: []
+  - id: modal
+    name: Modal
+    type: modal
+    extensionType: iframe
+    description: >
+      Modal dialog opened via client.invoke('instances.create').
+    supportedComponents: []
+  - id: ticket_editor
+    name: Ticket editor
+    type: composer
+    extensionType: iframe
+    description: >
+      App icon in the ticket composer toolbar.
+      Location `support.ticket.editor`.
+    supportedComponents: []
+
+components: []
+
+notes:
+  - Garden Design System (`@zendeskgarden/react-*`) is recommended by Zendesk for UI consistency but is not required by ZAF.
+  - Apps are packaged as a zip with manifest.json; marketplace listing may require Zendesk partner / app review (open question for this integration).
+  - OAuth for API access from a Support app is separate from ZAF iframe messaging; this API module uses the Support REST OAuth flow.

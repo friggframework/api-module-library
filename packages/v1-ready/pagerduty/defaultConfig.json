@@ -1,0 +1,19 @@
+{
+    "name": "pagerduty",
+    "label": "PagerDuty",
+    "productUrl": "https://www.pagerduty.com",
+    "apiDocs": "https://developer.pagerduty.com/docs/rest-api-overview",
+    "categories": ["Incident Management", "On-Call", "Alerting"],
+    "description": "PagerDuty",
+    "config": {
+        "oauth": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        },
+        "tokenHost": "https://identity.pagerduty.com",
+        "tokenPath": "/oauth/token",
+        "authorizeHost": "https://identity.pagerduty.com",
+        "authorizePath": "/oauth/authorize"
+    }
+}

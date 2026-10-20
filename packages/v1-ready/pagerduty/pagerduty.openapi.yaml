@@ -1,0 +1,429 @@
+openapi: 3.0.2
+info:
+  title: PagerDuty REST API (subset)
+  version: "2.0.0"
+  description: >-
+    Curated subset of PagerDuty's official REST OpenAPI
+    (https://github.com/PagerDuty/api-schema/blob/main/reference/REST/openapiv3.json)
+    covering identity (users/me), users, incidents, services, and V3 webhook
+    subscriptions. operationIds match the official spec 1:1 so they align with
+    the hand-written Api methods. Paths, methods, parameters, and documented
+    Scoped OAuth scopes are taken from the official spec — nothing invented.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.pagerduty.com
+    description: PagerDuty V2 API.
+security:
+  - oauth2: []
+tags:
+  - name: Users
+  - name: Incidents
+  - name: Services
+  - name: Webhooks
+paths:
+  /users/me:
+    get:
+      tags: [Users]
+      operationId: getCurrentUser
+      summary: Get the current user
+      description: >-
+        Get the current user. Scoped OAuth requires: `users.read`.
+      responses:
+        "200":
+          description: Success
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List users
+      description: >-
+        List users of your PagerDuty account. Scoped OAuth requires: `users.read`.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+        - in: query
+          name: total
+          schema: { type: boolean }
+        - in: query
+          name: query
+          schema: { type: string }
+          description: Filters the result, matching name or email partial strings.
+      responses:
+        "200":
+          description: Success
+    post:
+      tags: [Users]
+      operationId: createUser
+      summary: Create a user
+      description: >-
+        Create a new user. Requires the `From` header. Scoped OAuth requires:
+        `users.write`.
+      parameters:
+        - in: header
+          name: From
+          required: true
+          schema: { type: string, format: email }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created
+  /users/{id}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Get a user
+      description: "Get details about an existing user. Scoped OAuth requires: `users.read`."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [Users]
+      operationId: updateUser
+      summary: Update a user
+      description: "Update an existing user. Scoped OAuth requires: `users.write`."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+  /incidents:
+    get:
+      tags: [Incidents]
+      operationId: listIncidents
+      summary: List incidents
+      description: >-
+        List existing incidents. Scoped OAuth requires: `incidents.read`.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+        - in: query
+          name: total
+          schema: { type: boolean }
+        - in: query
+          name: date_range
+          schema: { type: string }
+        - in: query
+          name: incident_key
+          schema: { type: string }
+        - in: query
+          name: statuses
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - in: query
+          name: service_ids
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - in: query
+          name: team_ids
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - in: query
+          name: user_ids
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - in: query
+          name: urgencies
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - in: query
+          name: sort_by
+          schema: { type: string }
+        - in: query
+          name: include
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Success
+    post:
+      tags: [Incidents]
+      operationId: createIncident
+      summary: Create an Incident
+      description: >-
+        Create an Incident. Requires the `From` header. Scoped OAuth requires:
+        `incidents.write`.
+      parameters:
+        - in: header
+          name: From
+          required: true
+          schema: { type: string, format: email }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created
+  /incidents/{id}:
+    get:
+      tags: [Incidents]
+      operationId: getIncident
+      summary: Get an incident
+      description: "Show detailed information about an incident. Scoped OAuth requires: `incidents.read`."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [Incidents]
+      operationId: updateIncident
+      summary: Update an incident
+      description: >-
+        Acknowledge, resolve, escalate or reassign an incident. Scoped OAuth
+        requires: `incidents.write`.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: header
+          name: From
+          required: false
+          schema: { type: string, format: email }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+  /services:
+    get:
+      tags: [Services]
+      operationId: listServices
+      summary: List services
+      description: "List existing services. Scoped OAuth requires: `services.read`."
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+        - in: query
+          name: total
+          schema: { type: boolean }
+        - in: query
+          name: query
+          schema: { type: string }
+        - in: query
+          name: team_ids
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - in: query
+          name: include
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Success
+    post:
+      tags: [Services]
+      operationId: createService
+      summary: Create a service
+      description: "Create a new service. Scoped OAuth requires: `services.write`."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created
+  /services/{id}:
+    get:
+      tags: [Services]
+      operationId: getService
+      summary: Get a service
+      description: "Get details about an existing service. Scoped OAuth requires: `services.read`."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [Services]
+      operationId: updateService
+      summary: Update a service
+      description: "Update an existing service. Scoped OAuth requires: `services.write`."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+  /webhook_subscriptions:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookSubscriptions
+      summary: List webhook subscriptions
+      description: >-
+        List webhook subscriptions. Scoped OAuth requires:
+        `webhook_subscriptions.read`.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+        - in: query
+          name: total
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Success
+    post:
+      tags: [Webhooks]
+      operationId: createWebhookSubscription
+      summary: Create a webhook subscription
+      description: >-
+        Create a V3 webhook subscription. The delivery_method.secret is returned
+        once and is used to verify X-PagerDuty-Signature. Scoped OAuth requires:
+        `webhook_subscriptions.write`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+  /webhook_subscriptions/{id}:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhookSubscription
+      summary: Get a webhook subscription
+      description: >-
+        Get a webhook subscription. Scoped OAuth requires:
+        `webhook_subscriptions.read`.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhookSubscription
+      summary: Update a webhook subscription
+      description: >-
+        Update a webhook subscription. Scoped OAuth requires:
+        `webhook_subscriptions.write`.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhookSubscription
+      summary: Delete a webhook subscription
+      description: >-
+        Delete a webhook subscription. Scoped OAuth requires:
+        `webhook_subscriptions.write`.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      description: >-
+        PagerDuty OAuth 2.0 (Classic User OAuth or Scoped OAuth). Access tokens
+        are sent as `Authorization: Bearer <token>`. REST requests also require
+        `Accept: application/vnd.pagerduty+json;version=2`.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://identity.pagerduty.com/oauth/authorize
+          tokenUrl: https://identity.pagerduty.com/oauth/token
+          scopes:
+            read: Classic User OAuth — read-only access for the authorizing user
+            write: Classic User OAuth — read/write access for the authorizing user
+      x-additional-headers:
+        - name: Accept
+          schema:
+            type: string
+            default: application/vnd.pagerduty+json;version=2

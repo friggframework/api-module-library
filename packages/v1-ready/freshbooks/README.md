@@ -79,9 +79,12 @@ as the HMAC secret ([docs](https://www.freshbooks.com/api/webhooks)).
 
 - Official docs: https://www.freshbooks.com/api/
 - Prior module in this repo: `packages/needs-updating/freshbooks` (git-moved here)
-- Left Hook also maintains a FreshBooks API module under
+- Reconciled against Daniel’s module in
   `lefthookhq/freshbooks-integrations` `backend/src/api-modules/freshbooks/`
-  (reference only; not modified by this PR)
+  (auth JSON token body, single-use grant no-retry, `getUserDetails` /
+  `freshbooksUserId`, `findClientsByEmail`, client invoice/payment helpers,
+  `getCallback`, `webUrls`, `invoiceStatusName`, multi-business account
+  selection). Integration-specific logic was not copied.
 
 ## Test
 

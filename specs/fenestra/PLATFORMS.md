@@ -24,6 +24,7 @@ Popular platforms with well-documented extension ecosystems.
 | VS Code | Dev Tools | Coded Components | [Link](https://code.visualstudio.com/api) | ⏳ Pending |
 | Zendesk | Support | Iframe + Coded | [Link](https://developer.zendesk.com) | ⏳ Pending |
 | Microsoft Teams | Collaboration | JSON (Adaptive Cards) | [Link](https://docs.microsoft.com/en-us/microsoftteams/platform/) | ⏳ Pending |
+| Outlook Add-ins | Productivity | Iframe + Office.js | [Link](https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/outlook-add-ins-overview) | ✅ Example exists |
 | DocuSign | Document & Agreement | Embedded SDK + Extensions + Agent UI | [Link](https://developers.docusign.com) | ⏳ Pending |
 
 ### Tier 2: Medium Priority
@@ -69,6 +70,7 @@ Smaller or more specialized platforms.
 |----------|----------------|----------|-------------|-----|
 | Slack | JSON (Block Kit) | [Link](https://docs.slack.dev/block-kit/) | [App Directory](https://api.slack.com/apps) | @slack/bolt |
 | Microsoft Teams | JSON (Adaptive Cards) | [Link](https://docs.microsoft.com/microsoftteams/platform/) | [App Store](https://appsource.microsoft.com) | @microsoft/adaptivecards |
+| Outlook Add-ins | Iframe + Office.js (manifest ExtensionPoints) | [Link](https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/outlook-add-ins-overview) | [AppSource](https://appsource.microsoft.com/marketplace/apps?product=office%3Boutlook) | @microsoft/office-js |
 | Notion | Iframe + Database | [Link](https://developers.notion.com) | [Integrations](https://www.notion.so/integrations) | @notionhq/client |
 | Coda | Coded (Packs) | [Link](https://coda.io/developers) | [Packs](https://coda.io/packs) | Coda SDK |
 | Airtable | Coded + JSON | [Link](https://airtable.com/developers) | [Marketplace](https://airtable.com/marketplace) | Airtable.js |
@@ -190,6 +192,7 @@ Smaller or more specialized platforms.
 
 | Platform | Extension Type | Dev Docs | Marketplace | SDK |
 |----------|----------------|----------|-------------|-----|
+| Outlook Add-ins | Iframe + Office.js | [Link](https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/outlook-add-ins-overview) | [AppSource](https://appsource.microsoft.com/marketplace/apps?product=office%3Boutlook) | @microsoft/office-js |
 | Calendly | Embedded Widget | [Link](https://developer.calendly.com) | [Integrations](https://calendly.com/integrations) | Calendly API |
 | Cal.com | Embedded + Open Source | [Link](https://cal.com/docs) | [Marketplace](https://cal.com/marketplace) | Cal.com API |
 

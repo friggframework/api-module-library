@@ -1,0 +1,629 @@
+openapi: 3.0.3
+info:
+  title: Confluence Cloud REST API v2 (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Confluence Cloud is Atlassian's wiki / knowledge-base product. This file is
+    Left Hook's curated subset of the official Confluence Cloud REST API v2
+    OpenAPI (https://dac-static.atlassian.com/cloud/confluence/openapi-v2.v3.json),
+    covering exactly the endpoints the @friggframework/api-module-confluence
+    client in api.js implements under the OAuth gateway. It is the source of
+    truth the hand-written client mirrors 1:1 (one method per operationId).
+
+    Official docs: https://developer.atlassian.com/cloud/confluence/rest/v2/intro/
+    OAuth 2.0 (3LO): https://developer.atlassian.com/cloud/confluence/oauth-2-3lo-apps/
+
+    Identity helpers `listAccessibleResources` and `getCurrentUser` call
+    Atlassian platform URLs (not under /wiki/api/v2) and are intentionally
+    omitted from this Confluence v2 path list.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.atlassian.com/ex/confluence/{cloudId}/wiki/api/v2
+    description: Confluence Cloud REST API v2 via Atlassian OAuth gateway
+    variables:
+      cloudId:
+        default: CLOUD_ID
+        description: >-
+          Site cloud id from GET https://api.atlassian.com/oauth/token/accessible-resources
+security:
+  - OAuth2: []
+tags:
+  - name: Spaces
+  - name: Pages
+  - name: Blog posts
+paths:
+  /spaces:
+    get:
+      tags: [Spaces]
+      operationId: getSpaces
+      summary: Get spaces
+      description: >-
+        Returns all spaces the user can view. Paginate with `cursor` / `limit`.
+        Official scope: `read:space:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-space/#api-spaces-get
+      parameters:
+        - in: query
+          name: ids
+          schema: { type: array, items: { type: integer, format: int64 } }
+          style: form
+          explode: true
+        - in: query
+          name: keys
+          schema: { type: array, items: { type: string } }
+          style: form
+          explode: true
+        - in: query
+          name: type
+          schema: { type: string, enum: [global, personal] }
+        - in: query
+          name: status
+          schema: { type: string, enum: [current, archived] }
+        - in: query
+          name: labels
+          schema: { type: array, items: { type: string } }
+          style: form
+          explode: true
+        - in: query
+          name: favorited-by
+          schema: { type: string }
+        - in: query
+          name: not-favorited-by
+          schema: { type: string }
+        - in: query
+          name: sort
+          schema: { type: string }
+        - in: query
+          name: description-format
+          schema: { type: string }
+        - in: query
+          name: include-icon
+          schema: { type: boolean }
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 250 }
+      responses:
+        "200":
+          description: Multi-entity result of spaces
+    post:
+      tags: [Spaces]
+      operationId: createSpace
+      summary: Create space
+      description: >-
+        Creates a space. Official scope: `write:space:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-space/#api-spaces-post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, key]
+              properties:
+                name: { type: string }
+                key: { type: string }
+                alias: { type: string }
+                description:
+                  type: object
+                  properties:
+                    plain:
+                      type: object
+                      properties:
+                        value: { type: string }
+                        representation: { type: string, enum: [plain] }
+                roleAssignments:
+                  type: array
+                  items: { type: object }
+      responses:
+        "201":
+          description: Created space
+  /spaces/{id}:
+    get:
+      tags: [Spaces]
+      operationId: getSpaceById
+      summary: Get space by id
+      description: >-
+        Official scope: `read:space:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-space/#api-spaces-id-get
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: description-format
+          schema: { type: string }
+        - in: query
+          name: include-icon
+          schema: { type: boolean }
+        - in: query
+          name: include-operations
+          schema: { type: boolean }
+        - in: query
+          name: include-properties
+          schema: { type: boolean }
+        - in: query
+          name: include-permissions
+          schema: { type: boolean }
+        - in: query
+          name: include-role-assignments
+          schema: { type: boolean }
+        - in: query
+          name: include-labels
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Space
+  /spaces/{id}/pages:
+    get:
+      tags: [Pages]
+      operationId: getPagesInSpace
+      summary: Get pages in space
+      description: >-
+        Official scope: `read:page:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-page/#api-spaces-id-pages-get
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: depth
+          schema: { type: string }
+        - in: query
+          name: sort
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: array, items: { type: string } }
+          style: form
+          explode: true
+        - in: query
+          name: title
+          schema: { type: string }
+        - in: query
+          name: body-format
+          schema: { type: string }
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 250 }
+      responses:
+        "200":
+          description: Multi-entity result of pages
+  /spaces/{id}/blogposts:
+    get:
+      tags: [Blog posts]
+      operationId: getBlogPostsInSpace
+      summary: Get blog posts in space
+      description: >-
+        Official scope: `read:page:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-blog-post/#api-spaces-id-blogposts-get
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: sort
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: array, items: { type: string } }
+          style: form
+          explode: true
+        - in: query
+          name: title
+          schema: { type: string }
+        - in: query
+          name: body-format
+          schema: { type: string }
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 250 }
+      responses:
+        "200":
+          description: Multi-entity result of blog posts
+  /pages:
+    get:
+      tags: [Pages]
+      operationId: getPages
+      summary: Get pages
+      description: >-
+        Official scope: `read:page:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-page/#api-pages-get
+      parameters:
+        - in: query
+          name: id
+          schema: { type: array, items: { type: integer, format: int64 } }
+          style: form
+          explode: true
+        - in: query
+          name: space-id
+          schema: { type: array, items: { type: integer, format: int64 } }
+          style: form
+          explode: true
+        - in: query
+          name: sort
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: array, items: { type: string } }
+          style: form
+          explode: true
+        - in: query
+          name: title
+          schema: { type: string }
+        - in: query
+          name: body-format
+          schema: { type: string }
+        - in: query
+          name: subtype
+          schema: { type: string }
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 250 }
+      responses:
+        "200":
+          description: Multi-entity result of pages
+    post:
+      tags: [Pages]
+      operationId: createPage
+      summary: Create page
+      description: >-
+        Official scope: `write:page:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-page/#api-pages-post
+      parameters:
+        - in: query
+          name: embedded
+          schema: { type: boolean }
+        - in: query
+          name: private
+          schema: { type: boolean }
+        - in: query
+          name: root-level
+          schema: { type: boolean }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [spaceId]
+              properties:
+                spaceId: { type: string }
+                status: { type: string, enum: [current, draft] }
+                title: { type: string }
+                parentId: { type: string }
+                body:
+                  type: object
+                  properties:
+                    representation:
+                      type: string
+                      enum: [storage, atlas_doc_format, wiki]
+                    value: { type: string }
+      responses:
+        "200":
+          description: Created page
+  /pages/{id}:
+    get:
+      tags: [Pages]
+      operationId: getPageById
+      summary: Get page by id
+      description: >-
+        Official scope: `read:page:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-page/#api-pages-id-get
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: body-format
+          schema: { type: string }
+        - in: query
+          name: get-draft
+          schema: { type: boolean }
+        - in: query
+          name: status
+          schema: { type: array, items: { type: string } }
+          style: form
+          explode: true
+        - in: query
+          name: version
+          schema: { type: integer }
+        - in: query
+          name: include-labels
+          schema: { type: boolean }
+        - in: query
+          name: include-properties
+          schema: { type: boolean }
+        - in: query
+          name: include-operations
+          schema: { type: boolean }
+        - in: query
+          name: include-likes
+          schema: { type: boolean }
+        - in: query
+          name: include-versions
+          schema: { type: boolean }
+        - in: query
+          name: include-version
+          schema: { type: boolean }
+        - in: query
+          name: include-favorited-by-current-user-status
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Page
+    put:
+      tags: [Pages]
+      operationId: updatePage
+      summary: Update page
+      description: >-
+        Official scope: `write:page:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-page/#api-pages-id-put
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, status, title, body, version]
+              properties:
+                id: { type: string }
+                status: { type: string }
+                title: { type: string }
+                spaceId: { type: string }
+                parentId: { type: string }
+                body:
+                  type: object
+                  properties:
+                    representation: { type: string }
+                    value: { type: string }
+                version:
+                  type: object
+                  properties:
+                    number: { type: integer }
+                    message: { type: string }
+      responses:
+        "200":
+          description: Updated page
+    delete:
+      tags: [Pages]
+      operationId: deletePage
+      summary: Delete page
+      description: >-
+        Official scope: `delete:page:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-page/#api-pages-id-delete
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: purge
+          schema: { type: boolean }
+        - in: query
+          name: draft
+          schema: { type: boolean }
+      responses:
+        "204":
+          description: Deleted
+  /blogposts:
+    get:
+      tags: [Blog posts]
+      operationId: getBlogPosts
+      summary: Get blog posts
+      description: >-
+        Official scope: `read:page:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-blog-post/#api-blogposts-get
+      parameters:
+        - in: query
+          name: id
+          schema: { type: array, items: { type: integer, format: int64 } }
+          style: form
+          explode: true
+        - in: query
+          name: space-id
+          schema: { type: array, items: { type: integer, format: int64 } }
+          style: form
+          explode: true
+        - in: query
+          name: sort
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: array, items: { type: string } }
+          style: form
+          explode: true
+        - in: query
+          name: title
+          schema: { type: string }
+        - in: query
+          name: body-format
+          schema: { type: string }
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 250 }
+      responses:
+        "200":
+          description: Multi-entity result of blog posts
+    post:
+      tags: [Blog posts]
+      operationId: createBlogPost
+      summary: Create blog post
+      description: >-
+        Official scope: `write:page:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-blog-post/#api-blogposts-post
+      parameters:
+        - in: query
+          name: private
+          schema: { type: boolean }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [spaceId]
+              properties:
+                spaceId: { type: string }
+                status: { type: string, enum: [current, draft] }
+                title: { type: string }
+                body:
+                  type: object
+                  properties:
+                    representation: { type: string }
+                    value: { type: string }
+      responses:
+        "200":
+          description: Created blog post
+  /blogposts/{id}:
+    get:
+      tags: [Blog posts]
+      operationId: getBlogPostById
+      summary: Get blog post by id
+      description: >-
+        Official scope: `read:page:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-blog-post/#api-blogposts-id-get
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: body-format
+          schema: { type: string }
+        - in: query
+          name: get-draft
+          schema: { type: boolean }
+        - in: query
+          name: status
+          schema: { type: array, items: { type: string } }
+          style: form
+          explode: true
+        - in: query
+          name: version
+          schema: { type: integer }
+        - in: query
+          name: include-labels
+          schema: { type: boolean }
+        - in: query
+          name: include-properties
+          schema: { type: boolean }
+        - in: query
+          name: include-operations
+          schema: { type: boolean }
+        - in: query
+          name: include-likes
+          schema: { type: boolean }
+        - in: query
+          name: include-versions
+          schema: { type: boolean }
+        - in: query
+          name: include-version
+          schema: { type: boolean }
+        - in: query
+          name: include-favorited-by-current-user-status
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Blog post
+    put:
+      tags: [Blog posts]
+      operationId: updateBlogPost
+      summary: Update blog post
+      description: >-
+        Official scope: `write:page:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-blog-post/#api-blogposts-id-put
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, status, title, body, version]
+              properties:
+                id: { type: string }
+                status: { type: string }
+                title: { type: string }
+                spaceId: { type: string }
+                body:
+                  type: object
+                  properties:
+                    representation: { type: string }
+                    value: { type: string }
+                version:
+                  type: object
+                  properties:
+                    number: { type: integer }
+                    message: { type: string }
+      responses:
+        "200":
+          description: Updated blog post
+    delete:
+      tags: [Blog posts]
+      operationId: deleteBlogPost
+      summary: Delete blog post
+      description: >-
+        Official scope: `delete:page:confluence`.
+        https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-blog-post/#api-blogposts-id-delete
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: purge
+          schema: { type: boolean }
+        - in: query
+          name: draft
+          schema: { type: boolean }
+      responses:
+        "204":
+          description: Deleted
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Atlassian OAuth 2.0 (3LO) authorization-code grant.
+        https://developer.atlassian.com/cloud/confluence/oauth-2-3lo-apps/
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.atlassian.com/authorize
+          tokenUrl: https://auth.atlassian.com/oauth/token
+          scopes:
+            read:me: Read the authenticated Atlassian account profile
+            offline_access: Request a refresh token
+            read:space:confluence: View spaces and their properties
+            write:space:confluence: Create and update spaces and their properties
+            read:page:confluence: View pages and blog posts and their properties
+            write:page:confluence: Create and update pages and blog posts
+            delete:page:confluence: Delete pages and blog posts

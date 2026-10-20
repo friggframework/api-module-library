@@ -1,0 +1,550 @@
+openapi: 3.0.3
+info:
+  title: FreshBooks Public API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    FreshBooks is cloud accounting / invoicing software. FreshBooks publishes
+    HTML API docs and a Postman collection at https://www.freshbooks.com/api/
+    but does not publish an official OpenAPI document. This file is Left Hook's
+    hand-written subset covering exactly the endpoints implemented by
+    @friggframework/api-module-freshbooks (one method per operationId).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: FreshBooks API documentation
+    url: https://www.freshbooks.com/api/start
+servers:
+  - url: https://api.freshbooks.com
+    description: FreshBooks production API
+security:
+  - OAuth2: []
+tags:
+  - name: Identity
+  - name: Clients
+  - name: Invoices
+  - name: Expenses
+  - name: Payments
+  - name: Staff
+  - name: OtherIncome
+  - name: Webhooks
+paths:
+  /auth/api/v1/users/me:
+    get:
+      tags: [Identity]
+      operationId: getUserInfo
+      summary: Get identity info for the authorized user
+      description: >-
+        Returns the identity plus business_memberships (account_id / business id).
+        Scope: user:profile:read. Official docs send Api-Version: alpha.
+      responses:
+        "200":
+          description: "Identity payload wrapped in a top-level response object"
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /accounting/account/{accountId}/users/clients:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+    get:
+      tags: [Clients]
+      operationId: listClients
+      summary: List clients
+      description: "Scope user:clients:read. Page size silently capped at 100."
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/perPage"
+      responses:
+        "200":
+          description: Paginated clients list
+    post:
+      tags: [Clients]
+      operationId: createClient
+      summary: Create a client
+      description: "Scope user:clients:write. Body wraps fields in { client: {...} }."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [client]
+              properties:
+                client:
+                  type: object
+      responses:
+        "200":
+          description: Created client
+
+  /accounting/account/{accountId}/users/clients/{clientId}:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+      - $ref: "#/components/parameters/clientId"
+    get:
+      tags: [Clients]
+      operationId: getClient
+      summary: Get a single client
+      responses:
+        "200":
+          description: Client object
+    put:
+      tags: [Clients]
+      operationId: updateClient
+      summary: Update a client (also used to soft-delete via vis_state=1)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [client]
+              properties:
+                client:
+                  type: object
+      responses:
+        "200":
+          description: Updated client
+
+  /accounting/account/{accountId}/invoices/invoices:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+    get:
+      tags: [Invoices]
+      operationId: listInvoices
+      summary: List invoices
+      description: "Scope user:invoices:read"
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/perPage"
+      responses:
+        "200":
+          description: Paginated invoices list
+    post:
+      tags: [Invoices]
+      operationId: createInvoice
+      summary: Create an invoice
+      description: "Scope user:invoices:write. Body wraps fields in { invoice: {...} }."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invoice]
+              properties:
+                invoice:
+                  type: object
+      responses:
+        "200":
+          description: Created invoice
+
+  /accounting/account/{accountId}/invoices/invoices/{invoiceId}:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+      - $ref: "#/components/parameters/invoiceId"
+    get:
+      tags: [Invoices]
+      operationId: getInvoice
+      summary: Get a single invoice
+      responses:
+        "200":
+          description: Invoice object
+    put:
+      tags: [Invoices]
+      operationId: updateInvoice
+      summary: Update an invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invoice]
+              properties:
+                invoice:
+                  type: object
+      responses:
+        "200":
+          description: Updated invoice
+    delete:
+      tags: [Invoices]
+      operationId: deleteInvoice
+      summary: Delete an invoice
+      responses:
+        "200":
+          description: Deleted
+
+  /accounting/account/{accountId}/expenses/expenses:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+    get:
+      tags: [Expenses]
+      operationId: listExpenses
+      summary: List expenses
+      description: "Scope user:expenses:read"
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/perPage"
+      responses:
+        "200":
+          description: Paginated expenses list
+    post:
+      tags: [Expenses]
+      operationId: createExpense
+      summary: Create an expense
+      description: >-
+        Scope user:expenses:write. Required on create (per docs): amount,
+        categoryid, staffid, date.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [expense]
+              properties:
+                expense:
+                  type: object
+      responses:
+        "200":
+          description: Created expense
+
+  /accounting/account/{accountId}/expenses/expenses/{expenseId}:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+      - $ref: "#/components/parameters/expenseId"
+    get:
+      tags: [Expenses]
+      operationId: getExpense
+      summary: Get a single expense
+      responses:
+        "200":
+          description: Expense object
+    put:
+      tags: [Expenses]
+      operationId: updateExpense
+      summary: Update an expense (soft-delete via vis_state=1)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [expense]
+              properties:
+                expense:
+                  type: object
+      responses:
+        "200":
+          description: Updated expense
+
+  /accounting/account/{accountId}/expenses/categories:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+    get:
+      tags: [Expenses]
+      operationId: listExpenseCategories
+      summary: List expense categories
+      description: >-
+        Scope user:expenses:read. Create/update/delete of categories is not
+        supported by the public API.
+      responses:
+        "200":
+          description: Paginated categories list
+
+  /accounting/account/{accountId}/expenses/categories/{categoryId}:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+      - name: categoryId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Expenses]
+      operationId: getExpenseCategory
+      summary: Get a single expense category
+      responses:
+        "200":
+          description: Category object
+
+  /accounting/account/{accountId}/payments/payments:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+    get:
+      tags: [Payments]
+      operationId: listPayments
+      summary: List payments
+      description: "Scope user:payments:read"
+      responses:
+        "200":
+          description: Paginated payments list
+    post:
+      tags: [Payments]
+      operationId: createPayment
+      summary: Create a payment
+      description: "Scope user:payments:write"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payment]
+              properties:
+                payment:
+                  type: object
+      responses:
+        "200":
+          description: Created payment
+
+  /accounting/account/{accountId}/payments/payments/{paymentId}:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+      - name: paymentId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Payments]
+      operationId: getPayment
+      summary: Get a single payment
+      responses:
+        "200":
+          description: Payment object
+    put:
+      tags: [Payments]
+      operationId: updatePayment
+      summary: Update a payment (soft-delete via vis_state=1)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payment]
+              properties:
+                payment:
+                  type: object
+      responses:
+        "200":
+          description: Updated payment
+
+  /accounting/account/{accountId}/users/staffs:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+    get:
+      tags: [Staff]
+      operationId: listStaff
+      summary: List staff members
+      description: "Scope user:teams:read (staff resource)"
+      responses:
+        "200":
+          description: Paginated staff list
+
+  /accounting/account/{accountId}/users/staffs/{staffId}:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+      - name: staffId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Staff]
+      operationId: getStaff
+      summary: Get a single staff member
+      responses:
+        "200":
+          description: Staff object
+
+  /accounting/account/{accountId}/other_incomes/other_incomes:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+    get:
+      tags: [OtherIncome]
+      operationId: listOtherIncomes
+      summary: List other income entries
+      description: "Scope user:other_income:read"
+      responses:
+        "200":
+          description: Paginated other_income list
+    post:
+      tags: [OtherIncome]
+      operationId: createOtherIncome
+      summary: Create an other-income entry
+      description: "Scope user:other_income:write. Body wraps { other_income: {...} }."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [other_income]
+              properties:
+                other_income:
+                  type: object
+      responses:
+        "200":
+          description: Created other_income
+
+  /accounting/account/{accountId}/other_incomes/other_incomes/{incomeId}:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+      - name: incomeId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [OtherIncome]
+      operationId: getOtherIncome
+      summary: Get a single other-income entry
+      responses:
+        "200":
+          description: other_income object
+    put:
+      tags: [OtherIncome]
+      operationId: updateOtherIncome
+      summary: Update an other-income entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [other_income]
+              properties:
+                other_income:
+                  type: object
+      responses:
+        "200":
+          description: Updated other_income
+
+  /events/account/{accountId}/events/callbacks:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+    get:
+      tags: [Webhooks]
+      operationId: listCallbacks
+      summary: List webhook callbacks
+      responses:
+        "200":
+          description: Paginated callbacks list
+    post:
+      tags: [Webhooks]
+      operationId: createCallback
+      summary: Register a webhook callback
+      description: >-
+        FreshBooks POSTs a verifier to the registered URI. Call verifyCallback
+        with that verifier before deliveries begin.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [callback]
+              properties:
+                callback:
+                  type: object
+                  required: [event, uri]
+                  properties:
+                    event: { type: string }
+                    uri: { type: string, format: uri }
+      responses:
+        "200":
+          description: Created callback (verified=false until verified)
+
+  /events/account/{accountId}/events/callbacks/{callbackId}:
+    parameters:
+      - $ref: "#/components/parameters/accountId"
+      - name: callbackId
+        in: path
+        required: true
+        schema: { type: integer }
+    put:
+      tags: [Webhooks]
+      operationId: verifyCallback
+      summary: Verify a webhook callback (or resend verifier)
+      description: >-
+        Send { callback: { verifier } } to verify, or { callback: { resend: true } }
+        to resend the verification code. The client also exposes
+        resendCallbackVerification as a convenience wrapper of this same PUT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [callback]
+              properties:
+                callback:
+                  type: object
+      responses:
+        "200":
+          description: Callback after verify/resend
+    delete:
+      tags: [Webhooks]
+      operationId: deleteCallback
+      summary: Delete a webhook callback
+      responses:
+        "200":
+          description: Deleted
+
+components:
+  parameters:
+    accountId:
+      name: accountId
+      in: path
+      required: true
+      description: FreshBooks account_id from business_memberships on /users/me
+      schema: { type: string }
+    clientId:
+      name: clientId
+      in: path
+      required: true
+      schema: { type: integer }
+    invoiceId:
+      name: invoiceId
+      in: path
+      required: true
+      schema: { type: integer }
+    expenseId:
+      name: expenseId
+      in: path
+      required: true
+      schema: { type: integer }
+    page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1 }
+    perPage:
+      name: per_page
+      in: query
+      description: Silently capped at 100 by FreshBooks
+      schema: { type: integer, maximum: 100 }
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Authorization-code flow. Authorize at
+        https://auth.freshbooks.com/oauth/authorize/; exchange at
+        https://api.freshbooks.com/auth/oauth/token. Refresh tokens rotate
+        (one-time use).
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.freshbooks.com/oauth/authorize/
+          tokenUrl: https://api.freshbooks.com/auth/oauth/token
+          scopes:
+            user:profile:read: Read identity /me
+            user:clients:read: List/get clients
+            user:clients:write: Create/update clients
+            user:invoices:read: List/get invoices
+            user:invoices:write: Create/update/delete invoices
+            user:expenses:read: List/get expenses and categories
+            user:expenses:write: Create/update expenses
+            user:payments:read: List/get payments
+            user:payments:write: Create/update payments
+            user:other_income:read: List/get other income
+            user:other_income:write: Create/update other income
+            user:teams:read: List/get staff

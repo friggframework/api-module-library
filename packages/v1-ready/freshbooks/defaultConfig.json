@@ -1,0 +1,12 @@
+{
+    "name": "freshbooks",
+    "label": "FreshBooks",
+    "productUrl": "https://www.freshbooks.com",
+    "apiDocs": "https://www.freshbooks.com/api/start",
+    "logoUrl": "https://friggframework.org/assets/img/freshbooks-icon.png",
+    "categories": [
+        "Finance",
+        "Accounting"
+    ],
+    "description": "FreshBooks is cloud-based invoice and accounting software for small and midsize businesses."
+}

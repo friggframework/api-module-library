@@ -1,0 +1,435 @@
+openapi: 3.0.3
+info:
+  title: Namely API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Namely is a mid-market HCM / HRIS platform. This file is Left Hook's curated
+    subset of the official Namely REST API v1 Swagger 2.0 contract published on
+    the Namely developer portal (https://developers.namely.com/), covering exactly
+    the endpoints the @friggframework/api-module-namely client in api.js implements.
+    operationIds are camelCase aliases of the official GET_/POST_/PUT_ ids so they
+    match Api methods 1:1 (spec-sync enforced). Paths, methods, and parameters are
+    taken from the official contract — nothing invented.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://{company}.namely.com/api/v1
+    description: >-
+      Tenant-scoped Namely REST API. Replace {company} with the customer subdomain
+      (e.g. acme → https://acme.namely.com/api/v1).
+    variables:
+      company:
+        default: "{company}"
+        description: Namely company subdomain / permalink
+security:
+  - BearerAuth: []
+tags:
+  - name: Company
+  - name: Profiles
+  - name: Profile Fields
+  - name: Groups & Teams
+  - name: Job Titles
+  - name: Job Tiers
+  - name: Events
+paths:
+  /companies/info:
+    get:
+      tags: [Company]
+      operationId: getCompanyInfo
+      summary: Company Info
+      description: >-
+        Official operationId GET_companies-info. Returns company name, permalink,
+        logos, and authentication methods. Auth is not required by Namely for this
+        endpoint (public home-page data).
+      security: []
+      responses:
+        "200":
+          description: Successful Response
+
+  /profiles/me:
+    get:
+      tags: [Profiles]
+      operationId: getCurrentProfile
+      summary: Get Current User's Profile
+      description: Official operationId GET_profiles-me.
+      responses:
+        "200":
+          description: Successful Response
+
+  /profiles:
+    get:
+      tags: [Profiles]
+      operationId: listProfiles
+      summary: Get all Profiles
+      description: >-
+        Official operationId GET_profiles. Paginate with page/per_page (default 30,
+        max 50). Pagination is required to avoid timeouts.
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer, maximum: 50, default: 30 }
+        - in: query
+          name: profile_format
+          schema: { type: string }
+          description: Only `short` is supported.
+        - in: query
+          name: sort
+          schema: { type: string }
+          description: first_name, last_name, created_at, updated_at; prepend - to reverse.
+        - in: query
+          name: filter[first_name]
+          schema: { type: string }
+        - in: query
+          name: filter[last_name]
+          schema: { type: string }
+        - in: query
+          name: filter[email]
+          schema: { type: string }
+        - in: query
+          name: filter[personal_email]
+          schema: { type: string }
+        - in: query
+          name: filter[job_title]
+          schema: { type: string }
+        - in: query
+          name: filter[reports_to]
+          schema: { type: string }
+        - in: query
+          name: filter[user_status]
+          schema:
+            type: string
+            enum: [active, pending, inactive]
+      responses:
+        "200":
+          description: Successful Response
+    post:
+      tags: [Profiles]
+      operationId: createProfile
+      summary: Create a Profile
+      description: >-
+        Official operationId POST_profiles. Body wraps profiles[] with first_name,
+        last_name, user_status, start_date, email; personal_email required when
+        user_status is pending (Onboarding draft).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profiles]
+              properties:
+                profiles:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      [first_name, last_name, user_status, start_date, email]
+                    properties:
+                      first_name: { type: string }
+                      last_name: { type: string }
+                      user_status:
+                        type: string
+                        enum: [active, inactive, pending]
+                      start_date:
+                        type: string
+                        description: YYYY-MM-DD
+                      email: { type: string }
+                      personal_email: { type: string }
+      responses:
+        "200":
+          description: Successful Response
+        "201":
+          description: Created
+
+  /profiles/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Profiles]
+      operationId: getProfile
+      summary: Get a Profile
+      description: Official operationId GET_profiles-id.
+      responses:
+        "200":
+          description: Successful Response
+    put:
+      tags: [Profiles]
+      operationId: updateProfile
+      summary: Update a Profile
+      description: >-
+        Official operationId PUT_profiles-id. PUT (not PATCH); omitted fields are
+        preserved.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profiles]
+              properties:
+                profiles:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      email: { type: string }
+                      first_name: { type: string }
+                      last_name: { type: string }
+                      user_status:
+                        type: string
+                        enum: [active, pending]
+                      start_date: { type: string }
+                      personal_email: { type: string }
+                      reports_to: { type: string }
+                      job_title: { type: string }
+      responses:
+        "200":
+          description: Successful Response
+
+  /profiles/fields:
+    get:
+      tags: [Profile Fields]
+      operationId: listProfileFields
+      summary: Get all Profile Fields
+      description: Official operationId GET_profiles-fields.
+      responses:
+        "200":
+          description: Successful Response
+
+  /groups:
+    get:
+      tags: [Groups & Teams]
+      operationId: listGroups
+      summary: Get all Groups
+      description: Official operationId GET_groups. Office Locations and Departments are groups.
+      responses:
+        "200":
+          description: Successful Response
+
+  /groups/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Groups & Teams]
+      operationId: getGroup
+      summary: Get a Group
+      description: Official operationId GET_groups-id.
+      responses:
+        "200":
+          description: Successful Response
+
+  /group_types:
+    get:
+      tags: [Groups & Teams]
+      operationId: listGroupTypes
+      summary: Get all Group Types
+      description: Official operationId GET_group_types.
+      responses:
+        "200":
+          description: Successful Response
+
+  /group_types/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Groups & Teams]
+      operationId: getGroupType
+      summary: Get a Group Type
+      description: Official operationId GET_group_types-id.
+      responses:
+        "200":
+          description: Successful Response
+
+  /teams:
+    get:
+      tags: [Groups & Teams]
+      operationId: listTeams
+      summary: Get all Teams
+      description: Official operationId GET_teams.
+      responses:
+        "200":
+          description: Successful Response
+
+  /teams/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Groups & Teams]
+      operationId: getTeam
+      summary: Get a Team
+      description: Official operationId GET_teams-id.
+      responses:
+        "200":
+          description: Successful Response
+
+  /job_titles:
+    get:
+      tags: [Job Titles]
+      operationId: listJobTitles
+      summary: Get all Job Titles
+      description: Official operationId GET_job_titles.
+      responses:
+        "200":
+          description: Successful Response
+    post:
+      tags: [Job Titles]
+      operationId: createJobTitle
+      summary: Create a Job Title
+      description: >-
+        Official operationId POST_job_titles. `parent` is the id of a job tier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [job_titles]
+              properties:
+                job_titles:
+                  type: array
+                  items:
+                    type: object
+                    required: [title, parent]
+                    properties:
+                      title: { type: string }
+                      parent:
+                        type: string
+                        description: Job tier id
+      responses:
+        "201":
+          description: Created
+
+  /job_titles/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Job Titles]
+      operationId: getJobTitle
+      summary: Get a Job Title
+      description: Official operationId GET_job_titles-id.
+      responses:
+        "200":
+          description: Successful Response
+    put:
+      tags: [Job Titles]
+      operationId: updateJobTitle
+      summary: Update a Job Title
+      description: Official operationId PUT_job_titles-id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                job_titles:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      title: { type: string }
+                      parent: { type: string }
+      responses:
+        "200":
+          description: Successful Response
+
+  /job_tiers:
+    get:
+      tags: [Job Tiers]
+      operationId: listJobTiers
+      summary: Get all Job Tiers
+      description: Official operationId GET_job_tiers.
+      responses:
+        "200":
+          description: Successful Response
+
+  /job_tiers/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Job Tiers]
+      operationId: getJobTier
+      summary: Get a Job Tier
+      description: Official operationId GET_job_tiers-id.
+      responses:
+        "200":
+          description: Successful Response
+
+  /events:
+    get:
+      tags: [Events]
+      operationId: listEvents
+      summary: Get all Events
+      description: >-
+        Official operationId GET_events. Home-feed events (birthday, announcement,
+        recent_arrival, anniversary). Namely has no webhook subscription API —
+        poll this endpoint instead.
+      parameters:
+        - in: query
+          name: after
+          schema: { type: string }
+          description: id of the first record BEFORE the events you want.
+        - in: query
+          name: filter[type]
+          schema: { type: string }
+          description: birthday | announcement | recent_arrival | anniversary
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 30 }
+        - in: query
+          name: order
+          schema: { type: string, enum: [asc, desc] }
+        - in: query
+          name: profile_id
+          schema: { type: string }
+      responses:
+        "200":
+          description: Successful Response
+
+  /events/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Events]
+      operationId: getEvent
+      summary: Get an Event
+      description: Official operationId GET_events-id.
+      responses:
+        "200":
+          description: Successful Response
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        Personal Access Token or OAuth 2.0 access token. Sent as
+        `Authorization: Bearer <token>`. Official Swagger declares an apiKey
+        securityDefinition named Authorization; the docs require the Bearer
+        prefix.

@@ -76,7 +76,10 @@ const Definition = {
     env: {
         client_id: process.env.INTERCOM_CLIENT_ID,
         client_secret: process.env.INTERCOM_CLIENT_SECRET,
-        redirect_uri: `${process.env.REDIRECT_URI}/intercom`,
+        // Omit when unset so schema validation does not see the string "undefined/intercom".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/intercom`
+            : undefined,
         base_url: process.env.INTERCOM_BASE_URL,
     },
 };

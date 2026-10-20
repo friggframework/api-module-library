@@ -1,0 +1,381 @@
+openapi: 3.0.3
+info:
+  title: HiBob (Bob) Public API (subset)
+  version: "1.0.0"
+  description: >-
+    HiBob / Bob is an HRIS platform. This is Left Hook's curated subset of Bob's
+    public REST API covering the endpoints implemented by
+    @friggframework/api-module-hibob. Authored from Bob's published reference at
+    https://apidocs.hibob.com/ (People, Metadata, Time off). One operationId per
+    client method in api.js — keep them in sync.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  license:
+    name: Proprietary (HiBob API Terms)
+    url: https://apidocs.hibob.com/docs/api-terms-of-use
+servers:
+  - url: https://api.hibob.com/v1
+    description: Production
+  - url: https://api.sandbox.hibob.com/v1
+    description: Sandbox (accounts that have purchased Sandbox)
+security:
+  - BasicAuth: []
+tags:
+  - name: People
+  - name: Metadata
+  - name: TimeOff
+paths:
+  /people/search:
+    post:
+      tags: [People]
+      operationId: searchPeople
+      summary: Search / bulk-read employees
+      description: >-
+        Returns employee field data for many employees in one call. No
+        pagination — each successful call returns all matching employees.
+        Filters support only root.id and root.email with operator equals.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fields:
+                  type: array
+                  items: { type: string }
+                  description: Field IDs in dot notation (e.g. root.id). Max 400.
+                filters:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      fieldPath: { type: string }
+                      operator: { type: string, enum: [equals] }
+                      values:
+                        type: array
+                        items: { type: string }
+                showInactive: { type: boolean, default: false }
+                humanReadable: { type: string }
+      responses:
+        "200":
+          description: Employees matching the query
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  employees:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        email: { type: string }
+                        firstName: { type: string }
+                        surname: { type: string }
+                        displayName: { type: string }
+                        companyId: { type: number }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /people:
+    post:
+      tags: [People]
+      operationId: createPerson
+      summary: Create company employee
+      description: >-
+        Required fields: email, firstName, surname, and work.site +
+        work.startDate.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, firstName, surname, work]
+              properties:
+                email: { type: string, format: email }
+                firstName: { type: string }
+                surname: { type: string }
+                work:
+                  type: object
+                  required: [site, startDate]
+                  properties:
+                    site: { type: string }
+                    startDate: { type: string, format: date }
+                    department: { type: string }
+                    title: { type: string }
+      responses:
+        "200": { description: Employee created }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /people/{identifier}:
+    post:
+      tags: [People]
+      operationId: getPerson
+      summary: Read company employee fields by employee ID or email
+      parameters:
+        - in: path
+          name: identifier
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fields:
+                  type: array
+                  items: { type: string }
+                humanReadable: { type: string }
+      responses:
+        "200": { description: Employee fields }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [People]
+      operationId: updatePerson
+      summary: Update company employee (PUT behaves like PATCH)
+      parameters:
+        - in: path
+          name: identifier
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200": { description: Employee updated }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /profiles:
+    get:
+      tags: [People]
+      operationId: listProfiles
+      summary: Read the public profile section of all active employees
+      responses:
+        "200": { description: Public profiles }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /company/people/fields:
+    get:
+      tags: [Metadata]
+      operationId: listEmployeeFields
+      summary: Get all employee field metadata
+      description: >-
+        Retrieves metadata about employee fields. Does not require field
+        permissions on the service user.
+      responses:
+        "200": { description: Field metadata }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /company/named-lists:
+    get:
+      tags: [Metadata]
+      operationId: listNamedLists
+      summary: Get all company named lists
+      parameters:
+        - in: query
+          name: includeArchived
+          schema: { type: boolean }
+      responses:
+        "200": { description: Named lists }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /company/named-lists/{listName}:
+    get:
+      tags: [Metadata]
+      operationId: getNamedList
+      summary: Get a specific company named list by name
+      parameters:
+        - in: path
+          name: listName
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includeArchived
+          schema: { type: boolean }
+      responses:
+        "200": { description: Named list }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /timeoff/requests/changes:
+    get:
+      tags: [TimeOff]
+      operationId: listTimeOffChanges
+      summary: Get time off request changes
+      parameters:
+        - in: query
+          name: since
+          required: true
+          schema: { type: string }
+        - in: query
+          name: to
+          schema: { type: string }
+        - in: query
+          name: includePending
+          schema: { type: boolean }
+      responses:
+        "200": { description: Time off changes }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /timeoff/employees/{id}/requests/{requestId}:
+    get:
+      tags: [TimeOff]
+      operationId: getTimeOffRequest
+      summary: Get details of an existing time off request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: path
+          name: requestId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includeDailyDurations
+          schema: { type: boolean }
+      responses:
+        "200": { description: Time off request }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [TimeOff]
+      operationId: cancelTimeOffRequest
+      summary: Cancel an existing time off request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: path
+          name: requestId
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Request cancelled }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /timeoff/employees/{id}/requests:
+    post:
+      tags: [TimeOff]
+      operationId: createTimeOffRequest
+      summary: Submit a new time off request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              description: >-
+                One of the request-type shapes (days, hours, portionOnRange,
+                etc.) documented in Bob's OpenAPI.
+      responses:
+        "200": { description: Request submitted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /timeoff/whosout:
+    get:
+      tags: [TimeOff]
+      operationId: listWhosOut
+      summary: Read who's out of the office for a date range
+      parameters:
+        - in: query
+          name: from
+          schema: { type: string }
+        - in: query
+          name: to
+          schema: { type: string }
+        - in: query
+          name: includeHourly
+          schema: { type: boolean }
+        - in: query
+          name: includePrivate
+          schema: { type: boolean }
+        - in: query
+          name: includePending
+          schema: { type: boolean }
+        - in: query
+          name: includeWorkingRequests
+          schema: { type: boolean }
+      responses:
+        "200": { description: Who's out }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /timeoff/outtoday:
+    get:
+      tags: [TimeOff]
+      operationId: listOutToday
+      summary: Read who's out today or on a specified date
+      parameters:
+        - in: query
+          name: today
+          schema: { type: string }
+        - in: query
+          name: includeHourly
+          schema: { type: boolean }
+        - in: query
+          name: includePrivate
+          schema: { type: boolean }
+        - in: query
+          name: siteId
+          schema: { type: string }
+      responses:
+        "200": { description: Out today }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /timeoff/employees/{id}/balance:
+    get:
+      tags: [TimeOff]
+      operationId: getTimeOffBalance
+      summary: Get the balance for a given employee
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: policyType
+          required: true
+          schema: { type: string }
+        - in: query
+          name: date
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Balance }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /timeoff/policy-types:
+    get:
+      tags: [TimeOff]
+      operationId: listPolicyTypes
+      summary: Get all policy type names
+      responses:
+        "200": { description: Policy type names }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: >-
+        Service user credentials. Authorization: Basic
+        Base64(serviceUserId:token). Marketplace partners use OAuth 2.0 Bearer
+        instead (not covered by this module).
+  responses:
+    Unauthorized:
+      description: Missing or invalid service user credentials

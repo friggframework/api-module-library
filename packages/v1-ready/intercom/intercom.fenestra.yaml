@@ -1,0 +1,159 @@
+# Fenestra Document: Intercom Canvas Kit
+#
+# Intercom Canvas Kit apps render JSON component trees (and optional iframes)
+# inside Messenger (end users) and Inbox (teammates). Host communication is
+# request/response over Initialize / Submit / Configure webhooks.
+#
+# Draft against fenestra 0.1.0 (api-module-library branch
+# claude/fenestra-spec-draft-Q367t). Intercom is listed as Tier-2
+# "JSON + Iframe" in specs/fenestra/PLATFORMS.md.
+#
+# Docs: https://developers.intercom.com/docs/canvas-kit
+
+fenestra: "0.1.0"
+
+info:
+  title: Intercom Canvas Kit UI Ecosystem
+  version: "1.0.0"
+  description: |
+    Canvas Kit lets developers extend Intercom Messenger and Inbox with
+    interactive canvases described as JSON component trees. The host POSTs
+    Initialize / Submit (/ Configure) payloads to the app's HTTPS endpoints;
+    the app responds with a `canvas` object of components (text, input,
+    button, list, spacer, image, iframe, …).
+
+    Key characteristic: UI is primarily declarative JSON (Canvas Kit
+    components / `jsonResponse`). Optional iframe components can embed custom
+    web UIs. The web Messenger snippet commonly uses
+    `@intercom/messenger-js-sdk`; Canvas Kit canvases themselves are driven by
+    webhook request/response flows, not that client SDK.
+  contact:
+    name: Intercom Developer Platform
+    url: https://developers.intercom.com/
+
+platform:
+  name: Intercom
+  vendor: Intercom, Inc.
+  documentation: https://developers.intercom.com/docs/canvas-kit
+  appMarketplace: https://www.intercom.com/app-store
+  developerPortal: https://developers.intercom.com/
+  changelog: https://developers.intercom.com/docs/build-an-integration/learn-more/rest-apis/update-your-api-version
+
+sdks:
+  messenger-js:
+    name: Intercom Messenger JS SDK
+    packageManager: npm
+    package: "@intercom/messenger-js-sdk"
+    version: "^0.0.14"
+    documentation: https://developers.intercom.com/installing-intercom/docs/basic-javascript
+    description: |
+      Optional web Messenger install helper for product sites. Not used to
+      render Canvas Kit canvases inside Inbox/Messenger app slots — those
+      are driven by Canvas Kit webhook request/response flows.
+    exports:
+      Intercom:
+        type: utility
+        description: Boot / update / shutdown the Intercom Messenger widget.
+
+policies:
+  customComponents:
+    allowed: true
+    documentation: https://developers.intercom.com/docs/references/canvas-kit/contentcomponents/iframe
+    constraints:
+      - mustFollowDesignSystem
+  publishing:
+    privateApps:
+      componentRequirement: recommended
+      customComponentsAllowed: true
+      reviewRequired: false
+    publicApps:
+      componentRequirement: recommended
+      customComponentsAllowed: true
+      reviewRequired: true
+      notes: "Public Intercom App Store listing requires Intercom app review; OAuth scopes are reviewed with the app."
+    marketplaceApps:
+      componentRequirement: recommended
+      customComponentsAllowed: true
+      certificationRequired: true
+
+extensionPoints:
+  - id: messenger-home
+    name: Messenger Home
+    type: fullPage
+    extensionType: jsonResponse
+    description: |
+      Canvas Kit app on Messenger Home for users, leads, and visitors.
+      Initialize / Submit URLs configured under Developer Hub → Canvas Kit
+      → For users, leads and visitors.
+    supportedComponents:
+      - all
+    context:
+      provides:
+        - workspace_id
+        - contact
+        - context
+      actions:
+        - submit
+        - url
+        - sheet
+
+  - id: messenger-conversation
+    name: Messenger conversation insert
+    type: canvas
+    extensionType: jsonResponse
+    description: |
+      App inserted into a Messenger conversation reply, Workflow, or Message.
+      Same Initialize / Submit Canvas Kit flows as Messenger Home.
+    supportedComponents:
+      - all
+    context:
+      provides:
+        - workspace_id
+        - contact
+        - conversation
+        - context
+      actions:
+        - submit
+        - url
+        - sheet
+
+  - id: inbox-conversation-details
+    name: Inbox conversation details
+    type: sidebar
+    extensionType: jsonResponse
+    description: |
+      Teammate-facing Canvas Kit app in Inbox conversation details.
+      Initialize fires when a teammate opens/switches conversations (and for
+      up to the first 5 participants in group conversations). Configure under
+      Developer Hub → Canvas Kit → For teammates. Optional iframe components
+      can embed custom UI inside the canvas.
+    supportedComponents:
+      - all
+    context:
+      provides:
+        - workspace_id
+        - workspace_region
+        - admin
+        - conversation
+        - contact
+      actions:
+        - submit
+        - url
+        - sheet
+
+renderingEngines:
+  canvas-kit-json:
+    type: custom
+    name: Intercom Canvas Kit JSON
+    description: |
+      Intercom natively renders Canvas Kit JSON canvases returned from
+      Initialize / Submit / Configure webhook endpoints. Optional iframe
+      components load developer-hosted pages inside the canvas.
+
+jsonFormsIntegration:
+  supported: false
+  notes: "Intercom uses Canvas Kit JSON components, not JSON Forms."
+
+mcpAppsIntegration:
+  supported: false
+  notes: "Not integrated with MCP Apps in this module cut."

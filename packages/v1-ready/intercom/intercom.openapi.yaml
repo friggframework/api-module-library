@@ -1,0 +1,600 @@
+openapi: 3.0.3
+info:
+  title: Intercom REST API (Frigg curated subset)
+  version: "2.17"
+  description: >-
+    Intercom is a customer messaging and support platform. This file is Left Hook's
+    curated subset of Intercom's official OpenAPI
+    (https://github.com/intercom/Intercom-OpenAPI/blob/master/descriptions/2.17/api.intercom.io.yaml),
+    covering exactly the endpoints `@friggframework/api-module-intercom` implements
+    in api.js. It is the source of truth the hand-written client mirrors 1:1
+    (one method per operationId). Docs:
+    https://developers.intercom.com/docs/references/rest-api/api.intercom.io
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.intercom.io
+    description: Intercom production API (US)
+  - url: https://api.eu.intercom.io
+    description: Intercom production API (EU)
+  - url: https://api.au.intercom.io
+    description: Intercom production API (AU)
+security:
+  - BearerAuth: []
+tags:
+  - name: Identity
+  - name: Contacts
+  - name: Conversations
+  - name: Admins
+  - name: Companies
+  - name: Tags
+paths:
+  /me:
+    get:
+      tags: [Identity]
+      operationId: getMe
+      summary: Identify an admin
+      description: >-
+        View the currently authorised admin along with the embedded app object
+        (workspace). Official operationId in Intercom's OpenAPI: identifyAdmin.
+      responses:
+        "200":
+          description: Admin + workspace
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminWithApp" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /contacts:
+    get:
+      tags: [Contacts]
+      operationId: listContacts
+      summary: List contacts
+      description: Official operationId ListContacts. Cursor pagination via pages.
+      parameters:
+        - $ref: "#/components/parameters/per_page"
+        - $ref: "#/components/parameters/starting_after"
+      responses:
+        "200":
+          description: Contact list page
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContactList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Contacts]
+      operationId: createContact
+      summary: Create a contact
+      description: Official operationId CreateContact.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateContactRequest" }
+      responses:
+        "200":
+          description: Created contact
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contact" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /contacts/{contact_id}:
+    parameters:
+      - $ref: "#/components/parameters/contact_id"
+    get:
+      tags: [Contacts]
+      operationId: getContact
+      summary: Show a contact
+      description: Official operationId ShowContact.
+      responses:
+        "200":
+          description: Contact
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contact" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Contacts]
+      operationId: updateContact
+      summary: Update a contact
+      description: Official operationId UpdateContact.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateContactRequest" }
+      responses:
+        "200":
+          description: Updated contact
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contact" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /conversations:
+    get:
+      tags: [Conversations]
+      operationId: listConversations
+      summary: List conversations
+      parameters:
+        - $ref: "#/components/parameters/per_page"
+        - $ref: "#/components/parameters/starting_after"
+      responses:
+        "200":
+          description: Conversation list page
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConversationList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Conversations]
+      operationId: createConversation
+      summary: Create a conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateConversationRequest" }
+      responses:
+        "200":
+          description: Created conversation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Conversation" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /conversations/{conversation_id}:
+    parameters:
+      - $ref: "#/components/parameters/conversation_id"
+    get:
+      tags: [Conversations]
+      operationId: getConversation
+      summary: Retrieve a conversation
+      description: Official operationId retrieveConversation.
+      responses:
+        "200":
+          description: Conversation with parts
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Conversation" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Conversations]
+      operationId: updateConversation
+      summary: Update a conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateConversationRequest" }
+      responses:
+        "200":
+          description: Updated conversation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Conversation" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /conversations/{conversation_id}/reply:
+    parameters:
+      - $ref: "#/components/parameters/conversation_id"
+    post:
+      tags: [Conversations]
+      operationId: replyConversation
+      summary: Reply to a conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReplyConversationRequest" }
+      responses:
+        "200":
+          description: Conversation after reply
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Conversation" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /admins:
+    get:
+      tags: [Admins]
+      operationId: listAdmins
+      summary: List all admins
+      responses:
+        "200":
+          description: Admin list
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /admins/{admin_id}:
+    parameters:
+      - $ref: "#/components/parameters/admin_id"
+    get:
+      tags: [Admins]
+      operationId: getAdmin
+      summary: Retrieve an admin
+      description: Official operationId retrieveAdmin.
+      responses:
+        "200":
+          description: Admin
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Admin" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /companies/list:
+    post:
+      tags: [Companies]
+      operationId: listCompanies
+      summary: List all companies
+      description: Official operationId listAllCompanies.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                per_page: { type: integer }
+                starting_after: { type: string }
+      responses:
+        "200":
+          description: Company list page
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CompanyList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /companies:
+    post:
+      tags: [Companies]
+      operationId: createOrUpdateCompany
+      summary: Create or update a company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateOrUpdateCompanyRequest" }
+      responses:
+        "200":
+          description: Company
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Company" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /companies/{company_id}:
+    parameters:
+      - $ref: "#/components/parameters/company_id"
+    get:
+      tags: [Companies]
+      operationId: getCompany
+      summary: Retrieve a company by id
+      description: Official operationId RetrieveACompanyById.
+      responses:
+        "200":
+          description: Company
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Company" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /tags:
+    get:
+      tags: [Tags]
+      operationId: listTags
+      summary: List all tags
+      responses:
+        "200":
+          description: Tag list
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TagList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Tags]
+      operationId: createTag
+      summary: Create or update a tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateTagRequest" }
+      responses:
+        "200":
+          description: Tag
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Tag" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /tags/{tag_id}:
+    parameters:
+      - $ref: "#/components/parameters/tag_id"
+    get:
+      tags: [Tags]
+      operationId: getTag
+      summary: Find a tag by id
+      description: Official operationId findTag.
+      responses:
+        "200":
+          description: Tag
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Tag" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        Access Token or OAuth access_token sent as Authorization: Bearer <token>.
+        Also send Intercom-Version (e.g. 2.17) to pin the API version.
+  parameters:
+    per_page:
+      in: query
+      name: per_page
+      schema: { type: integer, minimum: 1, maximum: 150 }
+    starting_after:
+      in: query
+      name: starting_after
+      schema: { type: string }
+      description: Cursor from a previous page's pages.next.starting_after.
+    contact_id:
+      in: path
+      name: contact_id
+      required: true
+      schema: { type: string }
+    conversation_id:
+      in: path
+      name: conversation_id
+      required: true
+      schema: { type: string }
+    admin_id:
+      in: path
+      name: admin_id
+      required: true
+      schema: { type: string }
+    company_id:
+      in: path
+      name: company_id
+      required: true
+      schema: { type: string }
+    tag_id:
+      in: path
+      name: tag_id
+      required: true
+      schema: { type: string }
+  responses:
+    Unauthorized:
+      description: Missing or invalid Bearer token.
+    NotFound:
+      description: Resource not found.
+  schemas:
+    CursorPages:
+      type: object
+      properties:
+        type: { type: string, example: pages }
+        page: { type: integer }
+        next:
+          type: object
+          nullable: true
+          properties:
+            page: { type: integer }
+            starting_after: { type: string }
+        per_page: { type: integer }
+        total_pages: { type: integer }
+    App:
+      type: object
+      properties:
+        type: { type: string, example: app }
+        id_code: { type: string, description: Workspace id_code }
+        name: { type: string }
+        region: { type: string }
+        created_at: { type: integer }
+        identity_verification: { type: boolean }
+    Admin:
+      type: object
+      properties:
+        type: { type: string, example: admin }
+        id: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        job_title: { type: string }
+        away_mode_enabled: { type: boolean }
+        has_inbox_seat: { type: boolean }
+        team_ids:
+          type: array
+          items: { type: integer }
+    AdminWithApp:
+      allOf:
+        - $ref: "#/components/schemas/Admin"
+        - type: object
+          properties:
+            app: { $ref: "#/components/schemas/App" }
+            email_verified: { type: boolean }
+    AdminList:
+      type: object
+      properties:
+        type: { type: string, example: admin.list }
+        admins:
+          type: array
+          items: { $ref: "#/components/schemas/Admin" }
+    Contact:
+      type: object
+      properties:
+        type: { type: string, example: contact }
+        id: { type: string }
+        workspace_id: { type: string }
+        external_id: { type: string, nullable: true }
+        role: { type: string, enum: [user, lead, visitor] }
+        email: { type: string, format: email, nullable: true }
+        phone: { type: string, nullable: true }
+        name: { type: string, nullable: true }
+        owner_id: { type: string, nullable: true }
+        created_at: { type: integer }
+        updated_at: { type: integer }
+        signed_up_at: { type: integer, nullable: true }
+        last_seen_at: { type: integer, nullable: true }
+        custom_attributes: { type: object, additionalProperties: true }
+    ContactList:
+      type: object
+      properties:
+        type: { type: string, example: list }
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Contact" }
+        total_count: { type: integer }
+        pages: { $ref: "#/components/schemas/CursorPages" }
+    CreateContactRequest:
+      type: object
+      properties:
+        role: { type: string, enum: [user, lead] }
+        external_id: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        name: { type: string }
+        signed_up_at: { type: integer }
+        last_seen_at: { type: integer }
+        owner_id: { type: integer }
+        unsubscribed_from_emails: { type: boolean }
+        custom_attributes: { type: object, additionalProperties: true }
+    UpdateContactRequest:
+      type: object
+      properties:
+        role: { type: string }
+        external_id: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        name: { type: string }
+        owner_id: { type: integer }
+        unsubscribed_from_emails: { type: boolean }
+        custom_attributes: { type: object, additionalProperties: true }
+    Conversation:
+      type: object
+      properties:
+        type: { type: string, example: conversation }
+        id: { type: string }
+        title: { type: string, nullable: true }
+        created_at: { type: integer }
+        updated_at: { type: integer }
+        waiting_since: { type: integer, nullable: true }
+        snoozed_until: { type: integer, nullable: true }
+        open: { type: boolean }
+        state: { type: string, enum: [open, closed, snoozed] }
+        read: { type: boolean }
+        priority: { type: string }
+        admin_assignee_id: { type: integer, nullable: true }
+        team_assignee_id: { type: integer, nullable: true }
+        source: { type: object, additionalProperties: true }
+        contacts: { type: object, additionalProperties: true }
+        teammates: { type: object, additionalProperties: true }
+        custom_attributes: { type: object, additionalProperties: true }
+        conversation_parts: { type: object, additionalProperties: true }
+    ConversationList:
+      type: object
+      properties:
+        type: { type: string, example: conversation.list }
+        conversations:
+          type: array
+          items: { $ref: "#/components/schemas/Conversation" }
+        total_count: { type: integer }
+        pages: { $ref: "#/components/schemas/CursorPages" }
+    CreateConversationRequest:
+      type: object
+      required: [from, body]
+      properties:
+        from:
+          type: object
+          properties:
+            type: { type: string, enum: [user, lead, contact] }
+            id: { type: string }
+        body: { type: string }
+    UpdateConversationRequest:
+      type: object
+      properties:
+        read: { type: boolean }
+        title: { type: string }
+        custom_attributes: { type: object, additionalProperties: true }
+    ReplyConversationRequest:
+      type: object
+      required: [message_type, type, body]
+      properties:
+        message_type:
+          type: string
+          enum: [comment, note, assignment]
+        type: { type: string, enum: [admin, user] }
+        body: { type: string }
+        admin_id: { type: string }
+        intercom_user_id: { type: string }
+        attachment_urls:
+          type: array
+          items: { type: string, format: uri }
+    Company:
+      type: object
+      properties:
+        type: { type: string, example: company }
+        id: { type: string }
+        name: { type: string }
+        company_id: { type: string }
+        app_id: { type: string }
+        created_at: { type: integer }
+        updated_at: { type: integer }
+        website: { type: string, nullable: true }
+        industry: { type: string, nullable: true }
+        size: { type: integer, nullable: true }
+        monthly_spend: { type: integer }
+        session_count: { type: integer }
+        user_count: { type: integer }
+        custom_attributes: { type: object, additionalProperties: true }
+    CompanyList:
+      type: object
+      properties:
+        type: { type: string, example: list }
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Company" }
+        pages: { $ref: "#/components/schemas/CursorPages" }
+        total_count: { type: integer }
+    CreateOrUpdateCompanyRequest:
+      type: object
+      properties:
+        company_id: { type: string }
+        name: { type: string }
+        website: { type: string }
+        industry: { type: string }
+        size: { type: integer }
+        plan: { type: string }
+        remote_created_at: { type: integer }
+        monthly_spend: { type: integer }
+        custom_attributes: { type: object, additionalProperties: true }
+    Tag:
+      type: object
+      properties:
+        type: { type: string, example: tag }
+        id: { type: string }
+        name: { type: string }
+    TagList:
+      type: object
+      properties:
+        type: { type: string, example: list }
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Tag" }
+    CreateTagRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        id: { type: string }

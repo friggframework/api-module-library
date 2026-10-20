@@ -1,0 +1,13 @@
+{
+  "name": "intercom",
+  "label": "Intercom",
+  "productUrl": "https://www.intercom.com",
+  "apiDocs": "https://developers.intercom.com/docs/references/rest-api/api.intercom.io",
+  "logoUrl": "https://friggframework.org/assets/img/intercom-icon.jpeg",
+  "categories": [
+    "Customer Support",
+    "Messaging",
+    "CRM"
+  ],
+  "description": "Intercom customer messaging and support platform"
+}

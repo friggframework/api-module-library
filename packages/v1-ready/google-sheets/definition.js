@@ -59,7 +59,10 @@ const Definition = {
         client_id: process.env.GOOGLE_SHEETS_CLIENT_ID,
         client_secret: process.env.GOOGLE_SHEETS_CLIENT_SECRET,
         scope: process.env.GOOGLE_SHEETS_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/google-sheets`,
+        // Omit when unset so schema validation does not see the string "undefined/google-sheets".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/google-sheets`
+            : undefined,
     },
 };
 

@@ -64,7 +64,10 @@ const Definition = {
         client_id: process.env.MICROSOFT_ONEDRIVE_CLIENT_ID,
         client_secret: process.env.MICROSOFT_ONEDRIVE_CLIENT_SECRET,
         scope: process.env.MICROSOFT_ONEDRIVE_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/microsoft-onedrive`,
+        // Omit when unset so schema validation does not see the string "undefined/microsoft-onedrive".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/microsoft-onedrive`
+            : undefined,
     },
 };
 

@@ -1,0 +1,87 @@
+# Fenestra Document: Airtable Custom Extensions
+#
+# Airtable exposes in-product UI extension points (Custom Extensions, formerly
+# Blocks) that run inside the Airtable client, plus Interface Designer and the
+# marketplace. Documented at https://airtable.com/developers
+#
+# Drafted against Fenestra 0.1.0
+# (api-module-library branch claude/fenestra-spec-draft-Q367t).
+# Airtable is listed as Pending in specs/fenestra/PLATFORMS.md; this draft covers
+# the published Custom Extensions / Blocks SDK surface. The
+# `@friggframework/api-module-airtable` package itself implements the Web API
+# (OAuth + bases/records/webhooks), not the in-Airtable extension runtime.
+
+fenestra: "0.1.0"
+
+info:
+  title: Airtable Custom Extensions
+  version: "1.0.0"
+  description: |
+    Airtable Custom Extensions (Blocks SDK) are TypeScript/React apps that run
+    inside an Airtable base. They use the Blocks SDK (`@airtable/blocks`) to
+    read/write base data with the user's permissions and render custom UI in
+    the Airtable client.
+
+    Related surfaces (not fully modeled here):
+    - Interface Designer — no-code/low-code interfaces over base data
+    - Airtable Marketplace — distribution for extensions and apps
+    - Scripting / Automations — in-base automation, separate from Blocks
+
+platform:
+  name: Airtable
+  vendor: Airtable
+  documentation: https://airtable.com/developers
+  appMarketplace: https://airtable.com/marketplace
+
+sdks:
+  blocks:
+    name: Airtable Blocks SDK
+    packageManager: npm
+    package: "@airtable/blocks"
+    platform: web
+    documentation: https://airtable.com/developers/extensions
+    description: |
+      React SDK for building Custom Extensions that run inside Airtable.
+      Extensions are loaded in an iframe-like host and call Airtable APIs
+      through the Blocks SDK rather than raw REST from the browser.
+    exports:
+      useBase:
+        type: hook
+        description: Access the current base schema and data
+      useRecords:
+        type: hook
+        description: Subscribe to records in a table or view
+      useGlobalConfig:
+        type: hook
+        description: Read/write extension-level configuration
+      expandRecord:
+        type: utility
+        description: Open the native Airtable record detail UI
+
+extensionPoints:
+  - id: custom-extension
+    name: Custom Extension
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      A Custom Extension installed on a base that renders custom React UI
+      and reads/writes tables via the Blocks SDK.
+    documentation: https://airtable.com/developers/extensions
+    supportedComponents:
+      - useBase
+      - useRecords
+      - useGlobalConfig
+      - expandRecord
+
+  - id: marketplace-extension
+    name: Marketplace Extension
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      A reviewed Custom Extension distributed through the Airtable Marketplace.
+      Production OAuth integrations used by marketplace apps require ToS,
+      Privacy Policy, and Support Email on the OAuth integration.
+    documentation: https://airtable.com/marketplace
+    supportedComponents:
+      - useBase
+      - useRecords

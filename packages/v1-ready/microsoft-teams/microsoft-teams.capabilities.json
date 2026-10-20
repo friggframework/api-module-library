@@ -1,0 +1,453 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "microsoft-teams",
+  "label": "Microsoft Teams",
+  "package": "@friggframework/api-module-microsoft-teams",
+  "version": "1.2.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected Microsoft 365 tenant / user, persisted by the module (apiPropertiesToPersist).",
+    "fields": [
+      {
+        "name": "tenant_id",
+        "type": "string",
+        "description": "Microsoft Entra tenant (directory) id for the connection"
+      }
+    ]
+  },
+  "objects": {
+    "team": {
+      "label": "Team",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "displayName",
+          "type": "string",
+          "tag": "record.displayName",
+          "required": true
+        },
+        { "name": "description", "type": "text" },
+        {
+          "name": "webUrl",
+          "type": "string",
+          "tag": "record.url",
+          "readOnly": true
+        },
+        { "name": "isArchived", "type": "boolean", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "team.list" },
+        "get": { "capability": "team.get" }
+      }
+    },
+    "channel": {
+      "label": "Channel",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "displayName",
+          "type": "string",
+          "tag": "record.displayName",
+          "required": true
+        },
+        { "name": "description", "type": "text" },
+        {
+          "name": "membershipType",
+          "type": "string",
+          "description": "standard | private | shared"
+        },
+        {
+          "name": "webUrl",
+          "type": "string",
+          "tag": "record.url",
+          "readOnly": true
+        },
+        {
+          "name": "createdDateTime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        { "name": "isArchived", "type": "boolean", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "channel.list" },
+        "get": { "capability": "channel.get" },
+        "create": { "capability": "channel.create" },
+        "update": { "capability": "channel.update" }
+      }
+    },
+    "chat": {
+      "label": "Chat",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "topic", "type": "string", "tag": "record.displayName" },
+        { "name": "chatType", "type": "string" },
+        {
+          "name": "webUrl",
+          "type": "string",
+          "tag": "record.url",
+          "readOnly": true
+        },
+        {
+          "name": "createdDateTime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "lastUpdatedDateTime",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "chat.list" },
+        "get": { "capability": "chat.get" }
+      }
+    },
+    "chatMessage": {
+      "label": "Chat / channel message",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "subject", "type": "string" },
+        {
+          "name": "body.content",
+          "type": "text",
+          "tag": "message.body",
+          "required": true
+        },
+        { "name": "body.contentType", "type": "string" },
+        {
+          "name": "from.user.displayName",
+          "type": "string",
+          "tag": "person.displayName",
+          "readOnly": true
+        },
+        {
+          "name": "from.user.id",
+          "type": "string",
+          "tag": "person.id",
+          "readOnly": true
+        },
+        {
+          "name": "createdDateTime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "lastModifiedDateTime",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        { "name": "webUrl", "type": "string", "tag": "record.url", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "channelMessage.list" },
+        "get": { "capability": "channelMessage.get" },
+        "create": { "capability": "channelMessage.send" }
+      }
+    },
+    "teamMember": {
+      "label": "Team member",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "displayName",
+          "type": "string",
+          "tag": "person.displayName"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "userId",
+          "type": "string",
+          "tag": "person.id",
+          "readOnly": true
+        },
+        { "name": "roles", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "teamMember.list" }
+      }
+    },
+    "subscription": {
+      "label": "Change notification subscription",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "resource", "type": "string", "required": true },
+        { "name": "changeType", "type": "string", "required": true },
+        {
+          "name": "notificationUrl",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "expirationDateTime",
+          "type": "datetime",
+          "required": true
+        },
+        { "name": "clientState", "type": "string" }
+      ]
+    }
+  },
+  "events": {
+    "channelMessage.created": {
+      "delivery": "webhook",
+      "object": "chatMessage",
+      "description": "Graph change notification for channel messages (resource /teams/{id}/channels/{id}/messages).",
+      "payload": {
+        "value": [
+          {
+            "subscriptionId": "sub-id",
+            "clientState": "secret",
+            "changeType": "created",
+            "resource": "teams('t')/channels('c')/messages('m')",
+            "tenantId": "tenant-guid"
+          }
+        ]
+      },
+      "match": "created"
+    },
+    "chatMessage.created": {
+      "delivery": "webhook",
+      "object": "chatMessage",
+      "description": "Graph change notification for chat messages (resource /chats/{id}/messages).",
+      "payload": {
+        "value": [
+          {
+            "subscriptionId": "sub-id",
+            "clientState": "secret",
+            "changeType": "created",
+            "resource": "chats('c')/messages('m')",
+            "tenantId": "tenant-guid"
+          }
+        ]
+      },
+      "match": "created"
+    }
+  },
+  "webhook": {
+    "scope": "subscription",
+    "batch": ["body.value"],
+    "topic": "{{item.changeType}}",
+    "eventId": "{{item.subscriptionId}}:{{item.resource}}:{{item.changeType}}",
+    "account": "{{item.tenantId}}",
+    "verify": "verifyWebhookClientState",
+    "note": "Microsoft Graph change notifications authenticate via clientState (not HMAC). Create subscriptions with createSubscription; the Tier-3 extension handles validationToken handshake and tenantId routing."
+  },
+  "capabilities": {
+    "me.get": {
+      "kind": "read",
+      "method": "getMe",
+      "output": "user",
+      "args": []
+    },
+    "organization.get": {
+      "kind": "read",
+      "method": "getOrganization",
+      "output": "organization",
+      "args": []
+    },
+    "team.list": {
+      "kind": "read",
+      "method": "listJoinedTeams",
+      "output": "page<team>",
+      "args": ["$rest"]
+    },
+    "team.get": {
+      "kind": "read",
+      "method": "getTeam",
+      "input": {
+        "teamId": { "type": "string", "required": true }
+      },
+      "output": "team",
+      "args": ["teamId", "$rest"]
+    },
+    "channel.list": {
+      "kind": "read",
+      "method": "listChannels",
+      "input": {
+        "teamId": { "type": "string", "required": true }
+      },
+      "output": "page<channel>",
+      "args": ["teamId", "$rest"]
+    },
+    "channel.get": {
+      "kind": "read",
+      "method": "getChannel",
+      "input": {
+        "teamId": { "type": "string", "required": true },
+        "channelId": { "type": "string", "required": true }
+      },
+      "output": "channel",
+      "args": ["teamId", "channelId", "$rest"]
+    },
+    "channel.create": {
+      "kind": "write",
+      "method": "createChannel",
+      "input": {
+        "teamId": { "type": "string", "required": true },
+        "channel": { "type": "object", "required": true }
+      },
+      "output": "channel",
+      "args": ["teamId", "channel"]
+    },
+    "channel.update": {
+      "kind": "write",
+      "method": "updateChannel",
+      "input": {
+        "teamId": { "type": "string", "required": true },
+        "channelId": { "type": "string", "required": true },
+        "channel": { "type": "object", "required": true }
+      },
+      "output": "channel",
+      "args": ["teamId", "channelId", "channel"]
+    },
+    "channelMessage.list": {
+      "kind": "read",
+      "method": "listChannelMessages",
+      "input": {
+        "teamId": { "type": "string", "required": true },
+        "channelId": { "type": "string", "required": true }
+      },
+      "output": "page<chatMessage>",
+      "args": ["teamId", "channelId", "$rest"]
+    },
+    "channelMessage.get": {
+      "kind": "read",
+      "method": "getChannelMessage",
+      "input": {
+        "teamId": { "type": "string", "required": true },
+        "channelId": { "type": "string", "required": true },
+        "messageId": { "type": "string", "required": true }
+      },
+      "output": "chatMessage",
+      "args": ["teamId", "channelId", "messageId", "$rest"]
+    },
+    "channelMessage.send": {
+      "kind": "write",
+      "method": "sendChannelMessage",
+      "input": {
+        "teamId": { "type": "string", "required": true },
+        "channelId": { "type": "string", "required": true },
+        "message": { "type": "object", "required": true }
+      },
+      "output": "chatMessage",
+      "args": ["teamId", "channelId", "message"]
+    },
+    "chat.list": {
+      "kind": "read",
+      "method": "listChats",
+      "output": "page<chat>",
+      "args": ["$rest"]
+    },
+    "chat.get": {
+      "kind": "read",
+      "method": "getChat",
+      "input": {
+        "chatId": { "type": "string", "required": true }
+      },
+      "output": "chat",
+      "args": ["chatId", "$rest"]
+    },
+    "chatMessage.list": {
+      "kind": "read",
+      "method": "listChatMessages",
+      "input": {
+        "chatId": { "type": "string", "required": true }
+      },
+      "output": "page<chatMessage>",
+      "args": ["chatId", "$rest"]
+    },
+    "chatMessage.send": {
+      "kind": "write",
+      "method": "sendChatMessage",
+      "input": {
+        "chatId": { "type": "string", "required": true },
+        "message": { "type": "object", "required": true }
+      },
+      "output": "chatMessage",
+      "args": ["chatId", "message"]
+    },
+    "teamMember.list": {
+      "kind": "read",
+      "method": "listTeamMembers",
+      "input": {
+        "teamId": { "type": "string", "required": true }
+      },
+      "output": "page<teamMember>",
+      "args": ["teamId", "$rest"]
+    },
+    "subscription.create": {
+      "kind": "write",
+      "method": "createSubscription",
+      "input": {
+        "subscription": { "type": "object", "required": true }
+      },
+      "output": "subscription",
+      "args": ["subscription"]
+    },
+    "subscription.list": {
+      "kind": "read",
+      "method": "listSubscriptions",
+      "output": "page<subscription>",
+      "args": ["$rest"]
+    },
+    "subscription.get": {
+      "kind": "read",
+      "method": "getSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "output": "subscription",
+      "args": ["subscriptionId"]
+    },
+    "subscription.renew": {
+      "kind": "write",
+      "method": "renewSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "subscription",
+      "args": ["subscriptionId", "body"]
+    },
+    "subscription.delete": {
+      "kind": "write",
+      "method": "deleteSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "args": ["subscriptionId"]
+    }
+  },
+  "options": {
+    "team": {
+      "capability": "team.list",
+      "label": "{{item.displayName}}",
+      "value": "$.item.id"
+    },
+    "channel": {
+      "capability": "channel.list",
+      "label": "{{item.displayName}}",
+      "value": "$.item.id"
+    },
+    "chat": {
+      "capability": "chat.list",
+      "label": "{{item.topic}}",
+      "value": "$.item.id"
+    }
+  }
+}

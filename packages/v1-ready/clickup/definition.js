@@ -91,7 +91,10 @@ const Definition = {
         client_id: process.env.CLICKUP_CLIENT_ID,
         client_secret: process.env.CLICKUP_CLIENT_SECRET,
         scope: process.env.CLICKUP_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/clickup`,
+        // Omit when unset so schema validation does not see the string "undefined/clickup".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/clickup`
+            : undefined,
     },
 };
 

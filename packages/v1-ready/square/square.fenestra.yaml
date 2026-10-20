@@ -1,0 +1,87 @@
+# Fenestra Document: Square UI extension surfaces
+#
+# Square exposes UI extension points beyond pure REST:
+# 1. Web Payments SDK — embedded payment form components (PCI-scoped)
+# 2. App Extensions — iframe apps embedded in Square Dashboard / POS
+#
+# Drafted from Square's published docs against Fenestra 0.1.0
+# (api-module-library branch claude/fenestra-spec-draft-Q367t).
+# PLATFORMS.md lists Square under Embedded SDK alongside Stripe Elements.
+
+fenestra: "0.1.0"
+
+info:
+  title: Square Web Payments SDK and App Extensions
+  version: "1.0.0"
+  description: |
+    Square provides two primary UI extension surfaces for third-party apps:
+
+    **Web Payments SDK** — pre-built, PCI-scoped payment form components that
+    merchants embed on their own web checkout pages. Card data is tokenized by
+    Square; the merchant backend charges via the Payments API (CreatePayment).
+
+    **App Extensions** — iframe-based apps that run inside Square Dashboard
+    and Square Point of Sale, with a JavaScript bridge for host context.
+
+    This Fenestra document covers those surfaces. The `@friggframework/api-module-square`
+    package itself implements the Connect REST API (OAuth + merchants, locations,
+    customers, payments, invoices, webhook subscriptions), not the browser SDK.
+
+platform:
+  name: Square
+  vendor: Block, Inc.
+  documentation: https://developer.squareup.com/docs
+  appMarketplace: https://squareup.com/us/en/app-marketplace
+
+sdks:
+  web-payments-sdk:
+    name: Square Web Payments SDK
+    packageManager: npm
+    package: square.js
+    platform: web
+    documentation: https://developer.squareup.com/docs/web-payments/overview
+    cdn: https://sandbox.web.squarecdn.com/v1/square.js
+    cdnRequired: true
+    description: |
+      Load Square.js from Square's CDN (production: web.squarecdn.com).
+      Creates card / digital-wallet payment methods and returns a nonce
+      (source_id) for CreatePayment on the backend.
+    exports:
+      Square:
+        type: utility
+        description: Global Square object after script load
+      payments:
+        type: utility
+        description: payments(applicationId, locationId) factory
+      card:
+        type: component
+        description: Card payment method element
+      applePay:
+        type: component
+        description: Apple Pay payment method
+      googlePay:
+        type: component
+        description: Google Pay payment method
+
+extensionPoints:
+  - id: web-checkout
+    name: Merchant web checkout
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Embed Web Payments SDK elements in a merchant-hosted checkout page.
+      Tokenize with the SDK, then call CreatePayment with the resulting source_id.
+    documentation: https://developer.squareup.com/docs/web-payments/quickstart/add-sdk-to-web-client
+    supportedComponents:
+      - card
+      - applePay
+      - googlePay
+
+  - id: dashboard-app-extension
+    name: Square Dashboard App Extension
+    type: fullPage
+    extensionType: iframe
+    description: |
+      Iframe app surface inside Square Dashboard for seller-facing workflows.
+      Requires an App Marketplace listing for public distribution.
+    documentation: https://developer.squareup.com/docs/app-extensions/overview

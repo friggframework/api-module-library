@@ -1,0 +1,454 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "square",
+  "label": "Square",
+  "package": "@friggframework/api-module-square",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Square merchant identity persisted from OAuth / RetrieveMerchant.",
+    "fields": [
+      {
+        "name": "merchant_id",
+        "type": "string",
+        "description": "Square merchant id from ObtainToken / RetrieveMerchant."
+      }
+    ]
+  },
+  "objects": {
+    "merchant": {
+      "label": "Merchant",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "business_name", "type": "string", "tag": "org.name" },
+        { "name": "country", "type": "string", "tag": "address.country" },
+        { "name": "currency", "type": "string" },
+        { "name": "status", "type": "string", "readOnly": true },
+        { "name": "main_location_id", "type": "string", "readOnly": true },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "merchant.list",
+          "cursor": "cursor",
+          "items": "merchant",
+          "next": "cursor"
+        },
+        "get": {
+          "capability": "merchant.get",
+          "id": "merchantId"
+        }
+      }
+    },
+    "location": {
+      "label": "Location",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "location.name" },
+        { "name": "address.address_line_1", "type": "string", "tag": "address.line1" },
+        { "name": "address.locality", "type": "string", "tag": "address.locality" },
+        { "name": "address.administrative_district_level_1", "type": "string", "tag": "address.region" },
+        { "name": "address.postal_code", "type": "string", "tag": "address.postalCode" },
+        { "name": "address.country", "type": "string", "tag": "address.country" },
+        { "name": "timezone", "type": "string" },
+        { "name": "status", "type": "string", "readOnly": true },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "location.list",
+          "items": "locations"
+        },
+        "get": {
+          "capability": "location.get",
+          "id": "locationId"
+        },
+        "create": {
+          "capability": "location.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "location.update",
+          "id": "locationId",
+          "body": "data"
+        }
+      }
+    },
+    "customer": {
+      "label": "Customer",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "given_name", "type": "string", "tag": "person.givenName" },
+        { "name": "family_name", "type": "string", "tag": "person.familyName" },
+        { "name": "company_name", "type": "string", "tag": "org.name" },
+        { "name": "email_address", "type": "email", "tag": "contact.email" },
+        { "name": "phone_number", "type": "phone", "tag": "contact.phone" },
+        { "name": "reference_id", "type": "string", "tag": "record.externalId" },
+        { "name": "note", "type": "text" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "customer.list",
+          "cursor": "cursor",
+          "limit": "limit",
+          "items": "customers",
+          "next": "cursor"
+        },
+        "get": {
+          "capability": "customer.get",
+          "id": "customerId"
+        },
+        "create": {
+          "capability": "customer.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "customer.update",
+          "id": "customerId",
+          "body": "data"
+        }
+      }
+    },
+    "payment": {
+      "label": "Payment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "status", "type": "string", "readOnly": true },
+        { "name": "amount_money.amount", "type": "integer", "tag": "payment.amount" },
+        { "name": "amount_money.currency", "type": "string", "tag": "payment.currency" },
+        { "name": "location_id", "type": "string" },
+        { "name": "order_id", "type": "string" },
+        { "name": "customer_id", "type": "string", "tag": "record.externalId" },
+        { "name": "reference_id", "type": "string" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "payment.list",
+          "cursor": "cursor",
+          "limit": "limit",
+          "items": "payments",
+          "next": "cursor"
+        },
+        "get": {
+          "capability": "payment.get",
+          "id": "paymentId"
+        },
+        "create": {
+          "capability": "payment.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "payment.update",
+          "id": "paymentId",
+          "body": "data"
+        }
+      }
+    },
+    "invoice": {
+      "label": "Invoice",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "location_id", "type": "string" },
+        { "name": "order_id", "type": "string" },
+        { "name": "invoice_number", "type": "string" },
+        { "name": "title", "type": "string" },
+        { "name": "description", "type": "text" },
+        { "name": "status", "type": "string", "readOnly": true },
+        { "name": "public_url", "type": "string", "readOnly": true },
+        { "name": "primary_recipient.email_address", "type": "email", "tag": "contact.email" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "invoice.list",
+          "cursor": "cursor",
+          "limit": "limit",
+          "items": "invoices",
+          "next": "cursor"
+        },
+        "get": {
+          "capability": "invoice.get",
+          "id": "invoiceId"
+        },
+        "create": {
+          "capability": "invoice.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "invoice.update",
+          "id": "invoiceId",
+          "body": "data"
+        }
+      }
+    },
+    "webhookSubscription": {
+      "label": "Webhook subscription",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" },
+        { "name": "enabled", "type": "boolean" },
+        { "name": "event_types", "type": "json" },
+        { "name": "notification_url", "type": "string" },
+        { "name": "api_version", "type": "string" },
+        { "name": "created_at", "type": "datetime", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "readOnly": true }
+      ]
+    }
+  },
+  "events": {
+    "payment.created": {
+      "delivery": "webhook",
+      "object": "payment",
+      "subscribe": "webhookSubscription.create",
+      "description": "Square payment.created notification (subscribe via Webhook Subscriptions API)."
+    },
+    "payment.updated": {
+      "delivery": "webhook",
+      "object": "payment",
+      "subscribe": "webhookSubscription.create",
+      "description": "Square payment.updated notification."
+    },
+    "customer.created": {
+      "delivery": "webhook",
+      "object": "customer",
+      "subscribe": "webhookSubscription.create",
+      "description": "Square customer.created notification."
+    },
+    "invoice.payment_made": {
+      "delivery": "webhook",
+      "object": "invoice",
+      "subscribe": "webhookSubscription.create",
+      "description": "Square invoice.payment_made notification."
+    }
+  },
+  "capabilities": {
+    "merchant.list": {
+      "kind": "read",
+      "method": "listMerchants",
+      "input": {
+        "cursor": { "type": "integer" }
+      },
+      "output": "page<merchant>"
+    },
+    "merchant.get": {
+      "kind": "read",
+      "method": "retrieveMerchant",
+      "input": {
+        "merchantId": { "type": "string", "required": true }
+      },
+      "output": "merchant",
+      "args": ["merchantId"]
+    },
+    "location.list": {
+      "kind": "read",
+      "method": "listLocations",
+      "input": {},
+      "output": "page<location>"
+    },
+    "location.get": {
+      "kind": "read",
+      "method": "retrieveLocation",
+      "input": {
+        "locationId": { "type": "string", "required": true }
+      },
+      "output": "location",
+      "args": ["locationId"]
+    },
+    "location.create": {
+      "kind": "write",
+      "method": "createLocation",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "location",
+      "args": ["data"]
+    },
+    "location.update": {
+      "kind": "write",
+      "method": "updateLocation",
+      "input": {
+        "locationId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "location",
+      "args": ["locationId", "data"]
+    },
+    "customer.list": {
+      "kind": "read",
+      "method": "listCustomers",
+      "input": {
+        "cursor": { "type": "string" },
+        "limit": { "type": "integer" },
+        "sort_field": { "type": "string" },
+        "sort_order": { "type": "string" }
+      },
+      "output": "page<customer>"
+    },
+    "customer.get": {
+      "kind": "read",
+      "method": "retrieveCustomer",
+      "input": {
+        "customerId": { "type": "string", "required": true }
+      },
+      "output": "customer",
+      "args": ["customerId"]
+    },
+    "customer.create": {
+      "kind": "write",
+      "method": "createCustomer",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "customer",
+      "args": ["data"]
+    },
+    "customer.update": {
+      "kind": "write",
+      "method": "updateCustomer",
+      "input": {
+        "customerId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "customer",
+      "args": ["customerId", "data"]
+    },
+    "payment.list": {
+      "kind": "read",
+      "method": "listPayments",
+      "input": {
+        "begin_time": { "type": "string" },
+        "end_time": { "type": "string" },
+        "cursor": { "type": "string" },
+        "location_id": { "type": "string" },
+        "limit": { "type": "integer" }
+      },
+      "output": "page<payment>"
+    },
+    "payment.get": {
+      "kind": "read",
+      "method": "getPayment",
+      "input": {
+        "paymentId": { "type": "string", "required": true }
+      },
+      "output": "payment",
+      "args": ["paymentId"]
+    },
+    "payment.create": {
+      "kind": "write",
+      "method": "createPayment",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "payment",
+      "args": ["data"]
+    },
+    "payment.update": {
+      "kind": "write",
+      "method": "updatePayment",
+      "input": {
+        "paymentId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "payment",
+      "args": ["paymentId", "data"]
+    },
+    "invoice.list": {
+      "kind": "read",
+      "method": "listInvoices",
+      "input": {
+        "location_id": { "type": "string", "required": true },
+        "cursor": { "type": "string" },
+        "limit": { "type": "integer" }
+      },
+      "output": "page<invoice>"
+    },
+    "invoice.get": {
+      "kind": "read",
+      "method": "getInvoice",
+      "input": {
+        "invoiceId": { "type": "string", "required": true }
+      },
+      "output": "invoice",
+      "args": ["invoiceId"]
+    },
+    "invoice.create": {
+      "kind": "write",
+      "method": "createInvoice",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "invoice",
+      "args": ["data"]
+    },
+    "invoice.update": {
+      "kind": "write",
+      "method": "updateInvoice",
+      "input": {
+        "invoiceId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "invoice",
+      "args": ["invoiceId", "data"]
+    },
+    "webhookSubscription.list": {
+      "kind": "read",
+      "method": "listWebhookSubscriptions",
+      "input": {
+        "cursor": { "type": "string" },
+        "include_disabled": { "type": "boolean" },
+        "limit": { "type": "integer" }
+      },
+      "output": "page<webhookSubscription>"
+    },
+    "webhookSubscription.get": {
+      "kind": "read",
+      "method": "retrieveWebhookSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "output": "webhookSubscription",
+      "args": ["subscriptionId"]
+    },
+    "webhookSubscription.create": {
+      "kind": "subscribe",
+      "method": "createWebhookSubscription",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "webhookSubscription",
+      "args": ["data"]
+    },
+    "webhookSubscription.update": {
+      "kind": "write",
+      "method": "updateWebhookSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "webhookSubscription",
+      "args": ["subscriptionId", "data"]
+    },
+    "webhookSubscription.delete": {
+      "kind": "delete",
+      "method": "deleteWebhookSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["subscriptionId"]
+    }
+  }
+}

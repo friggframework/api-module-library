@@ -114,7 +114,10 @@ const Definition = {
         client_id: process.env.CONFLUENCE_CLIENT_ID,
         client_secret: process.env.CONFLUENCE_CLIENT_SECRET,
         scope: process.env.CONFLUENCE_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/confluence`,
+        // Omit when unset so schema validation does not see the string "undefined/confluence".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/confluence`
+            : undefined,
     },
 };
 

@@ -1,0 +1,119 @@
+{
+  "schema": "capability-manifest/v0.1",
+  "module": "figma",
+  "package": "@friggframework/api-module-figma",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "authorizationUrl": "https://www.figma.com/oauth",
+    "tokenUrl": "https://api.figma.com/v1/oauth/token",
+    "refreshUrl": "https://api.figma.com/v1/oauth/refresh",
+    "tokenAuth": "basic",
+    "scopes": [
+      "current_user:read",
+      "file_content:read",
+      "file_metadata:read",
+      "file_comments:read",
+      "file_comments:write",
+      "projects:read",
+      "folders:read",
+      "folder_metadata:read",
+      "webhooks:read",
+      "webhooks:write"
+    ],
+    "identityMethod": "getMe",
+    "notes": "Public OAuth apps require Figma review before end-user authorization. Private apps are limited to the associated team/org."
+  },
+  "objects": {
+    "user": {
+      "description": "Authenticated Figma user (GET /v1/me)",
+      "methods": {
+        "get": "getMe"
+      },
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier", "externalId"] },
+        { "name": "handle", "type": "string", "tags": ["displayName"] },
+        { "name": "email", "type": "string", "tags": ["email", "pii"] },
+        { "name": "img_url", "type": "string", "tags": ["avatar"] }
+      ]
+    },
+    "file": {
+      "description": "Figma design file document and metadata",
+      "methods": {
+        "get": "getFile",
+        "getMeta": "getFileMeta"
+      },
+      "fields": [
+        { "name": "key", "type": "string", "tags": ["identifier"] },
+        { "name": "name", "type": "string", "tags": ["displayName"] },
+        { "name": "lastModified", "type": "string", "tags": ["timestamp"] },
+        { "name": "thumbnailUrl", "type": "string", "tags": ["thumbnail"] },
+        { "name": "version", "type": "string", "tags": [] },
+        { "name": "editorType", "type": "string", "tags": [] },
+        { "name": "document", "type": "object", "tags": ["content"] }
+      ]
+    },
+    "project": {
+      "description": "Legacy team project (folder). Prefer folder object for new work.",
+      "methods": {
+        "listByTeam": "getTeamProjects",
+        "listFiles": "getProjectFiles",
+        "getMeta": "getProjectMeta"
+      },
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"] },
+        { "name": "name", "type": "string", "tags": ["displayName"] }
+      ]
+    },
+    "folder": {
+      "description": "Team folder (replaces projects). List files and read metadata.",
+      "methods": {
+        "listByTeam": "getTeamFolders",
+        "listFiles": "getFolderFiles",
+        "getMeta": "getFolderMeta"
+      },
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"] },
+        { "name": "name", "type": "string", "tags": ["displayName"] }
+      ]
+    },
+    "comment": {
+      "description": "File comments. Public API supports list/create/delete (no update).",
+      "methods": {
+        "list": "getComments",
+        "create": "postComment",
+        "delete": "deleteComment"
+      },
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"] },
+        { "name": "message", "type": "string", "tags": ["content"] },
+        { "name": "file_key", "type": "string", "tags": ["parent"] },
+        { "name": "user", "type": "object", "tags": ["author"] },
+        { "name": "created_at", "type": "string", "tags": ["timestamp"] },
+        { "name": "resolved_at", "type": "string", "tags": ["timestamp"] }
+      ]
+    },
+    "webhook": {
+      "description": "Webhooks V2 subscription on a team, project/folder, or file context",
+      "methods": {
+        "list": "getWebhooks",
+        "create": "postWebhook",
+        "get": "getWebhook",
+        "update": "putWebhook",
+        "delete": "deleteWebhook",
+        "listByTeam": "getTeamWebhooks",
+        "listRequests": "getWebhookRequests"
+      },
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"] },
+        { "name": "event_type", "type": "string", "tags": ["event"] },
+        { "name": "context", "type": "string", "tags": [] },
+        { "name": "context_id", "type": "string", "tags": ["parent"] },
+        { "name": "endpoint", "type": "string", "tags": ["url"] },
+        { "name": "passcode", "type": "string", "tags": ["secret", "redactedOnRead"] },
+        { "name": "status", "type": "string", "tags": ["status"] },
+        { "name": "description", "type": "string", "tags": [] }
+      ]
+    }
+  }
+}

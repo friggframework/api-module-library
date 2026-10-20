@@ -1,0 +1,32 @@
+{
+  "name": "@friggframework/api-module-figma",
+  "version": "1.0.0",
+  "description": "Figma REST API module that lets the Frigg Framework interact with Figma files, projects/folders, comments, users, and webhooks",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint:fix": "prettier --write --loglevel error . && eslint . --fix"
+  },
+  "keywords": [
+    "frigg",
+    "figma",
+    "api-module",
+    "design",
+    "files",
+    "webhooks"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^2.0.0-next.107"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-scheduler": "^3.1113.0",
+    "dotenv": "^16.0.3",
+    "jest": "^28.1.3",
+    "js-yaml": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

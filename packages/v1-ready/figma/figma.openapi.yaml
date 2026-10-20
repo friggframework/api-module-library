@@ -1,0 +1,862 @@
+openapi: 3.1.0
+info:
+  title: Figma REST API (Frigg curated subset)
+  version: 0.45.0
+  description: Curated subset of the official Figma REST API OpenAPI spec (https://github.com/figma/rest-api-spec)
+    covering exactly the endpoints implemented by @friggframework/api-module-figma. One Api method per
+    operationId. Source of truth for spec-sync tests.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+- url: https://api.figma.com
+security:
+- OAuth2: []
+tags:
+- name: Users
+- name: Files
+- name: Comments
+- name: Projects
+- name: Folders
+- name: Webhooks
+paths:
+  /v1/me:
+    get:
+      tags:
+      - Users
+      summary: Get current user
+      security:
+      - PersonalAccessToken: []
+      - OAuth2:
+        - current_user:read
+        - files:read
+      description: Returns the user information for the currently authenticated user.
+      operationId: getMe
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v1/files/{file_key}:
+    get:
+      tags:
+      - Files
+      summary: Get file JSON
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - file_content:read
+        - files:read
+      description: 'Returns the document identified by `file_key` as a JSON object. The file key can be
+        parsed from any Figma file url: `https://www.figma.com/file/{file_key}/{title}`.
+
+
+        The `document` property contains a node of type `DOCUMENT`.
+
+
+        The `components` property contains a mapping from node IDs to component metadata. This is to help
+        you determine which components each instance comes from.'
+      operationId: getFile
+      parameters:
+      - name: file_key
+        in: path
+        description: File to export JSON from. This can be a file key or branch key. Use `GET /v1/files/:key`
+          with the `branch_data` query param to get the branch key.
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: query
+        description: A specific version ID to get. Omitting this will get the current version of the file.
+        schema:
+          type: string
+      - name: ids
+        in: query
+        description: 'Comma separated list of nodes that you care about in the document. If specified,
+          only a subset of the document will be returned corresponding to the nodes listed, their children,
+          and everything between the root node and the listed nodes.
+
+
+          Note: There may be other nodes included in the returned JSON that are outside the ancestor chains
+          of the desired nodes. The response may also include dependencies of anything in the nodes''
+          subtrees. For example, if a node subtree contains an instance of a local component that lives
+          elsewhere in that file, that component and its ancestor chain will also be included.
+
+
+          For historical reasons, top-level canvas nodes are always returned, regardless of whether they
+          are listed in the `ids` parameter. This quirk may be removed in a future version of the API.'
+        schema:
+          type: string
+      - name: depth
+        in: query
+        description: Positive integer representing how deep into the document tree to traverse. For example,
+          setting this to 1 returns only Pages, setting it to 2 returns Pages and all top level objects
+          on each page. Not setting this parameter returns all nodes.
+        schema:
+          type: number
+      - name: geometry
+        in: query
+        description: Set to "paths" to export vector data.
+        schema:
+          type: string
+      - name: plugin_data
+        in: query
+        description: A comma separated list of plugin IDs and/or the string "shared". Any data present
+          in the document written by those plugins will be included in the result in the `pluginData`
+          and `sharedPluginData` properties.
+        schema:
+          type: string
+      - name: branch_data
+        in: query
+        description: 'Returns branch metadata for the requested file. If the file is a branch, the main
+          file''s key will be included in the returned response. If the file has branches, their metadata
+          will be included in the returned response. Default: false.'
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '400':
+          description: Response 400 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v1/files/{file_key}/meta:
+    get:
+      tags:
+      - Files
+      summary: Get file metadata
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - file_metadata:read
+        - files:read
+      description: Get file metadata
+      operationId: getFileMeta
+      parameters:
+      - name: file_key
+        in: path
+        description: File to get metadata for. This can be a file key or branch key. Use `GET /v1/files/:key`
+          with the `branch_data` query param to get the branch key.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '400':
+          description: Response 400 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v1/files/{file_key}/comments:
+    get:
+      tags:
+      - Comments
+      summary: Get comments in a file
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - file_comments:read
+        - files:read
+      description: Gets a list of comments left on the file.
+      operationId: getComments
+      parameters:
+      - name: file_key
+        in: path
+        description: File to get comments from. This can be a file key or branch key. Use `GET /v1/files/:key`
+          with the `branch_data` query param to get the branch key.
+        required: true
+        schema:
+          type: string
+      - name: as_md
+        in: query
+        description: If enabled, will return comments as their markdown equivalents when applicable.
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+    post:
+      tags:
+      - Comments
+      summary: Add a comment to a file
+      security:
+      - PersonalAccessToken: []
+      - OAuth2:
+        - file_comments:write
+      description: Posts a new comment on the file.
+      operationId: postComment
+      parameters:
+      - name: file_key
+        in: path
+        description: File to add comments in. This can be a file key or branch key. Use `GET /v1/files/:key`
+          with the `branch_data` query param to get the branch key.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Comment to post.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: The text contents of the comment to post.
+                comment_id:
+                  type: string
+                  description: The ID of the comment to reply to, if any. This must be a root comment.
+                    You cannot reply to other replies (a comment that has a parent_id).
+                client_meta:
+                  description: The position where to place the comment.
+                  oneOf:
+                  - $ref: '#/components/schemas/Vector'
+                  - $ref: '#/components/schemas/FrameOffset'
+                  - $ref: '#/components/schemas/Region'
+                  - $ref: '#/components/schemas/FrameOffsetRegion'
+              required:
+              - message
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '400':
+          description: Response 400 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v1/files/{file_key}/comments/{comment_id}:
+    delete:
+      tags:
+      - Comments
+      summary: Delete a comment
+      security:
+      - PersonalAccessToken: []
+      - OAuth2:
+        - file_comments:write
+      description: Deletes a specific comment. Only the person who made the comment is allowed to delete
+        it.
+      operationId: deleteComment
+      parameters:
+      - name: file_key
+        in: path
+        description: File to delete comment from. This can be a file key or branch key. Use `GET /v1/files/:key`
+          with the `branch_data` query param to get the branch key.
+        required: true
+        schema:
+          type: string
+      - name: comment_id
+        in: path
+        description: Comment id of comment to delete
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v1/teams/{team_id}/projects:
+    get:
+      tags:
+      - Projects
+      summary: '[Deprecated] Get projects in a team'
+      deprecated: true
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - projects:read
+        - files:read
+      description: 'Deprecated in favor of [Get top-level folders in a team](https://developers.figma.com/docs/rest-api/folders-endpoints/).
+        You can use this endpoint to get a list of the top-level Projects (now called "folders") within
+        the specified team. This will only return projects visible to the authenticated user or owner
+        of the developer token. Note: it is not currently possible to programmatically obtain the team
+        id of a user just from a token. To obtain a team id, navigate to a team page of a team you are
+        a part of. The team id will be present in the URL after the word team and before your team name.'
+      operationId: getTeamProjects
+      parameters:
+      - name: team_id
+        in: path
+        description: ID of the team to list projects from
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '400':
+          description: Response 400 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v1/projects/{project_id}/files:
+    get:
+      tags:
+      - Projects
+      summary: '[Deprecated] Get files in a project'
+      deprecated: true
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - projects:read
+        - files:read
+      description: Deprecated in favor of [Get files in a folder](https://developers.figma.com/docs/rest-api/folders-endpoints/).
+        Get a list of all the Files within the specified project (now called a "folder").
+      operationId: getProjectFiles
+      parameters:
+      - name: project_id
+        in: path
+        description: ID of the project to list files from
+        required: true
+        schema:
+          type: string
+      - name: branch_data
+        in: query
+        description: Returns branch metadata in the response for each main file with a branch inside the
+          project.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '400':
+          description: Response 400 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v1/projects/{project_id}/meta:
+    get:
+      tags:
+      - Projects
+      summary: '[Deprecated] Get project metadata'
+      deprecated: true
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - project_metadata:read
+      description: Deprecated in favor of [Get folder metadata](https://developers.figma.com/docs/rest-api/folders-endpoints/).
+        Get metadata for a project (now called a "folder").
+      operationId: getProjectMeta
+      parameters:
+      - name: project_id
+        in: path
+        description: ID of the project to get metadata for.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v2/teams/{team_id}/folders:
+    get:
+      tags:
+      - Folders
+      summary: Get top-level folders in a team
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - folders:read
+      description: Get a list of the top-level folders (previously called "projects") within the specified
+        team. Subfolders can be traversed with the GET /v2/folders/{folder_id}/folders endpoint. It is
+        not possible to programmatically obtain team IDs. To obtain a team ID, navigate to the team page
+        in the Figma file browser. The team ID is present in the URL after the word team. For example,
+        in `https://www.figma.com/files/181033233908053158/team/1535685101263221741`, the team ID is `1535685101263221741`.
+      operationId: getTeamFolders
+      parameters:
+      - name: team_id
+        in: path
+        description: ID of the team to list folders from
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '400':
+          description: Response 400 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v2/folders/{folder_id}/files:
+    get:
+      tags:
+      - Folders
+      summary: Get files in a folder
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - folders:read
+      description: Get a list of the files directly within the specified folder.
+      operationId: getFolderFiles
+      parameters:
+      - name: folder_id
+        in: path
+        description: ID of the folder to list files from
+        required: true
+        schema:
+          type: string
+      - name: branch_data
+        in: query
+        description: Returns branch metadata in the response for each main file with a branch inside the
+          folder.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '400':
+          description: Response 400 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v2/folders/{folder_id}/meta:
+    get:
+      tags:
+      - Folders
+      summary: Get folder metadata
+      security:
+      - PlanAccessToken: []
+      - OAuth2:
+        - folder_metadata:read
+      description: Get metadata for a folder (name, thumbnail, file count, timestamps) without enumerating
+        its files.
+      operationId: getFolderMeta
+      parameters:
+      - name: folder_id
+        in: path
+        description: ID of the folder to get metadata for
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v2/webhooks:
+    get:
+      tags:
+      - Webhooks
+      summary: Get webhooks by context or plan
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - webhooks:read
+      description: Returns a list of webhooks corresponding to the context or plan provided, if they exist.
+        For plan, the webhooks for all contexts that you have access to will be returned, and theresponse
+        is paginated
+      operationId: getWebhooks
+      parameters:
+      - name: context
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Context to create the resource on. Should be "team", "project", or "file".
+      - name: context_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: The id of the context that you want to get attached webhooks for. If you're using
+          context_id, you cannot use plan_api_id.
+      - name: plan_api_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: The id of your plan. Use this to get all webhooks for all contexts you have access
+          to. If you're using plan_api_id, you cannot use context or context_id. When you use plan_api_id,
+          the response is paginated.
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+        description: If you're using plan_api_id, this is the cursor to use for pagination. If you're
+          using context or context_id, this parameter is ignored. Provide the next_page or prev_page value
+          from the previous response to get the next or previous page of results.
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '400':
+          description: Response 400 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+    post:
+      tags:
+      - Webhooks
+      summary: Create a webhook
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - webhooks:write
+      description: Create a new webhook which will call the specified endpoint when the event triggers.
+        By default, this webhook will automatically send a PING event to the endpoint when it is created.
+        If this behavior is not desired, you can create the webhook and set the status to PAUSED and reactivate
+        it later.
+      operationId: postWebhook
+      requestBody:
+        description: The webhook to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event_type:
+                  type: string
+                  description: 'see official schema #/components/schemas/WebhookV2Event'
+                team_id:
+                  type: string
+                  description: Team id to receive updates about. This is deprecated, use 'context' and
+                    'context_id' instead.
+                  deprecated: true
+                context:
+                  type: string
+                  description: Context to create the webhook for. Must be "team", "project", or "file".
+                context_id:
+                  type: string
+                  description: The id of the context you want to receive updates about.
+                endpoint:
+                  type: string
+                  description: The HTTP endpoint that will receive a POST request when the event triggers.
+                    Max length 2048 characters.
+                passcode:
+                  type: string
+                  description: String that will be passed back to your webhook endpoint to verify that
+                    it is being called by Figma. Max length 100 characters.
+                status:
+                  type: string
+                  description: 'see official schema #/components/schemas/WebhookV2Status'
+                description:
+                  type: string
+                  description: User provided description or name for the webhook. Max length 150 characters.
+              required:
+              - event_type
+              - endpoint
+              - passcode
+              - context
+              - context_id
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '400':
+          description: Response 400 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v2/webhooks/{webhook_id}:
+    get:
+      tags:
+      - Webhooks
+      summary: Get a webhook
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - webhooks:read
+        - files:read
+      description: Get a webhook by ID.
+      operationId: getWebhook
+      parameters:
+      - name: webhook_id
+        in: path
+        description: ID of webhook to get
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '400':
+          description: Response 400 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+    put:
+      tags:
+      - Webhooks
+      summary: Update a webhook
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - webhooks:write
+      description: Update a webhook by ID.
+      operationId: putWebhook
+      parameters:
+      - name: webhook_id
+        in: path
+        description: ID of webhook to update
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: The webhook to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event_type:
+                  type: string
+                  description: 'see official schema #/components/schemas/WebhookV2Event'
+                endpoint:
+                  type: string
+                  description: The HTTP endpoint that will receive a POST request when the event triggers.
+                    Max length 2048 characters.
+                passcode:
+                  type: string
+                  description: String that will be passed back to your webhook endpoint to verify that
+                    it is being called by Figma. Max length 100 characters.
+                status:
+                  type: string
+                  description: 'see official schema #/components/schemas/WebhookV2Status'
+                description:
+                  type: string
+                  description: User provided description or name for the webhook. Max length 150 characters.
+              required:
+              - event_type
+              - team_id
+              - endpoint
+              - passcode
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '400':
+          description: Response 400 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+    delete:
+      tags:
+      - Webhooks
+      summary: Delete a webhook
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - webhooks:write
+      description: Deletes the specified webhook. This operation cannot be reversed.
+      operationId: deleteWebhook
+      parameters:
+      - name: webhook_id
+        in: path
+        description: ID of webhook to delete
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '400':
+          description: Response 400 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v2/teams/{team_id}/webhooks:
+    get:
+      tags:
+      - Webhooks
+      summary: '[Deprecated] Get team webhooks'
+      deprecated: true
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - webhooks:read
+        - files:read
+      description: Returns all webhooks registered under the specified team.
+      operationId: getTeamWebhooks
+      parameters:
+      - name: team_id
+        in: path
+        description: ID of team to get webhooks for
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+  /v2/webhooks/{webhook_id}/requests:
+    get:
+      tags:
+      - Webhooks
+      summary: Get webhook requests
+      security:
+      - PersonalAccessToken: []
+      - PlanAccessToken: []
+      - OAuth2:
+        - webhooks:read
+        - files:read
+      description: Returns all webhook requests sent within the last week. Useful for debugging.
+      operationId: getWebhookRequests
+      parameters:
+      - name: webhook_id
+        in: path
+        description: The id of the webhook subscription you want to see events from
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Response 200 (see official Figma OpenAPI)
+        '400':
+          description: Response 400 (see official Figma OpenAPI)
+        '403':
+          description: Response 403 (see official Figma OpenAPI)
+        '404':
+          description: Response 404 (see official Figma OpenAPI)
+        '429':
+          description: Response 429 (see official Figma OpenAPI)
+        '500':
+          description: Response 500 (see official Figma OpenAPI)
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://www.figma.com/oauth
+          tokenUrl: https://api.figma.com/v1/oauth/token
+          refreshUrl: https://api.figma.com/v1/oauth/refresh
+          scopes:
+            current_user:read: Read your name, email, and profile image.
+            file_comments:read: Read the comments for files.
+            file_comments:write: Post and delete comments and comment reactions in files.
+            file_content:read: Read the contents of files, such as nodes and the editor type.
+            file_dev_resources:read: Read dev resources in files.
+            file_dev_resources:write: Write to dev resources in files.
+            file_metadata:read: Read metadata of files.
+            file_variables:read: 'Read variables in Figma file. Note: this is only available to members
+              in Enterprise organizations.'
+            file_variables:write: 'Write to variables in Figma file. Note: this is only available to members
+              in Enterprise organizations.'
+            file_versions:read: Read the version history for files you can access.
+            files:read: Deprecated. Read files, projects, users, versions, comments, components & styles,
+              and webhooks.
+            library_analytics:read: Read library analytics data.
+            library_assets:read: Read data of individual published components and styles.
+            library_content:read: Read published components and styles of files.
+            project_metadata:read: Read metadata of projects.
+            projects:read: List projects and files in projects.
+            folders:read: List folders and files in folders.
+            folder_metadata:read: Read metadata of folders.
+            team_library_content:read: Read published components and styles of teams.
+            webhooks:read: Read metadata of webhooks.
+            webhooks:write: Create and manage webhooks.
+    PersonalAccessToken:
+      type: apiKey
+      name: X-Figma-Token
+      in: header
+    PlanAccessToken:
+      type: apiKey
+      name: X-Figma-Token
+      in: header
+  schemas: {}

@@ -52,7 +52,7 @@
       "sync": {
         "id": "id",
         "list": {
-          "capability": "project.list",
+          "capability": "project.search",
           "items": "values",
           "paging": "startAt"
         },
@@ -90,7 +90,7 @@
         "id": "id",
         "updatedAt": "fields.updated",
         "list": {
-          "capability": "issue.search",
+          "capability": "issue.searchJql",
           "items": "issues",
           "paging": "nextPageToken"
         },
@@ -181,9 +181,9 @@
       "output": "user",
       "args": ["params"]
     },
-    "project.list": {
+    "project.search": {
       "kind": "read",
-      "method": "listProjects",
+      "method": "searchProjects",
       "output": "project",
       "args": ["params"]
     },
@@ -228,15 +228,15 @@
       "method": "deleteIssue",
       "args": ["issueIdOrKey", "params"]
     },
-    "issue.search": {
+    "issue.searchJql": {
       "kind": "read",
-      "method": "searchIssues",
+      "method": "searchAndReconsileIssuesUsingJql",
       "output": "issue",
       "args": ["params"]
     },
     "comment.list": {
       "kind": "read",
-      "method": "listComments",
+      "method": "getComments",
       "output": "comment",
       "args": ["issueIdOrKey", "params"]
     },
@@ -248,19 +248,19 @@
     },
     "webhook.list": {
       "kind": "read",
-      "method": "listWebhooks",
+      "method": "getDynamicWebhooksForApp",
       "output": "webhook",
       "args": ["params"]
     },
     "webhook.create": {
       "kind": "write",
-      "method": "createWebhooks",
+      "method": "registerDynamicWebhooks",
       "output": "webhook",
       "args": ["body"]
     },
     "webhook.delete": {
       "kind": "write",
-      "method": "deleteWebhooks",
+      "method": "deleteWebhookById",
       "args": ["body"]
     },
     "webhook.refresh": {
@@ -271,7 +271,7 @@
   },
   "options": {
     "project": {
-      "capability": "project.list",
+      "capability": "project.search",
       "label": "{{item.name}} ({{item.key}})",
       "value": "$.item.id"
     }

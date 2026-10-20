@@ -6,7 +6,8 @@ const { OAuth2Requester, get } = require('@friggframework/core');
  *
  * Auth: Atlassian OAuth 2.0 authorization-code (3LO). Access tokens are sent as
  * `Authorization: Bearer <token>`. Token exchange uses JSON bodies against
- * `https://auth.atlassian.com/oauth/token`. Include `offline_access` in scopes
+ * `https://auth.atlassian.com/oauth/token`. Include `offline_access` (Atlassian
+ * auth-server scope from the 3LO docs — not listed in swagger-v3 OAuth2 scopes)
  * to receive rotating refresh tokens.
  *
  * Base URL (OAuth): `https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3`
@@ -337,10 +338,10 @@ class Api extends OAuth2Requester {
     /**
      * Get projects paginated (preferred over deprecated GET /project).
      * GET /rest/api/3/project/search
-     * Official operationId: searchProjects
+     * operationId: searchProjects (official swagger-v3)
      * Scope: read:jira-work
      */
-    async listProjects(params = {}) {
+    async searchProjects(params = {}) {
         return this._get({
             url: this.baseUrl + this.URLs.projectSearch,
             query: params,
@@ -445,10 +446,10 @@ class Api extends OAuth2Requester {
     /**
      * Search issues with JQL enhanced search (replaces deprecated /search).
      * GET /rest/api/3/search/jql
-     * Official operationId: searchAndReconsileIssuesUsingJql
+     * operationId: searchAndReconsileIssuesUsingJql (official swagger-v3 spelling)
      * Scope: read:jira-work
      */
-    async searchIssues(params = {}) {
+    async searchAndReconsileIssuesUsingJql(params = {}) {
         return this._get({
             url: this.baseUrl + this.URLs.searchJql,
             query: params,
@@ -460,10 +461,10 @@ class Api extends OAuth2Requester {
     /**
      * Get comments for an issue.
      * GET /rest/api/3/issue/{issueIdOrKey}/comment
-     * Official operationId: getComments
+     * operationId: getComments
      * Scope: read:jira-work
      */
-    async listComments(issueIdOrKey, params = {}) {
+    async getComments(issueIdOrKey, params = {}) {
         return this._get({
             url: this.baseUrl + this.URLs.issueComments(issueIdOrKey),
             query: params,
@@ -504,10 +505,10 @@ class Api extends OAuth2Requester {
     /**
      * Get dynamic webhooks for the calling app.
      * GET /rest/api/3/webhook
-     * Official operationId: getDynamicWebhooksForApp
+     * operationId: getDynamicWebhooksForApp
      * Scopes: read:jira-work, manage:jira-webhook
      */
-    async listWebhooks(params = {}) {
+    async getDynamicWebhooksForApp(params = {}) {
         return this._get({
             url: this.baseUrl + this.URLs.webhook,
             query: params,
@@ -517,11 +518,11 @@ class Api extends OAuth2Requester {
     /**
      * Register dynamic webhooks.
      * POST /rest/api/3/webhook
-     * Official operationId: registerDynamicWebhooks
+     * operationId: registerDynamicWebhooks
      * Body: { url, webhooks: [{ events, jqlFilter, ... }] }
      * Scopes: read:jira-work, manage:jira-webhook
      */
-    async createWebhooks(body) {
+    async registerDynamicWebhooks(body) {
         return this._post({
             url: this.baseUrl + this.URLs.webhook,
             body,
@@ -531,11 +532,11 @@ class Api extends OAuth2Requester {
     /**
      * Delete webhooks by ID.
      * DELETE /rest/api/3/webhook
-     * Official operationId: deleteWebhookById
+     * operationId: deleteWebhookById
      * Body: { webhookIds: number[] }
      * Scopes: read:jira-work, manage:jira-webhook
      */
-    async deleteWebhooks(body) {
+    async deleteWebhookById(body) {
         return this._delete({
             url: this.baseUrl + this.URLs.webhook,
             body,
@@ -545,7 +546,7 @@ class Api extends OAuth2Requester {
     /**
      * Extend webhook life.
      * PUT /rest/api/3/webhook/refresh
-     * Official operationId: refreshWebhooks
+     * operationId: refreshWebhooks
      * Body: { webhookIds: number[] }
      * Scopes: read:jira-work, manage:jira-webhook
      */

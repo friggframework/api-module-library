@@ -192,9 +192,9 @@ describe('Jira Api', () => {
     });
 
     describe('projects', () => {
-        it('listProjects hits /project/search', async () => {
+        it('searchProjects hits /project/search', async () => {
             const api = makeApi();
-            await api.listProjects({ maxResults: 10 });
+            await api.searchProjects({ maxResults: 10 });
             expect(api._captured[0].url).toBe(
                 'https://api.atlassian.com/ex/jira/cloud-123/rest/api/3/project/search'
             );
@@ -229,18 +229,18 @@ describe('Jira Api', () => {
             expect(api._captured[1].url).toContain('/issue/DEMO-1');
         });
 
-        it('searchIssues hits /search/jql', async () => {
+        it('searchAndReconsileIssuesUsingJql hits /search/jql', async () => {
             const api = makeApi();
-            await api.searchIssues({ jql: 'project = DEMO' });
+            await api.searchAndReconsileIssuesUsingJql({ jql: 'project = DEMO' });
             expect(api._captured[0].url).toContain('/search/jql');
             expect(api._captured[0].query.jql).toBe('project = DEMO');
         });
     });
 
     describe('comments & users', () => {
-        it('listComments and addComment hit issue comment paths', async () => {
+        it('getComments and addComment hit issue comment paths', async () => {
             const api = makeApi();
-            await api.listComments('DEMO-1');
+            await api.getComments('DEMO-1');
             await api.addComment('DEMO-1', { body: { type: 'doc', content: [] } });
             expect(api._captured[0].url).toContain('/issue/DEMO-1/comment');
             expect(api._captured[1].method).toBe('POST');
@@ -254,10 +254,10 @@ describe('Jira Api', () => {
     });
 
     describe('webhooks', () => {
-        it('list/create/delete/refresh hit /webhook paths', async () => {
+        it('get/register/delete/refresh hit /webhook paths', async () => {
             const api = makeApi();
-            await api.listWebhooks({ startAt: 0 });
-            await api.createWebhooks({
+            await api.getDynamicWebhooksForApp({ startAt: 0 });
+            await api.registerDynamicWebhooks({
                 url: 'https://hook.example/jira',
                 webhooks: [
                     {
@@ -266,7 +266,7 @@ describe('Jira Api', () => {
                     },
                 ],
             });
-            await api.deleteWebhooks({ webhookIds: [1, 2] });
+            await api.deleteWebhookById({ webhookIds: [1, 2] });
             await api.refreshWebhooks({ webhookIds: [1] });
             expect(api._captured[0].url).toContain('/webhook');
             expect(api._captured[1].method).toBe('POST');

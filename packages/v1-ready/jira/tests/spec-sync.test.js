@@ -32,7 +32,7 @@ describe('OpenAPI spec ↔ client sync', () => {
         expect(spec.servers[0].url).toBe(api.baseUrl);
     });
 
-    it('declares OAuth2 security matching Atlassian 3LO', () => {
+    it('declares OAuth2 security matching official swagger classic scopes', () => {
         const scheme = spec.components.securitySchemes.OAuth2;
         expect(scheme.type).toBe('oauth2');
         expect(scheme.flows.authorizationCode.authorizationUrl).toBe(
@@ -41,12 +41,42 @@ describe('OpenAPI spec ↔ client sync', () => {
         expect(scheme.flows.authorizationCode.tokenUrl).toBe(
             'https://auth.atlassian.com/oauth/token'
         );
-        expect(scheme.flows.authorizationCode.scopes).toHaveProperty(
+        // offline_access is auth-server only (3LO docs), not in swagger-v3 scopes
+        expect(scheme.flows.authorizationCode.scopes).not.toHaveProperty(
             'offline_access'
         );
         expect(scheme.flows.authorizationCode.scopes).toHaveProperty(
             'manage:jira-webhook'
         );
+        expect(scheme.flows.authorizationCode.scopes).toHaveProperty(
+            'read:jira-work'
+        );
+    });
+
+    it('uses official swagger operationIds for curated Jira REST ops', () => {
+        expect(specOperationIds).toEqual(
+            expect.arrayContaining([
+                'getCurrentUser',
+                'searchProjects',
+                'createProject',
+                'getProject',
+                'updateProject',
+                'createIssue',
+                'getIssue',
+                'editIssue',
+                'deleteIssue',
+                'searchAndReconsileIssuesUsingJql',
+                'getComments',
+                'addComment',
+                'findUsers',
+                'getDynamicWebhooksForApp',
+                'registerDynamicWebhooks',
+                'deleteWebhookById',
+                'refreshWebhooks',
+            ])
+        );
+        // accessible-resources is Atlassian auth API, not Jira swagger-v3
+        expect(specOperationIds).not.toContain('getAccessibleResources');
     });
 });
 

@@ -1,0 +1,517 @@
+openapi: 3.0.3
+info:
+  title: PostHog Private REST API (curated)
+  version: "1.0.0"
+  description: >-
+    Curated subset of PostHog's private REST API covering exactly the endpoints
+    implemented by @friggframework/api-module-posthog. Auth is a personal API
+    key (`Authorization: Bearer`). Paths are relative to the Cloud host
+    (US default https://us.posthog.com, EU https://eu.posthog.com).
+    Official docs: https://posthog.com/docs/api — no inventing; every path
+    here is documented by PostHog.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://us.posthog.com
+    description: "PostHog US Cloud (default). EU: https://eu.posthog.com"
+security:
+  - BearerAuth: []
+tags:
+  - name: Users
+  - name: Insights
+  - name: Query
+  - name: Events
+  - name: Persons
+  - name: HogFunctions
+paths:
+  /api/users/@me/:
+    get:
+      tags: [Users]
+      operationId: getCurrentUser
+      summary: Retrieve the authenticated user
+      description: >-
+        Pass `@me` as the UUID to fetch the authenticated user.
+        Scope: user:read. Docs: https://posthog.com/docs/api/users
+      responses:
+        "200":
+          description: Authenticated user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uuid: { type: string, format: uuid }
+                  email: { type: string, format: email }
+                  first_name: { type: string }
+                  last_name: { type: string }
+                  distinct_id: { type: string }
+
+  /api/projects/{project_id}/insights/:
+    parameters:
+      - $ref: "#/components/parameters/projectId"
+    get:
+      tags: [Insights]
+      operationId: listInsights
+      summary: List insights
+      description: "Scope insight:read. Docs: https://posthog.com/docs/api/insights"
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+        - in: query
+          name: saved
+          schema: { type: boolean }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: short_id
+          schema: { type: string }
+        - in: query
+          name: favorited
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Paginated insights
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+                  next: { type: string, nullable: true }
+                  previous: { type: string, nullable: true }
+                  results:
+                    type: array
+                    items: { $ref: "#/components/schemas/Insight" }
+    post:
+      tags: [Insights]
+      operationId: createInsight
+      summary: Create an insight
+      description: "Scope insight:write."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, nullable: true }
+                derived_name: { type: string, nullable: true }
+                description: { type: string, nullable: true }
+                query: { type: object }
+                tags:
+                  type: array
+                  items: { type: string }
+                favorited: { type: boolean }
+                dashboards:
+                  type: array
+                  items: { type: integer }
+      responses:
+        "201":
+          description: Created insight
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Insight" }
+
+  /api/projects/{project_id}/insights/{insight_id}/:
+    parameters:
+      - $ref: "#/components/parameters/projectId"
+      - in: path
+        name: insight_id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Insights]
+      operationId: getInsight
+      summary: Retrieve an insight
+      description: "Scope insight:read."
+      responses:
+        "200":
+          description: Insight
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Insight" }
+    patch:
+      tags: [Insights]
+      operationId: updateInsight
+      summary: Partially update an insight
+      description: "Scope insight:write."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated insight
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Insight" }
+
+  /api/projects/{project_id}/query/:
+    parameters:
+      - $ref: "#/components/parameters/projectId"
+    post:
+      tags: [Query]
+      operationId: createQuery
+      summary: Create / run a query (HogQL)
+      description: >-
+        Main analytics query endpoint. Scope query:read.
+        Docs: https://posthog.com/docs/api/queries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query:
+                  type: object
+                  required: [kind]
+                  properties:
+                    kind:
+                      type: string
+                      example: HogQLQuery
+                    query:
+                      type: string
+                      description: HogQL SQL when kind is HogQLQuery
+                name: { type: string }
+      responses:
+        "200":
+          description: Query results
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /api/projects/{project_id}/events/:
+    parameters:
+      - $ref: "#/components/parameters/projectId"
+    get:
+      tags: [Events]
+      operationId: listEvents
+      summary: List events (deprecated)
+      description: >-
+        Deprecated. Prefer /query or batch exports for bulk/ad-hoc analytics.
+        Scope query:read. Docs: https://posthog.com/docs/api/events
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+        - in: query
+          name: after
+          schema: { type: string, format: date-time }
+        - in: query
+          name: before
+          schema: { type: string, format: date-time }
+        - in: query
+          name: event
+          schema: { type: string }
+        - in: query
+          name: person_id
+          schema: { type: integer }
+        - in: query
+          name: distinct_id
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  next: { type: string, nullable: true }
+                  results:
+                    type: array
+                    items: { $ref: "#/components/schemas/Event" }
+
+  /api/projects/{project_id}/events/{event_id}/:
+    parameters:
+      - $ref: "#/components/parameters/projectId"
+      - in: path
+        name: event_id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Events]
+      operationId: getEvent
+      summary: Retrieve an event
+      description: "Scope query:read. Deprecated events surface."
+      responses:
+        "200":
+          description: Event
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Event" }
+
+  /api/projects/{project_id}/persons/:
+    parameters:
+      - $ref: "#/components/parameters/projectId"
+    get:
+      tags: [Persons]
+      operationId: listPersons
+      summary: List persons
+      description: >-
+        Read persons. Create via Capture API / SDKs, not this endpoint.
+        Scope person:read. Docs: https://posthog.com/docs/api/persons
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: email
+          schema: { type: string }
+        - in: query
+          name: distinct_id
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated persons
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+                  next: { type: string, nullable: true }
+                  previous: { type: string, nullable: true }
+                  results:
+                    type: array
+                    items: { $ref: "#/components/schemas/Person" }
+
+  /api/projects/{project_id}/persons/{person_id}/:
+    parameters:
+      - $ref: "#/components/parameters/projectId"
+      - in: path
+        name: person_id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Persons]
+      operationId: getPerson
+      summary: Retrieve a person
+      description: "Scope person:read."
+      responses:
+        "200":
+          description: Person
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Person" }
+    patch:
+      tags: [Persons]
+      operationId: updatePerson
+      summary: Partially update a person
+      description: >-
+        Scope person:write. Prefer Capture `$set` / SDKs for property updates
+        when possible.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated person
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Person" }
+
+  /api/projects/{project_id}/hog_functions/:
+    parameters:
+      - $ref: "#/components/parameters/projectId"
+    get:
+      tags: [HogFunctions]
+      operationId: listHogFunctions
+      summary: List hog functions
+      description: >-
+        Includes destination-type functions used for realtime / webhook-style
+        delivery. Scope hog_function:read.
+        Docs: https://posthog.com/docs/api/hog-functions
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+        - in: query
+          name: enabled
+          schema: { type: boolean }
+        - in: query
+          name: type
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items: { type: string }
+      responses:
+        "200":
+          description: Paginated hog functions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+                  next: { type: string, nullable: true }
+                  previous: { type: string, nullable: true }
+                  results:
+                    type: array
+                    items: { $ref: "#/components/schemas/HogFunction" }
+    post:
+      tags: [HogFunctions]
+      operationId: createHogFunction
+      summary: Create a hog function
+      description: "Scope hog_function:write. Use type=destination for webhook-style destinations."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: destination
+                name: { type: string }
+                description: { type: string }
+                enabled: { type: boolean }
+                hog: { type: string }
+                inputs: { type: object }
+                filters: { type: object }
+                mappings: { type: object }
+      responses:
+        "201":
+          description: Created hog function
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HogFunction" }
+
+  /api/projects/{project_id}/hog_functions/{hog_function_id}/:
+    parameters:
+      - $ref: "#/components/parameters/projectId"
+      - in: path
+        name: hog_function_id
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [HogFunctions]
+      operationId: getHogFunction
+      summary: Retrieve a hog function
+      description: "Scope hog_function:read."
+      responses:
+        "200":
+          description: Hog function
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HogFunction" }
+    patch:
+      tags: [HogFunctions]
+      operationId: updateHogFunction
+      summary: Partially update a hog function
+      description: "Scope hog_function:write."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated hog function
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HogFunction" }
+    delete:
+      tags: [HogFunctions]
+      operationId: deleteHogFunction
+      summary: Delete a hog function
+      description: "Scope hog_function:write."
+      responses:
+        "204":
+          description: Deleted
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >-
+        Personal API key sent as `Authorization: Bearer <key>`.
+        Docs: https://posthog.com/docs/api/personal-api-keys.
+        The module stores the bare key and prefixes Bearer at request time.
+  parameters:
+    projectId:
+      in: path
+      name: project_id
+      required: true
+      schema: { type: string }
+      description: PostHog project ID
+  schemas:
+    Insight:
+      type: object
+      properties:
+        id: { type: integer }
+        short_id: { type: string }
+        name: { type: string, nullable: true }
+        derived_name: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        query: { type: object }
+        favorited: { type: boolean }
+        tags:
+          type: array
+          items: { type: string }
+    Event:
+      type: object
+      properties:
+        id: { type: string }
+        event: { type: string }
+        distinct_id: { type: string }
+        timestamp: { type: string, format: date-time }
+        properties: { type: object }
+    Person:
+      type: object
+      properties:
+        id: { type: integer }
+        uuid: { type: string, format: uuid }
+        name: { type: string }
+        distinct_ids:
+          type: array
+          items: { type: string }
+        created_at: { type: string, format: date-time }
+        last_seen_at: { type: string, format: date-time, nullable: true }
+    HogFunction:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, example: destination }
+        name: { type: string }
+        description: { type: string }
+        enabled: { type: boolean }
+        deleted: { type: boolean }
+        hog: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }

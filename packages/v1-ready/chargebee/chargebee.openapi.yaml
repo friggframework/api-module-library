@@ -1,0 +1,428 @@
+openapi: 3.0.3
+info:
+  title: Chargebee Billing API v2 (subset)
+  version: "1.0.0"
+  description: >-
+    Curated subset of Chargebee's Billing API v2 (Product Catalog v2) used by
+    @friggframework/api-module-chargebee. Paths, auth, and request content types
+    are taken from Chargebee's published OpenAPI
+    (https://github.com/chargebee/openapi/blob/main/spec/chargebee_api_v2_pc_v2_spec.yaml)
+    and API docs (https://apidocs.chargebee.com/docs/api). This file is the
+    source of truth the hand-written client in api.js mirrors (one method per
+    operationId). Official operationIds are noted in each operation description.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://demo.chargebee.com/api/v2
+    description: >-
+      Chargebee site-scoped host. Replace `demo` with the connected site
+      subdomain (e.g. acme-test). Matches Api default site when none is provided.
+security:
+  - BasicAuth: []
+tags:
+  - name: Customers
+  - name: Subscriptions
+  - name: Invoices
+  - name: Transactions
+  - name: Items
+  - name: ItemPrices
+  - name: Events
+  - name: WebhookEndpoints
+paths:
+  /customers:
+    get:
+      tags: [Customers]
+      operationId: listCustomers
+      summary: List customers
+      description: Official OpenAPI operationId `list_customers`.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: string }
+        - in: query
+          name: include_deleted
+          schema: { type: boolean }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: Create a customer
+      description: Official OpenAPI operationId `create_a_customer`.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema: { $ref: "#/components/schemas/CustomerForm" }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /customers/{customer-id}:
+    get:
+      tags: [Customers]
+      operationId: getCustomer
+      summary: Retrieve a customer
+      description: Official OpenAPI operationId `retrieve_a_customer`.
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [Customers]
+      operationId: updateCustomer
+      summary: Update a customer
+      description: Official OpenAPI operationId `update_a_customer`.
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema: { $ref: "#/components/schemas/CustomerForm" }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /subscriptions:
+    get:
+      tags: [Subscriptions]
+      operationId: listSubscriptions
+      summary: List subscriptions
+      description: Official OpenAPI operationId `list_subscriptions`.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: string }
+        - in: query
+          name: "customer_id[is]"
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /subscriptions/{subscription-id}:
+    get:
+      tags: [Subscriptions]
+      operationId: getSubscription
+      summary: Retrieve a subscription
+      description: Official OpenAPI operationId `retrieve_a_subscription`.
+      parameters:
+        - in: path
+          name: subscription-id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /invoices:
+    get:
+      tags: [Invoices]
+      operationId: listInvoices
+      summary: List invoices
+      description: Official OpenAPI operationId `list_invoices`.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: string }
+        - in: query
+          name: "customer_id[is]"
+          schema: { type: string }
+        - in: query
+          name: "subscription_id[is]"
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /invoices/{invoice-id}:
+    get:
+      tags: [Invoices]
+      operationId: getInvoice
+      summary: Retrieve an invoice
+      description: Official OpenAPI operationId `retrieve_an_invoice`.
+      parameters:
+        - in: path
+          name: invoice-id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /transactions:
+    get:
+      tags: [Transactions]
+      operationId: listTransactions
+      summary: List transactions (payments)
+      description: Official OpenAPI operationId `list_transactions`.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: string }
+        - in: query
+          name: "customer_id[is]"
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /transactions/{transaction-id}:
+    get:
+      tags: [Transactions]
+      operationId: getTransaction
+      summary: Retrieve a transaction
+      description: Official OpenAPI operationId `retrieve_a_transaction`.
+      parameters:
+        - in: path
+          name: transaction-id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /items:
+    get:
+      tags: [Items]
+      operationId: listItems
+      summary: List items (Product Catalog v2)
+      description: Official OpenAPI operationId `list_items`.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /items/{item-id}:
+    get:
+      tags: [Items]
+      operationId: getItem
+      summary: Retrieve an item
+      description: Official OpenAPI operationId `retrieve_an_item`.
+      parameters:
+        - in: path
+          name: item-id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /item_prices:
+    get:
+      tags: [ItemPrices]
+      operationId: listItemPrices
+      summary: List item prices
+      description: Official OpenAPI operationId `list_item_prices`.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: string }
+        - in: query
+          name: "item_id[is]"
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /item_prices/{item-price-id}:
+    get:
+      tags: [ItemPrices]
+      operationId: getItemPrice
+      summary: Retrieve an item price
+      description: Official OpenAPI operationId `retrieve_an_item_price`.
+      parameters:
+        - in: path
+          name: item-price-id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /events:
+    get:
+      tags: [Events]
+      operationId: listEvents
+      summary: List events
+      description: Official OpenAPI operationId `list_events`.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: string }
+        - in: query
+          name: "event_type[is]"
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /events/{event-id}:
+    get:
+      tags: [Events]
+      operationId: getEvent
+      summary: Retrieve an event
+      description: Official OpenAPI operationId `retrieve_an_event`.
+      parameters:
+        - in: path
+          name: event-id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /webhook_endpoints:
+    get:
+      tags: [WebhookEndpoints]
+      operationId: listWebhookEndpoints
+      summary: List webhook endpoints
+      description: Official OpenAPI operationId `list_webhook_endpoints`.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [WebhookEndpoints]
+      operationId: createWebhookEndpoint
+      summary: Create a webhook endpoint
+      description: Official OpenAPI operationId `create_a_webhook_endpoint`.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema: { $ref: "#/components/schemas/WebhookEndpointForm" }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /webhook_endpoints/{webhook-endpoint-id}:
+    get:
+      tags: [WebhookEndpoints]
+      operationId: getWebhookEndpoint
+      summary: Retrieve a webhook endpoint
+      description: Official OpenAPI operationId `retrieve_a_webhook_endpoint`.
+      parameters:
+        - $ref: "#/components/parameters/WebhookEndpointId"
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [WebhookEndpoints]
+      operationId: updateWebhookEndpoint
+      summary: Update a webhook endpoint
+      description: Official OpenAPI operationId `update_a_webhook_endpoint`.
+      parameters:
+        - $ref: "#/components/parameters/WebhookEndpointId"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema: { $ref: "#/components/schemas/WebhookEndpointForm" }
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /webhook_endpoints/{webhook-endpoint-id}/delete:
+    post:
+      tags: [WebhookEndpoints]
+      operationId: deleteWebhookEndpoint
+      summary: Delete a webhook endpoint
+      description: >-
+        Official OpenAPI operationId `delete_a_webhook_endpoint`.
+        Chargebee uses POST (not HTTP DELETE) for this action.
+      parameters:
+        - $ref: "#/components/parameters/WebhookEndpointId"
+      responses:
+        "200": { $ref: "#/components/responses/ObjectResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: >-
+        API key as username, empty password. See
+        https://apidocs.chargebee.com/docs/api/auth?prod_cat_ver=2
+  parameters:
+    CustomerId:
+      in: path
+      name: customer-id
+      required: true
+      schema: { type: string }
+    WebhookEndpointId:
+      in: path
+      name: webhook-endpoint-id
+      required: true
+      schema: { type: string }
+  schemas:
+    CustomerForm:
+      type: object
+      properties:
+        id: { type: string }
+        first_name: { type: string }
+        last_name: { type: string }
+        email: { type: string, format: email }
+        company: { type: string }
+        phone: { type: string }
+        auto_collection: { type: string }
+    WebhookEndpointForm:
+      type: object
+      properties:
+        name: { type: string }
+        url: { type: string, format: uri }
+        send_card_resource: { type: boolean }
+        disabled: { type: boolean }
+        primary_url: { type: boolean }
+        api_version: { type: string }
+        enabled_events:
+          type: array
+          items: { type: string }
+  responses:
+    ListResponse:
+      description: >-
+        Chargebee list envelope with list array and optional next_offset string.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              list:
+                type: array
+                items: { type: object }
+              next_offset: { type: string }
+    ObjectResponse:
+      description: Chargebee resource envelope
+      content:
+        application/json:
+          schema: { type: object }
+    Unauthorized:
+      description: Invalid or missing API key
+    NotFound:
+      description: Resource not found

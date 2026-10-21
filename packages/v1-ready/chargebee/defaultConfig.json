@@ -1,0 +1,17 @@
+{
+    "name": "chargebee",
+    "label": "Chargebee",
+    "authType": "basic",
+    "productUrl": "https://www.chargebee.com",
+    "apiDocs": "https://apidocs.chargebee.com/docs/api",
+    "logoUrl": "https://www.chargebee.com/favicon.ico",
+    "categories": ["Billing", "Subscriptions", "Payments"],
+    "description": "Chargebee Billing API v2 (Product Catalog v2) — read customers, subscriptions, invoices, transactions, catalog items/prices, events, and manage webhook endpoints.",
+    "config": {
+        "apiKey": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

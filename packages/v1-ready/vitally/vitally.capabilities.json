@@ -1,0 +1,383 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "vitally",
+  "label": "Vitally",
+  "package": "@friggframework/api-module-vitally",
+  "version": "1.0.0",
+  "auth": {
+    "type": "basic",
+    "scheme": "basic",
+    "testAuthRequest": "testAuth",
+    "scopesDocumentedAt": "https://docs.vitally.io/en/articles/9880649-rest-api-overview",
+    "notes": [
+      "HTTP Basic: REST API key as username, empty password.",
+      "US host: https://{subdomain}.rest.vitally.io/resources",
+      "EU host: https://rest.vitally-eu.io/resources (set base_url)."
+    ]
+  },
+  "source": {
+    "officialDocs": "https://docs.vitally.io/en/collections/10410457-rest-api",
+    "overview": "https://docs.vitally.io/en/articles/9880649-rest-api-overview",
+    "notes": [
+      "Demand-source customer-success / account-health module. READ-first curated subset transcribed from official Help Center articles.",
+      "Vitally does not publish a provider OpenAPI; vitally.openapi.yaml is a Frigg-curated contract.",
+      "No REST API for webhook subscription management was found in official docs."
+    ]
+  },
+  "objects": {
+    "account": {
+      "label": "Account",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "externalId", "type": "string", "tags": ["identifier", "externalId"] },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "healthScore", "type": "number", "tags": ["health", "metric"], "readOnly": true },
+        { "name": "mrr", "type": "number", "tags": ["metric"] },
+        { "name": "npsScore", "type": "number", "tags": ["metric"], "readOnly": true },
+        { "name": "traits", "type": "json", "tags": ["custom"] },
+        { "name": "organizationId", "type": "string", "tags": ["relation"] },
+        { "name": "churnedAt", "type": "datetime", "tags": ["status"] }
+      ],
+      "operations": {
+        "list": { "method": "listAccounts", "officialOperationId": "listAccounts" },
+        "get": { "method": "getAccount", "officialOperationId": "getAccount" },
+        "create": { "method": "createAccount", "officialOperationId": "createAccount" },
+        "update": { "method": "updateAccount", "officialOperationId": "updateAccount" },
+        "getHealthScores": {
+          "method": "getAccountHealthScores",
+          "officialOperationId": "getAccountHealthScores"
+        }
+      }
+    },
+    "organization": {
+      "label": "Organization",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "externalId", "type": "string", "tags": ["identifier", "externalId"] },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "traits", "type": "json", "tags": ["custom"] }
+      ],
+      "operations": {
+        "list": { "method": "listOrganizations", "officialOperationId": "listOrganizations" },
+        "get": { "method": "getOrganization", "officialOperationId": "getOrganization" },
+        "create": { "method": "createOrganization", "officialOperationId": "createOrganization" },
+        "update": { "method": "updateOrganization", "officialOperationId": "updateOrganization" }
+      }
+    },
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "externalId", "type": "string", "tags": ["identifier", "externalId"] },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "email", "type": "string", "tags": ["pii", "identity"] },
+        { "name": "traits", "type": "json", "tags": ["custom"] },
+        { "name": "npsLastScore", "type": "number", "tags": ["metric"], "readOnly": true }
+      ],
+      "operations": {
+        "list": { "method": "listUsers", "officialOperationId": "listUsers" },
+        "listForAccount": {
+          "method": "listUsersForAccount",
+          "officialOperationId": "listUsersForAccount"
+        },
+        "get": { "method": "getUser", "officialOperationId": "getUser" },
+        "search": { "method": "searchUsers", "officialOperationId": "searchUsers" },
+        "create": { "method": "createUser", "officialOperationId": "createUser" },
+        "update": { "method": "updateUser", "officialOperationId": "updateUser" }
+      }
+    },
+    "task": {
+      "label": "Task (CTA)",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "externalId", "type": "string", "tags": ["identifier", "externalId"] },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "description", "type": "string", "tags": [] },
+        { "name": "accountId", "type": "string", "tags": ["relation"] },
+        { "name": "dueDate", "type": "string", "tags": [] },
+        { "name": "completedAt", "type": "datetime", "tags": ["status"] },
+        { "name": "traits", "type": "json", "tags": ["custom"] }
+      ],
+      "operations": {
+        "list": { "method": "listTasks", "officialOperationId": "listTasks" },
+        "listForAccount": {
+          "method": "listTasksForAccount",
+          "officialOperationId": "listTasksForAccount"
+        },
+        "get": { "method": "getTask", "officialOperationId": "getTask" },
+        "create": { "method": "createTask", "officialOperationId": "createTask" },
+        "update": { "method": "updateTask", "officialOperationId": "updateTask" }
+      }
+    },
+    "taskCategory": {
+      "label": "Task Category",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "name", "type": "string", "tags": ["display"] }
+      ],
+      "operations": {
+        "list": {
+          "method": "listTaskCategories",
+          "officialOperationId": "listTaskCategories"
+        }
+      }
+    },
+    "note": {
+      "label": "Note",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "externalId", "type": "string", "tags": ["identifier", "externalId"] },
+        { "name": "subject", "type": "string", "tags": ["display"] },
+        { "name": "note", "type": "string", "tags": [] },
+        { "name": "noteDate", "type": "datetime", "tags": [] },
+        { "name": "accountId", "type": "string", "tags": ["relation"] },
+        { "name": "traits", "type": "json", "tags": ["custom"] }
+      ],
+      "operations": {
+        "list": { "method": "listNotes", "officialOperationId": "listNotes" },
+        "listForAccount": {
+          "method": "listNotesForAccount",
+          "officialOperationId": "listNotesForAccount"
+        },
+        "get": { "method": "getNote", "officialOperationId": "getNote" },
+        "create": { "method": "createNote", "officialOperationId": "createNote" },
+        "update": { "method": "updateNote", "officialOperationId": "updateNote" }
+      }
+    },
+    "conversation": {
+      "label": "Conversation",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "externalId", "type": "string", "tags": ["identifier", "externalId"] },
+        { "name": "subject", "type": "string", "tags": ["display"] },
+        { "name": "status", "type": "string", "tags": ["status"], "readOnly": true },
+        { "name": "messages", "type": "json", "tags": [] },
+        { "name": "traits", "type": "json", "tags": ["custom"] }
+      ],
+      "operations": {
+        "list": { "method": "listConversations", "officialOperationId": "listConversations" },
+        "listForAccount": {
+          "method": "listConversationsForAccount",
+          "officialOperationId": "listConversationsForAccount"
+        },
+        "get": { "method": "getConversation", "officialOperationId": "getConversation" }
+      }
+    },
+    "customField": {
+      "label": "Custom Trait",
+      "fields": [
+        { "name": "label", "type": "string", "tags": ["display"] },
+        { "name": "path", "type": "string", "tags": ["identifier"] },
+        { "name": "type", "type": "string", "tags": [] },
+        { "name": "options", "type": "json", "tags": [] }
+      ],
+      "operations": {
+        "list": { "method": "listCustomFields", "officialOperationId": "listCustomFields" }
+      }
+    },
+    "npsResponse": {
+      "label": "NPS Response",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "userId", "type": "string", "tags": ["relation"] },
+        { "name": "score", "type": "number", "tags": ["metric"] },
+        { "name": "feedback", "type": "string", "tags": [] },
+        { "name": "respondedAt", "type": "datetime", "tags": [] }
+      ],
+      "operations": {
+        "list": { "method": "listNpsResponses", "officialOperationId": "listNpsResponses" },
+        "listForAccount": {
+          "method": "listNpsResponsesForAccount",
+          "officialOperationId": "listNpsResponsesForAccount"
+        }
+      }
+    },
+    "admin": {
+      "label": "Admin",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "email", "type": "string", "tags": ["pii", "identity"] },
+        { "name": "licenseStatus", "type": "string", "tags": ["status"] },
+        { "name": "role", "type": "string", "tags": [] }
+      ],
+      "operations": {
+        "list": { "method": "listAdmins", "officialOperationId": "listAdmins" },
+        "search": { "method": "searchAdmins", "officialOperationId": "searchAdmins" }
+      }
+    }
+  },
+  "capabilities": {
+    "account.list": {
+      "kind": "read",
+      "method": "listAccounts",
+      "officialOperationId": "listAccounts",
+      "output": "account"
+    },
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "officialOperationId": "getAccount",
+      "input": { "accountId": { "type": "string", "required": true } },
+      "output": "account"
+    },
+    "account.create": {
+      "kind": "write",
+      "method": "createAccount",
+      "officialOperationId": "createAccount",
+      "output": "account"
+    },
+    "account.update": {
+      "kind": "write",
+      "method": "updateAccount",
+      "officialOperationId": "updateAccount",
+      "input": { "accountId": { "type": "string", "required": true } },
+      "output": "account"
+    },
+    "account.healthScores.get": {
+      "kind": "read",
+      "method": "getAccountHealthScores",
+      "officialOperationId": "getAccountHealthScores",
+      "input": { "accountId": { "type": "string", "required": true } },
+      "output": "account"
+    },
+    "organization.list": {
+      "kind": "read",
+      "method": "listOrganizations",
+      "officialOperationId": "listOrganizations",
+      "output": "organization"
+    },
+    "organization.get": {
+      "kind": "read",
+      "method": "getOrganization",
+      "officialOperationId": "getOrganization",
+      "input": { "organizationId": { "type": "string", "required": true } },
+      "output": "organization"
+    },
+    "user.list": {
+      "kind": "read",
+      "method": "listUsers",
+      "officialOperationId": "listUsers",
+      "output": "user"
+    },
+    "user.listForAccount": {
+      "kind": "read",
+      "method": "listUsersForAccount",
+      "officialOperationId": "listUsersForAccount",
+      "input": { "accountId": { "type": "string", "required": true } },
+      "output": "user"
+    },
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "officialOperationId": "getUser",
+      "input": { "userId": { "type": "string", "required": true } },
+      "output": "user"
+    },
+    "user.search": {
+      "kind": "read",
+      "method": "searchUsers",
+      "officialOperationId": "searchUsers",
+      "output": "user"
+    },
+    "task.list": {
+      "kind": "read",
+      "method": "listTasks",
+      "officialOperationId": "listTasks",
+      "output": "task"
+    },
+    "task.listForAccount": {
+      "kind": "read",
+      "method": "listTasksForAccount",
+      "officialOperationId": "listTasksForAccount",
+      "input": { "accountId": { "type": "string", "required": true } },
+      "output": "task"
+    },
+    "task.get": {
+      "kind": "read",
+      "method": "getTask",
+      "officialOperationId": "getTask",
+      "input": { "taskId": { "type": "string", "required": true } },
+      "output": "task"
+    },
+    "note.list": {
+      "kind": "read",
+      "method": "listNotes",
+      "officialOperationId": "listNotes",
+      "output": "note"
+    },
+    "note.listForAccount": {
+      "kind": "read",
+      "method": "listNotesForAccount",
+      "officialOperationId": "listNotesForAccount",
+      "input": { "accountId": { "type": "string", "required": true } },
+      "output": "note"
+    },
+    "conversation.list": {
+      "kind": "read",
+      "method": "listConversations",
+      "officialOperationId": "listConversations",
+      "output": "conversation"
+    },
+    "conversation.get": {
+      "kind": "read",
+      "method": "getConversation",
+      "officialOperationId": "getConversation",
+      "input": { "conversationId": { "type": "string", "required": true } },
+      "output": "conversation"
+    },
+    "customField.list": {
+      "kind": "read",
+      "method": "listCustomFields",
+      "officialOperationId": "listCustomFields",
+      "input": { "model": { "type": "string", "required": true } },
+      "output": "customField"
+    },
+    "npsResponse.list": {
+      "kind": "read",
+      "method": "listNpsResponses",
+      "officialOperationId": "listNpsResponses",
+      "output": "npsResponse"
+    },
+    "admin.list": {
+      "kind": "read",
+      "method": "listAdmins",
+      "officialOperationId": "listAdmins",
+      "output": "admin"
+    }
+  },
+  "skipped": [
+    {
+      "draftMethod": "deleteAccount",
+      "reason": "Destructive permanent delete deferred; READ-first + create/update covered for Accounts."
+    },
+    {
+      "draftMethod": "deleteUser",
+      "reason": "Deferred; schedule-delete semantics need sandbox validation."
+    },
+    {
+      "draftMethod": "deleteTask",
+      "reason": "Deferred under READ-first scope."
+    },
+    {
+      "draftMethod": "createConversation",
+      "reason": "Write path deferred; list/get covered for timeline READ. Historical import can be added later."
+    },
+    {
+      "draftMethod": "listWebhookSubscriptions",
+      "reason": "No official Vitally REST API for webhook subscription management found in Help Center docs."
+    },
+    {
+      "draftMethod": "createWebhookSubscription",
+      "reason": "No official Vitally REST API for webhook subscription management found in Help Center docs."
+    },
+    {
+      "draftMethod": "listProjects",
+      "reason": "Projects documented in collection but out of READ-first CS core for this pass."
+    },
+    {
+      "draftMethod": "listMeetings",
+      "reason": "Meetings documented in collection but out of READ-first CS core for this pass."
+    }
+  ]
+}

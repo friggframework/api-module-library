@@ -1,0 +1,8 @@
+{
+  "name": "attentive",
+  "label": "Attentive",
+  "productUrl": "https://www.attentive.com",
+  "apiDocs": "https://docs.attentive.com",
+  "categories": ["SMS", "Email", "Marketing"],
+  "description": "Attentive SMS/email marketing platform REST API"
+}

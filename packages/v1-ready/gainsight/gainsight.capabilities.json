@@ -1,0 +1,365 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "gainsight",
+  "label": "Gainsight CS",
+  "package": "@friggframework/api-module-gainsight",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Values about the connected Gainsight tenant, persisted by the module (apiPropertiesToPersist). Definitions read them as $.install.accounts.gainsight.<name>.",
+    "fields": [
+      {
+        "name": "baseUrl",
+        "type": "string",
+        "description": "Gainsight customer domain (e.g. https://acme.gainsightcloud.com)"
+      }
+    ]
+  },
+  "objects": {
+    "company": {
+      "label": "Company",
+      "fields": [
+        { "name": "Gsid", "type": "id", "readOnly": true },
+        { "name": "Name", "type": "string", "tag": "record.displayName" },
+        { "name": "Industry", "type": "string" },
+        { "name": "ARR", "type": "number" },
+        { "name": "Employees", "type": "number" },
+        { "name": "Stage", "type": "string" },
+        { "name": "Status", "type": "string" },
+        { "name": "RenewalDate", "type": "date" },
+        { "name": "OriginalContractDate", "type": "date" },
+        { "name": "CSM", "type": "string", "tag": "record.owner" },
+        { "name": "ParentCompany", "type": "string" }
+      ],
+      "sync": {
+        "id": "Gsid",
+        "list": { "capability": "company.query", "items": "data" }
+      }
+    },
+    "person": {
+      "label": "Person",
+      "fields": [
+        { "name": "gsid", "type": "id", "readOnly": true },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "firstname", "type": "string", "tag": "person.firstName" },
+        { "name": "lastname", "type": "string", "tag": "person.lastName" },
+        { "name": "title", "type": "string" },
+        { "name": "location", "type": "string" },
+        { "name": "timezone", "type": "string" }
+      ],
+      "sync": {
+        "id": "gsid",
+        "get": { "capability": "person.getByEmail", "id": "email" }
+      }
+    },
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "Gsid", "type": "id", "readOnly": true },
+        { "name": "Name", "type": "string", "tag": "person.fullName" },
+        { "name": "Email", "type": "email", "tag": "contact.email" },
+        { "name": "SFDCUserName", "type": "string" },
+        { "name": "LicenseType", "type": "string" },
+        { "name": "IsSuperAdmin", "type": "boolean", "readOnly": true },
+        { "name": "ModifiedDate", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "Gsid",
+        "list": { "capability": "user.list", "items": "data.users" }
+      }
+    },
+    "cta": {
+      "label": "Call To Action",
+      "fields": [
+        { "name": "Gsid", "type": "id", "readOnly": true },
+        { "name": "Name", "type": "string", "tag": "record.displayName" },
+        { "name": "DueDate", "type": "date" },
+        { "name": "CompanyId", "type": "string" },
+        { "name": "OwnerId", "type": "string", "tag": "record.owner" },
+        { "name": "isImportant", "type": "boolean" },
+        { "name": "Type Name", "type": "string" },
+        { "name": "Status Name", "type": "string" },
+        { "name": "Priority name", "type": "string" },
+        { "name": "Reason Name", "type": "string" }
+      ],
+      "sync": {
+        "id": "Gsid",
+        "list": { "capability": "cta.list", "items": "data" }
+      }
+    },
+    "task": {
+      "label": "Cockpit Task",
+      "fields": [
+        { "name": "Gsid", "type": "id", "readOnly": true },
+        { "name": "Name", "type": "string", "tag": "record.displayName" },
+        { "name": "DueDate", "type": "date" },
+        { "name": "IsClosed", "type": "boolean" },
+        { "name": "ClosedDate", "type": "date" },
+        { "name": "CtaId__gr.Name", "type": "string" },
+        { "name": "OwnerId__gr.Name", "type": "string", "tag": "record.owner" },
+        { "name": "StatusId__gr.Name", "type": "string" },
+        { "name": "PriorityId__gr.Name", "type": "string" }
+      ],
+      "sync": {
+        "id": "Gsid",
+        "list": { "capability": "task.list", "items": "data" }
+      }
+    },
+    "timeline_activity": {
+      "label": "Timeline Activity",
+      "fields": [
+        { "name": "Gsid", "type": "id", "readOnly": true },
+        { "name": "ExternalId", "type": "string", "tag": "record.externalId" },
+        { "name": "Subject", "type": "string", "tag": "record.displayName" },
+        { "name": "Notes", "type": "text" },
+        { "name": "ActivityDate", "type": "datetime" },
+        { "name": "ContextName", "type": "string" },
+        { "name": "TypeName", "type": "string" },
+        { "name": "AuthorId", "type": "string" },
+        { "name": "GsCompanyId", "type": "string" },
+        { "name": "CreatedDate", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "Gsid",
+        "list": { "capability": "timeline.query", "items": "data.records" }
+      }
+    },
+    "custom_object": {
+      "label": "Custom / Scorecard Object",
+      "fields": [
+        { "name": "Gsid", "type": "id", "readOnly": true },
+        { "name": "objectName", "type": "string", "required": true }
+      ],
+      "sync": {
+        "id": "Gsid",
+        "list": { "capability": "customObject.query", "items": "data" }
+      }
+    },
+    "metadata_object": {
+      "label": "Metadata Object",
+      "fields": [
+        { "name": "objectName", "type": "string", "tag": "record.displayName" },
+        { "name": "label", "type": "string" },
+        { "name": "objectType", "type": "string" }
+      ],
+      "sync": {
+        "id": "objectName",
+        "list": { "capability": "metadata.objects.list", "items": "data" }
+      }
+    }
+  },
+  "events": {},
+  "webhook": {
+    "scope": "none",
+    "note": "Gainsight CS Events API publishes events into Gainsight (inbound). No documented outbound webhook subscription management API for CS NXT; extensions/webhooks omitted."
+  },
+  "capabilities": {
+    "company.query": {
+      "kind": "read",
+      "method": "queryCompanies",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "page<company>",
+      "args": ["body"]
+    },
+    "company.create": {
+      "kind": "write",
+      "method": "createCompanies",
+      "input": { "body": { "type": "object", "required": true } },
+      "args": ["body"]
+    },
+    "company.update": {
+      "kind": "write",
+      "method": "updateCompanies",
+      "input": {
+        "body": { "type": "object", "required": true },
+        "keys": { "type": "string", "required": true }
+      },
+      "args": ["body", "keys"]
+    },
+    "company.delete": {
+      "kind": "write",
+      "method": "deleteCompany",
+      "input": { "gsid": { "type": "string", "required": true } },
+      "args": ["gsid"]
+    },
+    "person.getByEmail": {
+      "kind": "read",
+      "method": "getPersonByEmail",
+      "input": { "email": { "type": "string", "required": true } },
+      "output": "person",
+      "args": ["email"]
+    },
+    "person.getByGsid": {
+      "kind": "read",
+      "method": "getPersonByGsid",
+      "input": { "gsid": { "type": "string", "required": true } },
+      "output": "person",
+      "args": ["gsid"]
+    },
+    "person.upsert": {
+      "kind": "write",
+      "method": "upsertPeople",
+      "input": { "body": { "type": "object", "required": true } },
+      "args": ["body"]
+    },
+    "user.list": {
+      "kind": "read",
+      "method": "listUsers",
+      "input": { "body": { "type": "object" } },
+      "output": "page<user>",
+      "args": ["body"]
+    },
+    "user.create": {
+      "kind": "write",
+      "method": "createUsers",
+      "input": {
+        "body": { "type": "object", "required": true },
+        "params": { "type": "object" }
+      },
+      "args": ["body", "params"]
+    },
+    "user.update": {
+      "kind": "write",
+      "method": "updateUsers",
+      "input": {
+        "body": { "type": "object", "required": true },
+        "key": { "type": "string", "required": true }
+      },
+      "args": ["body", "key"]
+    },
+    "metadata.objects.list": {
+      "kind": "read",
+      "method": "listObjects",
+      "output": "metadata_object[]",
+      "args": ["$rest"]
+    },
+    "metadata.object.describe": {
+      "kind": "read",
+      "method": "describeObject",
+      "input": {
+        "objectName": { "type": "string", "required": true },
+        "params": { "type": "object" }
+      },
+      "args": ["objectName", "params"],
+      "note": "Custom field discovery via Data Management describe."
+    },
+    "customObject.query": {
+      "kind": "read",
+      "method": "queryCustomObject",
+      "input": {
+        "objectName": { "type": "string", "required": true },
+        "body": { "type": "object" }
+      },
+      "output": "page<custom_object>",
+      "args": ["objectName", "body"],
+      "note": "Primary path for Scorecard / account-health reads (tenant object names)."
+    },
+    "customObject.create": {
+      "kind": "write",
+      "method": "createCustomObjectRecords",
+      "input": {
+        "objectName": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "args": ["objectName", "body"]
+    },
+    "customObject.update": {
+      "kind": "write",
+      "method": "updateCustomObjectRecords",
+      "input": {
+        "objectName": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true },
+        "keys": { "type": "string", "required": true }
+      },
+      "args": ["objectName", "body", "keys"]
+    },
+    "customObject.delete": {
+      "kind": "write",
+      "method": "deleteCustomObjectRecord",
+      "input": {
+        "objectName": { "type": "string", "required": true },
+        "gsid": { "type": "string", "required": true }
+      },
+      "args": ["objectName", "gsid"]
+    },
+    "cta.list": {
+      "kind": "read",
+      "method": "listCtas",
+      "input": { "body": { "type": "object" } },
+      "output": "page<cta>",
+      "args": ["body"]
+    },
+    "cta.create": {
+      "kind": "write",
+      "method": "createCta",
+      "input": { "body": { "type": "object", "required": true } },
+      "args": ["body"]
+    },
+    "cta.update": {
+      "kind": "write",
+      "method": "updateCta",
+      "input": { "body": { "type": "object", "required": true } },
+      "args": ["body"]
+    },
+    "task.list": {
+      "kind": "read",
+      "method": "listTasks",
+      "input": {
+        "ctaGsid": { "type": "string", "required": true },
+        "params": { "type": "object" }
+      },
+      "output": "task[]",
+      "args": ["ctaGsid", "params"]
+    },
+    "task.create": {
+      "kind": "write",
+      "method": "createTask",
+      "input": { "body": { "type": "object", "required": true } },
+      "args": ["body"]
+    },
+    "task.update": {
+      "kind": "write",
+      "method": "updateTask",
+      "input": { "body": { "type": "object", "required": true } },
+      "args": ["body"]
+    },
+    "timeline.query": {
+      "kind": "read",
+      "method": "queryTimelineActivities",
+      "input": { "body": { "type": "object" } },
+      "output": "page<timeline_activity>",
+      "args": ["body"]
+    },
+    "timeline.createBulk": {
+      "kind": "write",
+      "method": "createTimelineActivities",
+      "input": { "body": { "type": "object", "required": true } },
+      "args": ["body"]
+    },
+    "timeline.jobStatus": {
+      "kind": "read",
+      "method": "getTimelineJobStatus",
+      "input": { "jobId": { "type": "string", "required": true } },
+      "args": ["jobId"]
+    }
+  },
+  "options": {
+    "company": {
+      "capability": "company.query",
+      "label": "{{item.Name}}",
+      "value": "$.item.Gsid",
+      "items": "data"
+    },
+    "user": {
+      "capability": "user.list",
+      "label": "{{item.Name}} ({{item.Email}})",
+      "value": "$.item.Gsid",
+      "items": "data.users"
+    }
+  },
+  "skipped": {
+    "description": "Outbound webhook subscription management is not offered by Gainsight CS REST docs (Events API is inbound publish-only). Direct Scorecard write API does not exist; health reads use customObject.query. Playbook config GET /v2/cockpit/admin/playbook omitted from v1 surface (non-core). Bulk People async ingestion endpoints omitted (prefer sync upsert for integration paths).",
+    "noFenestra": "Gainsight CS / Horizon Experience does not publish a third-party UI extension SDK comparable to Zendesk Apps or Salesforce Lightning; no gainsight.fenestra.yaml."
+  }
+}

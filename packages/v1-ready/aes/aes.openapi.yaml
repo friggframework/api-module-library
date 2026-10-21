@@ -1,0 +1,602 @@
+openapi: 3.0.3
+info:
+  title: AES ConductorLink API
+  version: "1.0.0"
+  description: >-
+    AES (Auction & Event Solutions) ConductorLink API for Auction Conductor.
+    All calls are HTTP POST with JSON bodies. Authentication uses the
+    `AES_API_KEY` request header. Vendor does not publish an official OpenAPI
+    document; this file is a curated subset covering exactly the endpoints the
+    `@friggframework/api-module-aes` client in api.js implements, written from
+    https://help.aesauctions.com/article/3tz5rgz6lo-aes-conductor-link-api-guide
+    and related AES Suite release notes. One method per operationId.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://auctionconductor.com
+    description: AES ConductorLink production
+  - url: https://actestserver.com
+    description: AES ConductorLink QA staging
+security:
+  - ApiKeyAuth: []
+tags:
+  - name: Events
+  - name: Contributors
+  - name: Event Contributors
+  - name: Activity
+  - name: Packages
+  - name: Post Event
+paths:
+  /API/getEvent:
+    post:
+      tags: [Events]
+      operationId: getEvent
+      summary: Get event by id
+      description: >-
+        Returns the current name of the event to ensure accuracy of event_id's.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_id]
+              properties:
+                event_id:
+                  type: integer
+                  description: Event id
+      responses:
+        "200":
+          description: Event details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+
+  /API/getOrganizationEvents:
+    post:
+      tags: [Events]
+      operationId: getOrganizationEvents
+      summary: List organization events
+      description: Returns all events found for the Organization tied to the API key.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Array of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+
+  /API/getContributor:
+    post:
+      tags: [Contributors]
+      operationId: getContributor
+      summary: Get contributor by id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contributor_id]
+              properties:
+                contributor_id:
+                  type: integer
+      responses:
+        "200":
+          description: Contributor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contributor"
+
+  /API/getContributors:
+    post:
+      tags: [Contributors]
+      operationId: getContributors
+      summary: List contributors for an event
+      description: >-
+        Returns each contributor currently found for a specific event
+        (`/API/GetContributors` in AES Suite 6.0 release notes).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_id]
+              properties:
+                event_id:
+                  type: integer
+      responses:
+        "200":
+          description: Contributors for the event
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventContributorListItem"
+        "500":
+          description: AES error payload
+
+  /API/createContributor:
+    post:
+      tags: [Contributors]
+      operationId: createContributor
+      summary: Create a contributor
+      description: >-
+        Creates a person involved with the organization (Patron, Attendee,
+        Sponsor, Volunteer, Donor, etc.). Sample fields documented in the
+        ConductorLink API Guide Appendix B.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContributorWrite"
+      responses:
+        "200":
+          description: Created contributor (includes contributor_id)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contributor"
+
+  /API/updateContributor:
+    post:
+      tags: [Contributors]
+      operationId: updateContributor
+      summary: Update a contributor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - type: object
+                  required: [contributor_id]
+                  properties:
+                    contributor_id:
+                      type: integer
+                - $ref: "#/components/schemas/ContributorWrite"
+      responses:
+        "200":
+          description: Updated contributor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contributor"
+
+  /API/deleteContributor:
+    post:
+      tags: [Contributors]
+      operationId: deleteContributor
+      summary: Delete a contributor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contributor_id]
+              properties:
+                contributor_id:
+                  type: integer
+      responses:
+        "200":
+          description: Delete result
+
+  /API/getEventContributor:
+    post:
+      tags: [Event Contributors]
+      operationId: getEventContributor
+      summary: Get event-scoped contributor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_contributor_id]
+              properties:
+                event_contributor_id:
+                  type: integer
+      responses:
+        "200":
+          description: Event contributor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventContributor"
+
+  /API/createEventContributor:
+    post:
+      tags: [Event Contributors]
+      operationId: createEventContributor
+      summary: Create event-scoped contributor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created event contributor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventContributor"
+
+  /API/updateEventContributor:
+    post:
+      tags: [Event Contributors]
+      operationId: updateEventContributor
+      summary: Update event-scoped contributor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated event contributor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventContributor"
+
+  /API/deleteEventContributor:
+    post:
+      tags: [Event Contributors]
+      operationId: deleteEventContributor
+      summary: Delete event-scoped contributor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_contributor_id]
+              properties:
+                event_contributor_id:
+                  type: integer
+      responses:
+        "200":
+          description: Delete result
+
+  /API/associateEventContributors:
+    post:
+      tags: [Event Contributors]
+      operationId: associateEventContributors
+      summary: Associate event contributors into households or groups
+      description: >-
+        Associates Event Contributors into households or corporate groups to
+        ease the check-in process.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Association result
+
+  /API/getActivity:
+    post:
+      tags: [Activity]
+      operationId: getActivity
+      summary: Get contributor activity for an event
+      description: >-
+        Returns contributor, sale, and payment data for a specific event
+        contributor.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_contributor_id]
+              properties:
+                event_contributor_id:
+                  type: integer
+      responses:
+        "200":
+          description: Activity payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /API/getSales:
+    post:
+      tags: [Activity]
+      operationId: getSales
+      summary: Get sales for an event
+      description: >-
+        Post-event sync — sales (purchases and winning bids) for currently
+        closed packages.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_id]
+              properties:
+                event_id:
+                  type: integer
+      responses:
+        "200":
+          description: Sales for the event
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+  /API/getPayments:
+    post:
+      tags: [Activity]
+      operationId: getPayments
+      summary: Get payments for an event
+      description: >-
+        Post-event sync — cash, check, and credit card payments collected in AES.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_id]
+              properties:
+                event_id:
+                  type: integer
+                payment_type:
+                  type: array
+                  items:
+                    type: string
+                  description: Optional payment type filter
+      responses:
+        "200":
+          description: Payments for the event
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+  /API/getPackages:
+    post:
+      tags: [Packages]
+      operationId: getPackages
+      summary: List packages for an event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_id]
+              properties:
+                event_id:
+                  type: integer
+      responses:
+        "200":
+          description: Packages for the event
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+  /API/getPackageCategories:
+    post:
+      tags: [Packages]
+      operationId: getPackageCategories
+      summary: List package categories for an event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_id]
+              properties:
+                event_id:
+                  type: integer
+      responses:
+        "200":
+          description: Package categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+  /API/lockEvent:
+    post:
+      tags: [Post Event]
+      operationId: lockEvent
+      summary: Lock or unlock an event
+      description: >-
+        When locked, low-level users are restricted from adding or editing
+        contributors, packages, payments and sales in AES.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_id]
+              properties:
+                event_id:
+                  type: integer
+                lock:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: Lock result
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: AES_API_KEY
+      description: Organization ConductorLink API key
+  schemas:
+    Event:
+      type: object
+      properties:
+        event_id:
+          type: integer
+        event_title:
+          type: string
+      additionalProperties: true
+    Contributor:
+      type: object
+      properties:
+        contributor_id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        company:
+          type: string
+        cell:
+          type: string
+        phone:
+          type: string
+        address1:
+          type: string
+        address2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+      additionalProperties: true
+    ContributorWrite:
+      type: object
+      properties:
+        first_name:
+          type: string
+        middle_name:
+          type: string
+        last_name:
+          type: string
+        company:
+          type: string
+        title:
+          type: string
+        address1:
+          type: string
+        address2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+          description: US state/territory code (see ConductorLink Appendix A)
+        zip:
+          type: string
+        contributor_since:
+          type: string
+        phone:
+          type: string
+        cell:
+          type: string
+        fax:
+          type: string
+        website:
+          type: string
+        salutation:
+          type: string
+        email:
+          type: string
+          format: email
+        email_opt:
+          type: boolean
+      additionalProperties: true
+    EventContributor:
+      type: object
+      properties:
+        event_contributor_id:
+          type: integer
+        contributor_id:
+          type: integer
+        event_id:
+          type: integer
+      additionalProperties: true
+    EventContributorListItem:
+      type: object
+      description: Fields documented for /API/GetContributors (Suite 6.0+)
+      properties:
+        event_contributor_id:
+          type: integer
+        contributor_id:
+          type: integer
+        contributor_types:
+          type: array
+          items:
+            type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        cell:
+          type: string
+        email:
+          type: string
+        company:
+          type: string
+        alternate_key:
+          type: string
+        bidder_number:
+          type: string
+        group_id:
+          type: integer
+          nullable: true
+        household_id:
+          type: integer
+          nullable: true
+        household_name:
+          type: string
+          nullable: true
+        is_billing:
+          type: boolean
+          nullable: true
+      additionalProperties: true

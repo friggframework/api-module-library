@@ -1,0 +1,319 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "monday",
+  "label": "monday.com (CRM boards)",
+  "package": "@friggframework/api-module-monday",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected monday.com account. Entity/credential externalId is account.id from me.account / account.",
+    "fields": [
+      {
+        "name": "accountId",
+        "type": "string",
+        "description": "monday account id (externalId)"
+      },
+      {
+        "name": "accountName",
+        "type": "string",
+        "description": "Account display name or slug"
+      }
+    ]
+  },
+  "objects": {
+    "board": {
+      "label": "Board",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "state", "type": "enum", "values": ["active", "archived", "deleted"] },
+        { "name": "board_kind", "type": "enum", "values": ["private", "public", "share"] },
+        { "name": "description", "type": "text" },
+        { "name": "workspace_id", "type": "string" },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "board.list",
+          "items": "$",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "board.get",
+          "id": "boardId"
+        },
+        "create": {
+          "capability": "board.create",
+          "body": "$"
+        }
+      }
+    },
+    "item": {
+      "label": "Item",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "state", "type": "enum", "values": ["active", "archived", "deleted"] },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "board.id", "type": "string" },
+        { "name": "group.id", "type": "string" },
+        { "name": "group.title", "type": "string" },
+        { "name": "column_values", "type": "json" }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "item.listOnBoard",
+          "cursor": "cursor",
+          "limit": "limit",
+          "items": "items",
+          "paging": "cursor"
+        },
+        "get": {
+          "capability": "item.list",
+          "id": "ids"
+        },
+        "create": {
+          "capability": "item.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "item.changeMultipleColumnValues",
+          "body": "$"
+        }
+      }
+    },
+    "column": {
+      "label": "Column",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "title", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "type", "type": "string", "required": true },
+        { "name": "description", "type": "text" }
+      ]
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "board_id", "type": "string", "required": true },
+        { "name": "event", "type": "string", "required": true },
+        { "name": "config", "type": "json" }
+      ]
+    },
+    "user": {
+      "label": "User (me)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.displayName" },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "is_admin", "type": "boolean" },
+        { "name": "is_guest", "type": "boolean" }
+      ]
+    },
+    "account": {
+      "label": "Account",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" },
+        { "name": "slug", "type": "string" },
+        { "name": "tier", "type": "string" }
+      ]
+    },
+    "custom_activity": {
+      "label": "Custom activity (E&A CRM)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "required": true },
+        { "name": "icon_id", "type": "string", "required": true },
+        { "name": "color", "type": "string", "required": true },
+        { "name": "type", "type": "string", "readOnly": true }
+      ]
+    },
+    "timeline_item": {
+      "label": "Timeline item (E&A CRM)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "item_id", "type": "string", "required": true },
+        { "name": "custom_activity_id", "type": "string", "required": true },
+        { "name": "title", "type": "string", "required": true },
+        { "name": "timestamp", "type": "datetime", "required": true }
+      ]
+    }
+  },
+  "events": {
+    "item.created": {
+      "delivery": "webhook",
+      "object": "item",
+      "description": "Board webhook event create_item (payload type create_pulse).",
+      "match": "create_item",
+      "payload": {
+        "event": {
+          "type": "create_pulse",
+          "boardId": 1771812698,
+          "pulseId": 1772099344,
+          "pulseName": "Create_item webhook"
+        }
+      }
+    },
+    "item.column_changed": {
+      "delivery": "webhook",
+      "object": "item",
+      "description": "Board webhook events that change column values.",
+      "match": "change_column_value",
+      "payload": {
+        "event": {
+          "type": "update_column_value",
+          "boardId": 1771812698,
+          "pulseId": 1771812728,
+          "columnId": "status"
+        }
+      }
+    }
+  },
+  "webhook": {
+    "scope": "board",
+    "batch": ["event"],
+    "topic": "{{event.type}}",
+    "eventId": "{{event.triggerUuid}}",
+    "account": "{{event.boardId}}",
+    "verify": "verifyWebhookSignature",
+    "note": "Board webhooks are created via create_webhook. monday POSTs a challenge for URL verification. Integration-app webhooks may include a JWT in Authorization signed with the app Signing Secret (Api.verifyWebhookSignature)."
+  },
+  "capabilities": {
+    "me.get": {
+      "kind": "read",
+      "method": "getMe",
+      "output": "user",
+      "args": []
+    },
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "output": "account",
+      "args": []
+    },
+    "board.list": {
+      "kind": "read",
+      "method": "listBoards",
+      "output": "board",
+      "args": ["params"]
+    },
+    "board.get": {
+      "kind": "read",
+      "method": "getBoard",
+      "output": "board",
+      "args": ["boardId"]
+    },
+    "board.create": {
+      "kind": "write",
+      "method": "createBoard",
+      "output": "board",
+      "args": ["params"]
+    },
+    "column.list": {
+      "kind": "read",
+      "method": "listColumns",
+      "output": "column",
+      "args": ["boardId"]
+    },
+    "column.create": {
+      "kind": "write",
+      "method": "createColumn",
+      "output": "column",
+      "args": ["params"]
+    },
+    "item.list": {
+      "kind": "read",
+      "method": "listItems",
+      "output": "item",
+      "args": ["params"]
+    },
+    "item.listOnBoard": {
+      "kind": "read",
+      "method": "listBoardItems",
+      "output": "item",
+      "args": ["params"]
+    },
+    "item.nextPage": {
+      "kind": "read",
+      "method": "nextItemsPage",
+      "output": "item",
+      "args": ["params"]
+    },
+    "item.findByColumnValues": {
+      "kind": "read",
+      "method": "findItemsByColumnValues",
+      "output": "item",
+      "args": ["params"]
+    },
+    "item.create": {
+      "kind": "write",
+      "method": "createItem",
+      "output": "item",
+      "args": ["params"]
+    },
+    "item.changeMultipleColumnValues": {
+      "kind": "write",
+      "method": "changeMultipleColumnValues",
+      "output": "item",
+      "args": ["params"]
+    },
+    "item.delete": {
+      "kind": "write",
+      "method": "deleteItem",
+      "args": ["itemId"]
+    },
+    "custom_activity.list": {
+      "kind": "read",
+      "method": "listCustomActivities",
+      "output": "custom_activity",
+      "args": []
+    },
+    "custom_activity.create": {
+      "kind": "write",
+      "method": "createCustomActivity",
+      "output": "custom_activity",
+      "args": ["params"]
+    },
+    "timeline_item.create": {
+      "kind": "write",
+      "method": "createTimelineItem",
+      "output": "timeline_item",
+      "args": ["params"]
+    },
+    "timeline_item.delete": {
+      "kind": "write",
+      "method": "deleteTimelineItem",
+      "args": ["params"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "output": "webhook",
+      "args": ["params"]
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhook",
+      "output": "webhook",
+      "args": ["params"]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhook",
+      "args": ["webhookId"]
+    }
+  },
+  "options": {
+    "board": {
+      "capability": "board.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id"
+    }
+  }
+}

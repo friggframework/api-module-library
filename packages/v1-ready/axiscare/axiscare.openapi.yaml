@@ -1,0 +1,625 @@
+openapi: 3.0.3
+info:
+  title: AxisCare API (Frigg curated subset)
+  version: "2023-10-01"
+  description: >-
+    AxisCare is a home-care operations platform. This file is Left Hook's curated
+    OpenAPI 3.0 subset covering exactly the endpoints the
+    `@friggframework/api-module-axiscare` client in api.js implements. It is
+    derived from the vendor OpenAPI at
+    https://static.axiscare.com/api/stoplight/reference/api.yaml
+    (rendered at https://static.axiscare.com/api/documentation.html).
+    operationIds match Api method names 1:1 for spec-sync tests.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://{siteNumber}.axiscare.com
+    description: Per-tenant AxisCare site
+    variables:
+      siteNumber:
+        default: "{siteNumber}"
+        description: Your unique AxisCare site number
+security:
+  - BearerAuth: []
+tags:
+  - name: Clients
+  - name: Leads
+  - name: Caregivers
+  - name: Applicants
+  - name: Visits
+  - name: Call Logs
+  - name: Pagination
+paths:
+  /api/clients:
+    get:
+      tags: [Clients]
+      operationId: listClients
+      summary: List clients
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - in: query
+          name: clientIds
+          schema: { type: string }
+        - in: query
+          name: statuses
+          schema: { type: string }
+        - in: query
+          name: regionIds
+          schema: { type: string }
+        - in: query
+          name: startAfterId
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 100, maximum: 500 }
+        - in: query
+          name: requestedSensitiveFields
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated clients (`results.clients`, optional `nextPage`)
+    post:
+      tags: [Clients]
+      operationId: createClient
+      summary: Create a client
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName]
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+                status: { type: string }
+                dateOfBirth: { type: string, format: date }
+                personalEmail: { type: string }
+      responses:
+        "200":
+          description: Created client
+  /api/clients/{clientId}:
+    get:
+      tags: [Clients]
+      operationId: getClient
+      summary: Get a client
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/ClientId'
+        - in: query
+          name: requestedSensitiveFields
+          schema: { type: string }
+      responses:
+        "200":
+          description: Client
+    patch:
+      tags: [Clients]
+      operationId: updateClient
+      summary: Update a client
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/ClientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated client
+  /api/clients/{clientId}/responsibleParties:
+    get:
+      tags: [Clients]
+      operationId: listClientResponsibleParties
+      summary: List client responsible parties
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/ClientId'
+      responses:
+        "200":
+          description: Exactly three responsible-party slots
+  /api/clients/{clientId}/responsibleParties/{listNumber}:
+    get:
+      tags: [Clients]
+      operationId: getClientResponsibleParty
+      summary: Get one client responsible party
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/ClientId'
+        - $ref: '#/components/parameters/ListNumber'
+      responses:
+        "200":
+          description: Responsible party
+    put:
+      tags: [Clients]
+      operationId: updateClientResponsibleParty
+      summary: Update one client responsible party
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/ClientId'
+        - $ref: '#/components/parameters/ListNumber'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        "200":
+          description: All three responsible parties after update
+  /api/leads:
+    get:
+      tags: [Leads]
+      operationId: listLeads
+      summary: List leads
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - in: query
+          name: leadIds
+          schema: { type: string }
+        - in: query
+          name: statuses
+          schema: { type: string }
+        - in: query
+          name: startAfterId
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 100, maximum: 500 }
+      responses:
+        "200":
+          description: Paginated leads
+    post:
+      tags: [Leads]
+      operationId: createLead
+      summary: Create a lead
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName]
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+      responses:
+        "200":
+          description: Created lead
+  /api/leads/{leadId}:
+    get:
+      tags: [Leads]
+      operationId: getLead
+      summary: Get a lead
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/LeadId'
+      responses:
+        "200":
+          description: Lead
+    patch:
+      tags: [Leads]
+      operationId: updateLead
+      summary: Update a lead
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/LeadId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated lead
+  /api/leads/{leadId}/responsibleParties:
+    get:
+      tags: [Leads]
+      operationId: listLeadResponsibleParties
+      summary: List lead responsible parties
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/LeadId'
+      responses:
+        "200":
+          description: Exactly three responsible-party slots
+  /api/leads/{leadId}/responsibleParties/{listNumber}:
+    get:
+      tags: [Leads]
+      operationId: getLeadResponsibleParty
+      summary: Get one lead responsible party
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/LeadId'
+        - $ref: '#/components/parameters/ListNumber'
+      responses:
+        "200":
+          description: Responsible party
+    put:
+      tags: [Leads]
+      operationId: updateLeadResponsibleParty
+      summary: Update one lead responsible party
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/LeadId'
+        - $ref: '#/components/parameters/ListNumber'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        "200":
+          description: All three responsible parties after update
+  /api/caregivers:
+    get:
+      tags: [Caregivers]
+      operationId: listCaregivers
+      summary: List caregivers
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - in: query
+          name: caregiverIds
+          schema: { type: string }
+        - in: query
+          name: statuses
+          schema: { type: string }
+        - in: query
+          name: startAfterId
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: requestedSensitiveFields
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated caregivers
+    post:
+      tags: [Caregivers]
+      operationId: createCaregiver
+      summary: Create a caregiver
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName]
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+      responses:
+        "200":
+          description: Created caregiver
+  /api/caregivers/{caregiverId}:
+    get:
+      tags: [Caregivers]
+      operationId: getCaregiver
+      summary: Get a caregiver
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/CaregiverId'
+        - in: query
+          name: requestedSensitiveFields
+          schema: { type: string }
+      responses:
+        "200":
+          description: Caregiver (`results` unwrapped from vendor `results.data`)
+    patch:
+      tags: [Caregivers]
+      operationId: updateCaregiver
+      summary: Update a caregiver
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/CaregiverId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated caregiver
+  /api/applicants:
+    get:
+      tags: [Applicants]
+      operationId: listApplicants
+      summary: List applicants
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - in: query
+          name: applicantIds
+          schema: { type: string }
+        - in: query
+          name: statuses
+          schema: { type: string }
+        - in: query
+          name: startAfterId
+          schema: { type: string }
+        - in: query
+          name: requestedSensitiveFields
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated applicants
+    post:
+      tags: [Applicants]
+      operationId: createApplicant
+      summary: Create an applicant
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName]
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+      responses:
+        "200":
+          description: Created applicant
+  /api/applicants/{applicantId}:
+    get:
+      tags: [Applicants]
+      operationId: getApplicant
+      summary: Get an applicant
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/ApplicantId'
+        - in: query
+          name: requestedSensitiveFields
+          schema: { type: string }
+      responses:
+        "200":
+          description: Applicant (`results` unwrapped from vendor `results.data`)
+  /api/visits:
+    get:
+      tags: [Visits]
+      operationId: listVisits
+      summary: List visits
+      description: >-
+        At least one filter is required (`startDate`+`endDate`, `updatedSinceDate`,
+        or `visitIds`).
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - in: query
+          name: startDate
+          schema: { type: string, format: date }
+        - in: query
+          name: endDate
+          schema: { type: string, format: date }
+        - in: query
+          name: updatedSinceDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: visitIds
+          schema: { type: string }
+        - in: query
+          name: clientIds
+          schema: { type: string }
+        - in: query
+          name: caregiverIds
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated visits
+    post:
+      tags: [Visits]
+      operationId: createVisit
+      summary: Create a visit
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [clientId, visitDate, startTime, endTime]
+              properties:
+                clientId: { type: integer }
+                visitDate: { type: string, format: date }
+                startTime: { type: string }
+                endTime: { type: string }
+                caregiverId: { type: integer }
+      responses:
+        "200":
+          description: Created visit
+  /api/visits/{visitId}:
+    get:
+      tags: [Visits]
+      operationId: getVisit
+      summary: Get a visit
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/VisitId'
+      responses:
+        "200":
+          description: Visit
+    patch:
+      tags: [Visits]
+      operationId: updateVisit
+      summary: Update a visit
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/VisitId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated visit
+    delete:
+      tags: [Visits]
+      operationId: deleteVisit
+      summary: Delete a visit
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/VisitId'
+        - in: query
+          name: modificationReason
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+  /api/call-logs:
+    get:
+      tags: [Call Logs]
+      operationId: listCallLogs
+      summary: List call logs
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - in: query
+          name: callLogIds
+          schema: { type: string }
+        - in: query
+          name: fromDateTime
+          schema: { type: string, format: date-time }
+        - in: query
+          name: toDateTime
+          schema: { type: string, format: date-time }
+        - in: query
+          name: startAfterId
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 100, maximum: 100 }
+      responses:
+        "200":
+          description: Paginated call logs
+    post:
+      tags: [Call Logs]
+      operationId: createCallLog
+      summary: Create a call log
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - callerName
+                - callerPhone
+                - followUp
+                - dateTime
+                - subject
+                - notes
+                - tags
+              properties:
+                callerName: { type: string }
+                callerPhone: { type: string }
+                followUp: { type: boolean }
+                dateTime: { type: string, format: date-time }
+                subject: { type: string }
+                notes: { type: string }
+                tags:
+                  type: array
+                  items: { type: object }
+      responses:
+        "200":
+          description: Created call log
+  /api/call-logs/{callLogId}:
+    get:
+      tags: [Call Logs]
+      operationId: getCallLog
+      summary: Get a call log
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/CallLogId'
+      responses:
+        "200":
+          description: Call log
+    patch:
+      tags: [Call Logs]
+      operationId: updateCallLog
+      summary: Update a call log
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/CallLogId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated call log
+components:
+  parameters:
+    ApiVersion:
+      name: X-AxisCare-Api-Version
+      in: header
+      required: true
+      schema:
+        type: string
+        enum: ["2023-10-01"]
+      description: Required AxisCare API version (vendor OpenAPI enum).
+    ClientId:
+      name: clientId
+      in: path
+      required: true
+      schema: { type: integer }
+    LeadId:
+      name: leadId
+      in: path
+      required: true
+      schema: { type: integer }
+    CaregiverId:
+      name: caregiverId
+      in: path
+      required: true
+      schema: { type: integer }
+    ApplicantId:
+      name: applicantId
+      in: path
+      required: true
+      schema: { type: integer }
+    VisitId:
+      name: visitId
+      in: path
+      required: true
+      schema: { type: string }
+      description: Visit id, e.g. `s=222:d=2024-03-04`
+    CallLogId:
+      name: callLogId
+      in: path
+      required: true
+      schema: { type: integer }
+    ListNumber:
+      name: listNumber
+      in: path
+      required: true
+      schema: { type: integer, enum: [1, 2, 3] }
+      description: 1=Primary, 2=Secondary, 3=Tertiary
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        API token from Admin → API token. Sent as `Authorization: Bearer <token>`.
+# Note: getFromUrl is a client helper that follows absolute nextPage URLs; it is
+# not a distinct vendor path, so it is intentionally omitted from paths above.
+# Spec-sync only requires every path operationId to exist on Api.prototype.

@@ -1,0 +1,9 @@
+{
+    "name": "axiscare",
+    "label": "AxisCare",
+    "authType": "bearer",
+    "productUrl": "https://axiscare.com",
+    "apiDocs": "https://static.axiscare.com/api/documentation.html",
+    "categories": ["Home Care", "Healthcare", "Scheduling"],
+    "description": "AxisCare home-care operations API — clients, leads, caregivers, applicants, visits, and call logs on a per-site base URL."
+}

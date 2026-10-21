@@ -1,0 +1,651 @@
+openapi: 3.0.3
+info:
+  title: Instantly API v2 (Frigg curated subset)
+  version: "2.0.0"
+  description: >-
+    Instantly (instantly.ai) email outreach API v2. Instantly publishes an
+    official OpenAPI document at https://api.instantly.ai/openapi/api_v2.json
+    (server https://api.instantly.ai with `/api/v2/...` paths). This file is
+    Left Hook's curated subset covering exactly the endpoints the
+    @friggframework/api-module-instantly client in api.js implements. Paths are
+    relative to https://api.instantly.ai/api/v2 so the hand-written client
+    mirrors the contract 1:1 (one method per operationId).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.instantly.ai/api/v2
+    description: Instantly API v2 (path prefix folded into server URL)
+security:
+  - ApiKeyAuth: []
+tags:
+  - name: Workspace
+  - name: Campaign
+  - name: Account
+  - name: Lead
+  - name: LeadList
+  - name: Webhook
+paths:
+  /workspaces/current:
+    get:
+      tags: [Workspace]
+      operationId: getWorkspace
+      summary: Get current workspace
+      description: >-
+        Returns the workspace for the API key. Scopes: workspaces:read,
+        workspaces:all, all:read, all:all.
+      responses:
+        "200":
+          description: Workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+
+  /campaigns:
+    get:
+      tags: [Campaign]
+      operationId: listCampaigns
+      summary: List campaigns
+      description: >-
+        Scopes: campaigns:read, campaigns:all, all:read, all:all.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+        - in: query
+          name: starting_after
+          schema: { type: string }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: integer }
+          description: Campaign status enum value (e.g. ACTIVE, PAUSED).
+      responses:
+        "200":
+          description: Paginated campaigns
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignList"
+    post:
+      tags: [Campaign]
+      operationId: createCampaign
+      summary: Create campaign
+      description: >-
+        Body requires name + campaign_schedule. Scopes: campaigns:create,
+        campaigns:all, all:create, all:all.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignCreate"
+      responses:
+        "200":
+          description: Created campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+
+  /campaigns/{id}:
+    get:
+      tags: [Campaign]
+      operationId: getCampaign
+      summary: Get campaign
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+    patch:
+      tags: [Campaign]
+      operationId: patchCampaign
+      summary: Patch campaign
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+
+  /campaigns/analytics:
+    get:
+      tags: [Campaign]
+      operationId: getCampaignAnalytics
+      summary: Get campaign(s) analytics
+      description: >-
+        Pass `id` for one campaign, or omit for all campaigns.
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: start_date
+          schema: { type: string }
+        - in: query
+          name: end_date
+          schema: { type: string }
+      responses:
+        "200":
+          description: Analytics payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /campaigns/analytics/daily:
+    get:
+      tags: [Campaign]
+      operationId: getDailyCampaignAnalytics
+      summary: Get daily campaign analytics
+      parameters:
+        - in: query
+          name: campaign_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: start_date
+          schema: { type: string }
+        - in: query
+          name: end_date
+          schema: { type: string }
+      responses:
+        "200":
+          description: Daily analytics
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /accounts:
+    get:
+      tags: [Account]
+      operationId: listAccounts
+      summary: List sending accounts
+      description: >-
+        Email accounts that send campaigns. Scopes: accounts:read,
+        accounts:all, all:read, all:all.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+        - in: query
+          name: starting_after
+          schema: { type: string }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Paginated accounts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountList"
+    post:
+      tags: [Account]
+      operationId: createAccount
+      summary: Create account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+
+  /accounts/{email}:
+    get:
+      tags: [Account]
+      operationId: getAccount
+      summary: Get account by email
+      parameters:
+        - $ref: "#/components/parameters/EmailPath"
+      responses:
+        "200":
+          description: Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+    patch:
+      tags: [Account]
+      operationId: patchAccount
+      summary: Patch account by email
+      parameters:
+        - $ref: "#/components/parameters/EmailPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+
+  /leads/list:
+    post:
+      tags: [Lead]
+      operationId: listLeads
+      summary: List leads
+      description: >-
+        Instantly uses POST for list filters. Scopes: leads:read, leads:all,
+        all:read, all:all.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Paginated leads
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadListPage"
+
+  /leads:
+    post:
+      tags: [Lead]
+      operationId: createLead
+      summary: Create lead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+
+  /leads/{id}:
+    get:
+      tags: [Lead]
+      operationId: getLead
+      summary: Get lead
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+    patch:
+      tags: [Lead]
+      operationId: patchLead
+      summary: Patch lead
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+
+  /lead-lists:
+    get:
+      tags: [LeadList]
+      operationId: listLeadLists
+      summary: List lead lists
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+        - in: query
+          name: starting_after
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated lead lists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadListCollection"
+    post:
+      tags: [LeadList]
+      operationId: createLeadList
+      summary: Create lead list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created lead list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadList"
+
+  /lead-lists/{id}:
+    get:
+      tags: [LeadList]
+      operationId: getLeadList
+      summary: Get lead list
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Lead list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadList"
+    patch:
+      tags: [LeadList]
+      operationId: patchLeadList
+      summary: Patch lead list
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated lead list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadList"
+
+  /webhooks:
+    get:
+      tags: [Webhook]
+      operationId: listWebhooks
+      summary: List webhooks
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+        - in: query
+          name: starting_after
+          schema: { type: string }
+        - in: query
+          name: campaign
+          schema: { type: string, format: uuid }
+        - in: query
+          name: event_type
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated webhooks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookList"
+    post:
+      tags: [Webhook]
+      operationId: createWebhook
+      summary: Create webhook
+      description: >-
+        Body requires target_hook_url. Scopes: webhooks:create, webhooks:all,
+        all:create, all:all.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookCreate"
+      responses:
+        "200":
+          description: Created webhook
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webhook"
+
+  /webhooks/{id}:
+    get:
+      tags: [Webhook]
+      operationId: getWebhook
+      summary: Get webhook
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Webhook
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webhook"
+    patch:
+      tags: [Webhook]
+      operationId: patchWebhook
+      summary: Patch webhook
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated webhook
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webhook"
+    delete:
+      tags: [Webhook]
+      operationId: deleteWebhook
+      summary: Delete webhook
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Deleted
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        Instantly API v2 key. Client stores the bare key and sends
+        `Authorization: Bearer <key>` (see api.js addAuthHeaders).
+  parameters:
+    IdPath:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+    EmailPath:
+      in: path
+      name: email
+      required: true
+      schema: { type: string, format: email }
+  schemas:
+    Workspace:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        owner: { type: string, format: uuid }
+        timestamp_created: { type: string, format: date-time }
+        timestamp_updated: { type: string, format: date-time }
+      additionalProperties: true
+    Campaign:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        status: { type: integer }
+        organization: { type: string, format: uuid }
+        timestamp_created: { type: string, format: date-time }
+        timestamp_updated: { type: string, format: date-time }
+      additionalProperties: true
+    CampaignCreate:
+      type: object
+      required: [name, campaign_schedule]
+      properties:
+        name: { type: string }
+        campaign_schedule: { type: object, additionalProperties: true }
+      additionalProperties: true
+    CampaignList:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Campaign" }
+        next_starting_after: { type: string }
+      additionalProperties: true
+    Account:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+        first_name: { type: string }
+        last_name: { type: string }
+        status: { type: integer }
+        organization: { type: string, format: uuid }
+        timestamp_created: { type: string, format: date-time }
+        timestamp_updated: { type: string, format: date-time }
+      additionalProperties: true
+    AccountList:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Account" }
+        next_starting_after: { type: string }
+      additionalProperties: true
+    Lead:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        first_name: { type: string }
+        last_name: { type: string }
+        company_name: { type: string }
+        company_domain: { type: string }
+        phone: { type: string }
+        job_title: { type: string }
+        website: { type: string }
+        campaign: { type: string, format: uuid }
+        status: { type: integer }
+        organization: { type: string, format: uuid }
+      additionalProperties: true
+    LeadListPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Lead" }
+        next_starting_after: { type: string }
+      additionalProperties: true
+    LeadList:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        organization_id: { type: string, format: uuid }
+        timestamp_created: { type: string, format: date-time }
+      additionalProperties: true
+    LeadListCollection:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/LeadList" }
+        next_starting_after: { type: string }
+      additionalProperties: true
+    Webhook:
+      type: object
+      required: [id, target_hook_url]
+      properties:
+        id: { type: string, format: uuid }
+        organization: { type: string, format: uuid }
+        target_hook_url: { type: string, format: uri }
+        campaign: { type: string, format: uuid, nullable: true }
+        name: { type: string, nullable: true }
+        event_type: { type: string, nullable: true }
+        status: { type: integer }
+        timestamp_created: { type: string, format: date-time }
+      additionalProperties: true
+    WebhookCreate:
+      type: object
+      required: [target_hook_url]
+      properties:
+        target_hook_url:
+          type: string
+          pattern: "^https?://"
+        campaign: { type: string, format: uuid, nullable: true }
+        name: { type: string }
+        event_type: { type: string }
+        headers: { type: object, additionalProperties: { type: string } }
+      additionalProperties: true
+    WebhookList:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Webhook" }
+        next_starting_after: { type: string }
+      additionalProperties: true

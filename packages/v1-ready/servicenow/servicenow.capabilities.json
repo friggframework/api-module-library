@@ -1,0 +1,384 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "servicenow",
+  "label": "ServiceNow",
+  "package": "@friggframework/api-module-servicenow",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected ServiceNow instance, persisted by the module (apiPropertiesToPersist). Definitions read them as $.install.accounts.servicenow.<name>.",
+    "fields": [
+      {
+        "name": "instance",
+        "type": "string",
+        "description": "ServiceNow instance subdomain (dev12345 from https://dev12345.service-now.com)"
+      }
+    ]
+  },
+  "objects": {
+    "incident": {
+      "label": "Incident",
+      "fields": [
+        { "name": "sys_id", "type": "id", "readOnly": true },
+        { "name": "number", "type": "string", "readOnly": true, "tag": "record.displayId" },
+        { "name": "short_description", "type": "string", "tag": "record.displayName" },
+        { "name": "description", "type": "text" },
+        { "name": "state", "type": "string", "tag": "ticket.status" },
+        { "name": "priority", "type": "string", "tag": "ticket.priority" },
+        { "name": "urgency", "type": "string" },
+        { "name": "impact", "type": "string" },
+        { "name": "caller_id", "type": "string" },
+        { "name": "assigned_to", "type": "string", "tag": "record.owner" },
+        { "name": "assignment_group", "type": "string" },
+        { "name": "company", "type": "string" },
+        { "name": "sys_created_on", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "sys_updated_on", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "sys_id",
+        "updatedAt": "sys_updated_on",
+        "list": { "capability": "incident.list", "items": "result" },
+        "get": { "capability": "incident.get", "id": "sysId" },
+        "create": { "capability": "incident.create", "body": "body" },
+        "update": { "capability": "incident.update", "id": "sysId", "body": "body" }
+      }
+    },
+    "sc_request": {
+      "label": "Service Catalog Request",
+      "fields": [
+        { "name": "sys_id", "type": "id", "readOnly": true },
+        { "name": "number", "type": "string", "readOnly": true, "tag": "record.displayId" },
+        { "name": "short_description", "type": "string", "tag": "record.displayName" },
+        { "name": "state", "type": "string", "tag": "ticket.status" },
+        { "name": "requested_for", "type": "string" },
+        { "name": "sys_updated_on", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "sys_id",
+        "updatedAt": "sys_updated_on",
+        "list": { "capability": "sc_request.list", "items": "result" },
+        "get": { "capability": "sc_request.get", "id": "sysId" }
+      }
+    },
+    "sc_req_item": {
+      "label": "Requested Item",
+      "fields": [
+        { "name": "sys_id", "type": "id", "readOnly": true },
+        { "name": "number", "type": "string", "readOnly": true, "tag": "record.displayId" },
+        { "name": "short_description", "type": "string", "tag": "record.displayName" },
+        { "name": "state", "type": "string", "tag": "ticket.status" },
+        { "name": "request", "type": "string" },
+        { "name": "cat_item", "type": "string" },
+        { "name": "sys_updated_on", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "sys_id",
+        "updatedAt": "sys_updated_on",
+        "list": { "capability": "sc_req_item.list", "items": "result" },
+        "get": { "capability": "sc_req_item.get", "id": "sysId" }
+      }
+    },
+    "problem": {
+      "label": "Problem",
+      "fields": [
+        { "name": "sys_id", "type": "id", "readOnly": true },
+        { "name": "number", "type": "string", "readOnly": true, "tag": "record.displayId" },
+        { "name": "short_description", "type": "string", "tag": "record.displayName" },
+        { "name": "state", "type": "string", "tag": "ticket.status" },
+        { "name": "priority", "type": "string", "tag": "ticket.priority" },
+        { "name": "assigned_to", "type": "string", "tag": "record.owner" },
+        { "name": "sys_updated_on", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "sys_id",
+        "updatedAt": "sys_updated_on",
+        "list": { "capability": "problem.list", "items": "result" },
+        "get": { "capability": "problem.get", "id": "sysId" }
+      }
+    },
+    "change_request": {
+      "label": "Change Request",
+      "fields": [
+        { "name": "sys_id", "type": "id", "readOnly": true },
+        { "name": "number", "type": "string", "readOnly": true, "tag": "record.displayId" },
+        { "name": "short_description", "type": "string", "tag": "record.displayName" },
+        { "name": "state", "type": "string", "tag": "ticket.status" },
+        { "name": "priority", "type": "string", "tag": "ticket.priority" },
+        { "name": "assigned_to", "type": "string", "tag": "record.owner" },
+        { "name": "sys_updated_on", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "sys_id",
+        "updatedAt": "sys_updated_on",
+        "list": { "capability": "change_request.list", "items": "result" },
+        "get": { "capability": "change_request.get", "id": "sysId" }
+      }
+    },
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "sys_id", "type": "id", "readOnly": true },
+        { "name": "user_name", "type": "string" },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "phone", "type": "phone", "tag": "contact.phone" },
+        { "name": "active", "type": "boolean" },
+        { "name": "company", "type": "string" },
+        { "name": "sys_created_on", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "sys_updated_on", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "sys_id",
+        "updatedAt": "sys_updated_on",
+        "list": { "capability": "user.list", "items": "result" },
+        "get": { "capability": "user.get", "id": "sysId" }
+      }
+    },
+    "company": {
+      "label": "Company",
+      "fields": [
+        { "name": "sys_id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "phone", "type": "phone", "tag": "contact.phone" },
+        { "name": "street", "type": "string" },
+        { "name": "city", "type": "string" },
+        { "name": "state", "type": "string" },
+        { "name": "zip", "type": "string" },
+        { "name": "sys_updated_on", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "sys_id",
+        "updatedAt": "sys_updated_on",
+        "list": { "capability": "company.list", "items": "result" },
+        "get": { "capability": "company.get", "id": "sysId" }
+      }
+    },
+    "customer_account": {
+      "label": "Customer Account (CSM)",
+      "fields": [
+        { "name": "sys_id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "sys_updated_on", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "sys_id",
+        "updatedAt": "sys_updated_on",
+        "list": { "capability": "customer_account.list", "items": "result" },
+        "get": { "capability": "customer_account.get", "id": "sysId" }
+      }
+    },
+    "case": {
+      "label": "Case (CSM)",
+      "fields": [
+        { "name": "sys_id", "type": "id", "readOnly": true },
+        { "name": "number", "type": "string", "readOnly": true, "tag": "record.displayId" },
+        { "name": "short_description", "type": "string", "tag": "record.displayName" },
+        { "name": "description", "type": "text" },
+        { "name": "state", "type": "string", "tag": "ticket.status" },
+        { "name": "priority", "type": "string", "tag": "ticket.priority" },
+        { "name": "account", "type": "string" },
+        { "name": "contact", "type": "string" },
+        { "name": "assigned_to", "type": "string", "tag": "record.owner" },
+        { "name": "sys_created_on", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "sys_updated_on", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "sys_id",
+        "updatedAt": "sys_updated_on",
+        "list": { "capability": "case.list", "items": "result" },
+        "get": { "capability": "case.get", "id": "sysId" },
+        "create": { "capability": "case.create", "body": "body" },
+        "update": { "capability": "case.update", "id": "sysId", "body": "body" }
+      }
+    },
+    "attachment": {
+      "label": "Attachment",
+      "fields": [
+        { "name": "sys_id", "type": "id", "readOnly": true },
+        { "name": "file_name", "type": "string", "tag": "record.displayName" },
+        { "name": "content_type", "type": "string" },
+        { "name": "size_bytes", "type": "number" },
+        { "name": "table_name", "type": "string" },
+        { "name": "table_sys_id", "type": "string" }
+      ],
+      "sync": {
+        "id": "sys_id",
+        "list": { "capability": "attachment.list", "items": "result" },
+        "get": { "capability": "attachment.get", "id": "sysId" }
+      }
+    }
+  },
+  "capabilities": {
+    "incident.list": {
+      "kind": "read",
+      "method": "listIncidents",
+      "output": "incident",
+      "args": ["query"]
+    },
+    "incident.get": {
+      "kind": "read",
+      "method": "getIncident",
+      "input": { "sysId": { "type": "string", "required": true } },
+      "output": "incident",
+      "args": ["sysId", "query"]
+    },
+    "incident.create": {
+      "kind": "write",
+      "method": "createIncident",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "incident",
+      "args": ["body"]
+    },
+    "incident.update": {
+      "kind": "write",
+      "method": "updateIncident",
+      "input": {
+        "sysId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "incident",
+      "args": ["sysId", "body"]
+    },
+    "sc_request.list": {
+      "kind": "read",
+      "method": "listScRequests",
+      "output": "sc_request",
+      "args": ["query"]
+    },
+    "sc_request.get": {
+      "kind": "read",
+      "method": "getScRequest",
+      "input": { "sysId": { "type": "string", "required": true } },
+      "output": "sc_request",
+      "args": ["sysId", "query"]
+    },
+    "sc_req_item.list": {
+      "kind": "read",
+      "method": "listScReqItems",
+      "output": "sc_req_item",
+      "args": ["query"]
+    },
+    "sc_req_item.get": {
+      "kind": "read",
+      "method": "getScReqItem",
+      "input": { "sysId": { "type": "string", "required": true } },
+      "output": "sc_req_item",
+      "args": ["sysId", "query"]
+    },
+    "problem.list": {
+      "kind": "read",
+      "method": "listProblems",
+      "output": "problem",
+      "args": ["query"]
+    },
+    "problem.get": {
+      "kind": "read",
+      "method": "getProblem",
+      "input": { "sysId": { "type": "string", "required": true } },
+      "output": "problem",
+      "args": ["sysId", "query"]
+    },
+    "change_request.list": {
+      "kind": "read",
+      "method": "listChangeRequests",
+      "output": "change_request",
+      "args": ["query"]
+    },
+    "change_request.get": {
+      "kind": "read",
+      "method": "getChangeRequest",
+      "input": { "sysId": { "type": "string", "required": true } },
+      "output": "change_request",
+      "args": ["sysId", "query"]
+    },
+    "user.list": {
+      "kind": "read",
+      "method": "listSysUsers",
+      "output": "user",
+      "args": ["query"]
+    },
+    "user.get": {
+      "kind": "read",
+      "method": "getSysUser",
+      "input": { "sysId": { "type": "string", "required": true } },
+      "output": "user",
+      "args": ["sysId", "query"]
+    },
+    "company.list": {
+      "kind": "read",
+      "method": "listCompanies",
+      "output": "company",
+      "args": ["query"]
+    },
+    "company.get": {
+      "kind": "read",
+      "method": "getCompany",
+      "input": { "sysId": { "type": "string", "required": true } },
+      "output": "company",
+      "args": ["sysId", "query"]
+    },
+    "customer_account.list": {
+      "kind": "read",
+      "method": "listCustomerAccounts",
+      "output": "customer_account",
+      "args": ["query"]
+    },
+    "customer_account.get": {
+      "kind": "read",
+      "method": "getCustomerAccount",
+      "input": { "sysId": { "type": "string", "required": true } },
+      "output": "customer_account",
+      "args": ["sysId", "query"]
+    },
+    "case.list": {
+      "kind": "read",
+      "method": "listCases",
+      "output": "case",
+      "args": ["query"]
+    },
+    "case.get": {
+      "kind": "read",
+      "method": "getCase",
+      "input": { "sysId": { "type": "string", "required": true } },
+      "output": "case",
+      "args": ["sysId", "query"]
+    },
+    "case.create": {
+      "kind": "write",
+      "method": "createCase",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "case",
+      "args": ["body"]
+    },
+    "case.update": {
+      "kind": "write",
+      "method": "updateCase",
+      "input": {
+        "sysId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "case",
+      "args": ["sysId", "body"]
+    },
+    "attachment.list": {
+      "kind": "read",
+      "method": "listAttachments",
+      "output": "attachment",
+      "args": ["query"]
+    },
+    "attachment.get": {
+      "kind": "read",
+      "method": "getAttachment",
+      "input": { "sysId": { "type": "string", "required": true } },
+      "output": "attachment",
+      "args": ["sysId", "query"]
+    }
+  },
+  "skipped": {
+    "notes": [
+      "No webhook.subscribe capability: ServiceNow has no Table/ITSM REST API to register outbound webhooks. Use Outbound REST Messages, Business Rules, or Flow Designer REST steps on the instance.",
+      "Dedicated Case API (/api/sn_customerservice/case) and Trouble Ticket Open API are not wrapped; CSM cases use Table API sn_customerservice_case.",
+      "Attachment file download (/attachment/{sys_id}/file) and upload are not wrapped; metadata list/get only."
+    ]
+  }
+}

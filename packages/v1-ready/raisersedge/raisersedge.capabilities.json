@@ -1,0 +1,378 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "raisersedge",
+  "label": "Raiser's Edge NXT",
+  "package": "@friggframework/api-module-raisersedge",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Blackbaud environment identified by environment_id from the OAuth token response.",
+    "fields": [
+      {
+        "name": "environment_id",
+        "type": "id",
+        "description": "Blackbaud environment id returned on token exchange"
+      }
+    ]
+  },
+  "objects": {
+    "constituent": {
+      "label": "Constituent",
+      "description": "Donor / organization record (Constituent API)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "type", "type": "string" },
+        { "name": "lookup_id", "type": "string" },
+        { "name": "first", "type": "string", "tag": "person.firstName" },
+        { "name": "last", "type": "string", "tag": "person.lastName" },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "title", "type": "string", "tag": "person.title" },
+        { "name": "email.address", "type": "email", "tag": "contact.email" },
+        { "name": "phone.number", "type": "phone", "tag": "contact.phone" },
+        {
+          "name": "date_added",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "date_modified",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "date_modified",
+        "list": {
+          "capability": "constituent.list",
+          "limit": "limit",
+          "items": "value",
+          "paging": "offset"
+        },
+        "get": { "capability": "constituent.get", "id": "id" },
+        "create": { "capability": "constituent.create", "body": "constituent" },
+        "update": {
+          "capability": "constituent.update",
+          "id": "id",
+          "body": "constituent"
+        }
+      }
+    },
+    "gift": {
+      "label": "Gift",
+      "description": "Donation / gift record (Gift API)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "constituent_id", "type": "string" },
+        { "name": "type", "type": "string" },
+        { "name": "amount.value", "type": "number", "tag": "deal.amount" },
+        { "name": "date", "type": "date" },
+        {
+          "name": "date_added",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "gift.list",
+          "limit": "limit",
+          "items": "value",
+          "paging": "offset"
+        },
+        "get": { "capability": "gift.get", "id": "id" },
+        "create": { "capability": "gift.create", "body": "gift" },
+        "update": { "capability": "gift.update", "id": "id", "body": "gift" }
+      }
+    },
+    "event": {
+      "label": "Event",
+      "description": "Fundraising event (Event API)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" },
+        { "name": "start_date", "type": "datetime" },
+        { "name": "end_date", "type": "datetime" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "event.list",
+          "limit": "limit",
+          "items": "value",
+          "paging": "offset"
+        },
+        "get": { "capability": "event.get", "id": "id" },
+        "create": { "capability": "event.create", "body": "event" },
+        "update": { "capability": "event.update", "id": "id", "body": "event" }
+      }
+    },
+    "fund": {
+      "label": "Fund",
+      "description": "Fundraising fund (Fundraising API)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "description", "type": "string" },
+        { "name": "lookup_id", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "fund.list",
+          "limit": "limit",
+          "items": "value",
+          "paging": "offset"
+        }
+      }
+    },
+    "appeal": {
+      "label": "Appeal",
+      "description": "Fundraising appeal (Fundraising API)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "description", "type": "string" },
+        { "name": "lookup_id", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "appeal.list",
+          "limit": "limit",
+          "items": "value",
+          "paging": "offset"
+        }
+      }
+    },
+    "subscription": {
+      "label": "Webhook subscription",
+      "description": "SKY Webhook API subscription (one event type per environment)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "webhook_url", "type": "string" },
+        { "name": "event_type", "type": "string" },
+        { "name": "environment_id", "type": "string" },
+        { "name": "provisioning_status", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "subscription.get", "id": "id" },
+        "create": {
+          "capability": "subscription.create",
+          "body": "subscription"
+        },
+        "delete": { "capability": "subscription.delete", "id": "id" }
+      }
+    }
+  },
+  "capabilities": {
+    "constituent.list": {
+      "kind": "list",
+      "method": "listConstituents",
+      "output": "constituent[]",
+      "args": ["params"]
+    },
+    "constituent.get": {
+      "kind": "read",
+      "method": "getConstituent",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "constituent",
+      "args": ["id"]
+    },
+    "constituent.create": {
+      "kind": "create",
+      "method": "createConstituent",
+      "input": { "constituent": { "type": "object", "required": true } },
+      "output": "constituent",
+      "args": ["body"]
+    },
+    "constituent.update": {
+      "kind": "update",
+      "method": "updateConstituent",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "constituent": { "type": "object", "required": true }
+      },
+      "output": "constituent",
+      "args": ["id", "body"]
+    },
+    "constituent.duplicateSearch": {
+      "kind": "list",
+      "method": "duplicateSearchConstituents",
+      "output": "constituent[]",
+      "args": ["params"]
+    },
+    "constituent.email.list": {
+      "kind": "list",
+      "method": "listConstituentEmailAddresses",
+      "args": ["id", "params"]
+    },
+    "constituent.email.create": {
+      "kind": "create",
+      "method": "createEmailAddress",
+      "args": ["body"]
+    },
+    "constituent.email.update": {
+      "kind": "update",
+      "method": "updateEmailAddress",
+      "args": ["id", "body"]
+    },
+    "constituent.phone.list": {
+      "kind": "list",
+      "method": "listConstituentPhones",
+      "args": ["id", "params"]
+    },
+    "constituent.phone.create": {
+      "kind": "create",
+      "method": "createPhone",
+      "args": ["body"]
+    },
+    "constituent.phone.update": {
+      "kind": "update",
+      "method": "updatePhone",
+      "args": ["id", "body"]
+    },
+    "constituent.address.list": {
+      "kind": "list",
+      "method": "listConstituentAddresses",
+      "args": ["id", "params"]
+    },
+    "constituent.address.create": {
+      "kind": "create",
+      "method": "createAddress",
+      "args": ["body"]
+    },
+    "constituent.address.update": {
+      "kind": "update",
+      "method": "updateAddress",
+      "args": ["id", "body"]
+    },
+    "constituent.titles.list": {
+      "kind": "list",
+      "method": "listTitles",
+      "args": ["params"]
+    },
+    "constituent.emailTypes.list": {
+      "kind": "list",
+      "method": "listEmailAddressTypes"
+    },
+    "constituent.phoneTypes.list": {
+      "kind": "list",
+      "method": "listPhoneTypes"
+    },
+    "constituent.addressTypes.list": {
+      "kind": "list",
+      "method": "listAddressTypes"
+    },
+    "gift.list": {
+      "kind": "list",
+      "method": "listGifts",
+      "output": "gift[]",
+      "args": ["params"]
+    },
+    "gift.get": {
+      "kind": "read",
+      "method": "getGift",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "gift",
+      "args": ["id"]
+    },
+    "gift.create": {
+      "kind": "create",
+      "method": "createGift",
+      "input": { "gift": { "type": "object", "required": true } },
+      "output": "gift",
+      "args": ["body"]
+    },
+    "gift.update": {
+      "kind": "update",
+      "method": "updateGift",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "gift": { "type": "object", "required": true }
+      },
+      "output": "gift",
+      "args": ["id", "body"]
+    },
+    "event.list": {
+      "kind": "list",
+      "method": "listEvents",
+      "output": "event[]",
+      "args": ["params"]
+    },
+    "event.get": {
+      "kind": "read",
+      "method": "getEvent",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "event",
+      "args": ["id"]
+    },
+    "event.create": {
+      "kind": "create",
+      "method": "createEvent",
+      "input": { "event": { "type": "object", "required": true } },
+      "output": "event",
+      "args": ["body"]
+    },
+    "event.update": {
+      "kind": "update",
+      "method": "updateEvent",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "event": { "type": "object", "required": true }
+      },
+      "output": "event",
+      "args": ["id", "body"]
+    },
+    "event.participant.list": {
+      "kind": "list",
+      "method": "listParticipants",
+      "args": ["id", "params"]
+    },
+    "event.participant.create": {
+      "kind": "create",
+      "method": "createParticipant",
+      "args": ["id", "body"]
+    },
+    "event.participant.update": {
+      "kind": "update",
+      "method": "updateParticipant",
+      "args": ["id", "body"]
+    },
+    "fund.list": {
+      "kind": "list",
+      "method": "listFunds",
+      "output": "fund[]",
+      "args": ["params"]
+    },
+    "appeal.list": {
+      "kind": "list",
+      "method": "listAppeals",
+      "output": "appeal[]",
+      "args": ["params"]
+    },
+    "subscription.create": {
+      "kind": "create",
+      "method": "createSubscription",
+      "input": { "subscription": { "type": "object", "required": true } },
+      "output": "subscription",
+      "args": ["body"]
+    },
+    "subscription.get": {
+      "kind": "read",
+      "method": "getSubscription",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "subscription",
+      "args": ["id"]
+    },
+    "subscription.delete": {
+      "kind": "delete",
+      "method": "deleteSubscription",
+      "input": { "id": { "type": "string", "required": true } },
+      "args": ["id"]
+    }
+  }
+}

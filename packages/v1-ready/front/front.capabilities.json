@@ -1,0 +1,391 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "front",
+  "label": "Front",
+  "package": "@friggframework/api-module-front",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "authAlternates": ["apiKey"],
+  "account": {
+    "description": "Company identity from GET /me. Persisted as entity/credential externalId. Bearer may be an OAuth access token or a Front API token.",
+    "fields": [
+      {
+        "name": "companyId",
+        "type": "string",
+        "description": "Front company id (cmp_…) from /me"
+      }
+    ]
+  },
+  "objects": {
+    "conversation": {
+      "label": "Conversation",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "subject", "type": "string", "tag": "record.displayName" },
+        { "name": "status", "type": "string" },
+        { "name": "status_category", "type": "string" },
+        { "name": "assignee.id", "type": "string", "tag": "person.id" },
+        { "name": "assignee.email", "type": "email", "tag": "person.email" },
+        { "name": "recipient.handle", "type": "string", "tag": "contact.handle" },
+        { "name": "recipient.name", "type": "string", "tag": "person.displayName" },
+        { "name": "is_private", "type": "boolean" },
+        { "name": "created_at", "type": "number", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "number", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "conversation.list",
+          "cursor": "page_token",
+          "limit": "limit",
+          "items": "_results",
+          "paging": "cursor"
+        },
+        "get": { "capability": "conversation.get", "id": "conversationId" },
+        "create": { "capability": "conversation.create", "body": "body" },
+        "update": { "capability": "conversation.update", "id": "conversationId", "body": "body" }
+      }
+    },
+    "contact": {
+      "label": "Contact",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "person.displayName" },
+        { "name": "description", "type": "text" },
+        { "name": "handles", "type": "object[]", "tag": "contact.handles" },
+        { "name": "handles[0].handle", "type": "string", "tag": "contact.email" },
+        { "name": "handles[0].source", "type": "string" },
+        { "name": "is_private", "type": "boolean" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "contact.list",
+          "cursor": "page_token",
+          "limit": "limit",
+          "items": "_results",
+          "paging": "cursor"
+        },
+        "get": { "capability": "contact.get", "id": "contactId" },
+        "create": { "capability": "contact.create", "body": "body" },
+        "update": { "capability": "contact.update", "id": "contactId", "body": "body" }
+      }
+    },
+    "channel": {
+      "label": "Channel",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "address", "type": "string", "tag": "contact.handle" },
+        { "name": "type", "type": "string" },
+        { "name": "send_as", "type": "string" },
+        { "name": "is_private", "type": "boolean" }
+      ]
+    },
+    "teammate": {
+      "label": "Teammate",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "person.id" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "username", "type": "string" },
+        { "name": "first_name", "type": "string", "tag": "person.givenName" },
+        { "name": "last_name", "type": "string", "tag": "person.familyName" },
+        { "name": "is_admin", "type": "boolean" },
+        { "name": "is_available", "type": "boolean" }
+      ]
+    },
+    "inbox": {
+      "label": "Inbox",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "is_private", "type": "boolean" },
+        { "name": "is_public", "type": "boolean" }
+      ]
+    },
+    "tag": {
+      "label": "Tag",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "description", "type": "text" },
+        { "name": "highlight", "type": "string" },
+        { "name": "is_private", "type": "boolean" }
+      ]
+    },
+    "event": {
+      "label": "Event",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "type", "type": "string" },
+        { "name": "emitted_at", "type": "number", "tag": "record.createdAt" },
+        { "name": "conversation.id", "type": "string" }
+      ]
+    },
+    "message": {
+      "label": "Message",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "type", "type": "string" },
+        { "name": "is_inbound", "type": "boolean" },
+        { "name": "subject", "type": "string" },
+        { "name": "blurb", "type": "string" },
+        { "name": "body", "type": "text" },
+        { "name": "text", "type": "text" },
+        { "name": "created_at", "type": "number", "tag": "record.createdAt" }
+      ]
+    },
+    "comment": {
+      "label": "Comment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "body", "type": "text" },
+        { "name": "author.id", "type": "string", "tag": "person.id" },
+        { "name": "posted_at", "type": "number", "tag": "record.createdAt" },
+        { "name": "is_pinned", "type": "boolean" }
+      ]
+    }
+  },
+  "events": {
+    "inbound_received": {
+      "delivery": "webhook",
+      "object": "message",
+      "description": "Application webhook: inbound message received.",
+      "match": "inbound_received"
+    },
+    "outbound_sent": {
+      "delivery": "webhook",
+      "object": "message",
+      "match": "outbound_sent"
+    },
+    "conversation_archived": {
+      "delivery": "webhook",
+      "object": "conversation",
+      "match": "conversation_archived"
+    },
+    "conversation_reopened": {
+      "delivery": "webhook",
+      "object": "conversation",
+      "match": "conversation_reopened"
+    },
+    "assignee_changed": {
+      "delivery": "webhook",
+      "object": "conversation",
+      "match": "assignee_changed"
+    },
+    "tag_added": {
+      "delivery": "webhook",
+      "object": "conversation",
+      "match": "tag_added"
+    },
+    "tag_removed": {
+      "delivery": "webhook",
+      "object": "conversation",
+      "match": "tag_removed"
+    },
+    "new_comment_added": {
+      "delivery": "webhook",
+      "object": "comment",
+      "match": "new_comment_added"
+    }
+  },
+  "webhook": {
+    "scope": "app",
+    "topic": "{{body.type}}",
+    "eventId": "{{body.authorization.id}}:{{body.type}}:{{body.payload.id}}",
+    "account": "{{body.authorization.id}}",
+    "verify": "verifyWebhookSignature",
+    "note": "Application webhooks are configured as app features in the Front Developer portal (not via Core API CRUD). Front signs raw body with HMAC-SHA256 over `${timestamp}:` + body; headers x-front-signature / x-front-request-timestamp. Challenge handshake uses x-front-challenge."
+  },
+  "capabilities": {
+    "identity.get": {
+      "kind": "read",
+      "method": "getMe",
+      "output": "account",
+      "args": []
+    },
+    "conversation.list": {
+      "kind": "read",
+      "method": "listConversations",
+      "output": "page<conversation>",
+      "args": ["$rest"]
+    },
+    "conversation.get": {
+      "kind": "read",
+      "method": "getConversation",
+      "input": { "conversationId": { "type": "string", "required": true } },
+      "output": "conversation",
+      "args": ["conversationId"]
+    },
+    "conversation.create": {
+      "kind": "write",
+      "method": "createConversation",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "conversation",
+      "args": ["body"]
+    },
+    "conversation.update": {
+      "kind": "write",
+      "method": "updateConversation",
+      "input": {
+        "conversationId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "conversation",
+      "args": ["conversationId", "body"]
+    },
+    "contact.list": {
+      "kind": "read",
+      "method": "listContacts",
+      "output": "page<contact>",
+      "args": ["$rest"]
+    },
+    "contact.get": {
+      "kind": "read",
+      "method": "getContact",
+      "input": { "contactId": { "type": "string", "required": true } },
+      "output": "contact",
+      "args": ["contactId"]
+    },
+    "contact.create": {
+      "kind": "write",
+      "method": "createContact",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "contact",
+      "args": ["body"]
+    },
+    "contact.update": {
+      "kind": "write",
+      "method": "updateContact",
+      "input": {
+        "contactId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "contact",
+      "args": ["contactId", "body"]
+    },
+    "contact.delete": {
+      "kind": "write",
+      "method": "deleteContact",
+      "input": { "contactId": { "type": "string", "required": true } },
+      "args": ["contactId"]
+    },
+    "channel.list": {
+      "kind": "read",
+      "method": "listChannels",
+      "output": "page<channel>",
+      "args": ["$rest"]
+    },
+    "channel.get": {
+      "kind": "read",
+      "method": "getChannel",
+      "input": { "channelId": { "type": "string", "required": true } },
+      "output": "channel",
+      "args": ["channelId"]
+    },
+    "teammate.list": {
+      "kind": "read",
+      "method": "listTeammates",
+      "output": "page<teammate>",
+      "args": ["$rest"]
+    },
+    "teammate.get": {
+      "kind": "read",
+      "method": "getTeammate",
+      "input": { "teammateId": { "type": "string", "required": true } },
+      "output": "teammate",
+      "args": ["teammateId"]
+    },
+    "inbox.list": {
+      "kind": "read",
+      "method": "listInboxes",
+      "output": "page<inbox>",
+      "args": ["$rest"]
+    },
+    "inbox.get": {
+      "kind": "read",
+      "method": "getInbox",
+      "input": { "inboxId": { "type": "string", "required": true } },
+      "output": "inbox",
+      "args": ["inboxId"]
+    },
+    "tag.list": {
+      "kind": "read",
+      "method": "listTags",
+      "output": "page<tag>",
+      "args": ["$rest"]
+    },
+    "tag.get": {
+      "kind": "read",
+      "method": "getTag",
+      "input": { "tagId": { "type": "string", "required": true } },
+      "output": "tag",
+      "args": ["tagId"]
+    },
+    "tag.create": {
+      "kind": "write",
+      "method": "createTag",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "tag",
+      "args": ["body"]
+    },
+    "tag.update": {
+      "kind": "write",
+      "method": "updateTag",
+      "input": {
+        "tagId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "tag",
+      "args": ["tagId", "body"]
+    },
+    "event.list": {
+      "kind": "read",
+      "method": "listEvents",
+      "output": "page<event>",
+      "args": ["$rest"]
+    },
+    "event.get": {
+      "kind": "read",
+      "method": "getEvent",
+      "input": { "eventId": { "type": "string", "required": true } },
+      "output": "event",
+      "args": ["eventId"]
+    },
+    "message.listForConversation": {
+      "kind": "read",
+      "method": "listConversationMessages",
+      "input": { "conversationId": { "type": "string", "required": true } },
+      "output": "page<message>",
+      "args": ["conversationId", "$rest"]
+    },
+    "message.get": {
+      "kind": "read",
+      "method": "getMessage",
+      "input": { "messageId": { "type": "string", "required": true } },
+      "output": "message",
+      "args": ["messageId"]
+    },
+    "comment.listForConversation": {
+      "kind": "read",
+      "method": "listConversationComments",
+      "input": { "conversationId": { "type": "string", "required": true } },
+      "output": "page<comment>",
+      "args": ["conversationId", "$rest"]
+    },
+    "comment.create": {
+      "kind": "write",
+      "method": "addComment",
+      "input": {
+        "conversationId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "comment",
+      "args": ["conversationId", "body"]
+    }
+  },
+  "options": {
+    "note": "Webhook subscription CRUD is not offered by the Core API; configure Application webhooks as an app feature. Prefer OAuth for public App Store integrations; API tokens (Bearer) are supported as an alternate via setAuthParams / FRONT_API_TOKEN. Canonical conversation mapping is extensions.mapping → support@1 (UNVALIDATED)."
+  }
+}

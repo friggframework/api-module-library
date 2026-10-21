@@ -1,0 +1,570 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "shopmonkey",
+  "label": "Shopmonkey",
+  "package": "@friggframework/api-module-shopmonkey",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Account identity from GET /user/me (user id). Persisted as entity/credential externalId.",
+    "fields": [
+      {
+        "name": "userId",
+        "type": "string",
+        "description": "Shopmonkey user id from getCurrentUser"
+      },
+      {
+        "name": "companyId",
+        "type": "string",
+        "description": "Company id from getCurrentUser.data.companyId"
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "firstName", "type": "string", "tag": "person.givenName" },
+        { "name": "lastName", "type": "string", "tag": "person.familyName" },
+        { "name": "companyId", "type": "string", "readOnly": true },
+        { "name": "currentLocationId", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "user.list",
+          "cursor": "skip",
+          "limit": "limit",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": { "capability": "user.get", "id": "userId" }
+      }
+    },
+    "company": {
+      "label": "Company",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "createdDate", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "company.get", "id": "companyId" },
+        "update": { "capability": "company.update", "id": "companyId", "body": "data" }
+      }
+    },
+    "customer": {
+      "label": "Customer",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "firstName", "type": "string", "tag": "person.givenName" },
+        { "name": "lastName", "type": "string", "tag": "person.familyName" },
+        { "name": "companyName", "type": "string", "tag": "record.displayName" },
+        { "name": "createdDate", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updatedDate", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "customer.search",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": { "capability": "customer.get", "id": "customerId" },
+        "create": { "capability": "customer.create", "body": "data" },
+        "update": { "capability": "customer.update", "id": "customerId", "body": "data" },
+        "delete": { "capability": "customer.softDelete", "id": "customerId" }
+      }
+    },
+    "vehicle": {
+      "label": "Vehicle",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "vin", "type": "string" },
+        { "name": "licensePlate", "type": "string" },
+        { "name": "year", "type": "number" },
+        { "name": "make", "type": "string" },
+        { "name": "model", "type": "string" },
+        { "name": "createdDate", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "vehicle.get", "id": "vehicleId" },
+        "create": { "capability": "vehicle.create", "body": "data" },
+        "update": { "capability": "vehicle.update", "id": "vehicleId", "body": "data" },
+        "delete": { "capability": "vehicle.softDelete", "id": "vehicleId" }
+      }
+    },
+    "order": {
+      "label": "Order",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "customerId", "type": "string" },
+        { "name": "vehicleId", "type": "string" },
+        { "name": "coalescedName", "type": "string", "tag": "record.displayName" },
+        { "name": "createdDate", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "completedDate", "type": "datetime", "readOnly": true },
+        { "name": "archived", "type": "boolean" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "order.list",
+          "cursor": "skip",
+          "limit": "limit",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": { "capability": "order.get", "id": "orderId" },
+        "create": { "capability": "order.create", "body": "data" },
+        "update": { "capability": "order.update", "id": "orderId", "body": "data" },
+        "delete": { "capability": "order.softDelete", "id": "orderId" }
+      }
+    },
+    "payment": {
+      "label": "Payment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "amountCents", "type": "number", "tag": "money.amount" },
+        { "name": "createdDate", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "payment.search",
+          "items": "data",
+          "paging": "offset"
+        },
+        "create": { "capability": "payment.recordManual", "body": "data" },
+        "delete": { "capability": "payment.deleteManual", "id": "paymentId" }
+      }
+    },
+    "inventory_part": {
+      "label": "Inventory Part",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "sku", "type": "string" },
+        { "name": "createdDate", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "inventory_part.search",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": { "capability": "inventory_part.get", "id": "partId" },
+        "create": { "capability": "inventory_part.create", "body": "data" },
+        "update": { "capability": "inventory_part.update", "id": "partId", "body": "data" }
+      }
+    },
+    "appointment": {
+      "label": "Appointment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "customerId", "type": "string" },
+        { "name": "vehicleId", "type": "string" },
+        { "name": "startDate", "type": "datetime" },
+        { "name": "endDate", "type": "datetime" },
+        { "name": "createdDate", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "appointment.list",
+          "cursor": "skip",
+          "limit": "limit",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": { "capability": "appointment.get", "id": "appointmentId" },
+        "create": { "capability": "appointment.create", "body": "data" },
+        "update": { "capability": "appointment.update", "id": "appointmentId", "body": "data" },
+        "delete": { "capability": "appointment.delete", "id": "appointmentId" }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "url", "type": "string" },
+        { "name": "triggers", "type": "json" },
+        { "name": "enabled", "type": "boolean" },
+        { "name": "secret", "type": "string", "readOnly": true },
+        { "name": "createdDate", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "webhook.get", "id": "webhookId" },
+        "create": { "capability": "webhook.create", "body": "data" },
+        "update": { "capability": "webhook.update", "id": "webhookId", "body": "data" },
+        "delete": { "capability": "webhook.delete", "id": "webhookId" }
+      }
+    }
+  },
+  "capabilities": {
+    "auth.status": {
+      "kind": "read",
+      "method": "getApiKeyStatus",
+      "output": "object"
+    },
+    "user.me": {
+      "kind": "read",
+      "method": "getCurrentUser",
+      "output": "user"
+    },
+    "user.list": {
+      "kind": "read",
+      "method": "listUsers",
+      "input": {
+        "limit": { "type": "number" },
+        "skip": { "type": "number" }
+      },
+      "output": "page<user>",
+      "args": ["$rest"]
+    },
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": {
+        "userId": { "type": "string", "required": true }
+      },
+      "output": "user",
+      "args": ["userId"]
+    },
+    "company.get": {
+      "kind": "read",
+      "method": "getCompany",
+      "input": {
+        "companyId": { "type": "string", "required": true }
+      },
+      "output": "company",
+      "args": ["companyId"]
+    },
+    "company.update": {
+      "kind": "write",
+      "method": "updateCompany",
+      "input": {
+        "companyId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "company",
+      "args": ["companyId", "data"]
+    },
+    "customer.search": {
+      "kind": "read",
+      "method": "searchCustomers",
+      "input": {
+        "data": { "type": "object" }
+      },
+      "output": "page<customer>",
+      "args": ["data"]
+    },
+    "customer.get": {
+      "kind": "read",
+      "method": "getCustomer",
+      "input": {
+        "customerId": { "type": "string", "required": true }
+      },
+      "output": "customer",
+      "args": ["customerId"]
+    },
+    "customer.create": {
+      "kind": "write",
+      "method": "createCustomer",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "customer",
+      "args": ["data"]
+    },
+    "customer.update": {
+      "kind": "write",
+      "method": "updateCustomer",
+      "input": {
+        "customerId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "customer",
+      "args": ["customerId", "data"]
+    },
+    "customer.softDelete": {
+      "kind": "write",
+      "method": "softDeleteCustomer",
+      "input": {
+        "customerId": { "type": "string", "required": true },
+        "action": { "type": "string" }
+      },
+      "args": ["customerId", "action"]
+    },
+    "customer.listOrders": {
+      "kind": "read",
+      "method": "listCustomerOrders",
+      "input": {
+        "customerId": { "type": "string", "required": true }
+      },
+      "output": "page<order>",
+      "args": ["customerId", "$rest"]
+    },
+    "customer.listVehicles": {
+      "kind": "read",
+      "method": "listCustomerVehicles",
+      "input": {
+        "customerId": { "type": "string", "required": true }
+      },
+      "output": "page<vehicle>",
+      "args": ["customerId", "$rest"]
+    },
+    "vehicle.get": {
+      "kind": "read",
+      "method": "getVehicle",
+      "input": {
+        "vehicleId": { "type": "string", "required": true }
+      },
+      "output": "vehicle",
+      "args": ["vehicleId"]
+    },
+    "vehicle.create": {
+      "kind": "write",
+      "method": "createVehicle",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "vehicle",
+      "args": ["data"]
+    },
+    "vehicle.update": {
+      "kind": "write",
+      "method": "updateVehicle",
+      "input": {
+        "vehicleId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "vehicle",
+      "args": ["vehicleId", "data"]
+    },
+    "vehicle.softDelete": {
+      "kind": "write",
+      "method": "softDeleteVehicle",
+      "input": {
+        "vehicleId": { "type": "string", "required": true },
+        "action": { "type": "string" }
+      },
+      "args": ["vehicleId", "action"]
+    },
+    "vehicle.listOrders": {
+      "kind": "read",
+      "method": "listVehicleOrders",
+      "input": {
+        "vehicleId": { "type": "string", "required": true }
+      },
+      "output": "page<order>",
+      "args": ["vehicleId", "$rest"]
+    },
+    "order.list": {
+      "kind": "read",
+      "method": "listOrders",
+      "input": {
+        "limit": { "type": "number" },
+        "skip": { "type": "number" }
+      },
+      "output": "page<order>",
+      "args": ["$rest"]
+    },
+    "order.get": {
+      "kind": "read",
+      "method": "getOrder",
+      "input": {
+        "orderId": { "type": "string", "required": true }
+      },
+      "output": "order",
+      "args": ["orderId"]
+    },
+    "order.create": {
+      "kind": "write",
+      "method": "createOrder",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "order",
+      "args": ["data"]
+    },
+    "order.update": {
+      "kind": "write",
+      "method": "updateOrder",
+      "input": {
+        "orderId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "order",
+      "args": ["orderId", "data"]
+    },
+    "order.softDelete": {
+      "kind": "write",
+      "method": "softDeleteOrder",
+      "input": {
+        "orderId": { "type": "string", "required": true },
+        "action": { "type": "string" }
+      },
+      "args": ["orderId", "action"]
+    },
+    "order.pdf": {
+      "kind": "read",
+      "method": "getOrderPdf",
+      "input": {
+        "orderId": { "type": "string", "required": true }
+      },
+      "args": ["orderId", "$rest"]
+    },
+    "payment.search": {
+      "kind": "read",
+      "method": "searchPayments",
+      "input": {
+        "data": { "type": "object" }
+      },
+      "output": "page<payment>",
+      "args": ["data"]
+    },
+    "payment.recordManual": {
+      "kind": "write",
+      "method": "recordManualPayment",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "payment",
+      "args": ["data"]
+    },
+    "payment.deleteManual": {
+      "kind": "write",
+      "method": "deleteManualPayment",
+      "input": {
+        "paymentId": { "type": "string", "required": true }
+      },
+      "args": ["paymentId"]
+    },
+    "inventory_part.search": {
+      "kind": "read",
+      "method": "searchInventoryParts",
+      "input": {
+        "data": { "type": "object" }
+      },
+      "output": "page<inventory_part>",
+      "args": ["data"]
+    },
+    "inventory_part.get": {
+      "kind": "read",
+      "method": "getInventoryPart",
+      "input": {
+        "partId": { "type": "string", "required": true }
+      },
+      "output": "inventory_part",
+      "args": ["partId"]
+    },
+    "inventory_part.create": {
+      "kind": "write",
+      "method": "createInventoryPart",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "inventory_part",
+      "args": ["data"]
+    },
+    "inventory_part.update": {
+      "kind": "write",
+      "method": "updateInventoryPart",
+      "input": {
+        "partId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "inventory_part",
+      "args": ["partId", "data"]
+    },
+    "appointment.list": {
+      "kind": "read",
+      "method": "listAppointments",
+      "input": {
+        "limit": { "type": "number" },
+        "skip": { "type": "number" }
+      },
+      "output": "page<appointment>",
+      "args": ["$rest"]
+    },
+    "appointment.get": {
+      "kind": "read",
+      "method": "getAppointment",
+      "input": {
+        "appointmentId": { "type": "string", "required": true }
+      },
+      "output": "appointment",
+      "args": ["appointmentId"]
+    },
+    "appointment.create": {
+      "kind": "write",
+      "method": "createAppointment",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "appointment",
+      "args": ["data"]
+    },
+    "appointment.update": {
+      "kind": "write",
+      "method": "updateAppointment",
+      "input": {
+        "appointmentId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "appointment",
+      "args": ["appointmentId", "data"]
+    },
+    "appointment.delete": {
+      "kind": "write",
+      "method": "deleteAppointment",
+      "input": {
+        "appointmentId": { "type": "string", "required": true }
+      },
+      "args": ["appointmentId"]
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": {
+        "webhookId": { "type": "string", "required": true }
+      },
+      "output": "webhook",
+      "args": ["webhookId"]
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhook",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["data"]
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhook",
+      "input": {
+        "webhookId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["webhookId", "data"]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhook",
+      "input": {
+        "webhookId": { "type": "string", "required": true }
+      },
+      "args": ["webhookId"]
+    }
+  }
+}

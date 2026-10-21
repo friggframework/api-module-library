@@ -27,9 +27,9 @@ const { OAuth2Requester, get } = require('@friggframework/core');
  * Tekmetric does not publish a downloadable OpenAPI export; `tekmetric.openapi.yaml`
  * is Left Hook's curated subset of the documented surface that `api.js` implements.
  *
- * Ported from lefthookhq client module code (generic Api only). Client-specific
- * coupling and unverified /payments + /invoices helpers from that source were
- * stripped — those paths are not listed on the official docs nav.
+ * Ported from cleared Left Hook-owned module source (generic Api only).
+ * Client-specific coupling and unverified /payments + /invoices helpers from
+ * that source were stripped — those paths are not listed on the official docs nav.
  */
 const DEFAULT_BASE_URL = 'https://sandbox.tekmetric.com/api/v1';
 

@@ -1,0 +1,15 @@
+{
+    "name": "gorgias",
+    "label": "Gorgias",
+    "productUrl": "https://gorgias.com",
+    "apiDocs": "https://developers.gorgias.com",
+    "logoUrl": "https://friggframework.org/assets/img/gorgias-icon.png",
+    "categories": ["Customer Service", "Helpdesk"],
+    "description": "Gorgias helpdesk REST API",
+    "config": {
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

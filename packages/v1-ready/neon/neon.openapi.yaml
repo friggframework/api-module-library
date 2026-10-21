@@ -1,0 +1,544 @@
+openapi: 3.0.3
+info:
+  title: Neon CRM API v2 (curated)
+  version: "2.11"
+  description: >-
+    Neon CRM (Neon One) API v2 curated subset covering exactly the endpoints
+    the @friggframework/api-module-neon client in api.js implements. One method
+    per operationId. Derived from the official reference at
+    https://developer.neoncrm.com/api-v2/ (current version 2.11) and cross-checked
+    against community domain OpenAPI fragments at
+    https://github.com/api-evangelist/neonone/tree/main/openapi. Neon does not
+    publish a single downloadable OAS on developer.neoncrm.com; the interactive
+    reference (OAS3) is the vendor source of truth.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.neoncrm.com/v2
+    description: Production and sandbox
+  - url: https://trial.neoncrm.com/v2
+    description: Trial instances
+security:
+  - BasicAuth: []
+tags:
+  - name: Accounts
+  - name: Donations
+  - name: Campaigns
+  - name: Properties
+  - name: Events
+  - name: EventRegistrations
+  - name: Webhooks
+paths:
+  /properties/organizationProfile:
+    get:
+      tags: [Properties]
+      operationId: getOrganizationProfile
+      summary: Get organization profile
+      description: Returns profile details for the authenticated Neon organization.
+      responses:
+        "200":
+          description: Organization profile
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /properties/funds:
+    get:
+      tags: [Properties]
+      operationId: listFunds
+      summary: List funds
+      responses:
+        "200":
+          description: Funds list
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /properties/purposes:
+    get:
+      tags: [Properties]
+      operationId: listPurposes
+      summary: List purposes
+      responses:
+        "200":
+          description: Purposes list
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /properties/countries:
+    get:
+      tags: [Properties]
+      operationId: listCountries
+      summary: List countries
+      responses:
+        "200":
+          description: Countries list
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /properties/stateProvinces:
+    get:
+      tags: [Properties]
+      operationId: listStateProvinces
+      summary: List state/province codes
+      responses:
+        "200":
+          description: State/province list
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /accounts:
+    get:
+      tags: [Accounts]
+      operationId: listAccounts
+      summary: List accounts
+      description: Bulk list (API v2.3+). Prefer /accounts/search for criteria queries.
+      parameters:
+        - $ref: "#/components/parameters/CurrentPage"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Page of accounts
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Accounts]
+      operationId: createAccount
+      summary: Create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created account
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /accounts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    get:
+      tags: [Accounts]
+      operationId: getAccount
+      summary: Retrieve an account
+      responses:
+        "200":
+          description: Account
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Accounts]
+      operationId: updateAccount
+      summary: Update an account (full)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated account
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Accounts]
+      operationId: patchAccount
+      summary: Patch an account (partial)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated account
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /accounts/search:
+    post:
+      tags: [Accounts]
+      operationId: searchAccounts
+      summary: Search accounts
+      description: Rate-limited to one concurrent search request per organization.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Search results
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          description: Too many concurrent search requests
+  /accounts/{id}/donations:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    get:
+      tags: [Donations]
+      operationId: listAccountDonations
+      summary: List donations for an account
+      parameters:
+        - $ref: "#/components/parameters/CurrentPage"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Donations for the account
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /donations:
+    post:
+      tags: [Donations]
+      operationId: createDonation
+      summary: Create a donation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created donation
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /donations/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Donations]
+      operationId: getDonation
+      summary: Retrieve a donation
+      responses:
+        "200":
+          description: Donation
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /donations/search:
+    post:
+      tags: [Donations]
+      operationId: searchDonations
+      summary: Search donations
+      description: Rate-limited to one concurrent search request per organization.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Search results
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          description: Too many concurrent search requests
+  /campaigns:
+    get:
+      tags: [Campaigns]
+      operationId: listCampaigns
+      summary: List campaigns
+      parameters:
+        - $ref: "#/components/parameters/CurrentPage"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Campaigns list
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /campaigns/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Campaigns]
+      operationId: getCampaign
+      summary: Retrieve a campaign
+      responses:
+        "200":
+          description: Campaign
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /events:
+    get:
+      tags: [Events]
+      operationId: listEvents
+      summary: List legacy events
+      description: >-
+        Only legacy events are visible to the API. Next Gen events are not
+        exposed (see Neon API reference note on Legacy Events vs New Events).
+      parameters:
+        - $ref: "#/components/parameters/CurrentPage"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Events list
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Events]
+      operationId: createEvent
+      summary: Create a legacy event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created event
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /events/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Events]
+      operationId: getEvent
+      summary: Retrieve a legacy event
+      responses:
+        "200":
+          description: Event
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /events/{id}/eventRegistrations:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [EventRegistrations]
+      operationId: listEventRegistrations
+      summary: List registrations for an event
+      description: Paginates with `page` (not `currentPage`).
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer }
+        - name: pageSize
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Event registrations
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /eventRegistrations:
+    post:
+      tags: [EventRegistrations]
+      operationId: createEventRegistration
+      summary: Create an event registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created registration
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /eventRegistrations/{registrationId}:
+    parameters:
+      - name: registrationId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [EventRegistrations]
+      operationId: getEventRegistration
+      summary: Retrieve an event registration
+      responses:
+        "200":
+          description: Event registration
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List webhook subscriptions
+      responses:
+        "200":
+          description: Webhook subscriptions
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a webhook subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookInput"
+      responses:
+        "200":
+          description: Created webhook
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /webhooks/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Retrieve a webhook subscription
+      responses:
+        "200":
+          description: Webhook
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update a webhook subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookInput"
+      responses:
+        "200":
+          description: Updated webhook
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Webhooks]
+      operationId: patchWebhook
+      summary: Patch a webhook subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated webhook
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook subscription
+      responses:
+        "200":
+          description: Deletion confirmation
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: >-
+        HTTP Basic. Username = Neon Org ID; password = API key for a system
+        user. Also send header NEON-API-VERSION (module uses 2.11).
+  parameters:
+    AccountId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    CurrentPage:
+      name: currentPage
+      in: query
+      schema: { type: integer, minimum: 0 }
+    PageSize:
+      name: pageSize
+      in: query
+      schema: { type: integer, minimum: 1 }
+  responses:
+    Unauthorized:
+      description: Missing or invalid Org ID / API key
+    NotFound:
+      description: Resource not found
+  schemas:
+    SearchRequest:
+      type: object
+      properties:
+        searchFields:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              operator: { type: string }
+              value: {}
+            additionalProperties: true
+        outputFields:
+          type: array
+          items: { type: string }
+      additionalProperties: true
+    WebhookInput:
+      type: object
+      required: [name, url, eventTrigger]
+      properties:
+        name: { type: string }
+        url: { type: string, format: uri }
+        eventTrigger:
+          type: string
+          description: >-
+            e.g. createAccount, updateDonation, deleteMembership (see Neon
+            webhook docs for the full trigger list).
+        contentType:
+          type: string
+          enum:
+            - application/json
+            - application/x-www-form-urlencoded
+        authentication:
+          type: object
+          properties:
+            username: { type: string }
+            password: { type: string }
+          additionalProperties: true
+        customParameters:
+          type: object
+          additionalProperties: { type: string }
+      additionalProperties: true

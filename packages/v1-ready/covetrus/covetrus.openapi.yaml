@@ -1,0 +1,707 @@
+openapi: 3.0.3
+info:
+  title: Covetrus Connect API (curated subset)
+  version: "1.0.0"
+  description: >-
+    Curated OpenAPI subset for @friggframework/api-module-covetrus. Covetrus does
+    not publish a browsable public OpenAPI or REST reference; technical docs are
+    gated behind the Covetrus Technology Integration Partner Program / Connect
+    Developers Tool Kit
+    (https://covetrus.com/covetrus-platform/workflow-and-productivity-tools/technology-integration-hub/).
+    Auth hosts (auth.covetrus.com) and API host (api.covetrus.com) are publicly
+    reachable. Paths and operationIds here mirror the Left Hook–cleared port of
+    the generic client (api.js) 1:1 — treat as UNVERIFIED against partner docs
+    until sandbox credentials confirm each route. Default OAuth scope from the
+    port/brief: clients invoices payments.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.covetrus.com/v1
+    description: Covetrus NA API v1
+security:
+  - OAuth2: []
+tags:
+  - name: Practice
+  - name: Locations
+  - name: Clients
+  - name: Patients
+  - name: Appointments
+  - name: Invoices
+  - name: Payments
+  - name: Reminders
+  - name: Records
+  - name: Staff
+  - name: Catalog
+paths:
+  /practice:
+    get:
+      tags: [Practice]
+      operationId: getPractice
+      summary: Get the connected practice (identity)
+      responses:
+        "200":
+          description: Practice profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Practice"
+
+  /locations:
+    get:
+      tags: [Locations]
+      operationId: listLocations
+      summary: List practice locations
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Location list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocationList"
+
+  /locations/{locationId}:
+    get:
+      tags: [Locations]
+      operationId: getLocation
+      summary: Get a location by id
+      parameters:
+        - $ref: "#/components/parameters/LocationId"
+      responses:
+        "200":
+          description: Location
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+
+  /clients:
+    get:
+      tags: [Clients]
+      operationId: listClients
+      summary: List clients (pet owners)
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Client list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientList"
+    post:
+      tags: [Clients]
+      operationId: createClient
+      summary: Create a client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientInput"
+      responses:
+        "200":
+          description: Created client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "201":
+          description: Created client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /clients/search:
+    get:
+      tags: [Clients]
+      operationId: searchClients
+      summary: Search clients
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+          description: Search query (field name UNVERIFIED against partner docs)
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientList"
+
+  /clients/{clientId}:
+    get:
+      tags: [Clients]
+      operationId: getClient
+      summary: Get a client by id
+      parameters:
+        - $ref: "#/components/parameters/ClientId"
+      responses:
+        "200":
+          description: Client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+    put:
+      tags: [Clients]
+      operationId: updateClient
+      summary: Update a client
+      parameters:
+        - $ref: "#/components/parameters/ClientId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientInput"
+      responses:
+        "200":
+          description: Updated client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /clients/{clientId}/patients:
+    get:
+      tags: [Clients, Patients]
+      operationId: listClientPatients
+      summary: List patients for a client
+      parameters:
+        - $ref: "#/components/parameters/ClientId"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Patient list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientList"
+
+  /clients/{clientId}/invoices:
+    get:
+      tags: [Clients, Invoices]
+      operationId: listClientInvoices
+      summary: List invoices for a client
+      parameters:
+        - $ref: "#/components/parameters/ClientId"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Invoice list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvoiceList"
+
+  /clients/{clientId}/balance:
+    get:
+      tags: [Clients]
+      operationId: getClientBalance
+      summary: Get a client's balance
+      parameters:
+        - $ref: "#/components/parameters/ClientId"
+      responses:
+        "200":
+          description: Balance
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /clients/{clientId}/ledger:
+    get:
+      tags: [Clients]
+      operationId: getClientLedger
+      summary: Get a client's ledger
+      parameters:
+        - $ref: "#/components/parameters/ClientId"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Ledger entries
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /patients:
+    get:
+      tags: [Patients]
+      operationId: listPatients
+      summary: List patients (pets)
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Patient list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientList"
+
+  /patients/{patientId}:
+    get:
+      tags: [Patients]
+      operationId: getPatient
+      summary: Get a patient by id
+      parameters:
+        - $ref: "#/components/parameters/PatientId"
+      responses:
+        "200":
+          description: Patient
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+
+  /patients/{patientId}/reminders:
+    get:
+      tags: [Reminders, Patients]
+      operationId: getPatientReminders
+      summary: List reminders for a patient
+      parameters:
+        - $ref: "#/components/parameters/PatientId"
+      responses:
+        "200":
+          description: Reminder list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReminderList"
+
+  /patients/{patientId}/records:
+    get:
+      tags: [Records, Patients]
+      operationId: listMedicalRecords
+      summary: List medical records for a patient
+      parameters:
+        - $ref: "#/components/parameters/PatientId"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Medical record list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordList"
+
+  /appointments:
+    get:
+      tags: [Appointments]
+      operationId: listAppointments
+      summary: List appointments
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Appointment list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppointmentList"
+
+  /appointments/{appointmentId}:
+    get:
+      tags: [Appointments]
+      operationId: getAppointment
+      summary: Get an appointment by id
+      parameters:
+        - $ref: "#/components/parameters/AppointmentId"
+      responses:
+        "200":
+          description: Appointment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Appointment"
+
+  /invoices:
+    get:
+      tags: [Invoices]
+      operationId: listInvoices
+      summary: List invoices
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Invoice list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvoiceList"
+
+  /invoices/{invoiceId}:
+    get:
+      tags: [Invoices]
+      operationId: getInvoice
+      summary: Get an invoice by id
+      parameters:
+        - $ref: "#/components/parameters/InvoiceId"
+      responses:
+        "200":
+          description: Invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /payments:
+    get:
+      tags: [Payments]
+      operationId: listPayments
+      summary: List payments
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Payment list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentList"
+    post:
+      tags: [Payments]
+      operationId: createPayment
+      summary: Create / record a payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "200":
+          description: Created payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+        "201":
+          description: Created payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /payments/{paymentId}:
+    get:
+      tags: [Payments]
+      operationId: getPayment
+      summary: Get a payment by id
+      parameters:
+        - $ref: "#/components/parameters/PaymentId"
+      responses:
+        "200":
+          description: Payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /reminders:
+    get:
+      tags: [Reminders]
+      operationId: listReminders
+      summary: List reminders
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Reminder list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReminderList"
+
+  /records/{recordId}:
+    get:
+      tags: [Records]
+      operationId: getMedicalRecord
+      summary: Get a medical record by id
+      parameters:
+        - $ref: "#/components/parameters/RecordId"
+      responses:
+        "200":
+          description: Medical record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MedicalRecord"
+
+  /staff:
+    get:
+      tags: [Staff]
+      operationId: listStaff
+      summary: List staff
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Staff list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffList"
+
+  /staff/{staffId}:
+    get:
+      tags: [Staff]
+      operationId: getStaff
+      summary: Get a staff member by id
+      parameters:
+        - $ref: "#/components/parameters/StaffId"
+      responses:
+        "200":
+          description: Staff member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Staff"
+
+  /services:
+    get:
+      tags: [Catalog]
+      operationId: listServices
+      summary: List services
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Service list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /products:
+    get:
+      tags: [Catalog]
+      operationId: listProducts
+      summary: List products
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Product list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        OAuth 2.0 authorization code at auth.covetrus.com (Auth0-hosted).
+        Refresh via grant_type=refresh_token. Default scope from port/brief:
+        clients invoices payments. Exact scope catalog is partner-docs-only.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.covetrus.com/oauth/authorize
+          tokenUrl: https://auth.covetrus.com/oauth/token
+          scopes:
+            clients: Clients (pet owners) — from default port scope
+            invoices: Invoices — from default port scope
+            payments: Payments — from default port scope
+  parameters:
+    Limit:
+      in: query
+      name: limit
+      schema: { type: integer, default: 50 }
+    Offset:
+      in: query
+      name: offset
+      schema: { type: integer, default: 0 }
+    LocationId:
+      in: path
+      name: locationId
+      required: true
+      schema: { type: string }
+    ClientId:
+      in: path
+      name: clientId
+      required: true
+      schema: { type: string }
+    PatientId:
+      in: path
+      name: patientId
+      required: true
+      schema: { type: string }
+    AppointmentId:
+      in: path
+      name: appointmentId
+      required: true
+      schema: { type: string }
+    InvoiceId:
+      in: path
+      name: invoiceId
+      required: true
+      schema: { type: string }
+    PaymentId:
+      in: path
+      name: paymentId
+      required: true
+      schema: { type: string }
+    RecordId:
+      in: path
+      name: recordId
+      required: true
+      schema: { type: string }
+    StaffId:
+      in: path
+      name: staffId
+      required: true
+      schema: { type: string }
+  schemas:
+    # Field shapes below are minimal placeholders used by the ported identity
+    # helpers (practice.id / name / phone). Full schemas are partner-docs-only.
+    Practice:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        phone: { type: string }
+      additionalProperties: true
+    Location:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+      additionalProperties: true
+    LocationList:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Location" }
+      additionalProperties: true
+    Client:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+      additionalProperties: true
+    ClientInput:
+      type: object
+      additionalProperties: true
+    ClientList:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Client" }
+      additionalProperties: true
+    Patient:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+      additionalProperties: true
+    PatientList:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Patient" }
+      additionalProperties: true
+    Appointment:
+      type: object
+      properties:
+        id: { type: string }
+      additionalProperties: true
+    AppointmentList:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Appointment" }
+      additionalProperties: true
+    Invoice:
+      type: object
+      properties:
+        id: { type: string }
+      additionalProperties: true
+    InvoiceList:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Invoice" }
+      additionalProperties: true
+    Payment:
+      type: object
+      properties:
+        id: { type: string }
+      additionalProperties: true
+    PaymentInput:
+      type: object
+      additionalProperties: true
+    PaymentList:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Payment" }
+      additionalProperties: true
+    Reminder:
+      type: object
+      properties:
+        id: { type: string }
+      additionalProperties: true
+    ReminderList:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Reminder" }
+      additionalProperties: true
+    MedicalRecord:
+      type: object
+      properties:
+        id: { type: string }
+      additionalProperties: true
+    RecordList:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/MedicalRecord" }
+      additionalProperties: true
+    Staff:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+      additionalProperties: true
+    StaffList:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Staff" }
+      additionalProperties: true

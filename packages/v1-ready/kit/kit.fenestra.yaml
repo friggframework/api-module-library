@@ -1,0 +1,123 @@
+# Fenestra Document: Kit Plugins UI
+#
+# Kit App Store plugins embed third-party UI inside Kit (email editor, media
+# gallery, Visual Automation). Content blocks, media sources, and automation
+# nodes are documented UI extension points — hence a Fenestra draft.
+# Draft only — validate with specs/fenestra/tools/bin/fenestra.js validate.
+
+fenestra: "0.1.0"
+
+info:
+  title: Kit Plugins UI Ecosystem
+  version: "1.0.0"
+  description: |
+    Kit plugins integrate third-party content and actions into creators'
+    workflows inside the Kit product UI. Unlike REST-only apps, plugins
+    authenticate the other way around (Kit calls your service) and render
+    via Kit's plugin component library in content blocks, media sources, and
+    Visual Automation nodes.
+
+    Sources:
+      https://developers.kit.com/plugins/overview
+      https://developers.kit.com/plugins/component-library/overview
+      https://developers.kit.com/plugins/content-blocks/overview
+      https://developers.kit.com/plugins/media-source/overview
+      https://developers.kit.com/kit-app-store/overview
+
+    Note: Official npm package name for the component library was not
+    unambiguously pinned in the public docs at draft time — treat
+    `@kit/plugin-components` as a placeholder until confirmed against Kit's
+    plugin starter. Plugin OAuth is inverted vs App Store REST apps
+    (https://developers.kit.com/plugins/oauth-authorization).
+
+platform:
+  name: Kit
+  vendor: Kit (ConvertKit)
+  documentation: https://developers.kit.com/plugins/overview
+  appMarketplace: https://app.kit.com/apps
+
+sdks:
+  kit-plugin-components:
+    name: Kit Plugin Component Library
+    packageManager: npm
+    package: "@kit/plugin-components"
+    documentation: https://developers.kit.com/plugins/component-library/overview
+    description: |
+      Declared component set for plugin settings UIs (content blocks, media
+      sources). Exact npm package name should be confirmed against Kit's
+      current plugin starter — docs describe the component catalog rather
+      than pinning a single published package name.
+    exports:
+      TextInput:
+        type: component
+        description: Single-line text input
+      Textarea:
+        type: component
+        description: Multi-line text input
+      NumericalInput:
+        type: component
+        description: Numeric input
+      SelectInput:
+        type: component
+        description: Static select / dropdown
+      DynamicSelectInput:
+        type: component
+        description: Select populated from a remote data source
+      SearchInput:
+        type: component
+        description: Search field
+      Toggle:
+        type: component
+        description: Boolean toggle
+      RadioGroup:
+        type: component
+        description: Radio button group
+      Slider:
+        type: component
+        description: Numeric slider
+      ColorPicker:
+        type: component
+        description: Brand / palette color picker
+      DatePicker:
+        type: component
+        description: Date picker
+      FontPicker:
+        type: component
+        description: Font picker for email typography
+      Group:
+        type: component
+        description: Layout group for settings fields
+
+extensionPoints:
+  - id: content-block
+    name: Content block
+    type: panel
+    extensionType: iframe
+    description: >
+      Dynamic HTML elements creators insert into emails from the Kit editor.
+      Settings sidebar uses the plugin component library; render HTML is
+      returned by the plugin backend.
+      https://developers.kit.com/plugins/content-blocks/overview
+  - id: dynamic-content-block
+    name: Dynamic content block
+    type: panel
+    extensionType: iframe
+    description: >
+      Subscriber-personalized content blocks powered by Liquid templates.
+      https://developers.kit.com/plugins/content-blocks/dynamic-blocks/overview
+  - id: media-source
+    name: Media source
+    type: panel
+    extensionType: iframe
+    description: >
+      External media gallery connected into Kit's media picker with search
+      and filters.
+      https://developers.kit.com/plugins/media-source/overview
+  - id: automation-node
+    name: Automation node
+    type: fullPage
+    extensionType: iframe
+    description: >
+      Custom Event or Action nodes inside Kit Visual Automation builder that
+      connect external systems to subscriber journeys.
+      https://developers.kit.com/plugins/overview

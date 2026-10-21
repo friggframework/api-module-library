@@ -1,0 +1,560 @@
+openapi: 3.0.3
+info:
+  title: Kit API v4 (curated)
+  version: "4.0"
+  description: >-
+    Kit (formerly ConvertKit) creator email-marketing API. Official OpenAPI is
+    published at https://developers.kit.com/api-reference/v4.json (server
+    https://api.kit.com, paths under /v4). This file is the curated subset that
+    @friggframework/api-module-kit implements — one operationId per Api method.
+    Auth: OAuth2 Bearer (App Store) or X-Kit-Api-Key (personal automation).
+  contact:
+    name: Frigg Framework
+    url: https://friggframework.org
+servers:
+  - url: https://api.kit.com/v4
+    description: Kit API v4
+security:
+  - OAuth2: [public]
+  - ApiKeyAuth: []
+tags:
+  - name: Account
+  - name: Subscribers
+  - name: Tags
+  - name: Broadcasts
+  - name: Sequences
+  - name: Forms
+  - name: Custom Fields
+  - name: Webhook Endpoints
+paths:
+  /account:
+    get:
+      tags: [Account]
+      operationId: getAccount
+      summary: Get current account
+      description: >-
+        Returns the authenticated account and user. For OAuth apps this is the
+        standard way to identify which account authorized your app.
+      responses:
+        "200":
+          description: Current account and user
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user, account]
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      email: { type: string, format: email }
+                  account:
+                    type: object
+                    required: [id, name]
+                    properties:
+                      id: { type: integer }
+                      name: { type: string }
+                      plan_type: { type: string }
+                      primary_email_address: { type: string, format: email }
+                      created_at: { type: string, format: date-time }
+
+  /subscribers:
+    get:
+      tags: [Subscribers]
+      operationId: listSubscribers
+      summary: List subscribers
+      parameters:
+        - in: query
+          name: after
+          schema: { type: string }
+        - in: query
+          name: before
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: number }
+        - in: query
+          name: email_address
+          schema: { type: string, format: email }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, inactive, bounced, complained, cancelled, all]
+        - in: query
+          name: created_after
+          schema: { type: string, format: date-time }
+        - in: query
+          name: created_before
+          schema: { type: string, format: date-time }
+        - in: query
+          name: sort_field
+          schema: { type: string }
+        - in: query
+          name: sort_order
+          schema: { type: string, enum: [asc, desc] }
+      responses:
+        "200":
+          description: Paginated subscribers
+    post:
+      tags: [Subscribers]
+      operationId: createSubscriber
+      summary: Create a subscriber (upsert by email)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email_address]
+              properties:
+                email_address: { type: string, format: email }
+                first_name: { type: string }
+                state: { type: string }
+                fields: { type: object }
+      responses:
+        "201":
+          description: Subscriber created or updated
+
+  /subscribers/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Subscribers]
+      operationId: getSubscriber
+      summary: Get a subscriber
+      responses:
+        "200":
+          description: Subscriber
+    put:
+      tags: [Subscribers]
+      operationId: updateSubscriber
+      summary: Update a subscriber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email_address: { type: string, format: email }
+                first_name: { type: string }
+                fields: { type: object }
+      responses:
+        "200":
+          description: Updated subscriber
+
+  /tags:
+    get:
+      tags: [Tags]
+      operationId: listTags
+      summary: List tags
+      parameters:
+        - in: query
+          name: after
+          schema: { type: string }
+        - in: query
+          name: before
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: number }
+      responses:
+        "200":
+          description: Paginated tags
+    post:
+      tags: [Tags]
+      operationId: createTag
+      summary: Create a tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        "200":
+          description: Existing tag (idempotent)
+        "201":
+          description: Created tag
+
+  /tags/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    put:
+      tags: [Tags]
+      operationId: updateTag
+      summary: Update tag name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        "200":
+          description: Updated tag
+
+  /tags/{tag_id}/subscribers/{id}:
+    parameters:
+      - in: path
+        name: tag_id
+        required: true
+        schema: { type: integer }
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Tags]
+      operationId: tagSubscriber
+      summary: Tag a subscriber
+      responses:
+        "200":
+          description: Tagged subscriber
+    delete:
+      tags: [Tags]
+      operationId: removeTagFromSubscriber
+      summary: Remove tag from subscriber
+      responses:
+        "204":
+          description: Tag removed
+
+  /broadcasts:
+    get:
+      tags: [Broadcasts]
+      operationId: listBroadcasts
+      summary: List broadcasts
+      parameters:
+        - in: query
+          name: after
+          schema: { type: string }
+        - in: query
+          name: before
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: number }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [draft, scheduled, sending, completed, aborted]
+      responses:
+        "200":
+          description: Paginated broadcasts
+    post:
+      tags: [Broadcasts]
+      operationId: createBroadcast
+      summary: Create a broadcast
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject: { type: string }
+                content: { type: string }
+                preview_text: { type: string }
+                description: { type: string }
+                public: { type: boolean }
+                send_at: { type: string, format: date-time, nullable: true }
+                email_address: { type: string }
+                email_template_id: { type: integer }
+                subscriber_filter: { type: array, items: { type: object } }
+      responses:
+        "201":
+          description: Created broadcast
+
+  /broadcasts/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Broadcasts]
+      operationId: getBroadcast
+      summary: Get a broadcast
+      responses:
+        "200":
+          description: Broadcast
+    put:
+      tags: [Broadcasts]
+      operationId: updateBroadcast
+      summary: Update a broadcast
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject: { type: string }
+                content: { type: string }
+                preview_text: { type: string }
+                public: { type: boolean }
+                send_at: { type: string, format: date-time, nullable: true }
+                subscriber_filter: { type: array, items: { type: object } }
+      responses:
+        "200":
+          description: Updated broadcast
+
+  /sequences:
+    get:
+      tags: [Sequences]
+      operationId: listSequences
+      summary: List sequences
+      parameters:
+        - in: query
+          name: after
+          schema: { type: string }
+        - in: query
+          name: before
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: number }
+      responses:
+        "200":
+          description: Paginated sequences
+    post:
+      tags: [Sequences]
+      operationId: createSequence
+      summary: Create a sequence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                email_address: { type: string }
+                email_template_id: { type: integer }
+                active: { type: boolean }
+                repeat: { type: boolean }
+                hold: { type: boolean }
+      responses:
+        "201":
+          description: Created sequence
+
+  /sequences/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Sequences]
+      operationId: getSequence
+      summary: Get a sequence
+      parameters:
+        - in: query
+          name: include
+          schema: { type: string }
+      responses:
+        "200":
+          description: Sequence
+    put:
+      tags: [Sequences]
+      operationId: updateSequence
+      summary: Update a sequence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                active: { type: boolean }
+                repeat: { type: boolean }
+                hold: { type: boolean }
+      responses:
+        "200":
+          description: Updated sequence
+
+  /forms:
+    get:
+      tags: [Forms]
+      operationId: listForms
+      summary: List forms and landing pages
+      parameters:
+        - in: query
+          name: after
+          schema: { type: string }
+        - in: query
+          name: before
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: number }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, archived, trashed, all]
+        - in: query
+          name: type
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated forms
+
+  /custom_fields:
+    get:
+      tags: [Custom Fields]
+      operationId: listCustomFields
+      summary: List custom fields
+      parameters:
+        - in: query
+          name: after
+          schema: { type: string }
+        - in: query
+          name: before
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: number }
+      responses:
+        "200":
+          description: Paginated custom fields
+    post:
+      tags: [Custom Fields]
+      operationId: createCustomField
+      summary: Create a custom field
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [label]
+              properties:
+                label: { type: string }
+      responses:
+        "201":
+          description: Created custom field
+
+  /webhook_endpoints:
+    get:
+      tags: [Webhook Endpoints]
+      operationId: listWebhookEndpoints
+      summary: List webhook endpoints
+      parameters:
+        - in: query
+          name: after
+          schema: { type: string }
+        - in: query
+          name: before
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: number }
+        - in: query
+          name: status
+          schema: { type: string, enum: [active, disabled] }
+      responses:
+        "200":
+          description: Paginated webhook endpoints
+    post:
+      tags: [Webhook Endpoints]
+      operationId: createWebhookEndpoint
+      summary: Create a webhook endpoint
+      description: >-
+        Registers a URL for signed deliveries. The response includes `secret`
+        only once — store it for X-Kit-Signature verification.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, events]
+              properties:
+                url: { type: string, format: uri }
+                events:
+                  type: array
+                  items: { type: string }
+                name: { type: string }
+                description: { type: string }
+      responses:
+        "201":
+          description: Created webhook endpoint (includes secret)
+
+  /webhook_endpoints/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Webhook Endpoints]
+      operationId: getWebhookEndpoint
+      summary: Get a webhook endpoint
+      responses:
+        "200":
+          description: Webhook endpoint (no secret)
+    patch:
+      tags: [Webhook Endpoints]
+      operationId: updateWebhookEndpoint
+      summary: Update a webhook endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                url: { type: string, format: uri }
+                description: { type: string }
+                status: { type: string, enum: [active, disabled] }
+                events:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          description: Updated webhook endpoint
+    delete:
+      tags: [Webhook Endpoints]
+      operationId: deleteWebhookEndpoint
+      summary: Delete a webhook endpoint
+      responses:
+        "204":
+          description: Deleted
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Kit-Api-Key
+      description: Personal V4 API key (not for public App Store apps).
+    OAuth2:
+      type: oauth2
+      description: App Store OAuth 2.0 (authorization code + refresh).
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.kit.com/v4/oauth/authorize
+          tokenUrl: https://api.kit.com/v4/oauth/token
+          refreshUrl: https://api.kit.com/v4/oauth/token
+          scopes:
+            public: Default scope (docs); fine-grained scopes coming soon
+            read: Read access (listed in official OpenAPI)
+            write: Write access (listed in official OpenAPI)

@@ -1,0 +1,314 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "kit",
+  "label": "Kit (ConvertKit API v4)",
+  "package": "@friggframework/api-module-kit",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Kit account. Entity/credential externalId is account.id from GET /account.",
+    "fields": [
+      {
+        "name": "accountId",
+        "type": "string",
+        "description": "Kit account id (externalId)"
+      },
+      {
+        "name": "accountName",
+        "type": "string",
+        "description": "Account display name"
+      },
+      {
+        "name": "primaryEmail",
+        "type": "string",
+        "description": "Account primary_email_address"
+      }
+    ]
+  },
+  "objects": {
+    "subscriber": {
+      "label": "Subscriber",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "email_address", "type": "email", "tag": "person.email", "required": true },
+        { "name": "first_name", "type": "string", "tag": "person.firstName" },
+        { "name": "state", "type": "enum", "values": ["active", "inactive", "bounced", "complained", "cancelled"] },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "fields", "type": "json", "description": "Custom field key/value map" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "subscriber.list",
+          "items": "subscribers",
+          "paging": "cursor"
+        },
+        "get": {
+          "capability": "subscriber.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "subscriber.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "subscriber.update",
+          "id": "id",
+          "body": "$"
+        }
+      }
+    },
+    "tag": {
+      "label": "Tag",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "tag.list",
+          "items": "tags",
+          "paging": "cursor"
+        },
+        "create": {
+          "capability": "tag.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "tag.update",
+          "id": "id",
+          "body": "$"
+        }
+      }
+    },
+    "broadcast": {
+      "label": "Broadcast",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "subject", "type": "string", "tag": "record.displayName" },
+        { "name": "preview_text", "type": "string" },
+        { "name": "description", "type": "text" },
+        { "name": "content", "type": "text" },
+        { "name": "public", "type": "boolean" },
+        { "name": "send_at", "type": "datetime" },
+        { "name": "published_at", "type": "datetime", "readOnly": true },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "broadcast.list",
+          "items": "broadcasts",
+          "paging": "cursor"
+        },
+        "get": {
+          "capability": "broadcast.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "broadcast.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "broadcast.update",
+          "id": "id",
+          "body": "$"
+        }
+      }
+    },
+    "sequence": {
+      "label": "Sequence",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "active", "type": "boolean" },
+        { "name": "repeat", "type": "boolean" },
+        { "name": "hold", "type": "boolean" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "sequence.list",
+          "items": "sequences",
+          "paging": "cursor"
+        },
+        "get": {
+          "capability": "sequence.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "sequence.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "sequence.update",
+          "id": "id",
+          "body": "$"
+        }
+      }
+    },
+    "form": {
+      "label": "Form",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "type", "type": "string" },
+        { "name": "format", "type": "string" },
+        { "name": "archived", "type": "boolean" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "form.list",
+          "items": "forms",
+          "paging": "cursor"
+        }
+      }
+    },
+    "customField": {
+      "label": "Custom Field",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "label", "type": "string", "tag": "record.displayName", "required": true },
+        { "name": "key", "type": "string", "readOnly": true },
+        { "name": "name", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "customField.list",
+          "items": "custom_fields",
+          "paging": "cursor"
+        },
+        "create": {
+          "capability": "customField.create",
+          "body": "$"
+        }
+      }
+    },
+    "webhookEndpoint": {
+      "label": "Webhook Endpoint",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string" },
+        { "name": "url", "type": "string", "required": true },
+        { "name": "events", "type": "string[]", "required": true },
+        { "name": "status", "type": "enum", "values": ["active", "disabled"] },
+        { "name": "description", "type": "text" },
+        { "name": "secret", "type": "string", "readOnly": true, "description": "Returned only on create/rotate" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "webhookEndpoint.list",
+          "items": "webhook_endpoints",
+          "paging": "cursor"
+        },
+        "get": {
+          "capability": "webhookEndpoint.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "webhookEndpoint.create",
+          "body": "$"
+        },
+        "update": {
+          "capability": "webhookEndpoint.update",
+          "id": "id",
+          "body": "$"
+        },
+        "delete": {
+          "capability": "webhookEndpoint.delete",
+          "id": "id"
+        }
+      }
+    }
+  },
+  "capabilities": {
+    "account.get": { "method": "getAccount", "object": "account" },
+    "subscriber.list": { "method": "listSubscribers", "object": "subscriber" },
+    "subscriber.get": { "method": "getSubscriber", "object": "subscriber" },
+    "subscriber.create": { "method": "createSubscriber", "object": "subscriber" },
+    "subscriber.update": { "method": "updateSubscriber", "object": "subscriber" },
+    "tag.list": { "method": "listTags", "object": "tag" },
+    "tag.create": { "method": "createTag", "object": "tag" },
+    "tag.update": { "method": "updateTag", "object": "tag" },
+    "tag.tagSubscriber": { "method": "tagSubscriber", "object": "tag" },
+    "tag.removeTagFromSubscriber": { "method": "removeTagFromSubscriber", "object": "tag" },
+    "broadcast.list": { "method": "listBroadcasts", "object": "broadcast" },
+    "broadcast.get": { "method": "getBroadcast", "object": "broadcast" },
+    "broadcast.create": { "method": "createBroadcast", "object": "broadcast" },
+    "broadcast.update": { "method": "updateBroadcast", "object": "broadcast" },
+    "sequence.list": { "method": "listSequences", "object": "sequence" },
+    "sequence.get": { "method": "getSequence", "object": "sequence" },
+    "sequence.create": { "method": "createSequence", "object": "sequence" },
+    "sequence.update": { "method": "updateSequence", "object": "sequence" },
+    "form.list": { "method": "listForms", "object": "form" },
+    "customField.list": { "method": "listCustomFields", "object": "customField" },
+    "customField.create": { "method": "createCustomField", "object": "customField" },
+    "webhookEndpoint.list": { "method": "listWebhookEndpoints", "object": "webhookEndpoint" },
+    "webhookEndpoint.get": { "method": "getWebhookEndpoint", "object": "webhookEndpoint" },
+    "webhookEndpoint.create": { "method": "createWebhookEndpoint", "object": "webhookEndpoint" },
+    "webhookEndpoint.update": { "method": "updateWebhookEndpoint", "object": "webhookEndpoint" },
+    "webhookEndpoint.delete": { "method": "deleteWebhookEndpoint", "object": "webhookEndpoint" }
+  },
+  "events": {
+    "subscriber.created": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "description": "Subscriber added to the account.",
+      "match": "subscriber.created"
+    },
+    "subscriber.activated": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "match": "subscriber.activated"
+    },
+    "subscriber.unsubscribed": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "match": "subscriber.unsubscribed"
+    },
+    "subscriber.tag_added": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "match": "subscriber.tag_added"
+    },
+    "subscriber.tag_removed": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "match": "subscriber.tag_removed"
+    },
+    "tag.created": {
+      "delivery": "webhook",
+      "object": "tag",
+      "match": "tag.created"
+    },
+    "tag.deleted": {
+      "delivery": "webhook",
+      "object": "tag",
+      "match": "tag.deleted"
+    },
+    "broadcast.created": {
+      "delivery": "webhook",
+      "object": "broadcast",
+      "match": "broadcast.created"
+    },
+    "broadcast.sent": {
+      "delivery": "webhook",
+      "object": "broadcast",
+      "match": "broadcast.sent"
+    },
+    "sequence.created": {
+      "delivery": "webhook",
+      "object": "sequence",
+      "match": "sequence.created"
+    }
+  }
+}

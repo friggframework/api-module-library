@@ -28,12 +28,26 @@ describe('OpenAPI spec ↔ client sync', () => {
         expect(missing).toEqual([]);
     });
 
-    it('the base server URL matches the client baseUrl', () => {
-        const api = new Api({
-            client_id: 'x',
-            client_secret: 'y',
-        });
-        expect(spec.servers[0].url).toBe(api.baseUrl);
+    it('the base server URL matches the client baseUrl (production default)', () => {
+        const prevEnv = process.env.TEKMETRIC_ENVIRONMENT;
+        const prevBase = process.env.TEKMETRIC_BASE_URL;
+        delete process.env.TEKMETRIC_ENVIRONMENT;
+        delete process.env.TEKMETRIC_BASE_URL;
+        try {
+            const api = new Api({
+                client_id: 'x',
+                client_secret: 'y',
+            });
+            expect(spec.servers[0].url).toBe(
+                'https://shop.tekmetric.com/api/v1'
+            );
+            expect(spec.servers[0].url).toBe(api.baseUrl);
+        } finally {
+            if (prevEnv === undefined) delete process.env.TEKMETRIC_ENVIRONMENT;
+            else process.env.TEKMETRIC_ENVIRONMENT = prevEnv;
+            if (prevBase === undefined) delete process.env.TEKMETRIC_BASE_URL;
+            else process.env.TEKMETRIC_BASE_URL = prevBase;
+        }
     });
 
     it('declares bearerAuth security matching the client', () => {

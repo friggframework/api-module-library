@@ -1,4 +1,9 @@
-const { Api, DEFAULT_BASE_URL } = require('../api');
+const {
+    Api,
+    DEFAULT_BASE_URL,
+    PRODUCTION_BASE_URL,
+    SANDBOX_BASE_URL,
+} = require('../api');
 
 // Fully offline: stub low-level HTTP methods and assert on constructed options.
 function makeApi(overrides = {}) {
@@ -29,19 +34,56 @@ function makeApi(overrides = {}) {
 }
 
 describe('Tekmetric Api', () => {
+    const savedEnv = {};
+
+    beforeEach(() => {
+        for (const key of [
+            'TEKMETRIC_BASE_URL',
+            'TEKMETRIC_ENVIRONMENT',
+        ]) {
+            savedEnv[key] = process.env[key];
+            delete process.env[key];
+        }
+    });
+
+    afterEach(() => {
+        for (const [key, value] of Object.entries(savedEnv)) {
+            if (value === undefined) delete process.env[key];
+            else process.env[key] = value;
+        }
+    });
+
     describe('construction & auth', () => {
-        it('defaults to the sandbox base URL and client_credentials grant', () => {
+        it('defaults to the production base URL and client_credentials grant', () => {
             const api = new Api({
                 client_id: 'c',
                 client_secret: 's',
             });
             expect(api.baseUrl).toBe(DEFAULT_BASE_URL);
-            expect(api.baseUrl).toBe('https://sandbox.tekmetric.com/api/v1');
+            expect(api.baseUrl).toBe(PRODUCTION_BASE_URL);
+            expect(api.baseUrl).toBe('https://shop.tekmetric.com/api/v1');
             expect(api.tokenUri).toBe(
-                'https://sandbox.tekmetric.com/api/v1/oauth/token'
+                'https://shop.tekmetric.com/api/v1/oauth/token'
             );
             expect(api.grant_type).toBe('client_credentials');
             expect(api.authorizationUri).toBeNull();
+        });
+
+        it('opts into sandbox via environment / TEKMETRIC_ENVIRONMENT', () => {
+            expect(
+                new Api({ environment: 'sandbox' }).baseUrl
+            ).toBe(SANDBOX_BASE_URL);
+
+            process.env.TEKMETRIC_ENVIRONMENT = 'sandbox';
+            expect(new Api({}).baseUrl).toBe(SANDBOX_BASE_URL);
+        });
+
+        it('lets an explicit baseUrl win over environment', () => {
+            process.env.TEKMETRIC_ENVIRONMENT = 'sandbox';
+            const api = new Api({
+                baseUrl: 'https://shop.tekmetric.com/api/v1',
+            });
+            expect(api.baseUrl).toBe(PRODUCTION_BASE_URL);
         });
 
         it('accepts a pre-issued access_token / api_key alias', () => {
@@ -94,7 +136,7 @@ describe('Tekmetric Api', () => {
             const { options, stringify } = api._captured[0];
             expect(stringify).toBe(false);
             expect(options.url).toBe(
-                'https://sandbox.tekmetric.com/api/v1/oauth/token'
+                'https://shop.tekmetric.com/api/v1/oauth/token'
             );
             expect(options.headers['Content-Type']).toContain(
                 'application/x-www-form-urlencoded'
@@ -118,7 +160,7 @@ describe('Tekmetric Api', () => {
             const api = makeApi();
             await api.listShops();
             expect(api._captured[0].url).toBe(
-                'https://sandbox.tekmetric.com/api/v1/shops'
+                'https://shop.tekmetric.com/api/v1/shops'
             );
         });
 
@@ -126,7 +168,7 @@ describe('Tekmetric Api', () => {
             const api = makeApi();
             await api.getShop(42);
             expect(api._captured[0].url).toBe(
-                'https://sandbox.tekmetric.com/api/v1/shops/42'
+                'https://shop.tekmetric.com/api/v1/shops/42'
             );
         });
     });
@@ -137,7 +179,7 @@ describe('Tekmetric Api', () => {
             await api.listCustomers({ shopId: 9, search: 'ann' });
             const { url } = api._captured[0];
             expect(url).toContain(
-                'https://sandbox.tekmetric.com/api/v1/customers?'
+                'https://shop.tekmetric.com/api/v1/customers?'
             );
             expect(url).toContain('shop=9');
             expect(url).toContain('page=0');
@@ -152,16 +194,16 @@ describe('Tekmetric Api', () => {
             await api.createCustomer({ firstName: 'A' });
             await api.updateCustomer(7, { lastName: 'B' });
             expect(api._captured[0].url).toBe(
-                'https://sandbox.tekmetric.com/api/v1/customers/7'
+                'https://shop.tekmetric.com/api/v1/customers/7'
             );
             expect(api._captured[1].method).toBe('POST');
             expect(api._captured[1].url).toBe(
-                'https://sandbox.tekmetric.com/api/v1/customers'
+                'https://shop.tekmetric.com/api/v1/customers'
             );
             expect(api._captured[1].body).toEqual({ firstName: 'A' });
             expect(api._captured[2].method).toBe('PATCH');
             expect(api._captured[2].url).toBe(
-                'https://sandbox.tekmetric.com/api/v1/customers/7'
+                'https://shop.tekmetric.com/api/v1/customers/7'
             );
         });
     });

@@ -20,10 +20,10 @@ info:
     name: Left Hook
     url: https://lefthook.com
 servers:
-  - url: https://sandbox.tekmetric.com/api/v1
-    description: Tekmetric sandbox (module default)
   - url: https://shop.tekmetric.com/api/v1
-    description: Tekmetric production
+    description: Tekmetric production (module default)
+  - url: https://sandbox.tekmetric.com/api/v1
+    description: Tekmetric sandbox (opt-in via TEKMETRIC_ENVIRONMENT=sandbox)
 security:
   - bearerAuth: []
 tags:

@@ -17,11 +17,11 @@ const { OAuth2Requester, get } = require('@friggframework/core');
  *   Token `scope` is a space-separated list of authorized shop IDs.
  *
  * Environments:
- *   Sandbox:    https://sandbox.tekmetric.com/api/v1  (module default)
- *   Production: https://shop.tekmetric.com/api/v1
+ *   Production: https://shop.tekmetric.com/api/v1   (module default)
+ *   Sandbox:    https://sandbox.tekmetric.com/api/v1
  *
- * This module defaults to the sandbox host (matching the cleared Left Hook
- * source port). Override with `baseUrl` / `TEKMETRIC_BASE_URL`.
+ * Defaults to production. Opt into sandbox with `environment: 'sandbox'`,
+ * `TEKMETRIC_ENVIRONMENT=sandbox`, or an explicit `baseUrl` / `TEKMETRIC_BASE_URL`.
  *
  * Official reference (partner-gated SPA): https://api.tekmetric.com/docs
  * Tekmetric does not publish a downloadable OpenAPI export; `tekmetric.openapi.yaml`
@@ -31,7 +31,35 @@ const { OAuth2Requester, get } = require('@friggframework/core');
  * Client-specific coupling and unverified /payments + /invoices helpers from
  * that source were stripped — those paths are not listed on the official docs nav.
  */
-const DEFAULT_BASE_URL = 'https://sandbox.tekmetric.com/api/v1';
+const PRODUCTION_BASE_URL = 'https://shop.tekmetric.com/api/v1';
+const SANDBOX_BASE_URL = 'https://sandbox.tekmetric.com/api/v1';
+/** @deprecated Use PRODUCTION_BASE_URL — kept as the default export alias. */
+const DEFAULT_BASE_URL = PRODUCTION_BASE_URL;
+
+/**
+ * Resolve the Tekmetric API base URL.
+ * Precedence: explicit baseUrl/baseURL param → TEKMETRIC_BASE_URL →
+ * environment/TEKMETRIC_ENVIRONMENT → production default.
+ */
+function resolveBaseUrl(params = {}) {
+    const explicit =
+        get(params, 'baseUrl', null) ||
+        get(params, 'baseURL', null) ||
+        process.env.TEKMETRIC_BASE_URL ||
+        null;
+    if (explicit) return explicit;
+
+    const environment = String(
+        get(params, 'environment', null) ||
+            process.env.TEKMETRIC_ENVIRONMENT ||
+            'production'
+    )
+        .trim()
+        .toLowerCase();
+
+    if (environment === 'sandbox') return SANDBOX_BASE_URL;
+    return PRODUCTION_BASE_URL;
+}
 
 class Api extends OAuth2Requester {
     constructor(params = {}) {
@@ -40,11 +68,7 @@ class Api extends OAuth2Requester {
             grant_type: 'client_credentials',
         });
 
-        this.baseUrl =
-            get(params, 'baseUrl', null) ||
-            get(params, 'baseURL', null) ||
-            process.env.TEKMETRIC_BASE_URL ||
-            DEFAULT_BASE_URL;
+        this.baseUrl = resolveBaseUrl(params);
         // OAuth2Requester also reads `baseURL`; keep both aligned.
         this.baseURL = this.baseUrl;
 
@@ -538,4 +562,10 @@ class Api extends OAuth2Requester {
     }
 }
 
-module.exports = { Api, DEFAULT_BASE_URL };
+module.exports = {
+    Api,
+    DEFAULT_BASE_URL,
+    PRODUCTION_BASE_URL,
+    SANDBOX_BASE_URL,
+    resolveBaseUrl,
+};

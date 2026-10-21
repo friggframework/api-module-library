@@ -130,11 +130,16 @@ const Definition = {
         client_id: process.env.TEKMETRIC_CLIENT_ID,
         client_secret: process.env.TEKMETRIC_CLIENT_SECRET,
         api_key: process.env.TEKMETRIC_API_KEY,
-        // Optional override; Api also reads TEKMETRIC_BASE_URL directly.
-        // Schema key is base_url (uri). Default sandbox when unset.
+        // Optional override; Api also reads TEKMETRIC_BASE_URL /
+        // TEKMETRIC_ENVIRONMENT directly. Schema key is base_url (uri).
+        // Default production when unset; sandbox only via TEKMETRIC_ENVIRONMENT.
         base_url:
             process.env.TEKMETRIC_BASE_URL ||
-            'https://sandbox.tekmetric.com/api/v1',
+            (String(process.env.TEKMETRIC_ENVIRONMENT || '')
+                .trim()
+                .toLowerCase() === 'sandbox'
+                ? 'https://sandbox.tekmetric.com/api/v1'
+                : 'https://shop.tekmetric.com/api/v1'),
     },
 };
 

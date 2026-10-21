@@ -19,11 +19,12 @@ describe('Api.listContacts pagination', () => {
         await api.listContacts({ limit: 100, properties: ['email'] });
 
         expect(api._get).toHaveBeenCalledTimes(1);
-        const { query } = api._get.mock.calls[0][0];
+        const { query, url } = api._get.mock.calls[0][0];
         // HubSpot 400s on `after=null`; the first page must not send it at all.
         expect(query).not.toHaveProperty('after');
         expect(query.limit).toBe(100);
         expect(query.properties).toEqual(['email']);
+        expect(url).toContain('/crm/objects/2026-09/contacts');
     });
 
     it('sends `after` from the second page onward', async () => {

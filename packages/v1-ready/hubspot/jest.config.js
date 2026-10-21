@@ -1,9 +1,17 @@
 /*
- * For a detailed explanation regarding each configuration property, visit:
- * https://jestjs.io/docs/configuration
+ * Default suite is offline unit tests (no live HubSpot OAuth, no MongoDB).
+ * Live integration coverage lives in tests/api.test.js and is opted into with:
+ *   npm test -- --config jest.live.config.js
  */
 module.exports = {
-    // preset: '@friggframework/test-environment',
+    testEnvironment: 'node',
+    testMatch: ['**/tests/**/*.test.js'],
+    testPathIgnorePatterns: [
+        '/node_modules/',
+        // Live / Mongo-backed suites (opt in via jest.live.config.js)
+        '/tests/api\\.test\\.js$',
+        '/tests/auther\\.test\\.js$',
+    ],
     coverageThreshold: {
         global: {
             statements: 13,
@@ -12,9 +20,4 @@ module.exports = {
             lines: 13,
         },
     },
-    // A path to a module which exports an async function that is triggered once before all test suites
-    globalSetup: './jest-setup.js',
-
-    // A path to a module which exports an async function that is triggered once after all test suites
-    globalTeardown: './jest-teardown.js',
 };

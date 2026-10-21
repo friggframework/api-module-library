@@ -2,6 +2,13 @@
 
 This is the API Module for hubspot that allows the [Frigg](https://friggframework.org) code to talk to the hubspot API.
 
+**Pinned HubSpot API version: `2026-09`** (date-based versioning). Paths live in
+[`api.js`](./api.js), the machine-readable contract in
+[`hubspot.openapi.yaml`](./hubspot.openapi.yaml), and the capability graph in
+[`hubspot.capabilities.json`](./hubspot.capabilities.json). See HubSpot's
+[legacy API migration guide](https://developers.hubspot.com/docs/api-reference/legacy/migration-guide)
+and [2026-09 overview](https://developers.hubspot.com/docs/api-reference/latest/overview).
+
 Read more on the [Frigg documentation site](https://docs.friggframework.org/api-modules/list/hubspot).
 
 ## Webhooks (Integration Extension)
@@ -103,9 +110,12 @@ colliding.
 
 - `useDatabase: false` — the receiver route runs without a DB connection.
 - **Route:** `POST /webhooks` (namespaced to `/{bindingKey}/webhooks`) → `HUBSPOT_WEBHOOK_RECEIVED`.
-- **`HUBSPOT_WEBHOOK_RECEIVED`** — DB-free receiver: verifies the v3 signature and
-  enqueues one `HUBSPOT_WEBHOOK_RESOLVE` per event (in parallel). Events missing a
-  `portalId` are skipped. No database access.
+- **`HUBSPOT_WEBHOOK_RECEIVED`** — DB-free receiver: verifies the
+  `X-HubSpot-Signature-V3` signature and enqueues one `HUBSPOT_WEBHOOK_RESOLVE`
+  per event (in parallel). Events missing a `portalId` are skipped. No database
+  access. App webhook settings/subscriptions are managed via
+  `/app-webhooks/2026-09/{appId}/…`
+  ([docs](https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide)).
 - **`HUBSPOT_WEBHOOK_RESOLVE`** — queue event (worker, DB): reverse-looks up
   `portalId` → integration id and re-enqueues a `HUBSPOT_WEBHOOK` bound to it. Events
   whose portal maps to no integration are skipped; an ambiguous resolution (one external

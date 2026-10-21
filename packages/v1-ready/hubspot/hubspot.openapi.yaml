@@ -1,0 +1,677 @@
+openapi: 3.0.3
+info:
+  title: HubSpot API (Frigg module surface)
+  version: "2026-09"
+  description: >-
+    Machine-readable contract for @friggframework/api-module-hubspot.
+    Paths are pinned to HubSpot's date-based API version 2026-09 (current as of
+    the Fall Spotlight 2026 / DBV migration). Verified against HubSpot official
+    docs — do not treat this as a full HubSpot catalog; it mirrors what api.js
+    calls. See https://developers.hubspot.com/docs/api-reference/latest/overview
+    and https://developers.hubspot.com/docs/api-reference/legacy/migration-guide.
+  contact:
+    name: Frigg Framework
+    url: https://friggframework.org
+servers:
+  - url: https://api.hubapi.com
+    description: HubSpot public API
+security:
+  - OAuth2: []
+tags:
+  - name: Auth
+  - name: Account
+  - name: Contacts
+  - name: Companies
+  - name: Deals
+  - name: Properties
+  - name: Pipelines
+  - name: Owners
+  - name: Associations
+  - name: Lists
+  - name: Schemas
+  - name: CustomObjects
+  - name: CMS
+  - name: EmailTemplates
+  - name: Timeline
+  - name: Webhooks
+paths:
+  # Token exchange uses OAuth2Requester.getTokenFromCode / refreshAccessToken
+  # against tokenUrl https://api.hubapi.com/oauth/2026-09/token (pinned in api.js).
+  /oauth/2026-09/token/introspect:
+    post:
+      tags: [Auth]
+      operationId: getAccessTokenInfo
+      summary: Introspect an access or refresh token
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/authentication/oauth-tokens/token-introspect
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                client_id: { type: string }
+                client_secret: { type: string }
+                token: { type: string }
+                token_type_hint: { type: string }
+      responses:
+        "200": { description: Token metadata }
+  /account-info/2026-09/details:
+    get:
+      tags: [Account]
+      operationId: getUserDetails
+      summary: Retrieve account details (merged with token introspect in client)
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-account-details
+      responses:
+        "200": { description: Portal information }
+  /crm/objects/2026-09/contacts:
+    get:
+      tags: [Contacts]
+      operationId: listContacts
+      summary: List contacts
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/crm/objects/contacts/get-contacts
+      responses:
+        "200": { description: Contact page }
+    post:
+      tags: [Contacts]
+      operationId: createContact
+      summary: Create a contact
+      responses:
+        "201": { description: Created contact }
+  /crm/objects/2026-09/contacts/{contactId}:
+    get:
+      tags: [Contacts]
+      operationId: getContactById
+      parameters:
+        - $ref: "#/components/parameters/ContactId"
+      responses:
+        "200": { description: Contact }
+    patch:
+      tags: [Contacts]
+      operationId: updateContact
+      parameters:
+        - $ref: "#/components/parameters/ContactId"
+      responses:
+        "200": { description: Updated contact }
+    delete:
+      tags: [Contacts]
+      operationId: archiveContact
+      parameters:
+        - $ref: "#/components/parameters/ContactId"
+      responses:
+        "204": { description: Archived }
+  /crm/objects/2026-09/contacts/batch/read:
+    post:
+      tags: [Contacts]
+      operationId: batchGetContactsById
+      responses:
+        "200": { description: Batch read }
+  /crm/objects/2026-09/companies:
+    get:
+      tags: [Companies]
+      operationId: listCompanies
+      responses:
+        "200": { description: Company page }
+    post:
+      tags: [Companies]
+      operationId: createCompany
+      responses:
+        "201": { description: Created company }
+  /crm/objects/2026-09/companies/{companyId}:
+    get:
+      tags: [Companies]
+      operationId: getCompanyById
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200": { description: Company }
+    patch:
+      tags: [Companies]
+      operationId: updateCompany
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200": { description: Updated company }
+    delete:
+      tags: [Companies]
+      operationId: archiveCompany
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "204": { description: Archived }
+  /crm/objects/2026-09/companies/search:
+    post:
+      tags: [Companies]
+      operationId: searchCompanies
+      responses:
+        "200": { description: Search results }
+  /crm/objects/2026-09/companies/batch/read:
+    post:
+      tags: [Companies]
+      operationId: batchGetCompaniesById
+      responses:
+        "200": { description: Batch read }
+  /crm/objects/2026-09/deals:
+    get:
+      tags: [Deals]
+      operationId: listDeals
+      responses:
+        "200": { description: Deal page }
+    post:
+      tags: [Deals]
+      operationId: createDeal
+      responses:
+        "201": { description: Created deal }
+  /crm/objects/2026-09/deals/{dealId}:
+    get:
+      tags: [Deals]
+      operationId: getDealById
+      parameters:
+        - $ref: "#/components/parameters/DealId"
+      responses:
+        "200": { description: Deal }
+    patch:
+      tags: [Deals]
+      operationId: updateDeal
+      parameters:
+        - $ref: "#/components/parameters/DealId"
+      responses:
+        "200": { description: Updated deal }
+    delete:
+      tags: [Deals]
+      operationId: archiveDeal
+      parameters:
+        - $ref: "#/components/parameters/DealId"
+      responses:
+        "204": { description: Archived }
+  /crm/objects/2026-09/deals/search:
+    post:
+      tags: [Deals]
+      operationId: searchDeals
+      responses:
+        "200": { description: Search results }
+  /crm/properties/2026-09/{objectType}:
+    get:
+      tags: [Properties]
+      operationId: listProperties
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/crm/properties/guide
+      responses:
+        "200": { description: Properties }
+    post:
+      tags: [Properties]
+      operationId: createProperty
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+      responses:
+        "201": { description: Created property }
+  /crm/properties/2026-09/{objectType}/{propertyName}:
+    get:
+      tags: [Properties]
+      operationId: getPropertyByName
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+        - $ref: "#/components/parameters/PropertyName"
+      responses:
+        "200": { description: Property }
+    patch:
+      tags: [Properties]
+      operationId: updateProperty
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+        - $ref: "#/components/parameters/PropertyName"
+      responses:
+        "200": { description: Updated property }
+    delete:
+      tags: [Properties]
+      operationId: deleteProperty
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+        - $ref: "#/components/parameters/PropertyName"
+      responses:
+        "204": { description: Deleted }
+  /crm/pipelines/2026-09/{objectType}:
+    get:
+      tags: [Pipelines]
+      operationId: getPipelineDetails
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/crm/pipelines/guide
+      responses:
+        "200": { description: Pipelines }
+  /crm/owners/2026-09/{ownerId}:
+    get:
+      tags: [Owners]
+      operationId: getOwnerById
+      parameters:
+        - name: ownerId
+          in: path
+          required: true
+          schema: { type: string }
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/crm/owners/guide
+      responses:
+        "200": { description: Owner }
+  /crm/associations/2026-09/{fromObjectType}/{toObjectType}/batch/read:
+    post:
+      tags: [Associations]
+      operationId: getBatchAssociations
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associate-records/batch/get-associations
+      responses:
+        "200": { description: Associations }
+  /crm/associations/2026-09/{fromObjectType}/{toObjectType}/batch/create:
+    post:
+      tags: [Associations]
+      operationId: createBatchAssociations
+      responses:
+        "200": { description: Created associations }
+  /crm/associations/2026-09/{fromObjectType}/{toObjectType}/batch/associate/default:
+    post:
+      tags: [Associations]
+      operationId: createBatchAssociationsDefault
+      responses:
+        "200": { description: Default associations }
+  /crm/associations/2026-09/{fromObjectType}/{toObjectType}/batch/archive:
+    post:
+      tags: [Associations]
+      operationId: deleteBatchAssociations
+      responses:
+        "204": { description: Archived }
+  /crm/associations/2026-09/{fromObjectType}/{toObjectType}/batch/labels/archive:
+    post:
+      tags: [Associations]
+      operationId: deleteBatchAssociationLabels
+      responses:
+        "204": { description: Labels archived }
+  /crm/associations/2026-09/{fromObjectType}/{toObjectType}/labels:
+    get:
+      tags: [Associations]
+      operationId: getAssociationLabels
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associations-schema/labels/get-associations-label
+      responses:
+        "200": { description: Labels }
+    post:
+      tags: [Associations]
+      operationId: createAssociationLabel
+      responses:
+        "201": { description: Created label }
+  /crm/associations/2026-09/{fromObjectType}/{toObjectType}/labels/{associationTypeId}:
+    delete:
+      tags: [Associations]
+      operationId: deleteAssociationLabel
+      parameters:
+        - name: associationTypeId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204": { description: Deleted }
+  /crm/lists/2026-09:
+    post:
+      tags: [Lists]
+      operationId: createList
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/crm/lists/create-list
+      responses:
+        "200": { description: Created list }
+  /crm/lists/2026-09/{listId}:
+    get:
+      tags: [Lists]
+      operationId: getListById
+      parameters:
+        - $ref: "#/components/parameters/ListId"
+      responses:
+        "200": { description: List }
+    delete:
+      tags: [Lists]
+      operationId: deleteList
+      parameters:
+        - $ref: "#/components/parameters/ListId"
+      responses:
+        "204": { description: Deleted }
+  /crm/lists/2026-09/search:
+    post:
+      tags: [Lists]
+      operationId: searchLists
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/crm/lists/search/search-lists
+      responses:
+        "200": { description: Search results }
+  /crm/lists/2026-09/{listId}/memberships:
+    delete:
+      tags: [Lists]
+      operationId: removeAllListMembers
+      parameters:
+        - $ref: "#/components/parameters/ListId"
+      responses:
+        "204": { description: Cleared }
+  /crm/lists/2026-09/{listId}/memberships/add-and-remove:
+    put:
+      tags: [Lists]
+      operationId: addAndRemoveFromList
+      parameters:
+        - $ref: "#/components/parameters/ListId"
+      responses:
+        "200": { description: Membership update }
+  /crm-object-schemas/2026-09/schemas:
+    get:
+      tags: [Schemas]
+      operationId: listCustomObjectSchemas
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/get-schemas
+      responses:
+        "200": { description: Schemas }
+    post:
+      tags: [Schemas]
+      operationId: createCustomObjectSchema
+      responses:
+        "201": { description: Created schema }
+  /crm-object-schemas/2026-09/schemas/{objectType}:
+    get:
+      tags: [Schemas]
+      operationId: getCustomObjectSchema
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/get-schema
+      responses:
+        "200": { description: Schema }
+    patch:
+      tags: [Schemas]
+      operationId: updateCustomObjectSchema
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+      responses:
+        "200": { description: Updated schema }
+    delete:
+      tags: [Schemas]
+      operationId: deleteCustomObjectSchema
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+      responses:
+        "204": { description: Deleted }
+  /crm/objects/2026-09/{objectType}:
+    get:
+      tags: [CustomObjects]
+      operationId: listCustomObjects
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/crm/objects/custom-objects/guide
+      responses:
+        "200": { description: Object page }
+    post:
+      tags: [CustomObjects]
+      operationId: createCustomObject
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+      responses:
+        "201": { description: Created object }
+  /crm/objects/2026-09/{objectType}/{objectId}:
+    get:
+      tags: [CustomObjects]
+      operationId: getCustomObject
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+        - name: objectId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Object }
+    patch:
+      tags: [CustomObjects]
+      operationId: updateCustomObject
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+        - name: objectId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Updated object }
+    delete:
+      tags: [CustomObjects]
+      operationId: deleteCustomObject
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+        - name: objectId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Archived }
+  /crm/objects/2026-09/{objectType}/search:
+    post:
+      tags: [CustomObjects]
+      operationId: searchCustomObjects
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+      responses:
+        "200": { description: Search results }
+  /crm/objects/2026-09/{objectType}/batch/create:
+    post:
+      tags: [CustomObjects]
+      operationId: bulkCreateCustomObjects
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+      responses:
+        "200": { description: Batch create }
+  /crm/objects/2026-09/{objectType}/batch/read:
+    post:
+      tags: [CustomObjects]
+      operationId: bulkReadCustomObjects
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+      responses:
+        "200": { description: Batch read }
+  /crm/objects/2026-09/{objectType}/batch/update:
+    post:
+      tags: [CustomObjects]
+      operationId: bulkUpdateCustomObjects
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+      responses:
+        "200": { description: Batch update }
+  /crm/objects/2026-09/{objectType}/batch/archive:
+    post:
+      tags: [CustomObjects]
+      operationId: bulkArchiveCustomObjects
+      parameters:
+        - $ref: "#/components/parameters/ObjectType"
+      responses:
+        "204": { description: Batch archive }
+  /cms/pages/2026-09/landing-pages:
+    get:
+      tags: [CMS]
+      operationId: getLandingPages
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/cms/pages/landing-pages/get-landing-pages
+      responses:
+        "200": { description: Landing pages }
+  /cms/pages/2026-09/landing-pages/{landingPageId}:
+    get:
+      tags: [CMS]
+      operationId: getLandingPage
+      parameters:
+        - name: landingPageId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Landing page }
+    patch:
+      tags: [CMS]
+      operationId: updateLandingPage
+      parameters:
+        - name: landingPageId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Updated landing page }
+  /cms/pages/2026-09/site-pages:
+    get:
+      tags: [CMS]
+      operationId: getSitePages
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/cms/pages/website-pages/get-website-pages
+      responses:
+        "200": { description: Site pages }
+  /cms/pages/2026-09/site-pages/{sitePageId}:
+    get:
+      tags: [CMS]
+      operationId: getSitePage
+      parameters:
+        - name: sitePageId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Site page }
+    patch:
+      tags: [CMS]
+      operationId: updateSitePage
+      parameters:
+        - name: sitePageId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Updated site page }
+  /cms/blogs/2026-09/posts:
+    get:
+      tags: [CMS]
+      operationId: getBlogPosts
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/cms/blogs/posts/get-posts
+      responses:
+        "200": { description: Blog posts }
+  /cms/blogs/2026-09/posts/{blogPostId}:
+    get:
+      tags: [CMS]
+      operationId: getBlogPost
+      parameters:
+        - name: blogPostId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Blog post }
+    patch:
+      tags: [CMS]
+      operationId: updateBlogPost
+      parameters:
+        - name: blogPostId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Updated blog post }
+  /automation/email-templates/2026-09:
+    get:
+      tags: [EmailTemplates]
+      operationId: getEmailTemplates
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/automation/email-templates/retrieve-email-templates
+      responses:
+        "200": { description: Templates }
+    post:
+      tags: [EmailTemplates]
+      operationId: createEmailTemplate
+      responses:
+        "201": { description: Created template }
+  /automation/email-templates/2026-09/{templateId}:
+    get:
+      tags: [EmailTemplates]
+      operationId: getEmailTemplate
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Template }
+    patch:
+      tags: [EmailTemplates]
+      operationId: updateEmailTemplate
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Updated template }
+    delete:
+      tags: [EmailTemplates]
+      operationId: deleteEmailTemplate
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Deleted }
+  /integrators/timeline/2026-09/events:
+    post:
+      tags: [Timeline]
+      operationId: createTimelineEvent
+      summary: Send an app event occurrence (timeline)
+      description: >-
+        https://developers.hubspot.com/docs/apps/developer-platform/add-features/app-events/send-event-occurrences
+      responses:
+        "200": { description: Event accepted }
+components:
+  parameters:
+    ContactId:
+      name: contactId
+      in: path
+      required: true
+      schema: { type: string }
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      schema: { type: string }
+    DealId:
+      name: dealId
+      in: path
+      required: true
+      schema: { type: string }
+    ObjectType:
+      name: objectType
+      in: path
+      required: true
+      schema: { type: string }
+    PropertyName:
+      name: propertyName
+      in: path
+      required: true
+      schema: { type: string }
+    ListId:
+      name: listId
+      in: path
+      required: true
+      schema: { type: string }
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://app.hubspot.com/oauth/authorize
+          tokenUrl: https://api.hubapi.com/oauth/2026-09/token
+          scopes: {}
+x-frigg-api-version: "2026-09"
+x-frigg-sources:
+  - https://developers.hubspot.com/changelog/legacy-apis-and-legacy-apps-whats-going-unsupported-and-when
+  - https://developers.hubspot.com/docs/api-reference/legacy/migration-guide
+  - https://developers.hubspot.com/docs/api-reference/latest/overview

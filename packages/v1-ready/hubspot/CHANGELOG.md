@@ -1,3 +1,14 @@
+# v1.2.0
+
+#### 🚀 Enhancement
+
+- Migrate all HubSpot API paths from legacy v1–v4 to pinned date-based version **2026-09**
+- Add `hubspot.openapi.yaml`, `hubspot.capabilities.json`, and `tests/spec-sync.test.js`
+- Auth: `POST /oauth/2026-09/token`, token metadata via `POST /oauth/2026-09/token/introspect`, account via `GET /account-info/2026-09/details`
+- Webhooks extension docs note `/app-webhooks/2026-09/{appId}/…` management paths
+
+---
+
 # v1.1.7 (Tue Aug 06 2024)
 
 :tada: This release contains work from a new contributor! :tada:

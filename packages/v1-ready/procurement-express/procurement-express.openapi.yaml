@@ -1,0 +1,1018 @@
+openapi: 3.0.3
+info:
+  title: ProcurementExpress API (curated Frigg module subset)
+  description: |
+    Curated OpenAPI subset for `@friggframework/api-module-procurement-express`.
+    Written from the official docs at https://docs.procurementexpress.com/
+    (the vendor publishes no downloadable OpenAPI). One operationId per Api method.
+
+    Auth: `authentication_token` header; optional `app_company_id`.
+    Server URL matches the module default base (`/api/v1`). Vendor examples often
+    illustrate the same resource paths under `/api/v3/` — see module README.
+  version: 1.0.0
+  contact:
+    url: https://docs.procurementexpress.com/
+servers:
+  - url: https://app.procurementexpress.com/api/v1
+    description: Default module base (PROCUREMENT_EXPRESS_BASE_URL)
+security:
+  - AuthenticationToken: []
+paths:
+  /currentuser:
+    get:
+      operationId: getCurrentUser
+      summary: Get current user
+      tags: [Identity]
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUser'
+    put:
+      operationId: updateCurrentUser
+      summary: Update current user
+      tags: [Identity]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUser'
+
+  /companies:
+    get:
+      operationId: listCompanies
+      summary: List companies
+      tags: [Companies]
+      parameters:
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          description: Company list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: createCompany
+      summary: Create a company
+      tags: [Companies]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [company]
+              properties:
+                company:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Created company
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+
+  /companies/{companyId}:
+    get:
+      operationId: getCompany
+      summary: Get a company
+      tags: [Companies]
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+      responses:
+        '200':
+          description: Company
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+
+  /purchase_orders:
+    get:
+      operationId: listPurchaseOrders
+      summary: List purchase orders
+      tags: [PurchaseOrders]
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: per_page
+          in: query
+          schema: { type: integer }
+        - name: archived
+          in: query
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: Purchase order list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: createPurchaseOrder
+      summary: Create a purchase order
+      tags: [PurchaseOrders]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                commit:
+                  type: string
+                  description: Send or Draft
+                purchase_order:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Created purchase order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+
+  /purchase_orders/{purchaseOrderId}:
+    get:
+      operationId: getPurchaseOrder
+      summary: Get purchase order details
+      tags: [PurchaseOrders]
+      parameters:
+        - $ref: '#/components/parameters/purchaseOrderId'
+      responses:
+        '200':
+          description: Purchase order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+
+  /purchase_orders/{purchaseOrderId}/approve:
+    get:
+      operationId: approvePurchaseOrder
+      summary: Approve a purchase order
+      tags: [PurchaseOrders]
+      parameters:
+        - $ref: '#/components/parameters/purchaseOrderId'
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+          description: Approver accept token
+      responses:
+        '200':
+          description: Approval result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: boolean }
+
+  /purchase_orders/{purchaseOrderId}/reject:
+    get:
+      operationId: rejectPurchaseOrder
+      summary: Reject a purchase order
+      tags: [PurchaseOrders]
+      parameters:
+        - $ref: '#/components/parameters/purchaseOrderId'
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+          description: Approver reject token
+      responses:
+        '200':
+          description: Rejection result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: boolean }
+
+  /purchase_orders/{purchaseOrderId}/cancel:
+    post:
+      operationId: cancelPurchaseOrder
+      summary: Cancel a purchase order
+      tags: [PurchaseOrders]
+      parameters:
+        - $ref: '#/components/parameters/purchaseOrderId'
+      responses:
+        '200':
+          description: Cancel result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: boolean }
+
+  /purchase_orders/{purchaseOrderId}/archive:
+    post:
+      operationId: archivePurchaseOrder
+      summary: Archive a purchase order
+      tags: [PurchaseOrders]
+      parameters:
+        - $ref: '#/components/parameters/purchaseOrderId'
+      responses:
+        '200':
+          description: Archive result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: boolean }
+
+  /invoices:
+    get:
+      operationId: listInvoices
+      summary: List invoices
+      tags: [Invoices]
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: per_page
+          in: query
+          schema: { type: integer }
+        - name: archived
+          in: query
+          schema: { type: boolean }
+        - name: supplier_id
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Invoice list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: createInvoice
+      summary: Create an invoice
+      tags: [Invoices]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invoice]
+              properties:
+                invoice:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Created invoice
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+
+  /invoices/{invoiceId}:
+    get:
+      operationId: getInvoice
+      summary: Get invoice details
+      tags: [Invoices]
+      parameters:
+        - $ref: '#/components/parameters/invoiceId'
+      responses:
+        '200':
+          description: Invoice
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+    put:
+      operationId: updateInvoice
+      summary: Update an invoice
+      tags: [Invoices]
+      parameters:
+        - $ref: '#/components/parameters/invoiceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invoice]
+              properties:
+                invoice:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Updated invoice
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+
+  /invoices/{invoiceId}/approve:
+    put:
+      operationId: approveInvoice
+      summary: Approve an invoice
+      tags: [Invoices]
+      parameters:
+        - $ref: '#/components/parameters/invoiceId'
+      responses:
+        '200':
+          description: Approved invoice
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+
+  /invoices/{invoiceId}/reject:
+    put:
+      operationId: rejectInvoice
+      summary: Reject an invoice
+      tags: [Invoices]
+      parameters:
+        - $ref: '#/components/parameters/invoiceId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Rejected invoice
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+
+  /suppliers:
+    get:
+      operationId: listSuppliers
+      summary: List suppliers
+      tags: [Suppliers]
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - name: per_page
+          in: query
+          schema: { type: integer }
+        - name: search
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Supplier list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: createSupplier
+      summary: Create a supplier
+      tags: [Suppliers]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [supplier]
+              properties:
+                supplier:
+                  $ref: '#/components/schemas/SupplierInput'
+      responses:
+        '200':
+          description: Created supplier
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+
+  /suppliers/{supplierId}:
+    get:
+      operationId: getSupplier
+      summary: Get supplier details
+      tags: [Suppliers]
+      parameters:
+        - $ref: '#/components/parameters/supplierId'
+      responses:
+        '200':
+          description: Supplier
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+    put:
+      operationId: updateSupplier
+      summary: Update a supplier
+      tags: [Suppliers]
+      parameters:
+        - $ref: '#/components/parameters/supplierId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [supplier]
+              properties:
+                supplier:
+                  $ref: '#/components/schemas/SupplierInput'
+      responses:
+        '200':
+          description: Updated supplier
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+
+  /departments:
+    get:
+      operationId: listDepartments
+      summary: List departments
+      tags: [Departments]
+      parameters:
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          description: Department list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: createDepartment
+      summary: Create a department
+      tags: [Departments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [department]
+              properties:
+                department:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Created department
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+
+  /departments/{departmentId}:
+    get:
+      operationId: getDepartment
+      summary: Get a department
+      tags: [Departments]
+      parameters:
+        - $ref: '#/components/parameters/departmentId'
+      responses:
+        '200':
+          description: Department
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+    put:
+      operationId: updateDepartment
+      summary: Update a department
+      tags: [Departments]
+      parameters:
+        - $ref: '#/components/parameters/departmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [department]
+              properties:
+                department:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Updated department
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+
+  /budgets:
+    get:
+      operationId: listBudgets
+      summary: List budgets
+      tags: [Budgets]
+      parameters:
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          description: Budget list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: createBudget
+      summary: Create a budget
+      tags: [Budgets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [budget]
+              properties:
+                budget:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Created budget
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Budget'
+
+  /budgets/{budgetId}:
+    get:
+      operationId: getBudget
+      summary: Get a budget
+      tags: [Budgets]
+      parameters:
+        - $ref: '#/components/parameters/budgetId'
+      responses:
+        '200':
+          description: Budget
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Budget'
+    put:
+      operationId: updateBudget
+      summary: Update a budget
+      tags: [Budgets]
+      parameters:
+        - $ref: '#/components/parameters/budgetId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [budget]
+              properties:
+                budget:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Updated budget
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Budget'
+
+  /products:
+    get:
+      operationId: listProducts
+      summary: List products
+      tags: [Products]
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: supplier_id
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Product list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: createProduct
+      summary: Create a product
+      tags: [Products]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product]
+              properties:
+                product:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Created product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /products/{productId}:
+    get:
+      operationId: getProduct
+      summary: Get product details
+      tags: [Products]
+      parameters:
+        - $ref: '#/components/parameters/productId'
+      responses:
+        '200':
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+    put:
+      operationId: updateProduct
+      summary: Update a product
+      tags: [Products]
+      parameters:
+        - $ref: '#/components/parameters/productId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product]
+              properties:
+                product:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /tax_rates:
+    get:
+      operationId: listTaxRates
+      summary: List tax rates
+      tags: [TaxRates]
+      responses:
+        '200':
+          description: Tax rate list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxRate'
+    post:
+      operationId: createTaxRate
+      summary: Create a tax rate
+      tags: [TaxRates]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tax_rate]
+              properties:
+                tax_rate:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Created tax rate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxRate'
+
+  /tax_rates/{taxRateId}:
+    get:
+      operationId: getTaxRate
+      summary: Get a tax rate
+      tags: [TaxRates]
+      parameters:
+        - $ref: '#/components/parameters/taxRateId'
+      responses:
+        '200':
+          description: Tax rate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxRate'
+    put:
+      operationId: updateTaxRate
+      summary: Update a tax rate
+      tags: [TaxRates]
+      parameters:
+        - $ref: '#/components/parameters/taxRateId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tax_rate]
+              properties:
+                tax_rate:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Updated tax rate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxRate'
+
+  /webhooks:
+    get:
+      operationId: listWebhooks
+      summary: List webhooks
+      tags: [Webhooks]
+      responses:
+        '200':
+          description: Webhook list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: createWebhook
+      summary: Create a webhook
+      tags: [Webhooks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhook]
+              properties:
+                webhook:
+                  $ref: '#/components/schemas/WebhookInput'
+      responses:
+        '200':
+          description: Created webhook
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+
+  /webhooks/{webhookId}:
+    get:
+      operationId: getWebhook
+      summary: Get a webhook
+      tags: [Webhooks]
+      parameters:
+        - $ref: '#/components/parameters/webhookId'
+      responses:
+        '200':
+          description: Webhook
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+    put:
+      operationId: updateWebhook
+      summary: Update a webhook
+      tags: [Webhooks]
+      parameters:
+        - $ref: '#/components/parameters/webhookId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhook]
+              properties:
+                webhook:
+                  $ref: '#/components/schemas/WebhookInput'
+      responses:
+        '200':
+          description: Updated webhook
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+
+components:
+  securitySchemes:
+    AuthenticationToken:
+      type: apiKey
+      in: header
+      name: authentication_token
+      description: |
+        Account authentication token. Optionally also send `app_company_id`
+        for the active employer/company context.
+  parameters:
+    page:
+      name: page
+      in: query
+      schema: { type: integer }
+    companyId:
+      name: companyId
+      in: path
+      required: true
+      schema: { type: string }
+    purchaseOrderId:
+      name: purchaseOrderId
+      in: path
+      required: true
+      schema: { type: string }
+    invoiceId:
+      name: invoiceId
+      in: path
+      required: true
+      schema: { type: string }
+    supplierId:
+      name: supplierId
+      in: path
+      required: true
+      schema: { type: string }
+    departmentId:
+      name: departmentId
+      in: path
+      required: true
+      schema: { type: string }
+    budgetId:
+      name: budgetId
+      in: path
+      required: true
+      schema: { type: string }
+    productId:
+      name: productId
+      in: path
+      required: true
+      schema: { type: string }
+    taxRateId:
+      name: taxRateId
+      in: path
+      required: true
+      schema: { type: string }
+    webhookId:
+      name: webhookId
+      in: path
+      required: true
+      schema: { type: string }
+  schemas:
+    CurrentUser:
+      type: object
+      properties:
+        id: { type: integer }
+        email: { type: string, format: email }
+        name: { type: string }
+        employer_id: { type: integer }
+        authentication_token: { type: string }
+        companies:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+      additionalProperties: true
+    Company:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+      additionalProperties: true
+    PurchaseOrder:
+      type: object
+      properties:
+        id: { type: integer }
+        company_id: { type: integer }
+        supplier_id: { type: integer }
+        supplier_name: { type: string }
+        status: { type: string }
+        amount: { type: string }
+      additionalProperties: true
+    Invoice:
+      type: object
+      properties:
+        id: { type: integer }
+        invoice_number: { type: string }
+        supplier_id: { type: integer }
+        status: { type: string }
+      additionalProperties: true
+    Supplier:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        address: { type: string }
+        phone_number: { type: string }
+        tax_number: { type: string }
+        archived: { type: boolean }
+      additionalProperties: true
+    SupplierInput:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string }
+        address: { type: string }
+        notes: { type: string }
+        phone_number: { type: string }
+        tax_number: { type: string }
+        contact_person: { type: string }
+        archived: { type: boolean }
+      additionalProperties: true
+    Department:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+      additionalProperties: true
+    Budget:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        amount: { type: string }
+      additionalProperties: true
+    Product:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        supplier_id: { type: integer }
+      additionalProperties: true
+    TaxRate:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        value: { type: number }
+        archived: { type: boolean }
+        company_id: { type: integer }
+        tax_type: { type: string }
+      additionalProperties: true
+    Webhook:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        url: { type: string }
+        archived: { type: boolean }
+        event_type:
+          type: array
+          items:
+            type: string
+            enum: [new_po, po_approved, po_delivered, po_paid, po_cancelled, po_update]
+      additionalProperties: true
+    WebhookInput:
+      type: object
+      properties:
+        name: { type: string }
+        url: { type: string }
+        archived: { type: boolean }
+        event_type:
+          type: array
+          items:
+            type: string
+            enum: [new_po, po_approved, po_delivered, po_paid, po_cancelled, po_update]
+        json_wrapper: { type: string }
+        send_as_text: { type: boolean }
+        basic_auth_uname: { type: string }
+        basic_auth_pword: { type: string }
+      additionalProperties: true

@@ -1,6 +1,9 @@
 const {get, BasicAuthRequester} = require('@friggframework/core');
 const FormatPatchBody = require('./formatPatchBody');
 
+/** Default PSA REST Accept-header version. See ConnectWise PSA Developer Guide. */
+const DEFAULT_API_VERSION = '2019.1';
+
 class Api extends BasicAuthRequester {
     constructor(params) {
         super(params);
@@ -9,6 +12,11 @@ class Api extends BasicAuthRequester {
         this.private_key = get(params, 'private_key', null);
         this.client_id = get(params, 'client_id', null);
         this.site = get(params, 'site', null);
+        this.api_version = get(
+            params,
+            'api_version',
+            process.env.CONNECTWISE_API_VERSION || DEFAULT_API_VERSION
+        );
         this.setup();
     }
 
@@ -34,10 +42,15 @@ class Api extends BasicAuthRequester {
         this.Credentials = `Basic ${buff.toString('base64')}`
     }
 
+    getAcceptHeader() {
+        return `application/vnd.connectwise.com+json; version=${this.api_version}`;
+    }
+
     addAuthHeaders(headers) {
         const authHeaders = {
             clientId: this.client_id,
             authorization: this.Credentials,
+            Accept: this.getAcceptHeader(),
         }
         return {...headers, ...authHeaders}
     }
@@ -45,7 +58,6 @@ class Api extends BasicAuthRequester {
     async _post(options) {
         const postHeaders = {
             'content-type': 'application/json',
-            Accept: 'application/vnd.connectwise.com+json; version=2019.1',
         }
         options.headers = {...options.headers, ...postHeaders}
         return super._post(options);
@@ -54,7 +66,6 @@ class Api extends BasicAuthRequester {
     async _patch(options) {
         const patchHeaders = {
             'content-type': 'application/json',
-            Accept: 'application/vnd.connectwise.com+json; version=2019.1',
         }
         options.headers = {...options.headers, ...patchHeaders}
         return super._patch(options);
@@ -401,4 +412,4 @@ class Api extends BasicAuthRequester {
     }
 }
 
-module.exports = {Api};
+module.exports = {Api, DEFAULT_API_VERSION};

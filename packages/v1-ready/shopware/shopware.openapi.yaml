@@ -1,0 +1,519 @@
+openapi: 3.0.1
+info:
+  title: Shop-Ware Public Partner API (curated)
+  version: "1.0.0"
+  description: >-
+    Shop-Ware (shop-ware.com) is cloud auto-repair shop management software.
+    This file is Left Hook's curated subset of the official Partner API v1
+    covering exactly the endpoints `@friggframework/api-module-shopware`
+    implements in api.js (one method per operationId).
+
+    Official sources (do not invent beyond these):
+      - Stoplight: https://shop-ware.stoplight.io/docs/public-api
+      - OpenAPI: https://api.shop-ware.com/api-docs/public/v1/swagger.yaml
+      - Auth: https://shop-ware.stoplight.io/docs/public-api/6b3x0hrgt5ek5-authentication
+      - Webhooks: https://shop-ware.stoplight.io/docs/public-api/dgrb4a8slxf6k-webhooks
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.shop-ware.com/api/v1
+    description: Shop-Ware Partner API v1
+security:
+  - ApiPartnerId: []
+    ApiSecret: []
+tags:
+  - name: Tenants
+  - name: Customers
+  - name: Vehicles
+  - name: Repair Orders
+  - name: Shops
+  - name: Staff
+  - name: Payments
+  - name: Inventory
+  - name: Webhooks
+paths:
+  /tenants:
+    get:
+      tags: [Tenants]
+      operationId: listTenants
+      summary: List authorized tenants
+      description: >-
+        Returns tenants this API partner is authorized to access.
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+        - in: query
+          name: updated_after
+          schema: { type: string, format: date-time }
+          description: ISO-8601; only records updated after this time.
+      responses:
+        "200":
+          description: Paginated tenant list (`results`, `total_count`, …)
+  /tenants/{id}:
+    get:
+      tags: [Tenants]
+      operationId: getTenant
+      summary: Get a tenant by id
+      parameters:
+        - $ref: "#/components/parameters/TenantIdPathAsId"
+      responses:
+        "200":
+          description: Tenant object
+  /tenants/{tenant_id}/customers:
+    get:
+      tags: [Customers]
+      operationId: listCustomers
+      summary: List customers for a tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - in: query
+          name: last_name
+          schema: { type: string }
+        - in: query
+          name: email
+          schema: { type: string }
+        - in: query
+          name: phone_number
+          schema: { type: string }
+        - in: query
+          name: phone_number_preferred_only
+          schema: { type: boolean }
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+        - in: query
+          name: updated_after
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated customers
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: Create a customer
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created customer
+  /tenants/{tenant_id}/customers/{id}:
+    get:
+      tags: [Customers]
+      operationId: getCustomer
+      summary: Get a customer by id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "200":
+          description: Customer object
+    put:
+      tags: [Customers]
+      operationId: updateCustomer
+      summary: Update a customer
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated customer
+  /tenants/{tenant_id}/vehicles:
+    get:
+      tags: [Vehicles]
+      operationId: listVehicles
+      summary: List vehicles for a tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - in: query
+          name: vin
+          schema: { type: string }
+        - in: query
+          name: customer_id
+          schema: { type: integer }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+        - in: query
+          name: updated_after
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated vehicles
+    post:
+      tags: [Vehicles]
+      operationId: createVehicle
+      summary: Create a vehicle
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created vehicle
+  /tenants/{tenant_id}/vehicles/{id}:
+    get:
+      tags: [Vehicles]
+      operationId: getVehicle
+      summary: Get a vehicle by id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "200":
+          description: Vehicle object
+    put:
+      tags: [Vehicles]
+      operationId: updateVehicle
+      summary: Update a vehicle
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated vehicle
+  /tenants/{tenant_id}/repair_orders:
+    get:
+      tags: [Repair Orders]
+      operationId: listRepairOrders
+      summary: List repair orders for a tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+        - in: query
+          name: shop_id
+          schema: { type: integer }
+        - in: query
+          name: customer_id
+          schema: { type: integer }
+        - in: query
+          name: vehicle_id
+          schema: { type: integer }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: number
+          schema: { type: integer }
+        - in: query
+          name: closed_after
+          schema: { type: string, format: date-time }
+        - in: query
+          name: technician_id
+          schema: { type: integer }
+        - in: query
+          name: associations[]
+          schema:
+            type: array
+            items: { type: string }
+        - in: query
+          name: updated_after
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated repair orders
+    post:
+      tags: [Repair Orders]
+      operationId: createRepairOrder
+      summary: Create a repair order
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created repair order
+  /tenants/{tenant_id}/repair_orders/{id}:
+    get:
+      tags: [Repair Orders]
+      operationId: getRepairOrder
+      summary: Get a repair order by id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ResourceId"
+        - in: query
+          name: associations[]
+          schema:
+            type: array
+            items: { type: string }
+      responses:
+        "200":
+          description: Repair order object
+    put:
+      tags: [Repair Orders]
+      operationId: updateRepairOrder
+      summary: Update a repair order
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated repair order
+  /tenants/{tenant_id}/shops:
+    get:
+      tags: [Shops]
+      operationId: listShops
+      summary: List shops (locations) for a tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+        - in: query
+          name: updated_after
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated shops
+  /tenants/{tenant_id}/shops/{id}:
+    get:
+      tags: [Shops]
+      operationId: getShop
+      summary: Get a shop by id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "200":
+          description: Shop object
+  /tenants/{tenant_id}/staffs:
+    get:
+      tags: [Staff]
+      operationId: listStaffs
+      summary: List staff members for a tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+        - in: query
+          name: is_active
+          schema: { type: boolean }
+        - in: query
+          name: assigned_shop_id
+          schema: { type: integer }
+        - in: query
+          name: updated_after
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated staff
+  /tenants/{tenant_id}/staffs/{id}:
+    get:
+      tags: [Staff]
+      operationId: getStaff
+      summary: Get a staff member by id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "200":
+          description: Staff object
+  /tenants/{tenant_id}/payments:
+    get:
+      tags: [Payments]
+      operationId: listPayments
+      summary: List payments for a tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+        - in: query
+          name: updated_after
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated payments
+  /tenants/{tenant_id}/payments/{id}:
+    get:
+      tags: [Payments]
+      operationId: getPayment
+      summary: Get a payment by id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "200":
+          description: Payment object
+  /tenants/{tenant_id}/inventories:
+    get:
+      tags: [Inventory]
+      operationId: listInventories
+      summary: List inventory (parts) records for a tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - in: query
+          name: on_hand
+          schema: { type: boolean }
+        - in: query
+          name: in_stock
+          schema: { type: boolean }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+        - in: query
+          name: updated_after
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated inventory
+  /tenants/{tenant_id}/inventories/{id}:
+    get:
+      tags: [Inventory]
+      operationId: getInventory
+      summary: Get an inventory record by id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "200":
+          description: Inventory object
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List registered webhooks for this partner
+      responses:
+        "200":
+          description: Webhook list
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a webhook
+      description: >-
+        Register an HTTPS callback for `object.action` events
+        (e.g. `customer.created`, `repair_order.updated`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, events]
+              properties:
+                url: { type: string, format: uri }
+                events:
+                  type: array
+                  items: { type: string }
+                format: { type: string, nullable: true }
+      responses:
+        "201":
+          description: Created webhook
+  /webhooks/{id}:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Get a webhook by id
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "200":
+          description: Webhook object
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update a webhook
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated webhook
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "204":
+          description: Deleted
+components:
+  securitySchemes:
+    ApiPartnerId:
+      type: apiKey
+      in: header
+      name: X-Api-Partner-Id
+      description: Partner id issued by Shop-Ware support.
+    ApiSecret:
+      type: apiKey
+      in: header
+      name: X-Api-Secret
+      description: API secret issued by Shop-Ware support.
+  parameters:
+    TenantId:
+      name: tenant_id
+      in: path
+      required: true
+      schema: { type: integer }
+    TenantIdPathAsId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }

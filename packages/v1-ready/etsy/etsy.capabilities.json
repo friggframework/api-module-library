@@ -1,0 +1,436 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "etsy",
+  "label": "Etsy",
+  "package": "@friggframework/api-module-etsy",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Etsy shop/user from GET /users/me (shop_id, user_id) and GET /shops/{shop_id}.",
+    "fields": [
+      {
+        "name": "shop_id",
+        "type": "id",
+        "description": "Etsy shop id (preferred entity externalId)"
+      },
+      {
+        "name": "user_id",
+        "type": "id",
+        "description": "Etsy user id of the authorizing seller"
+      },
+      {
+        "name": "shop_name",
+        "type": "string",
+        "description": "Shop display name from getShop"
+      }
+    ]
+  },
+  "objects": {
+    "shop": {
+      "label": "Shop",
+      "description": "Etsy seller shop",
+      "fields": [
+        { "name": "shop_id", "type": "id", "readOnly": true },
+        { "name": "user_id", "type": "id", "readOnly": true },
+        { "name": "shop_name", "type": "string", "tag": "organization.name" },
+        { "name": "title", "type": "string" },
+        { "name": "currency_code", "type": "string" },
+        { "name": "url", "type": "string", "tag": "organization.domain" },
+        {
+          "name": "created_timestamp",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_timestamp",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "shop_id",
+        "updatedAt": "updated_timestamp",
+        "list": {
+          "capability": "shop.list",
+          "cursor": "offset",
+          "limit": "limit",
+          "items": "results",
+          "paging": "offset"
+        },
+        "get": { "capability": "shop.get", "id": "shop_id" },
+        "update": { "capability": "shop.update", "id": "shop_id", "body": "shop" }
+      }
+    },
+    "listing": {
+      "label": "Listing",
+      "description": "Etsy shop listing (product listing container)",
+      "fields": [
+        { "name": "listing_id", "type": "id", "readOnly": true },
+        { "name": "shop_id", "type": "id", "readOnly": true },
+        { "name": "title", "type": "string", "tag": "product.name" },
+        { "name": "description", "type": "text", "tag": "product.description" },
+        { "name": "state", "type": "string" },
+        { "name": "quantity", "type": "integer" },
+        { "name": "url", "type": "string" },
+        {
+          "name": "created_timestamp",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_timestamp",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "listing_id",
+        "updatedAt": "updated_timestamp",
+        "list": {
+          "capability": "listing.list",
+          "cursor": "offset",
+          "limit": "limit",
+          "items": "results",
+          "paging": "offset"
+        },
+        "get": { "capability": "listing.get", "id": "listing_id" },
+        "create": { "capability": "listing.create", "body": "listing" },
+        "update": {
+          "capability": "listing.update",
+          "id": "listing_id",
+          "body": "listing"
+        },
+        "delete": { "capability": "listing.delete", "id": "listing_id" }
+      }
+    },
+    "receipt": {
+      "label": "Receipt",
+      "description": "Etsy shop receipt (order)",
+      "fields": [
+        { "name": "receipt_id", "type": "id", "readOnly": true },
+        { "name": "seller_user_id", "type": "id", "readOnly": true },
+        { "name": "buyer_user_id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "buyer_email", "type": "email", "tag": "contact.email" },
+        { "name": "status", "type": "string" },
+        { "name": "is_paid", "type": "boolean" },
+        { "name": "is_shipped", "type": "boolean" },
+        {
+          "name": "created_timestamp",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_timestamp",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "receipt_id",
+        "updatedAt": "updated_timestamp",
+        "list": {
+          "capability": "receipt.list",
+          "cursor": "offset",
+          "limit": "limit",
+          "items": "results",
+          "paging": "offset"
+        },
+        "get": { "capability": "receipt.get", "id": "receipt_id" },
+        "update": {
+          "capability": "receipt.update",
+          "id": "receipt_id",
+          "body": "receipt"
+        }
+      }
+    },
+    "transaction": {
+      "label": "Transaction",
+      "description": "Line item on a shop receipt",
+      "fields": [
+        { "name": "transaction_id", "type": "id", "readOnly": true },
+        { "name": "receipt_id", "type": "id", "readOnly": true },
+        { "name": "listing_id", "type": "id" },
+        { "name": "title", "type": "string" },
+        { "name": "quantity", "type": "integer" }
+      ],
+      "sync": {
+        "id": "transaction_id",
+        "list": {
+          "capability": "transaction.list",
+          "cursor": "offset",
+          "limit": "limit",
+          "items": "results",
+          "paging": "offset"
+        },
+        "get": { "capability": "transaction.get", "id": "transaction_id" }
+      }
+    },
+    "payment": {
+      "label": "Payment",
+      "description": "Payment recorded against a receipt",
+      "fields": [
+        { "name": "payment_id", "type": "id", "readOnly": true },
+        { "name": "receipt_id", "type": "id", "readOnly": true },
+        { "name": "shop_id", "type": "id", "readOnly": true },
+        { "name": "status", "type": "string" },
+        { "name": "currency", "type": "string" }
+      ],
+      "sync": {
+        "id": "payment_id",
+        "get": { "capability": "payment.getByReceipt", "id": "receipt_id" }
+      }
+    },
+    "user": {
+      "label": "User",
+      "description": "Etsy user profile (email_r)",
+      "fields": [
+        { "name": "user_id", "type": "id", "readOnly": true },
+        { "name": "primary_email", "type": "email", "tag": "contact.email" },
+        { "name": "first_name", "type": "string", "tag": "person.firstName" },
+        { "name": "last_name", "type": "string", "tag": "person.lastName" }
+      ],
+      "sync": {
+        "id": "user_id",
+        "get": { "capability": "user.get", "id": "user_id" }
+      }
+    }
+  },
+  "events": {
+    "order.paid": {
+      "source": "webhook",
+      "object": "receipt",
+      "action": "paid",
+      "note": "Subscribed in Etsy Developer Portal Webhook portal (no REST subscription API)."
+    },
+    "order.canceled": {
+      "source": "webhook",
+      "object": "receipt",
+      "action": "canceled"
+    },
+    "order.shipped": {
+      "source": "webhook",
+      "object": "receipt",
+      "action": "shipped"
+    },
+    "order.delivered": {
+      "source": "webhook",
+      "object": "receipt",
+      "action": "delivered"
+    },
+    "listing.created": {
+      "source": "webhook",
+      "object": "listing",
+      "action": "created"
+    },
+    "listing.updated": {
+      "source": "webhook",
+      "object": "listing",
+      "action": "updated"
+    },
+    "listing.deleted": {
+      "source": "webhook",
+      "object": "listing",
+      "action": "deleted"
+    },
+    "inventory.created": {
+      "source": "webhook",
+      "object": "listing",
+      "action": "inventory_created"
+    },
+    "inventory.updated": {
+      "source": "webhook",
+      "object": "listing",
+      "action": "inventory_updated"
+    },
+    "inventory.deleted": {
+      "source": "webhook",
+      "object": "listing",
+      "action": "inventory_deleted"
+    },
+    "inventory.out_of_stock": {
+      "source": "webhook",
+      "object": "listing",
+      "action": "out_of_stock"
+    }
+  },
+  "capabilities": {
+    "account.ping": {
+      "kind": "read",
+      "method": "ping",
+      "input": {},
+      "output": "object"
+    },
+    "account.getMe": {
+      "kind": "read",
+      "method": "getMe",
+      "input": {},
+      "output": "user"
+    },
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": { "userId": { "type": "string", "required": true } },
+      "output": "user",
+      "args": ["userId", "params"]
+    },
+    "shop.list": {
+      "kind": "list",
+      "method": "findShops",
+      "output": "shop[]",
+      "args": ["params"]
+    },
+    "shop.get": {
+      "kind": "read",
+      "method": "getShop",
+      "input": { "shopId": { "type": "string", "required": true } },
+      "output": "shop",
+      "args": ["shopId", "params"]
+    },
+    "shop.getByOwnerUserId": {
+      "kind": "read",
+      "method": "getShopByOwnerUserId",
+      "input": { "userId": { "type": "string", "required": true } },
+      "output": "shop",
+      "args": ["userId", "params"]
+    },
+    "shop.update": {
+      "kind": "update",
+      "method": "updateShop",
+      "input": {
+        "shopId": { "type": "string", "required": true },
+        "shop": { "type": "object", "required": true }
+      },
+      "output": "shop",
+      "args": ["shopId", "body"]
+    },
+    "listing.list": {
+      "kind": "list",
+      "method": "getListingsByShop",
+      "output": "listing[]",
+      "args": ["shopId", "params"]
+    },
+    "listing.listActive": {
+      "kind": "list",
+      "method": "findAllActiveListingsByShop",
+      "output": "listing[]",
+      "args": ["shopId", "params"]
+    },
+    "listing.get": {
+      "kind": "read",
+      "method": "getListing",
+      "input": { "listingId": { "type": "string", "required": true } },
+      "output": "listing",
+      "args": ["listingId", "params"]
+    },
+    "listing.create": {
+      "kind": "create",
+      "method": "createDraftListing",
+      "input": {
+        "shopId": { "type": "string", "required": true },
+        "listing": { "type": "object", "required": true }
+      },
+      "output": "listing",
+      "args": ["shopId", "body"]
+    },
+    "listing.update": {
+      "kind": "update",
+      "method": "updateListing",
+      "input": {
+        "shopId": { "type": "string", "required": true },
+        "listingId": { "type": "string", "required": true },
+        "listing": { "type": "object", "required": true }
+      },
+      "output": "listing",
+      "args": ["shopId", "listingId", "body"]
+    },
+    "listing.delete": {
+      "kind": "delete",
+      "method": "deleteListing",
+      "input": { "listingId": { "type": "string", "required": true } },
+      "args": ["listingId", "params"]
+    },
+    "receipt.list": {
+      "kind": "list",
+      "method": "getShopReceipts",
+      "output": "receipt[]",
+      "args": ["shopId", "params"]
+    },
+    "receipt.get": {
+      "kind": "read",
+      "method": "getShopReceipt",
+      "input": {
+        "shopId": { "type": "string", "required": true },
+        "receiptId": { "type": "string", "required": true }
+      },
+      "output": "receipt",
+      "args": ["shopId", "receiptId", "params"]
+    },
+    "receipt.update": {
+      "kind": "update",
+      "method": "updateShopReceipt",
+      "input": {
+        "shopId": { "type": "string", "required": true },
+        "receiptId": { "type": "string", "required": true },
+        "receipt": { "type": "object", "required": true }
+      },
+      "output": "receipt",
+      "args": ["shopId", "receiptId", "body", "params"]
+    },
+    "receipt.createShipment": {
+      "kind": "create",
+      "method": "createReceiptShipment",
+      "input": {
+        "shopId": { "type": "string", "required": true },
+        "receiptId": { "type": "string", "required": true },
+        "shipment": { "type": "object", "required": true }
+      },
+      "output": "receipt",
+      "args": ["shopId", "receiptId", "body"]
+    },
+    "transaction.list": {
+      "kind": "list",
+      "method": "getShopReceiptTransactionsByShop",
+      "output": "transaction[]",
+      "args": ["shopId", "params"]
+    },
+    "transaction.get": {
+      "kind": "read",
+      "method": "getShopReceiptTransaction",
+      "input": {
+        "shopId": { "type": "string", "required": true },
+        "transactionId": { "type": "string", "required": true }
+      },
+      "output": "transaction",
+      "args": ["shopId", "transactionId", "params"]
+    },
+    "transaction.listByReceipt": {
+      "kind": "list",
+      "method": "getShopReceiptTransactionsByReceipt",
+      "output": "transaction[]",
+      "args": ["shopId", "receiptId", "params"]
+    },
+    "payment.getByReceipt": {
+      "kind": "read",
+      "method": "getShopPaymentByReceiptId",
+      "input": {
+        "shopId": { "type": "string", "required": true },
+        "receiptId": { "type": "string", "required": true }
+      },
+      "output": "payment[]",
+      "args": ["shopId", "receiptId", "params"]
+    },
+    "payment.listByIds": {
+      "kind": "list",
+      "method": "getPayments",
+      "output": "payment[]",
+      "args": ["shopId", "params"]
+    }
+  }
+}

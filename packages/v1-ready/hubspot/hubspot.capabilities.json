@@ -1,0 +1,126 @@
+{
+  "module": "hubspot",
+  "apiVersion": "2026-09",
+  "apiVersionPinned": true,
+  "docs": {
+    "overview": "https://developers.hubspot.com/docs/api-reference/latest/overview",
+    "migration": "https://developers.hubspot.com/docs/api-reference/legacy/migration-guide",
+    "changelog": "https://developers.hubspot.com/changelog/legacy-apis-and-legacy-apps-whats-going-unsupported-and-when",
+    "versioning": "https://developers.hubspot.com/changelog/introducing-date-based-api-versioning"
+  },
+  "openapi": "./hubspot.openapi.yaml",
+  "capabilities": {
+    "crm.contact.list": {
+      "surface": "data-read",
+      "spec": {
+        "kind": "openapi",
+        "ref": "./hubspot.openapi.yaml#/paths/~1crm~1objects~12026-09~1contacts/get"
+      },
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listContacts"
+      }
+    },
+    "crm.contact.create": {
+      "surface": "data-write",
+      "spec": {
+        "kind": "openapi",
+        "ref": "./hubspot.openapi.yaml#/paths/~1crm~1objects~12026-09~1contacts/post"
+      },
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.createContact"
+      }
+    },
+    "crm.contact.get": {
+      "surface": "data-read",
+      "spec": {
+        "kind": "openapi",
+        "ref": "./hubspot.openapi.yaml#/paths/~1crm~1objects~12026-09~1contacts~1{contactId}/get"
+      },
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getContactById"
+      }
+    },
+    "crm.company.list": {
+      "surface": "data-read",
+      "spec": {
+        "kind": "openapi",
+        "ref": "./hubspot.openapi.yaml#/paths/~1crm~1objects~12026-09~1companies/get"
+      },
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listCompanies"
+      }
+    },
+    "crm.deal.list": {
+      "surface": "data-read",
+      "spec": {
+        "kind": "openapi",
+        "ref": "./hubspot.openapi.yaml#/paths/~1crm~1objects~12026-09~1deals/get"
+      },
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listDeals"
+      }
+    },
+    "crm.list.search": {
+      "surface": "data-read",
+      "spec": {
+        "kind": "openapi",
+        "ref": "./hubspot.openapi.yaml#/paths/~1crm~1lists~12026-09~1search/post"
+      },
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.searchLists"
+      }
+    },
+    "account.details": {
+      "surface": "data-read",
+      "spec": {
+        "kind": "openapi",
+        "ref": "./hubspot.openapi.yaml#/paths/~1account-info~12026-09~1details/get"
+      },
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getUserDetails"
+      }
+    },
+    "auth.token.introspect": {
+      "surface": "data-read",
+      "spec": {
+        "kind": "openapi",
+        "ref": "./hubspot.openapi.yaml#/paths/~1oauth~12026-09~1token~1introspect/post"
+      },
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getAccessTokenInfo"
+      }
+    },
+    "crm.timeline.event.send": {
+      "surface": "data-write",
+      "spec": {
+        "kind": "openapi",
+        "ref": "./hubspot.openapi.yaml#/paths/~1integrators~1timeline~12026-09~1events/post"
+      },
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.createTimelineEvent"
+      }
+    },
+    "crm.contact.watch": {
+      "surface": "webhook-source",
+      "spec": {
+        "kind": "docs",
+        "ref": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide"
+      },
+      "implementedBy": {
+        "kind": "extension",
+        "ref": "extensions.webhooks",
+        "extensionEvent": "HUBSPOT_WEBHOOK"
+      },
+      "notes": "Inbound receiver verifies X-HubSpot-Signature-V3. App subscription management uses /app-webhooks/2026-09/{appId}/…"
+    }
+  }
+}

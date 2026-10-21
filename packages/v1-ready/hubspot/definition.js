@@ -1,7 +1,8 @@
 require('dotenv').config();
 const {Api} = require('./api');
 const {get} = require("@friggframework/core");
-const config = require('./defaultConfig.json')
+const config = require('./defaultConfig.json');
+const capabilitiesManifest = require('./hubspot.capabilities.json');
 
 const Definition = {
     API: Api,
@@ -10,6 +11,9 @@ const Definition = {
     },
     moduleName: config.name,
     modelName: 'HubSpot',
+    // Pinned HubSpot date-based API version (see hubspot.capabilities.json).
+    apiVersion: capabilitiesManifest.apiVersion,
+    capabilities: capabilitiesManifest.capabilities,
     requiredAuthMethods: {
         getToken: async function (api, params) {
             const code = get(params, 'code');

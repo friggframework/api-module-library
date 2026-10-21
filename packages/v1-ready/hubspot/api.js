@@ -1,83 +1,99 @@
 const {OAuth2Requester, get} = require('@friggframework/core');
 
 class Api extends OAuth2Requester {
+    /** @type {string} Pinned HubSpot date-based API version (YYYY-MM). */
+    static API_VERSION = '2026-09';
+
     constructor(params) {
         super(params);
         // The majority of the properties for OAuth are default loaded by OAuth2Requester.
         // This includes the `client_id`, `client_secret`, `scopes`, and `redirect_uri`.
         this.baseUrl = 'https://api.hubapi.com';
+        // Pin HubSpot's current date-based API version (DBV). Do not use
+        // unpinned/latest path aliases — migrate consciously when a new
+        // YYYY-MM version is released. Docs:
+        // https://developers.hubspot.com/docs/api-reference/latest/overview
+        // https://developers.hubspot.com/docs/api-reference/legacy/migration-guide
+        this.apiVersion = Api.API_VERSION;
 
+        const v = this.apiVersion;
         this.URLs = {
             authorization: '/oauth/authorize',
-            access_token: '/oauth/v1/token',
-            contacts: '/crm/v3/objects/contacts',
-            contactById: (contactId) => `/crm/v3/objects/contacts/${contactId}`,
-            getBatchContactsById: '/crm/v3/objects/contacts/batch/read',
-            companies: '/crm/v3/objects/companies',
-            companyById: (compId) => `/crm/v3/objects/companies/${compId}`,
-            companySearch: '/crm/v3/objects/companies/search',
-            getBatchCompaniesById: '/crm/v3/objects/companies/batch/read',
-            createTimelineEvent: '/crm/v3/timeline/events',
-            userDetails: '/integrations/v1/me',
-            domain: (accessToken) => `/oauth/v1/access-tokens/${accessToken}`,
-            properties: (objType) => `/crm/v3/properties/${objType}`,
+            access_token: `/oauth/${v}/token`,
+            tokenIntrospect: `/oauth/${v}/token/introspect`,
+            accountDetails: `/account-info/${v}/details`,
+            contacts: `/crm/objects/${v}/contacts`,
+            contactById: (contactId) => `/crm/objects/${v}/contacts/${contactId}`,
+            getBatchContactsById: `/crm/objects/${v}/contacts/batch/read`,
+            contactSearch: `/crm/objects/${v}/contacts/search`,
+            companies: `/crm/objects/${v}/companies`,
+            companyById: (compId) => `/crm/objects/${v}/companies/${compId}`,
+            companySearch: `/crm/objects/${v}/companies/search`,
+            getBatchCompaniesById: `/crm/objects/${v}/companies/batch/read`,
+            // App events (replacement for legacy crm/v3/timeline/events):
+            // https://developers.hubspot.com/docs/apps/developer-platform/add-features/app-events/send-event-occurrences
+            createTimelineEvent: `/integrators/timeline/${v}/events`,
+            properties: (objType) => `/crm/properties/${v}/${objType}`,
             propertiesByName: (objType, propName) =>
-                `/crm/v3/properties/${objType}/${propName}`,
-            deals: '/crm/v3/objects/deals',
-            dealById: (dealId) => `/crm/v3/objects/deals/${dealId}`,
-            searchDeals: '/crm/v3/objects/deals/search',
+                `/crm/properties/${v}/${objType}/${propName}`,
+            deals: `/crm/objects/${v}/deals`,
+            dealById: (dealId) => `/crm/objects/${v}/deals/${dealId}`,
+            searchDeals: `/crm/objects/${v}/deals/search`,
             readBatchAssociations: (fromObjectType, toObjectType) =>
-                `/crm/v4/associations/${fromObjectType}/${toObjectType}/batch/read`,
+                `/crm/associations/${v}/${fromObjectType}/${toObjectType}/batch/read`,
             createBatchAssociations: (fromObjectType, toObjectType) =>
-                `/crm/v4/associations/${fromObjectType}/${toObjectType}/batch/create`,
+                `/crm/associations/${v}/${fromObjectType}/${toObjectType}/batch/create`,
             createBatchAssociationsDefault: (fromObjectType, toObjectType) =>
-                `/crm/v4/associations/${fromObjectType}/${toObjectType}/batch/associate/default`,
+                `/crm/associations/${v}/${fromObjectType}/${toObjectType}/batch/associate/default`,
             deleteBatchAssociations: (fromObjectType, toObjectType) =>
-                `/crm/v4/associations/${fromObjectType}/${toObjectType}/batch/archive`,
+                `/crm/associations/${v}/${fromObjectType}/${toObjectType}/batch/archive`,
             deleteBatchAssociationLabels: (fromObjectType, toObjectType) =>
-                `/crm/v4/associations/${fromObjectType}/${toObjectType}/batch/labels/archive`,
-            v1DealInfo: (dealId) => `/deals/v1/deal/${dealId}`,
-            getPipelineDetails: (objType) => `/crm/v3/pipelines/${objType}`,
-            getOwnerById: (ownerId) => `/owners/v2/owners/${ownerId}`,
-            contactList: '/contacts/v1/lists',
-            contactListById: (listId) => `/contacts/v1/lists/${listId}`,
-            customObjectSchemas: '/crm/v3/schemas',
+                `/crm/associations/${v}/${fromObjectType}/${toObjectType}/batch/labels/archive`,
+            getPipelineDetails: (objType) => `/crm/pipelines/${v}/${objType}`,
+            getOwnerById: (ownerId) => `/crm/owners/${v}/${ownerId}`,
+            // Legacy Contacts Lists API (/contacts/v1/lists) → CRM Lists
+            contactList: `/crm/lists/${v}`,
+            contactListById: (listId) => `/crm/lists/${v}/${listId}`,
+            // https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/guide
+            customObjectSchemas: `/crm-object-schemas/${v}/schemas`,
             customObjectSchemaByObjectType: (objectType) =>
-                `/crm/v3/schemas/${objectType}`,
-            customObjects: (objectType) => `/crm/v3/objects/${objectType}`,
-            customObjectsSearch: (objectType) => `/crm/v3/objects/${objectType}/search`,
+                `/crm-object-schemas/${v}/schemas/${objectType}`,
+            customObjects: (objectType) => `/crm/objects/${v}/${objectType}`,
+            customObjectsSearch: (objectType) => `/crm/objects/${v}/${objectType}/search`,
             customObjectById: (objectType, objId) =>
-                `/crm/v3/objects/${objectType}/${objId}`,
+                `/crm/objects/${v}/${objectType}/${objId}`,
             bulkCreateCustomObjects: (objectType) =>
-                `/crm/v3/objects/${objectType}/batch/create`,
+                `/crm/objects/${v}/${objectType}/batch/create`,
             bulkReadCustomObjects: (objectType) =>
-                `/crm/v3/objects/${objectType}/batch/read`,
+                `/crm/objects/${v}/${objectType}/batch/read`,
             bulkUpdateCustomObjects: (objectType) =>
-                `/crm/v3/objects/${objectType}/batch/update`,
+                `/crm/objects/${v}/${objectType}/batch/update`,
             bulkArchiveCustomObjects: (objectType) =>
-                `/crm/v3/objects/${objectType}/batch/archive`,
-            landingPages: '/cms/v3/pages/landing-pages',
-            sitePages: '/cms/v3/pages/site-pages',
-            blogPosts: '/cms/v3/blogs/posts',
-            landingPageById: (landingPageId) => `/cms/v3/pages/landing-pages/${landingPageId}`,
-            sitePageById: (sitePageId) => `/cms/v3/pages/site-pages/${sitePageId}`,
-            blogPostById: (blogPostId) => `/cms/v3/blogs/posts/${blogPostId}`,
-            emailTemplates: '/content/api/v2/templates',
-            emailTemplateById: (templateId) => `/content/api/v2/templates/${templateId}`,
-            lists: '/crm/v3/lists',
-            listById: (listId) => `/crm/v3/lists/${listId}`,
-            listSearch: '/crm/v3/lists/search',
-            listMemberships: (listId) => `/crm/v3/lists/${listId}/memberships`,
-            listMembershipsAddRemove: (listId) => `/crm/v3/lists/${listId}/memberships/add-and-remove`,
-            associations: (fromObject, toObject) => `/crm/v4/associations/${fromObject}/${toObject}`,
-            associationLabels: (fromObject, toObject) => `/crm/v4/associations/${fromObject}/${toObject}/labels`,
-
+                `/crm/objects/${v}/${objectType}/batch/archive`,
+            landingPages: `/cms/pages/${v}/landing-pages`,
+            sitePages: `/cms/pages/${v}/site-pages`,
+            blogPosts: `/cms/blogs/${v}/posts`,
+            landingPageById: (landingPageId) => `/cms/pages/${v}/landing-pages/${landingPageId}`,
+            sitePageById: (sitePageId) => `/cms/pages/${v}/site-pages/${sitePageId}`,
+            blogPostById: (blogPostId) => `/cms/blogs/${v}/posts/${blogPostId}`,
+            emailTemplates: `/automation/email-templates/${v}`,
+            emailTemplateById: (templateId) => `/automation/email-templates/${v}/${templateId}`,
+            lists: `/crm/lists/${v}`,
+            listById: (listId) => `/crm/lists/${v}/${listId}`,
+            listSearch: `/crm/lists/${v}/search`,
+            listMemberships: (listId) => `/crm/lists/${v}/${listId}/memberships`,
+            listMembershipsAddRemove: (listId) => `/crm/lists/${v}/${listId}/memberships/add-and-remove`,
+            associations: (fromObject, toObject) => `/crm/associations/${v}/${fromObject}/${toObject}`,
+            associationLabels: (fromObject, toObject) => `/crm/associations/${v}/${fromObject}/${toObject}/labels`,
+            // Webhook subscription management (app-level; not used by the receiver extension)
+            webhookSettings: (appId) => `/app-webhooks/${v}/${appId}/settings`,
+            webhookSubscriptions: (appId) => `/app-webhooks/${v}/${appId}/subscriptions`,
         };
 
         this.authorizationUri = encodeURI(
             `https://app.hubspot.com/oauth/authorize?client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&scope=${this.scope}&state=${this.state}`
         );
-        this.tokenUri = 'https://api.hubapi.com/oauth/v1/token';
+        this.tokenUri = `https://api.hubapi.com/oauth/${v}/token`;
 
         this.access_token = get(params, 'access_token', null);
         this.refresh_token = get(params, 'refresh_token', null);
@@ -315,12 +331,18 @@ class Api extends OAuth2Requester {
     }
 
     async getDealStageHistory(dealId) {
+        // Replaces legacy GET /deals/v1/deal/{id}?includePropertyVersions=true.
+        // Dated objects API: propertiesWithHistory=dealstage.
+        // https://developers.hubspot.com/docs/api-reference/latest/crm/using-object-apis
         const options = {
-            url: this.baseUrl + this.URLs.v1DealInfo(dealId),
-            query: {includePropertyVersions: true},
+            url: this.baseUrl + this.URLs.dealById(dealId),
+            query: {propertiesWithHistory: 'dealstage'},
         };
         const res = await this._get(options);
-        return res.properties.dealstage.versions;
+        const history =
+            (res.propertiesWithHistory && res.propertiesWithHistory.dealstage) ||
+            [];
+        return history;
     }
 
     // pageObj can look something like this:
@@ -376,7 +398,7 @@ class Api extends OAuth2Requester {
         const properties = get(params, 'properties');
         const body = {properties};
         const options = {
-            url: this.baseUrl + this.URLs.getDealById(dealId),
+            url: this.baseUrl + this.URLs.dealById(dealId),
             body,
         };
         return this._patch(options);
@@ -410,19 +432,18 @@ class Api extends OAuth2Requester {
     }
 
     async listContactLists() {
-        const options = {
-            url: this.baseUrl + this.URLs.contactList,
-        };
-
-        return this._get(options);
+        // Legacy GET /contacts/v1/lists → CRM Lists search.
+        // https://developers.hubspot.com/docs/api-reference/latest/crm/lists/search/search-lists
+        return this.searchLists('', 0, 500, []);
     }
 
     async updateContactList(listId, body) {
+        // CRM Lists update is PATCH (was POST on contacts/v1).
         const options = {
             url: this.baseUrl + this.URLs.contactListById(listId),
             body,
         };
-        return this._post(options);
+        return this._patch(options);
     }
 
     //* **************************   Custom Object Schemas   ******************* */
@@ -633,22 +654,30 @@ class Api extends OAuth2Requester {
 
     async createTimelineEvent(
         objId,
-        data,
+        data = {},
         eventTemplateId = process.env.HUBSPOT_TIMELINE_EVENT_TEMPLATE_ID
     ) {
-        /*
-        Example data:
-        {
-          "activityName": "Custom property for deal"
-        }
-         */
+        // App events (DBV) replace legacy POST /crm/v3/timeline/events.
+        // https://developers.hubspot.com/docs/apps/developer-platform/add-features/app-events/send-event-occurrences
+        // Method args kept for callers; body maps to the dated contract:
+        // eventTemplateId → eventTypeName, data.tokens → properties.
+        const eventTypeName =
+            get(data, 'eventTypeName', null) || eventTemplateId;
         const body = {
-            eventTemplateId,
-            objectId: objId,
-            tokens: data.tokens,
-            extraData: data.extraData,
+            eventTypeName,
+            objectId: String(objId),
+            id:
+                get(data, 'id', null) ||
+                `${eventTypeName}-${objId}-${Date.now()}`,
+            properties: get(data, 'properties', null) || get(data, 'tokens', {}),
         };
-        return this._post(this.URLs.createTimelineEvent, body);
+        if (data && data.extraData !== undefined) {
+            body.extraData = data.extraData;
+        }
+        return this._post({
+            url: this.baseUrl + this.URLs.createTimelineEvent,
+            body,
+        });
     }
 
     // **************************   Pages   *****************************
@@ -808,11 +837,13 @@ class Api extends OAuth2Requester {
     }
 
     async updateEmailTemplate(objId, body) {
+        // Automation email-templates 2026-09 uses PATCH (legacy content/v2 used PUT).
+        // https://developers.hubspot.com/docs/api-reference/latest/automation/email-templates/update-email-template
         const options = {
             url: `${this.baseUrl}${this.URLs.emailTemplateById(objId)}`,
             body: body,
         };
-        return this._put(options);
+        return this._patch(options);
     }
 
     async createEmailTemplate(body) {
@@ -832,13 +863,44 @@ class Api extends OAuth2Requester {
 
     // **************************   Other/All   **********************************
 
-    async getUserDetails() {
-        const res1 = await this._get({
-            url: this.baseUrl + this.URLs.userDetails,
+    async getAccessTokenInfo() {
+        // Replaces GET /oauth/v1/access-tokens/{token}.
+        // https://developers.hubspot.com/docs/api-reference/latest/authentication/oauth-tokens/token-introspect
+        const form = new URLSearchParams({
+            client_id: this.client_id,
+            client_secret: this.client_secret,
+            token: this.access_token,
+            token_type_hint: 'access_token',
         });
-        const url2 = this.URLs.domain(this.access_token);
-        const res2 = await this._get({url: this.baseUrl + url2});
-        return Object.assign(res1, res2);
+        // Bypass Api._post JSON headers — introspect is form-urlencoded.
+        return super._post(
+            {
+                url: this.baseUrl + this.URLs.tokenIntrospect,
+                body: form.toString(),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    Accept: 'application/json',
+                },
+            },
+            false
+        );
+    }
+
+    async getUserDetails() {
+        // Replaces /integrations/v1/me + /oauth/v1/access-tokens/{token}.
+        // Account details: https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-account-details
+        // Token metadata: https://developers.hubspot.com/docs/api-reference/latest/authentication/manage-oauth-tokens
+        const account = await this._get({
+            url: this.baseUrl + this.URLs.accountDetails,
+        });
+        const tokenInfo = await this.getAccessTokenInfo();
+        // Preserve fields Definition / callers historically read from the
+        // merged legacy responses (portalId, hub_domain, app_id, …).
+        return Object.assign({}, account, tokenInfo, {
+            portalId: account.portalId,
+            hub_domain: tokenInfo.hub_domain,
+            hub_id: tokenInfo.hub_id,
+        });
     }
 
     async getPipelineDetails(objType) {

@@ -2,11 +2,15 @@ const { verifyHubSpotSignature } = require('./signature-verifier');
 const { findIntegrationByPortalId } = require('./lookup');
 
 /**
- * Receiver for `POST /webhooks` — DB-free. Verifies the v3 signature, then
- * enqueues one HUBSPOT_WEBHOOK_RESOLVE per event (carrying the raw payload incl.
- * portalId). It does NOT resolve the owning integration — that needs the DB and
- * happens in the worker, which is what lets the extension declare
- * useDatabase: false. Events missing a portalId are skipped.
+ * Receiver for `POST /webhooks` — DB-free. Verifies the X-HubSpot-Signature-V3
+ * signature (still the current request-validation scheme under the 2026-09
+ * webhooks docs), then enqueues one HUBSPOT_WEBHOOK_RESOLVE per event (carrying
+ * the raw payload incl. portalId). It does NOT resolve the owning integration —
+ * that needs the DB and happens in the worker, which is what lets the extension
+ * declare useDatabase: false. Events missing a portalId are skipped.
+ *
+ * Subscription configuration lives on /app-webhooks/2026-09/{appId}/… (see
+ * https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide).
  */
 async function onHubSpotWebhookReceived({ req, res }) {
     const verification = verifyHubSpotSignature({

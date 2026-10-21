@@ -1,0 +1,57 @@
+# Fenestra Document: Close CRM Integration Links (draft)
+#
+# Close's primary in-product UI extension surface for third parties is
+# Integration Links — named URL templates on Lead, Contact, or Opportunity
+# pages. Close does not ship a React/iframe component SDK comparable to HubSpot
+# UI Extensions; marketplace listings are OAuth apps. Modeled here as card +
+# iframe-style external navigation (PLATFORMS.md lists Close as Iframe).
+# Status: UNVALIDATED against live Close UX.
+#
+# Sources:
+#   https://developer.close.com/api/resources/integration-links.md
+#   https://developer.close.com/integrations.md
+#   https://resources.close.io/marketplace
+
+fenestra: "0.1.0"
+
+info:
+  title: Close CRM Integration Links
+  version: "0.1.0"
+  description: |
+    Close exposes Integration Links as custom links on Lead, Contact, and
+    Opportunity detail pages. Each link has a name, a URL template, and a type
+    (`lead`, `contact`, or `opportunity`). Only admins can create, edit, or
+    delete integration links via the REST API (`/integration_link/`).
+
+    This is a declarative URL-template extension model — not a sandboxed iframe
+    component framework. OAuth apps may also be listed in the Close Integrations
+    Directory; listing does not add additional UI SDK primitives beyond links
+    and API access.
+
+platform:
+  name: Close
+  vendor: Close
+  documentation: https://developer.close.com/api/resources/integration-links.md
+  appMarketplace: https://resources.close.io/marketplace
+
+extensionPoints:
+  - id: lead.integration_link
+    name: Lead Integration Link
+    type: card
+    extensionType: iframe
+    description: |
+      Named URL template rendered on Lead pages. Managed via
+      /api/v1/integration_link/ (type=lead). Opens the templated URL; Close does
+      not provide an in-page component SDK for the destination.
+  - id: contact.integration_link
+    name: Contact Integration Link
+    type: card
+    extensionType: iframe
+    description: |
+      Named URL template rendered on Contact pages (type=contact).
+  - id: opportunity.integration_link
+    name: Opportunity Integration Link
+    type: card
+    extensionType: iframe
+    description: |
+      Named URL template rendered on Opportunity pages (type=opportunity).

@@ -1,0 +1,487 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "close",
+  "label": "Close CRM",
+  "package": "@friggframework/api-module-close",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected Close organization, from GET /me/ and OAuth token (organization_id).",
+    "fields": [
+      {
+        "name": "organization_id",
+        "type": "id",
+        "description": "Close organization id (orga_…)"
+      },
+      {
+        "name": "email",
+        "type": "email",
+        "description": "Email of the authorizing user (GET /me/)"
+      }
+    ]
+  },
+  "objects": {
+    "lead": {
+      "label": "Lead",
+      "description": "Company/organization — primary object in Close",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" },
+        { "name": "display_name", "type": "string" },
+        { "name": "url", "type": "string", "tag": "organization.domain" },
+        { "name": "description", "type": "text" },
+        { "name": "status_id", "type": "string" },
+        { "name": "status_label", "type": "string" },
+        { "name": "primary_email", "type": "email", "tag": "contact.email" },
+        {
+          "name": "date_created",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "date_updated",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "date_updated",
+        "list": {
+          "capability": "lead.list",
+          "cursor": "_skip",
+          "limit": "_limit",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": { "capability": "lead.get", "id": "id" },
+        "create": { "capability": "lead.create", "body": "lead" },
+        "update": { "capability": "lead.update", "id": "id", "body": "lead" }
+      }
+    },
+    "contact": {
+      "label": "Contact",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "title", "type": "string", "tag": "person.title" },
+        { "name": "emails[0].email", "type": "email", "tag": "contact.email" },
+        { "name": "phones[0].phone", "type": "phone", "tag": "contact.phone" },
+        { "name": "lead_id", "type": "string" },
+        {
+          "name": "date_created",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "date_updated",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "date_updated",
+        "list": {
+          "capability": "contact.list",
+          "cursor": "_skip",
+          "limit": "_limit",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": { "capability": "contact.get", "id": "id" },
+        "create": { "capability": "contact.create", "body": "contact" },
+        "update": {
+          "capability": "contact.update",
+          "id": "id",
+          "body": "contact"
+        }
+      }
+    },
+    "opportunity": {
+      "label": "Opportunity",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "lead_id", "type": "string", "required": true },
+        { "name": "lead_name", "type": "string" },
+        { "name": "value", "type": "number", "tag": "deal.amount" },
+        { "name": "value_currency", "type": "string", "tag": "deal.currency" },
+        { "name": "confidence", "type": "number" },
+        { "name": "status_id", "type": "string" },
+        { "name": "status_label", "type": "string" },
+        { "name": "status_type", "type": "string" },
+        { "name": "pipeline_id", "type": "string" },
+        { "name": "pipeline_name", "type": "string" },
+        { "name": "date_won", "type": "date", "tag": "deal.closeDate" },
+        { "name": "date_lost", "type": "datetime" },
+        { "name": "user_id", "type": "string", "tag": "record.owner" },
+        {
+          "name": "date_created",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "date_updated",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "date_updated",
+        "list": {
+          "capability": "opportunity.list",
+          "cursor": "_skip",
+          "limit": "_limit",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": { "capability": "opportunity.get", "id": "id" },
+        "create": {
+          "capability": "opportunity.create",
+          "body": "opportunity"
+        },
+        "update": {
+          "capability": "opportunity.update",
+          "id": "id",
+          "body": "opportunity"
+        }
+      }
+    },
+    "activity": {
+      "label": "Activity",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "_type", "type": "string" },
+        { "name": "lead_id", "type": "string" },
+        { "name": "user_id", "type": "string", "tag": "record.owner" },
+        {
+          "name": "date_created",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "activity.list",
+          "cursor": "_skip",
+          "limit": "_limit",
+          "items": "data",
+          "paging": "offset"
+        }
+      }
+    },
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "first_name", "type": "string", "tag": "person.givenName" },
+        { "name": "last_name", "type": "string", "tag": "person.familyName" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "user.list",
+          "cursor": "_skip",
+          "limit": "_limit",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": { "capability": "user.get", "id": "id" }
+      }
+    },
+    "webhook": {
+      "label": "Webhook subscription",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "url", "type": "string", "required": true },
+        { "name": "events", "type": "array", "required": true },
+        { "name": "status", "type": "string", "readOnly": true },
+        { "name": "signature_key", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "webhook.list", "items": "data" },
+        "get": { "capability": "webhook.get", "id": "id" },
+        "create": { "capability": "webhook.create", "body": "webhook" },
+        "update": { "capability": "webhook.update", "id": "id", "body": "webhook" }
+      }
+    },
+    "custom_field": {
+      "label": "Custom field",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" },
+        { "name": "type", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "custom_field.lead.list", "items": "data" }
+      }
+    }
+  },
+  "events": {
+    "lead.created": {
+      "source": "webhook",
+      "object": "lead",
+      "action": "created"
+    },
+    "lead.updated": {
+      "source": "webhook",
+      "object": "lead",
+      "action": "updated"
+    },
+    "opportunity.updated": {
+      "source": "webhook",
+      "object": "opportunity",
+      "action": "updated"
+    },
+    "activity.call.created": {
+      "source": "webhook",
+      "object": "activity",
+      "action": "created"
+    }
+  },
+  "capabilities": {
+    "account.getMe": {
+      "kind": "read",
+      "method": "getMe",
+      "input": {},
+      "output": "user"
+    },
+    "user.list": {
+      "kind": "list",
+      "method": "listUsers",
+      "output": "user[]",
+      "args": ["params"]
+    },
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "user",
+      "args": ["id", "params"]
+    },
+    "lead.list": {
+      "kind": "list",
+      "method": "listLeads",
+      "output": "lead[]",
+      "args": ["params"]
+    },
+    "lead.get": {
+      "kind": "read",
+      "method": "getLead",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "lead",
+      "args": ["id", "params"]
+    },
+    "lead.create": {
+      "kind": "create",
+      "method": "createLead",
+      "input": { "lead": { "type": "object", "required": true } },
+      "output": "lead",
+      "args": ["body"]
+    },
+    "lead.update": {
+      "kind": "update",
+      "method": "updateLead",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "lead": { "type": "object", "required": true }
+      },
+      "output": "lead",
+      "args": ["id", "body"]
+    },
+    "contact.list": {
+      "kind": "list",
+      "method": "listContacts",
+      "output": "contact[]",
+      "args": ["params"]
+    },
+    "contact.get": {
+      "kind": "read",
+      "method": "getContact",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "contact",
+      "args": ["id", "params"]
+    },
+    "contact.create": {
+      "kind": "create",
+      "method": "createContact",
+      "input": { "contact": { "type": "object", "required": true } },
+      "output": "contact",
+      "args": ["body"]
+    },
+    "contact.update": {
+      "kind": "update",
+      "method": "updateContact",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "contact": { "type": "object", "required": true }
+      },
+      "output": "contact",
+      "args": ["id", "body"]
+    },
+    "opportunity.list": {
+      "kind": "list",
+      "method": "listOpportunities",
+      "output": "opportunity[]",
+      "args": ["params"]
+    },
+    "opportunity.get": {
+      "kind": "read",
+      "method": "getOpportunity",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "opportunity",
+      "args": ["id", "params"]
+    },
+    "opportunity.create": {
+      "kind": "create",
+      "method": "createOpportunity",
+      "input": { "opportunity": { "type": "object", "required": true } },
+      "output": "opportunity",
+      "args": ["body"]
+    },
+    "opportunity.update": {
+      "kind": "update",
+      "method": "updateOpportunity",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "opportunity": { "type": "object", "required": true }
+      },
+      "output": "opportunity",
+      "args": ["id", "body"]
+    },
+    "activity.list": {
+      "kind": "list",
+      "method": "listActivities",
+      "output": "activity[]",
+      "args": ["params"]
+    },
+    "activity.call.list": {
+      "kind": "list",
+      "method": "listCalls",
+      "output": "activity[]",
+      "args": ["params"]
+    },
+    "activity.call.get": {
+      "kind": "read",
+      "method": "getCall",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "activity",
+      "args": ["id", "params"]
+    },
+    "activity.call.create": {
+      "kind": "create",
+      "method": "createCall",
+      "input": { "call": { "type": "object", "required": true } },
+      "output": "activity",
+      "args": ["body"]
+    },
+    "activity.email.list": {
+      "kind": "list",
+      "method": "listEmails",
+      "output": "activity[]",
+      "args": ["params"]
+    },
+    "activity.email.get": {
+      "kind": "read",
+      "method": "getEmail",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "activity",
+      "args": ["id", "params"]
+    },
+    "activity.note.list": {
+      "kind": "list",
+      "method": "listNotes",
+      "output": "activity[]",
+      "args": ["params"]
+    },
+    "activity.note.get": {
+      "kind": "read",
+      "method": "getNote",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "activity",
+      "args": ["id", "params"]
+    },
+    "activity.note.create": {
+      "kind": "create",
+      "method": "createNote",
+      "input": { "note": { "type": "object", "required": true } },
+      "output": "activity",
+      "args": ["body"]
+    },
+    "custom_field.lead.list": {
+      "kind": "list",
+      "method": "listLeadCustomFields",
+      "output": "custom_field[]",
+      "args": ["params"]
+    },
+    "custom_field.contact.list": {
+      "kind": "list",
+      "method": "listContactCustomFields",
+      "output": "custom_field[]",
+      "args": ["params"]
+    },
+    "custom_field.opportunity.list": {
+      "kind": "list",
+      "method": "listOpportunityCustomFields",
+      "output": "custom_field[]",
+      "args": ["params"]
+    },
+    "custom_field.schema.get": {
+      "kind": "read",
+      "method": "getCustomFieldSchema",
+      "input": {
+        "object_type": { "type": "string", "required": true }
+      },
+      "output": "custom_field_schema",
+      "args": ["objectType", "params"]
+    },
+    "webhook.list": {
+      "kind": "list",
+      "method": "listWebhooks",
+      "output": "webhook[]",
+      "args": ["params"]
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "webhook",
+      "args": ["id", "params"]
+    },
+    "webhook.create": {
+      "kind": "create",
+      "method": "createWebhook",
+      "input": { "webhook": { "type": "object", "required": true } },
+      "output": "webhook",
+      "args": ["body"]
+    },
+    "webhook.update": {
+      "kind": "update",
+      "method": "updateWebhook",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "webhook": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["id", "body"]
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhook",
+      "input": { "id": { "type": "string", "required": true } },
+      "args": ["id"]
+    }
+  }
+}

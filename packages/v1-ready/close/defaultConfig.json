@@ -1,0 +1,11 @@
+{
+    "name": "close",
+    "config": {
+        "oauth": true,
+        "apiKey": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

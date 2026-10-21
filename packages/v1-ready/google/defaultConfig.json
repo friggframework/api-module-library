@@ -1,0 +1,14 @@
+{
+  "name": "google",
+  "label": "Google",
+  "productUrl": "https://developers.google.com/",
+  "apiDocs": "https://developers.google.com/apis-explorer",
+  "logoUrl": "https://friggframework.org/assets/img/google-icon.png",
+  "categories": [
+    "Productivity",
+    "Google Workspace",
+    "Advertising",
+    "Analytics"
+  ],
+  "description": "Multi-API Google OAuth client covering Gmail, Calendar, Drive, Docs, Sheets, Analytics, Search Console, and Google Ads under one consent"
+}

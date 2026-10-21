@@ -1,0 +1,16 @@
+{
+    "name": "clockwork-recruiting",
+    "label": "Clockwork Recruiting",
+    "authType": "oauth2",
+    "productUrl": "https://www.clockworkrecruiting.com",
+    "apiDocs": "https://api.clockworkrecruiting.com/v3.0",
+    "categories": ["Recruiting", "ATS", "CRM"],
+    "description": "Clockwork Recruiting API v3 module — OAuth-connected access to people, companies, search projects, candidacies, tags, and webhooks for executive search firms.",
+    "config": {
+        "oauth": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

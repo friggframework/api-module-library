@@ -1,0 +1,68 @@
+{
+  "schema": "capability-manifest/v0.1",
+  "module": "crosschannel",
+  "package": "@friggframework/api-module-crosschannel",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "grant": "client_credentials",
+    "scope": null,
+    "methods": {
+      "getToken": "getTokenFromClientCredentials",
+      "testAuth": "getEventConfigurations"
+    },
+    "credentials": ["client_id", "client_secret"],
+    "docs": "https://api-docs.tools.listrak.com/cross-channel/guides/authentication.md"
+  },
+  "objects": {
+    "eventConfiguration": {
+      "description": "Listrak Cross Channel Custom Event Configuration (schema + feature access)",
+      "fields": [
+        { "name": "eventUID", "tags": ["identifier", "required"] },
+        { "name": "eventName", "tags": ["display", "required"] },
+        { "name": "eventSchemaAttrs", "tags": [] },
+        { "name": "featureAccess", "tags": ["enum"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "getEventConfigurations",
+          "spec": "crosschannel.openapi.yaml#/paths/~1eventConfigurations/get"
+        },
+        "get": {
+          "method": "getSchemaByEventUid",
+          "spec": "crosschannel.openapi.yaml#/paths/~1eventConfigurations~1{eventUID}/get"
+        }
+      }
+    },
+    "event": {
+      "description": "Cross-channel custom event posted to Journey Hub automations (email, SMS, push, web)",
+      "fields": [
+        { "name": "identifiers", "tags": ["pii", "required"] },
+        { "name": "identifiers[].identifierType", "tags": ["enum", "required"] },
+        { "name": "identifiers[].identifierValue", "tags": ["pii", "required"] },
+        { "name": "dataFields", "tags": ["pii"] }
+      ],
+      "capabilities": {
+        "create": {
+          "method": "postEvents",
+          "spec": "crosschannel.openapi.yaml#/paths/~1eventConfigurations~1{eventUID}~1events/post",
+          "notes": "HTTP 200 is not a per-recipient success receipt; inspect data[].statusCode"
+        }
+      }
+    }
+  },
+  "skipped": {
+    "webhooks": {
+      "reason": "The Cross Channel REST API does not offer webhook subscription management (create/list/delete). Official surface is eventConfigurations + events only.",
+      "docs": "https://api-docs.tools.listrak.com/cross-channel/llms.txt"
+    },
+    "eventConfigurationWrite": {
+      "reason": "There is no public REST create/update/delete for Event Configurations; schemas are defined in the Listrak application under Integrations → Integration Management (type Cross Channel).",
+      "docs": "https://api.listrak.com/crosschannel/v1/docs"
+    },
+    "canonicalSchemaMapping": {
+      "reason": "Event configurations and posted custom events do not map to business@1 Company/Contact/Deal, support@1, or billing@1 objects (ADR-057). No extensions.mapping shipped — UNVALIDATED would invent a fit that does not exist.",
+      "docs": "https://github.com/friggframework/frigg/blob/next/docs/architecture-decisions/057-canonical-schema.md"
+    }
+  }
+}

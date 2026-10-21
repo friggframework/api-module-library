@@ -42,6 +42,8 @@ const Definition = {
         client_secret: process.env.DEEL_CLIENT_SECRET,
         redirect_uri: `${process.env.REDIRECT_URI}/deel`,
         scope: process.env.DEEL_SCOPE,
+        // Opt in to sandbox hosts with DEEL_ENVIRONMENT=sandbox; default is production.
+        environment: process.env.DEEL_ENVIRONMENT || 'production',
     }
 };
 

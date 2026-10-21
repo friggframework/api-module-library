@@ -1,0 +1,255 @@
+openapi: 3.0.3
+info:
+  title: JobTread Pave API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    JobTread exposes a single Pave endpoint. Pave is a GraphQL-like JSON query
+    language: every call is HTTP POST to the server URL with body
+    `{ "query": { "$": { "grantKey": "..." }, ... } }`. This OpenAPI document
+    is Left Hook's curated subset covering exactly the operations the
+    `@friggframework/api-module-jobtread` client in api.js implements. Every
+    operationId maps 1:1 to an Api method. Path segments below are logical
+    operation names for OpenAPI/spec-sync, not REST resources.
+
+    Official sources:
+      - https://www.jobtread.com/integrations/open-api
+      - https://app.jobtread.com/docs
+      - Live schema introspection: POST https://api.jobtread.com/pave
+        with `{ "query": { "schema": { "$": { "path": "root", "expand": true } } } }`
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.jobtread.com/pave
+    description: JobTread production Pave endpoint
+security:
+  - GrantKeyAuth: []
+tags:
+  - name: Auth
+  - name: Organization
+  - name: Accounts
+  - name: Locations
+  - name: Jobs
+  - name: Documents
+  - name: Webhooks
+paths:
+  /getCurrentGrant:
+    post:
+      tags: [Auth]
+      operationId: getCurrentGrant
+      summary: Get the grant used to authenticate the request
+      description: >-
+        Pave `currentGrant { id name expiresAt organization { id name } user { … } }`.
+      responses:
+        "200":
+          description: Pave currentGrant payload
+  /getOrganization:
+    post:
+      tags: [Organization]
+      operationId: getOrganization
+      summary: Get an organization by id
+      description: "Pave `organization($: { id })`"
+      responses:
+        "200":
+          description: Pave organization payload
+  /listAccounts:
+    post:
+      tags: [Accounts]
+      operationId: listAccounts
+      summary: List accounts (customers/vendors) for an organization
+      description: "Pave `organization.accounts` connection"
+      responses:
+        "200":
+          description: Pave organization.accounts page
+  /getAccount:
+    post:
+      tags: [Accounts]
+      operationId: getAccount
+      summary: Get an account by id
+      description: "Pave `account($: { id })`"
+      responses:
+        "200":
+          description: Pave account payload
+  /createAccount:
+    post:
+      tags: [Accounts]
+      operationId: createAccount
+      summary: Create a customer or vendor account
+      description: >-
+        Pave `createAccount($: { name, type, organizationId, … })` then select
+        `createdAccount`. `type` is `customer` or `vendor`.
+      responses:
+        "200":
+          description: Pave createdAccount payload
+  /updateAccount:
+    post:
+      tags: [Accounts]
+      operationId: updateAccount
+      summary: Update an account
+      description: "Pave `updateAccount($: { id, … })`"
+      responses:
+        "200":
+          description: Pave account payload after update
+  /listLocations:
+    post:
+      tags: [Locations]
+      operationId: listLocations
+      summary: List locations for an organization
+      description: "Pave `organization.locations` connection"
+      responses:
+        "200":
+          description: Pave organization.locations page
+  /getLocation:
+    post:
+      tags: [Locations]
+      operationId: getLocation
+      summary: Get a location by id
+      description: "Pave `location($: { id })`"
+      responses:
+        "200":
+          description: Pave location payload
+  /createLocation:
+    post:
+      tags: [Locations]
+      operationId: createLocation
+      summary: Create a location on an account
+      description: >-
+        Pave `createLocation($: { accountId, … })`. A location is required
+        before `createJob`.
+      responses:
+        "200":
+          description: Pave createdLocation payload
+  /updateLocation:
+    post:
+      tags: [Locations]
+      operationId: updateLocation
+      summary: Update a location
+      description: "Pave `updateLocation($: { id, … })`"
+      responses:
+        "200":
+          description: Pave location payload after update
+  /listJobs:
+    post:
+      tags: [Jobs]
+      operationId: listJobs
+      summary: List jobs for an organization
+      description: "Pave `organization.jobs` connection"
+      responses:
+        "200":
+          description: Pave organization.jobs page
+  /getJob:
+    post:
+      tags: [Jobs]
+      operationId: getJob
+      summary: Get a job by id
+      description: "Pave `job($: { id })`"
+      responses:
+        "200":
+          description: Pave job payload
+  /createJob:
+    post:
+      tags: [Jobs]
+      operationId: createJob
+      summary: Create a job
+      description: >-
+        Pave `createJob($: { locationId, … })`. Schema description: a location
+        is required to create a job; a customer is required to create a location.
+      responses:
+        "200":
+          description: Pave createdJob payload
+  /updateJob:
+    post:
+      tags: [Jobs]
+      operationId: updateJob
+      summary: Update a job
+      description: "Pave `updateJob($: { id, … })`"
+      responses:
+        "200":
+          description: Pave job payload after update
+  /listDocuments:
+    post:
+      tags: [Documents]
+      operationId: listDocuments
+      summary: List documents for an organization
+      description: >-
+        Pave `organization.documents`. documentType oneOf: bidRequest,
+        customerInvoice, customerOrder, vendorBill, vendorOrder.
+      responses:
+        "200":
+          description: Pave organization.documents page
+  /getDocument:
+    post:
+      tags: [Documents]
+      operationId: getDocument
+      summary: Get a document by id
+      description: "Pave `document($: { id })`"
+      responses:
+        "200":
+          description: Pave document payload
+  /createDocument:
+    post:
+      tags: [Documents]
+      operationId: createDocument
+      summary: Create a document
+      description: "Pave `createDocument($: { type, jobId, … })`"
+      responses:
+        "200":
+          description: Pave createdDocument payload
+  /updateDocument:
+    post:
+      tags: [Documents]
+      operationId: updateDocument
+      summary: Update a document
+      description: "Pave `updateDocument($: { id, … })`"
+      responses:
+        "200":
+          description: Pave document payload after update
+  /listWebhooks:
+    post:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List webhook subscriptions for an organization
+      description: "Pave `organization.webhooks` connection"
+      responses:
+        "200":
+          description: Pave organization.webhooks page
+  /getWebhook:
+    post:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Get a webhook by id
+      description: "Pave `webhook($: { id })`"
+      responses:
+        "200":
+          description: Pave webhook payload
+  /createWebhook:
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a webhook subscription
+      description: >-
+        Pave `createWebhook($: { organizationId, url, eventTypes })`.
+        eventTypes are values from the public `eventType` oneOf
+        (accountCreated, jobUpdated, documentSent, …).
+      responses:
+        "200":
+          description: Pave createdWebhook payload
+  /deleteWebhook:
+    post:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook subscription
+      description: "Pave `deleteWebhook($: { id })`"
+      responses:
+        "200":
+          description: Pave delete acknowledgement
+components:
+  securitySchemes:
+    GrantKeyAuth:
+      type: apiKey
+      in: query
+      name: grantKey
+      description: >-
+        Not an HTTP query parameter. JobTread places the grant key in the JSON
+        body at `query.$.grantKey`. Modeled here as apiKey so OpenAPI can
+        express the credential; the client injects it in `Api.pave()`.

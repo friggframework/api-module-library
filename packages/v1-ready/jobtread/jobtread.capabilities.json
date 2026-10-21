@@ -1,0 +1,325 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "jobtread",
+  "label": "JobTread",
+  "package": "@friggframework/api-module-jobtread",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "objects": {
+    "organization": {
+      "label": "Organization",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "org.name" }
+      ]
+    },
+    "account": {
+      "label": "Account (customer/vendor)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "org.name" },
+        { "name": "type", "type": "string", "tag": "account.type" },
+        { "name": "isTaxable", "type": "boolean" },
+        { "name": "archivedAt", "type": "datetime", "readOnly": true },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "qboId", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "account.get", "id": "id" },
+        "create": { "capability": "account.create" },
+        "update": { "capability": "account.update", "body": "input" }
+      }
+    },
+    "location": {
+      "label": "Location",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "location.name" },
+        { "name": "address", "type": "string", "tag": "location.address" },
+        { "name": "street", "type": "string" },
+        { "name": "city", "type": "string", "tag": "location.city" },
+        { "name": "state", "type": "string", "tag": "location.state" },
+        { "name": "postalCode", "type": "string", "tag": "location.postalCode" },
+        { "name": "country", "type": "string", "tag": "location.country" },
+        { "name": "formattedAddress", "type": "string", "readOnly": true },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "location.get", "id": "id" },
+        "create": { "capability": "location.create" },
+        "update": { "capability": "location.update", "body": "input" }
+      }
+    },
+    "job": {
+      "label": "Job",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "job.title" },
+        { "name": "number", "type": "string", "tag": "record.displayId" },
+        { "name": "description", "type": "text", "tag": "job.instructions" },
+        { "name": "closedOn", "type": "date", "tag": "job.completedAt" },
+        { "name": "projectedCost", "type": "number" },
+        { "name": "projectedPrice", "type": "number", "tag": "job.total" },
+        { "name": "actualCost", "type": "number" },
+        { "name": "location.id", "type": "string", "tag": "record.parentId" },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "job.get", "id": "id" },
+        "create": { "capability": "job.create" },
+        "update": { "capability": "job.update", "body": "input" }
+      }
+    },
+    "document": {
+      "label": "Document (invoice/order/bill/bid request)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" },
+        { "name": "number", "type": "number", "tag": "record.displayId", "readOnly": true },
+        { "name": "fullName", "type": "string", "readOnly": true },
+        { "name": "type", "type": "string", "tag": "document.type" },
+        { "name": "status", "type": "string", "tag": "document.status" },
+        { "name": "subject", "type": "string" },
+        { "name": "issueDate", "type": "date", "tag": "invoice.issuedAt" },
+        { "name": "dueDate", "type": "date", "tag": "invoice.dueAt" },
+        { "name": "price", "type": "number" },
+        { "name": "balance", "type": "number" },
+        { "name": "job.id", "type": "string", "tag": "record.parentId" },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "document.get", "id": "id" },
+        "create": { "capability": "document.create" },
+        "update": { "capability": "document.update", "body": "input" }
+      }
+    },
+    "webhook": {
+      "label": "Webhook subscription",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "url", "type": "string" },
+        { "name": "eventTypes", "type": "array" },
+        { "name": "error", "type": "string", "readOnly": true },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true }
+      ]
+    }
+  },
+  "events": {
+    "account.created": {
+      "delivery": "webhook",
+      "object": "account",
+      "description": "eventType accountCreated from createWebhook. Inbound payload shape is not published in the public schema — confirm against a live delivery before relying on idPath.",
+      "match": "accountCreated"
+    },
+    "account.updated": {
+      "delivery": "webhook",
+      "object": "account",
+      "description": "eventType accountUpdated.",
+      "match": "accountUpdated"
+    },
+    "job.created": {
+      "delivery": "webhook",
+      "object": "job",
+      "description": "eventType jobCreated.",
+      "match": "jobCreated"
+    },
+    "job.updated": {
+      "delivery": "webhook",
+      "object": "job",
+      "description": "eventType jobUpdated.",
+      "match": "jobUpdated"
+    },
+    "document.created": {
+      "delivery": "webhook",
+      "object": "document",
+      "description": "eventType documentCreated.",
+      "match": "documentCreated"
+    },
+    "document.sent": {
+      "delivery": "webhook",
+      "object": "document",
+      "description": "eventType documentSent.",
+      "match": "documentSent"
+    }
+  },
+  "webhook": {
+    "scope": "organization",
+    "note": "Subscriptions are created via createWebhook({ organizationId, url, eventTypes }). The public webhook type exposes id, url, eventTypes, error, createdAt — no signing secret field. Inbound payload shape and signature verification are not documented in the introspectable schema; treat delivery verification as an open question until confirmed on a sandbox grant."
+  },
+  "capabilities": {
+    "grant.get": {
+      "kind": "read",
+      "method": "getCurrentGrant",
+      "input": {},
+      "output": "grant"
+    },
+    "organization.get": {
+      "kind": "read",
+      "method": "getOrganization",
+      "input": { "organizationId": { "type": "string", "required": true } },
+      "output": "organization",
+      "args": ["organizationId"]
+    },
+    "account.list": {
+      "kind": "read",
+      "method": "listAccounts",
+      "input": {
+        "organizationId": { "type": "string", "required": true },
+        "size": { "type": "number" },
+        "page": { "type": "string" },
+        "where": { "type": "object" },
+        "sortBy": { "type": "array" }
+      },
+      "output": "page<account>"
+    },
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "account",
+      "args": ["id"]
+    },
+    "account.create": {
+      "kind": "write",
+      "method": "createAccount",
+      "input": { "input": { "type": "object", "required": true } },
+      "output": "account",
+      "args": ["input"]
+    },
+    "account.update": {
+      "kind": "write",
+      "method": "updateAccount",
+      "input": { "input": { "type": "object", "required": true } },
+      "output": "account",
+      "args": ["input"]
+    },
+    "location.list": {
+      "kind": "read",
+      "method": "listLocations",
+      "input": {
+        "organizationId": { "type": "string", "required": true },
+        "size": { "type": "number" },
+        "page": { "type": "string" }
+      },
+      "output": "page<location>"
+    },
+    "location.get": {
+      "kind": "read",
+      "method": "getLocation",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "location",
+      "args": ["id"]
+    },
+    "location.create": {
+      "kind": "write",
+      "method": "createLocation",
+      "input": { "input": { "type": "object", "required": true } },
+      "output": "location",
+      "args": ["input"]
+    },
+    "location.update": {
+      "kind": "write",
+      "method": "updateLocation",
+      "input": { "input": { "type": "object", "required": true } },
+      "output": "location",
+      "args": ["input"]
+    },
+    "job.list": {
+      "kind": "read",
+      "method": "listJobs",
+      "input": {
+        "organizationId": { "type": "string", "required": true },
+        "size": { "type": "number" },
+        "page": { "type": "string" }
+      },
+      "output": "page<job>"
+    },
+    "job.get": {
+      "kind": "read",
+      "method": "getJob",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "job",
+      "args": ["id"]
+    },
+    "job.create": {
+      "kind": "write",
+      "method": "createJob",
+      "input": { "input": { "type": "object", "required": true } },
+      "output": "job",
+      "args": ["input"]
+    },
+    "job.update": {
+      "kind": "write",
+      "method": "updateJob",
+      "input": { "input": { "type": "object", "required": true } },
+      "output": "job",
+      "args": ["input"]
+    },
+    "document.list": {
+      "kind": "read",
+      "method": "listDocuments",
+      "input": {
+        "organizationId": { "type": "string", "required": true },
+        "size": { "type": "number" },
+        "page": { "type": "string" }
+      },
+      "output": "page<document>"
+    },
+    "document.get": {
+      "kind": "read",
+      "method": "getDocument",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "document",
+      "args": ["id"]
+    },
+    "document.create": {
+      "kind": "write",
+      "method": "createDocument",
+      "input": { "input": { "type": "object", "required": true } },
+      "output": "document",
+      "args": ["input"]
+    },
+    "document.update": {
+      "kind": "write",
+      "method": "updateDocument",
+      "input": { "input": { "type": "object", "required": true } },
+      "output": "document",
+      "args": ["input"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "input": {
+        "organizationId": { "type": "string", "required": true },
+        "size": { "type": "number" },
+        "page": { "type": "string" }
+      },
+      "output": "page<webhook>"
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "webhook",
+      "args": ["id"]
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhook",
+      "input": { "input": { "type": "object", "required": true } },
+      "output": "webhook",
+      "args": ["input"]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhook",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "webhook",
+      "args": ["id"]
+    }
+  }
+}

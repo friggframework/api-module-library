@@ -1,0 +1,476 @@
+openapi: 3.0.3
+info:
+  title: DrChrono EHR API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    DrChrono (app.drchrono.com) is an EHR / practice-management platform.
+    This OpenAPI document is Left Hook's curated subset covering exactly the
+    endpoints the @friggframework/api-module-drchrono client in api.js
+    implements. It is the source of truth the hand-written client mirrors 1:1
+    (one method per operationId).
+
+    DrChrono publishes interactive reference docs at
+    https://app.drchrono.com/api-docs/v2/documentation (no vendor-downloadable
+    OpenAPI export was available at module authoring time). Paths and verbs
+    below are taken from that official documentation.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://app.drchrono.com
+    description: DrChrono production API
+security:
+  - bearerAuth: []
+tags:
+  - name: Users
+  - name: Doctors
+  - name: Patients
+  - name: Appointments
+  - name: Offices
+  - name: Billing
+  - name: Insurance
+  - name: Iframe
+paths:
+  /api/users/current:
+    get:
+      tags: [Users]
+      operationId: getCurrentUser
+      summary: Get the authenticated user
+      description: >-
+        Resolves to /api/users/{current_user_id}. Used for identity.
+      responses:
+        "200":
+          description: User profile
+  /api/doctors:
+    get:
+      tags: [Doctors]
+      operationId: listDoctors
+      summary: List doctors
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Doctor collection
+  /api/doctors/{doctor_id}:
+    get:
+      tags: [Doctors]
+      operationId: getDoctor
+      summary: Get a doctor
+      parameters:
+        - in: path
+          name: doctor_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Doctor
+  /api/patients:
+    get:
+      tags: [Patients]
+      operationId: listPatients
+      summary: List patients
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+        - in: query
+          name: doctor
+          schema: { type: integer }
+        - in: query
+          name: email
+          schema: { type: string }
+        - in: query
+          name: first_name
+          schema: { type: string }
+        - in: query
+          name: last_name
+          schema: { type: string }
+        - in: query
+          name: since
+          schema: { type: string }
+      responses:
+        "200":
+          description: Patient collection
+    post:
+      tags: [Patients]
+      operationId: createPatient
+      summary: Create a patient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Patient created
+  /api/patients/{patient_id}:
+    get:
+      tags: [Patients]
+      operationId: getPatient
+      summary: Get a patient
+      parameters:
+        - in: path
+          name: patient_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Patient
+    patch:
+      tags: [Patients]
+      operationId: updatePatient
+      summary: Partially update a patient
+      parameters:
+        - in: path
+          name: patient_id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Patient updated
+  /api/appointments:
+    get:
+      tags: [Appointments]
+      operationId: listAppointments
+      summary: List appointments
+      description: >-
+        Requires one of since, occurred_since, date, or date_range.
+        Needs calendar:* scopes beyond the module default.
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+        - in: query
+          name: since
+          schema: { type: string }
+        - in: query
+          name: date
+          schema: { type: string }
+        - in: query
+          name: doctor
+          schema: { type: integer }
+        - in: query
+          name: patient
+          schema: { type: integer }
+        - in: query
+          name: office
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Appointment collection
+    post:
+      tags: [Appointments]
+      operationId: createAppointment
+      summary: Create an appointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Appointment created
+  /api/appointments/{appointment_id}:
+    get:
+      tags: [Appointments]
+      operationId: getAppointment
+      summary: Get an appointment
+      parameters:
+        - in: path
+          name: appointment_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Appointment
+    patch:
+      tags: [Appointments]
+      operationId: updateAppointment
+      summary: Partially update an appointment
+      parameters:
+        - in: path
+          name: appointment_id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Appointment updated
+  /api/offices:
+    get:
+      tags: [Offices]
+      operationId: listOffices
+      summary: List offices
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+        - in: query
+          name: doctor
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Office collection
+  /api/offices/{office_id}:
+    get:
+      tags: [Offices]
+      operationId: getOffice
+      summary: Get an office
+      parameters:
+        - in: path
+          name: office_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Office
+  /api/line_items:
+    get:
+      tags: [Billing]
+      operationId: listLineItems
+      summary: List billing line items
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+        - in: query
+          name: patient
+          schema: { type: integer }
+        - in: query
+          name: appointment
+          schema: { type: integer }
+        - in: query
+          name: since
+          schema: { type: string }
+      responses:
+        "200":
+          description: Line item collection
+  /api/line_items/{line_item_id}:
+    get:
+      tags: [Billing]
+      operationId: getLineItem
+      summary: Get a line item
+      parameters:
+        - in: path
+          name: line_item_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Line item
+  /api/patient_payments:
+    get:
+      tags: [Billing]
+      operationId: listPatientPayments
+      summary: List patient payments
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+        - in: query
+          name: patient
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Patient payment collection
+    post:
+      tags: [Billing]
+      operationId: createPatientPayment
+      summary: Create a patient payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Patient payment created
+  /api/patient_payments/{payment_id}:
+    get:
+      tags: [Billing]
+      operationId: getPatientPayment
+      summary: Get a patient payment
+      parameters:
+        - in: path
+          name: payment_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Patient payment
+  /api/patient_payment_log:
+    get:
+      tags: [Billing]
+      operationId: listPatientPaymentLog
+      summary: List patient payment logs
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+        - in: query
+          name: since
+          schema: { type: string }
+      responses:
+        "200":
+          description: Payment log collection
+  /api/patient_payment_log/{log_id}:
+    get:
+      tags: [Billing]
+      operationId: getPatientPaymentLog
+      summary: Get a patient payment log entry
+      parameters:
+        - in: path
+          name: log_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Payment log entry
+  /api/billing_profiles:
+    get:
+      tags: [Billing]
+      operationId: listBillingProfiles
+      summary: List billing profiles
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Billing profile collection
+  /api/billing_profiles/{profile_id}:
+    get:
+      tags: [Billing]
+      operationId: getBillingProfile
+      summary: Get a billing profile
+      parameters:
+        - in: path
+          name: profile_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Billing profile
+  /api/insurances:
+    get:
+      tags: [Insurance]
+      operationId: listInsurances
+      summary: List insurance payers
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Insurance collection
+  /api/insurances/{insurance_id}:
+    get:
+      tags: [Insurance]
+      operationId: getInsurance
+      summary: Get an insurance payer
+      parameters:
+        - in: path
+          name: insurance_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Insurance
+  /api/transactions:
+    get:
+      tags: [Billing]
+      operationId: listTransactions
+      summary: List transactions
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Transaction collection
+  /api/transactions/{transaction_id}:
+    get:
+      tags: [Billing]
+      operationId: getTransaction
+      summary: Get a transaction
+      parameters:
+        - in: path
+          name: transaction_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Transaction
+  /api/iframe_integration:
+    post:
+      tags: [Iframe]
+      operationId: createIframeIntegration
+      summary: Enable iframe app for the authorizing doctor
+      description: >-
+        POST with no body. Registers the API application iframe on the
+        doctor's patient page navigation.
+      responses:
+        "200":
+          description: Iframe enabled
+    delete:
+      tags: [Iframe]
+      operationId: deleteIframeIntegration
+      summary: Disable iframe app for the authorizing doctor
+      responses:
+        "200":
+          description: Iframe disabled
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: oauth2
+      description: >-
+        OAuth 2.0 access token from POST /o/token/. Send as
+        Authorization: Bearer <access_token>.

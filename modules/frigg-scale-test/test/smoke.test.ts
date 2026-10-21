@@ -1,6 +1,6 @@
 import { createServer, IncomingMessage, ServerResponse } from "http";
 import { AddressInfo } from "net";
-import { handler } from "services/frigg-scale-test-lambda/src/handler";
+import { handler } from "tools/scale-test/frigg-scale-test-lambda/src/handler";
 import FriggScaleTestAPI from "../src/api";
 import { APIGatewayProxyEventV2 } from "aws-lambda";
 

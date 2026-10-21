@@ -9,7 +9,7 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "services/*": ["../../../services/*"]
+      "tools/scale-test/*": ["../../tools/scale-test/*"]
     }
   },
   "include": ["src/**/*"],

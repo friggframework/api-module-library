@@ -1,11 +1,21 @@
 const {OAuth2Requester, get} = require('@friggframework/core');
 
+/** CRM object type ids as HubSpot record URLs use them. */
+const OBJECT_TYPE_IDS = {contact: '0-1', company: '0-2', deal: '0-3', ticket: '0-5'};
+
 class Api extends OAuth2Requester {
     /** @type {string} Pinned HubSpot date-based API version (YYYY-MM). */
     static API_VERSION = '2026-09';
 
     constructor(params) {
         super(params);
+        // The portal this Api is connected to, for record URLs. The webhooks extension sets it from a delivery
+        // when it is not passed in.
+        this.portalId = (params && params.portalId) || null;
+        this.urls = {
+            record: (objectType, id) =>
+                `https://app.hubspot.com/contacts/${this.portalId}/record/${OBJECT_TYPE_IDS[objectType] || objectType}/${id}`,
+        };
         // The majority of the properties for OAuth are default loaded by OAuth2Requester.
         // This includes the `client_id`, `client_secret`, `scopes`, and `redirect_uri`.
         this.baseUrl = 'https://api.hubapi.com';
@@ -644,6 +654,15 @@ class Api extends OAuth2Requester {
     }
 
     // **************************   Owners   **********************************
+
+    /**
+     * Batch-read CRM objects of a type (deals, contacts, companies, or a custom object type).
+     * @param {string} objectType e.g. 'deals'
+     * @param {{ inputs: Array<{ id: string }>, properties?: string[] }} body
+     */
+    async batchReadObjects(objectType, body) {
+        return this.bulkReadCustomObjects(objectType, body);
+    }
 
     async getOwnerById(ownerId) {
         const options = {

@@ -46,6 +46,14 @@ const introspectResponse = {
     token_type: 'Bearer',
 };
 
+function mockMe() {
+    return nock(HUBAPI, {
+        reqheaders: { authorization: 'Bearer current-access-token' },
+    })
+        .get('/integrations/v1/me')
+        .reply(200, meResponse);
+}
+
 function formBody(body) {
     return Object.fromEntries(new URLSearchParams(body));
 }
@@ -145,14 +153,6 @@ describe('HubSpot OAuth 2026-03 endpoints', () => {
     });
 
     describe('getUserDetails()', () => {
-        function mockMe() {
-            return nock(HUBAPI, {
-                reqheaders: { authorization: 'Bearer current-access-token' },
-            })
-                .get('/integrations/v1/me')
-                .reply(200, meResponse);
-        }
-
         it('introspects the token with a form-encoded POST, never putting it in the URL', async () => {
             let sentBody;
             const me = mockMe();
@@ -234,10 +234,6 @@ describe('HubSpot OAuth 2026-03 endpoints', () => {
                 .post('/oauth/2026-03/token/introspect')
                 .reply(200, introspectResponse);
         });
-
-        function mockMe() {
-            nock(HUBAPI).get('/integrations/v1/me').reply(200, meResponse);
-        }
 
         it('getEntityDetails() keeps the portal id and hub domain identifiers', async () => {
             const api = new Api({ ...apiParams, access_token: 'current-access-token' });

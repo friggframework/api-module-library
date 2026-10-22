@@ -107,10 +107,18 @@ describe('HubSpot OAuth 2026-03 endpoints', () => {
                     sentBody = formBody(body);
                     return true;
                 })
-                .reply(200, { ...tokenResponse, refresh_token: 'rotated-refresh-token' });
+                .reply(200, {
+                    ...tokenResponse,
+                    refresh_token: 'rotated-refresh-token',
+                });
 
-            const api = new Api({ ...apiParams, refresh_token: 'old-refresh-token' });
-            await api.refreshAccessToken({ refresh_token: 'old-refresh-token' });
+            const api = new Api({
+                ...apiParams,
+                refresh_token: 'old-refresh-token',
+            });
+            await api.refreshAccessToken({
+                refresh_token: 'old-refresh-token',
+            });
 
             expect(scope.isDone()).toBe(true);
             expect(sentBody).toMatchObject({
@@ -129,8 +137,13 @@ describe('HubSpot OAuth 2026-03 endpoints', () => {
                 .post('/oauth/2026-03/token')
                 .reply(200, withoutRefreshToken);
 
-            const api = new Api({ ...apiParams, refresh_token: 'old-refresh-token' });
-            await api.refreshAccessToken({ refresh_token: 'old-refresh-token' });
+            const api = new Api({
+                ...apiParams,
+                refresh_token: 'old-refresh-token',
+            });
+            await api.refreshAccessToken({
+                refresh_token: 'old-refresh-token',
+            });
 
             expect(api.access_token).toBe('new-access-token');
             expect(api.refresh_token).toBe('old-refresh-token');
@@ -139,12 +152,16 @@ describe('HubSpot OAuth 2026-03 endpoints', () => {
         it('rejects with the status when HubSpot refuses the grant', async () => {
             nock(HUBAPI).post('/oauth/2026-03/token').reply(400, {
                 error: 'invalid_grant',
-                error_description: 'refresh token is invalid, expired or revoked',
+                error_description:
+                    'refresh token is invalid, expired or revoked',
                 status: 'BAD_REFRESH_TOKEN',
                 message: 'refresh token is invalid, expired or revoked',
             });
 
-            const api = new Api({ ...apiParams, refresh_token: 'dead-refresh-token' });
+            const api = new Api({
+                ...apiParams,
+                refresh_token: 'dead-refresh-token',
+            });
 
             await expect(
                 api.refreshAccessToken({ refresh_token: 'dead-refresh-token' })
@@ -165,7 +182,10 @@ describe('HubSpot OAuth 2026-03 endpoints', () => {
                 })
                 .reply(200, introspectResponse);
 
-            const api = new Api({ ...apiParams, access_token: 'current-access-token' });
+            const api = new Api({
+                ...apiParams,
+                access_token: 'current-access-token',
+            });
             await api.getUserDetails();
 
             expect(me.isDone()).toBe(true);
@@ -184,7 +204,10 @@ describe('HubSpot OAuth 2026-03 endpoints', () => {
                 .post('/oauth/2026-03/token/introspect')
                 .reply(200, introspectResponse);
 
-            const api = new Api({ ...apiParams, access_token: 'current-access-token' });
+            const api = new Api({
+                ...apiParams,
+                access_token: 'current-access-token',
+            });
             const details = await api.getUserDetails();
 
             expect(details).toMatchObject({
@@ -207,7 +230,10 @@ describe('HubSpot OAuth 2026-03 endpoints', () => {
                 .post('/oauth/2026-03/token/introspect')
                 .reply(200, { active: false });
 
-            const api = new Api({ ...apiParams, access_token: 'current-access-token' });
+            const api = new Api({
+                ...apiParams,
+                access_token: 'current-access-token',
+            });
 
             await expect(api.getUserDetails()).rejects.toThrow(/inactive/);
         });
@@ -219,7 +245,10 @@ describe('HubSpot OAuth 2026-03 endpoints', () => {
                 error_description: 'client credentials are invalid',
             });
 
-            const api = new Api({ ...apiParams, access_token: 'current-access-token' });
+            const api = new Api({
+                ...apiParams,
+                access_token: 'current-access-token',
+            });
 
             await expect(api.getUserDetails()).rejects.toMatchObject({
                 statusCode: 400,
@@ -236,14 +265,18 @@ describe('HubSpot OAuth 2026-03 endpoints', () => {
         });
 
         it('getEntityDetails() keeps the portal id and hub domain identifiers', async () => {
-            const api = new Api({ ...apiParams, access_token: 'current-access-token' });
+            const api = new Api({
+                ...apiParams,
+                access_token: 'current-access-token',
+            });
 
-            const result = await Definition.requiredAuthMethods.getEntityDetails(
-                api,
-                null,
-                null,
-                42
-            );
+            const result =
+                await Definition.requiredAuthMethods.getEntityDetails(
+                    api,
+                    null,
+                    null,
+                    42
+                );
 
             expect(result).toEqual({
                 identifiers: { externalId: '111111111', user: 42 },
@@ -252,12 +285,16 @@ describe('HubSpot OAuth 2026-03 endpoints', () => {
         });
 
         it('getCredentialDetails() keeps the portal id identifier', async () => {
-            const api = new Api({ ...apiParams, access_token: 'current-access-token' });
+            const api = new Api({
+                ...apiParams,
+                access_token: 'current-access-token',
+            });
 
-            const result = await Definition.requiredAuthMethods.getCredentialDetails(
-                api,
-                42
-            );
+            const result =
+                await Definition.requiredAuthMethods.getCredentialDetails(
+                    api,
+                    42
+                );
 
             expect(result).toEqual({
                 identifiers: { externalId: '111111111', userId: 42 },

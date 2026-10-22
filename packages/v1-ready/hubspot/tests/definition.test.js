@@ -2,7 +2,7 @@
  * Definition unit tests — assert the shape of identifiers handed to
  * Frigg core during the auth handshake. The Postgres schema in
  * @friggframework/core ≥ 2.0.0-next types Credential.externalId as
- * String?, so portalId (Int from HubSpot's /access-tokens response)
+ * String?, so portalId (Int from HubSpot's /integrations/v1/me response)
  * must be stringified at the api-module boundary.
  */
 

@@ -9,7 +9,7 @@ class Api extends OAuth2Requester {
 
         this.URLs = {
             authorization: '/oauth/authorize',
-            access_token: '/oauth/v1/token',
+            access_token: '/oauth/2026-03/token',
             contacts: '/crm/v3/objects/contacts',
             contactById: (contactId) => `/crm/v3/objects/contacts/${contactId}`,
             getBatchContactsById: '/crm/v3/objects/contacts/batch/read',
@@ -19,7 +19,7 @@ class Api extends OAuth2Requester {
             getBatchCompaniesById: '/crm/v3/objects/companies/batch/read',
             createTimelineEvent: '/crm/v3/timeline/events',
             userDetails: '/integrations/v1/me',
-            domain: (accessToken) => `/oauth/v1/access-tokens/${accessToken}`,
+            tokenIntrospect: '/oauth/2026-03/token/introspect',
             properties: (objType) => `/crm/v3/properties/${objType}`,
             propertiesByName: (objType, propName) =>
                 `/crm/v3/properties/${objType}/${propName}`,
@@ -77,7 +77,7 @@ class Api extends OAuth2Requester {
         this.authorizationUri = encodeURI(
             `https://app.hubspot.com/oauth/authorize?client_id=${this.client_id}&redirect_uri=${this.redirect_uri}&scope=${this.scope}&state=${this.state}`
         );
-        this.tokenUri = 'https://api.hubapi.com/oauth/v1/token';
+        this.tokenUri = 'https://api.hubapi.com/oauth/2026-03/token';
 
         this.access_token = get(params, 'access_token', null);
         this.refresh_token = get(params, 'refresh_token', null);
@@ -836,9 +836,29 @@ class Api extends OAuth2Requester {
         const res1 = await this._get({
             url: this.baseUrl + this.URLs.userDetails,
         });
-        const url2 = this.URLs.domain(this.access_token);
-        const res2 = await this._get({url: this.baseUrl + url2});
+        const res2 = await this.introspectToken();
         return Object.assign(res1, res2);
+    }
+
+    async introspectToken() {
+        const body = new URLSearchParams({
+            client_id: this.client_id,
+            client_secret: this.client_secret,
+            token: this.access_token,
+            token_type_hint: 'access_token',
+        });
+        const response = await this._post(
+            {
+                url: this.baseUrl + this.URLs.tokenIntrospect,
+                body,
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            },
+            false
+        );
+        if (!response.active) {
+            throw new Error('HubSpot reports the access token as inactive');
+        }
+        return response;
     }
 
     async getPipelineDetails(objType) {

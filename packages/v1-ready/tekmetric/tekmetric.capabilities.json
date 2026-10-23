@@ -1,0 +1,340 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "tekmetric",
+  "label": "Tekmetric",
+  "package": "@friggframework/api-module-tekmetric",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "objects": {
+    "shop": {
+      "label": "Shop",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "org.name" },
+        { "name": "nickname", "type": "string" },
+        { "name": "phone", "type": "string", "tag": "org.phone" },
+        { "name": "email", "type": "email", "tag": "org.email" },
+        { "name": "website", "type": "string", "tag": "org.url" },
+        { "name": "address", "type": "object" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "shop.get", "id": "shopId" }
+      }
+    },
+    "customer": {
+      "label": "Customer",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "firstName", "type": "string", "tag": "person.firstName" },
+        { "name": "lastName", "type": "string", "tag": "person.lastName" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "phone", "type": "array", "tag": "person.phone" },
+        { "name": "address", "type": "object" },
+        { "name": "shopId", "type": "integer", "tag": "record.parentId" },
+        { "name": "okForMarketing", "type": "boolean" },
+        { "name": "eligibleForAccountsReceivable", "type": "boolean" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "customer.get", "id": "customerId" },
+        "create": { "capability": "customer.create" },
+        "update": { "capability": "customer.update", "id": "customerId", "body": "data" }
+      }
+    },
+    "vehicle": {
+      "label": "Vehicle",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "customerId", "type": "integer", "tag": "record.parentId" },
+        { "name": "year", "type": "integer" },
+        { "name": "make", "type": "string" },
+        { "name": "model", "type": "string" },
+        { "name": "vin", "type": "string" },
+        { "name": "licensePlate", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "vehicle.get", "id": "vehicleId" },
+        "create": { "capability": "vehicle.create" },
+        "update": { "capability": "vehicle.update", "id": "vehicleId", "body": "data" }
+      }
+    },
+    "repairOrder": {
+      "label": "Repair Order",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "repairOrderNumber", "type": "integer", "tag": "record.displayId", "readOnly": true },
+        { "name": "shopId", "type": "integer" },
+        { "name": "customerId", "type": "integer", "tag": "record.parentId" },
+        { "name": "vehicleId", "type": "integer" },
+        { "name": "repairOrderStatus", "type": "object", "tag": "job.status" },
+        { "name": "totalSales", "type": "number", "tag": "job.total" },
+        { "name": "amountPaid", "type": "number" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "repairOrder.get", "id": "repairOrderId" },
+        "update": { "capability": "repairOrder.update", "id": "repairOrderId", "body": "data" }
+      }
+    },
+    "job": {
+      "label": "Job",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "repairOrderId", "type": "integer", "tag": "record.parentId" },
+        { "name": "name", "type": "string", "tag": "job.description" },
+        { "name": "authorized", "type": "boolean" },
+        { "name": "subtotal", "type": "number", "tag": "job.total" },
+        { "name": "technicianId", "type": "integer" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "job.get", "id": "jobId" },
+        "update": { "capability": "job.update", "id": "jobId", "body": "data" }
+      }
+    },
+    "appointment": {
+      "label": "Appointment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "shopId", "type": "integer" },
+        { "name": "customerId", "type": "integer", "tag": "record.parentId" },
+        { "name": "vehicleId", "type": "integer" },
+        { "name": "startTime", "type": "datetime", "tag": "job.start" },
+        { "name": "endTime", "type": "datetime", "tag": "job.end" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "appointment.get", "id": "appointmentId" },
+        "create": { "capability": "appointment.create" },
+        "update": { "capability": "appointment.update", "id": "appointmentId", "body": "data" }
+      }
+    },
+    "employee": {
+      "label": "Employee",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "firstName", "type": "string", "tag": "person.firstName" },
+        { "name": "lastName", "type": "string", "tag": "person.lastName" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "phone", "type": "string", "tag": "person.phone" },
+        { "name": "employeeRole", "type": "object" },
+        { "name": "shopId", "type": "integer" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "employee.get", "id": "employeeId" }
+      }
+    }
+  },
+  "capabilities": {
+    "auth.token": {
+      "kind": "auth",
+      "method": "getAccessToken",
+      "input": {},
+      "output": "token"
+    },
+    "shop.list": {
+      "kind": "read",
+      "method": "listShops",
+      "input": {},
+      "output": "list<shop>"
+    },
+    "shop.get": {
+      "kind": "read",
+      "method": "getShop",
+      "input": { "shopId": { "type": "integer", "required": true } },
+      "output": "shop",
+      "args": ["shopId"]
+    },
+    "customer.list": {
+      "kind": "read",
+      "method": "listCustomers",
+      "input": {
+        "shop": { "type": "integer" },
+        "page": { "type": "number" },
+        "size": { "type": "number" },
+        "search": { "type": "string" }
+      },
+      "output": "page<customer>"
+    },
+    "customer.get": {
+      "kind": "read",
+      "method": "getCustomer",
+      "input": { "customerId": { "type": "integer", "required": true } },
+      "output": "customer",
+      "args": ["customerId"]
+    },
+    "customer.create": {
+      "kind": "write",
+      "method": "createCustomer",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "customer",
+      "args": ["data"]
+    },
+    "customer.update": {
+      "kind": "write",
+      "method": "updateCustomer",
+      "input": {
+        "customerId": { "type": "integer", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "customer",
+      "args": ["customerId", "data"]
+    },
+    "vehicle.list": {
+      "kind": "read",
+      "method": "listVehicles",
+      "input": {
+        "shop": { "type": "integer" },
+        "page": { "type": "number" },
+        "size": { "type": "number" },
+        "customerId": { "type": "integer" }
+      },
+      "output": "page<vehicle>"
+    },
+    "vehicle.get": {
+      "kind": "read",
+      "method": "getVehicle",
+      "input": { "vehicleId": { "type": "integer", "required": true } },
+      "output": "vehicle",
+      "args": ["vehicleId"]
+    },
+    "vehicle.create": {
+      "kind": "write",
+      "method": "createVehicle",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "vehicle",
+      "args": ["data"]
+    },
+    "vehicle.update": {
+      "kind": "write",
+      "method": "updateVehicle",
+      "input": {
+        "vehicleId": { "type": "integer", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "vehicle",
+      "args": ["vehicleId", "data"]
+    },
+    "repairOrder.list": {
+      "kind": "read",
+      "method": "listRepairOrders",
+      "input": {
+        "shop": { "type": "integer" },
+        "page": { "type": "number" },
+        "size": { "type": "number" },
+        "customerId": { "type": "integer" },
+        "vehicleId": { "type": "integer" },
+        "repairOrderStatusId": { "type": "integer" }
+      },
+      "output": "page<repairOrder>"
+    },
+    "repairOrder.get": {
+      "kind": "read",
+      "method": "getRepairOrder",
+      "input": { "repairOrderId": { "type": "integer", "required": true } },
+      "output": "repairOrder",
+      "args": ["repairOrderId"]
+    },
+    "repairOrder.update": {
+      "kind": "write",
+      "method": "updateRepairOrder",
+      "input": {
+        "repairOrderId": { "type": "integer", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "repairOrder",
+      "args": ["repairOrderId", "data"]
+    },
+    "job.list": {
+      "kind": "read",
+      "method": "listJobs",
+      "input": {
+        "shop": { "type": "integer" },
+        "page": { "type": "number" },
+        "size": { "type": "number" }
+      },
+      "output": "page<job>"
+    },
+    "job.get": {
+      "kind": "read",
+      "method": "getJob",
+      "input": { "jobId": { "type": "integer", "required": true } },
+      "output": "job",
+      "args": ["jobId"]
+    },
+    "job.update": {
+      "kind": "write",
+      "method": "updateJob",
+      "input": {
+        "jobId": { "type": "integer", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "job",
+      "args": ["jobId", "data"]
+    },
+    "appointment.list": {
+      "kind": "read",
+      "method": "listAppointments",
+      "input": {
+        "shop": { "type": "integer" },
+        "page": { "type": "number" },
+        "size": { "type": "number" },
+        "customerId": { "type": "integer" },
+        "vehicleId": { "type": "integer" }
+      },
+      "output": "page<appointment>"
+    },
+    "appointment.get": {
+      "kind": "read",
+      "method": "getAppointment",
+      "input": { "appointmentId": { "type": "integer", "required": true } },
+      "output": "appointment",
+      "args": ["appointmentId"]
+    },
+    "appointment.create": {
+      "kind": "write",
+      "method": "createAppointment",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "appointment",
+      "args": ["data"]
+    },
+    "appointment.update": {
+      "kind": "write",
+      "method": "updateAppointment",
+      "input": {
+        "appointmentId": { "type": "integer", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "appointment",
+      "args": ["appointmentId", "data"]
+    },
+    "appointment.delete": {
+      "kind": "write",
+      "method": "deleteAppointment",
+      "input": { "appointmentId": { "type": "integer", "required": true } },
+      "output": "void",
+      "args": ["appointmentId"]
+    },
+    "employee.list": {
+      "kind": "read",
+      "method": "listEmployees",
+      "input": {
+        "shop": { "type": "integer" },
+        "page": { "type": "number" },
+        "size": { "type": "number" },
+        "search": { "type": "string" }
+      },
+      "output": "page<employee>"
+    },
+    "employee.get": {
+      "kind": "read",
+      "method": "getEmployee",
+      "input": { "employeeId": { "type": "integer", "required": true } },
+      "output": "employee",
+      "args": ["employeeId"]
+    }
+  }
+}

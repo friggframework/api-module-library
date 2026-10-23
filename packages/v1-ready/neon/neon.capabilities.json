@@ -1,0 +1,380 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "neon",
+  "label": "Neon CRM",
+  "package": "@friggframework/api-module-neon",
+  "version": "1.0.0",
+  "auth": "basic",
+  "account": {
+    "description": "HTTP Basic credentials: Org ID (username) + API key (password). Entity externalId is the Org ID.",
+    "fields": [
+      {
+        "name": "orgId",
+        "type": "string",
+        "description": "Neon organization ID (Basic-auth username; webhook organizationId)"
+      },
+      {
+        "name": "apiKey",
+        "type": "string",
+        "description": "API key for a system user (Basic-auth password)"
+      },
+      {
+        "name": "environment",
+        "type": "string",
+        "description": "production (api.neoncrm.com) or trial (trial.neoncrm.com)"
+      },
+      {
+        "name": "baseUrl",
+        "type": "string",
+        "description": "Optional override of the environment-derived base URL"
+      }
+    ]
+  },
+  "objects": {
+    "account": {
+      "label": "Account",
+      "description": "Individual or organization constituent record",
+      "fields": [
+        { "name": "accountId", "type": "id", "readOnly": true },
+        { "name": "accountType", "type": "string" },
+        {
+          "name": "primaryContact.firstName",
+          "type": "string",
+          "tag": "person.givenName"
+        },
+        {
+          "name": "primaryContact.lastName",
+          "type": "string",
+          "tag": "person.familyName"
+        },
+        {
+          "name": "primaryContact.email1",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "organizationName",
+          "type": "string",
+          "tag": "organization.name"
+        }
+      ],
+      "sync": {
+        "id": "accountId",
+        "list": {
+          "capability": "account.list",
+          "cursor": "currentPage",
+          "limit": "pageSize",
+          "paging": "offset"
+        },
+        "get": { "capability": "account.get", "id": "id" },
+        "create": { "capability": "account.create", "body": "account" },
+        "update": { "capability": "account.update", "id": "id", "body": "account" }
+      }
+    },
+    "donation": {
+      "label": "Donation",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "accountId", "type": "string" },
+        { "name": "amount", "type": "number", "tag": "payment.amount" },
+        { "name": "date", "type": "date" },
+        { "name": "fund.id", "type": "string" },
+        { "name": "campaign.id", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "donation.get", "id": "id" },
+        "create": { "capability": "donation.create", "body": "donation" }
+      }
+    },
+    "campaign": {
+      "label": "Campaign",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" },
+        { "name": "status", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "campaign.list", "paging": "offset" },
+        "get": { "capability": "campaign.get", "id": "id" }
+      }
+    },
+    "event": {
+      "label": "Legacy event",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" },
+        { "name": "startDate", "type": "datetime" },
+        { "name": "endDate", "type": "datetime" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "event.list", "paging": "offset" },
+        "get": { "capability": "event.get", "id": "id" },
+        "create": { "capability": "event.create", "body": "event" }
+      }
+    },
+    "event_registration": {
+      "label": "Event registration",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "eventId", "type": "string" },
+        { "name": "accountId", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "event_registration.get", "id": "registrationId" },
+        "create": {
+          "capability": "event_registration.create",
+          "body": "registration"
+        }
+      }
+    },
+    "webhook": {
+      "label": "Webhook subscription",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "required": true },
+        { "name": "url", "type": "string", "required": true },
+        { "name": "eventTrigger", "type": "string", "required": true },
+        { "name": "contentType", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "webhook.list" },
+        "get": { "capability": "webhook.get", "id": "id" },
+        "create": { "capability": "webhook.create", "body": "webhook" },
+        "update": { "capability": "webhook.update", "id": "id", "body": "webhook" }
+      }
+    }
+  },
+  "events": {
+    "account.created": {
+      "source": "webhook",
+      "object": "account",
+      "action": "created",
+      "description": "Neon eventTrigger createAccount"
+    },
+    "account.updated": {
+      "source": "webhook",
+      "object": "account",
+      "action": "updated",
+      "description": "Neon eventTrigger updateAccount"
+    },
+    "donation.created": {
+      "source": "webhook",
+      "object": "donation",
+      "action": "created",
+      "description": "Neon eventTrigger createDonation"
+    },
+    "event_registration.created": {
+      "source": "webhook",
+      "object": "event_registration",
+      "action": "created",
+      "description": "Neon eventTrigger createEventRegistration"
+    }
+  },
+  "capabilities": {
+    "account.profile": {
+      "kind": "read",
+      "method": "getOrganizationProfile",
+      "input": {},
+      "output": "organization_profile"
+    },
+    "account.list": {
+      "kind": "list",
+      "method": "listAccounts",
+      "output": "account[]",
+      "args": ["params"]
+    },
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "account",
+      "args": ["id"]
+    },
+    "account.create": {
+      "kind": "create",
+      "method": "createAccount",
+      "input": { "account": { "type": "object", "required": true } },
+      "output": "account",
+      "args": ["body"]
+    },
+    "account.update": {
+      "kind": "update",
+      "method": "updateAccount",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "account": { "type": "object", "required": true }
+      },
+      "output": "account",
+      "args": ["id", "body"]
+    },
+    "account.patch": {
+      "kind": "update",
+      "method": "patchAccount",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "account": { "type": "object", "required": true }
+      },
+      "output": "account",
+      "args": ["id", "body"]
+    },
+    "account.search": {
+      "kind": "list",
+      "method": "searchAccounts",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "account[]",
+      "args": ["body"]
+    },
+    "donation.create": {
+      "kind": "create",
+      "method": "createDonation",
+      "input": { "donation": { "type": "object", "required": true } },
+      "output": "donation",
+      "args": ["body"]
+    },
+    "donation.get": {
+      "kind": "read",
+      "method": "getDonation",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "donation",
+      "args": ["id"]
+    },
+    "donation.listForAccount": {
+      "kind": "list",
+      "method": "listAccountDonations",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "donation[]",
+      "args": ["id", "params"]
+    },
+    "donation.search": {
+      "kind": "list",
+      "method": "searchDonations",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "donation[]",
+      "args": ["body"]
+    },
+    "campaign.list": {
+      "kind": "list",
+      "method": "listCampaigns",
+      "output": "campaign[]",
+      "args": ["params"]
+    },
+    "campaign.get": {
+      "kind": "read",
+      "method": "getCampaign",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "campaign",
+      "args": ["id"]
+    },
+    "property.funds.list": {
+      "kind": "list",
+      "method": "listFunds",
+      "output": "fund[]"
+    },
+    "property.purposes.list": {
+      "kind": "list",
+      "method": "listPurposes",
+      "output": "purpose[]"
+    },
+    "property.countries.list": {
+      "kind": "list",
+      "method": "listCountries",
+      "output": "country[]"
+    },
+    "property.stateProvinces.list": {
+      "kind": "list",
+      "method": "listStateProvinces",
+      "output": "stateProvince[]"
+    },
+    "event.list": {
+      "kind": "list",
+      "method": "listEvents",
+      "output": "event[]",
+      "args": ["params"]
+    },
+    "event.get": {
+      "kind": "read",
+      "method": "getEvent",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "event",
+      "args": ["id"]
+    },
+    "event.create": {
+      "kind": "create",
+      "method": "createEvent",
+      "input": { "event": { "type": "object", "required": true } },
+      "output": "event",
+      "args": ["body"]
+    },
+    "event_registration.create": {
+      "kind": "create",
+      "method": "createEventRegistration",
+      "input": { "registration": { "type": "object", "required": true } },
+      "output": "event_registration",
+      "args": ["body"]
+    },
+    "event_registration.get": {
+      "kind": "read",
+      "method": "getEventRegistration",
+      "input": { "registrationId": { "type": "string", "required": true } },
+      "output": "event_registration",
+      "args": ["registrationId"]
+    },
+    "event_registration.listForEvent": {
+      "kind": "list",
+      "method": "listEventRegistrations",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "event_registration[]",
+      "args": ["id", "params"]
+    },
+    "webhook.list": {
+      "kind": "list",
+      "method": "listWebhooks",
+      "output": "webhook[]"
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "webhook",
+      "args": ["id"]
+    },
+    "webhook.create": {
+      "kind": "create",
+      "method": "createWebhook",
+      "input": { "webhook": { "type": "object", "required": true } },
+      "output": "webhook",
+      "args": ["body"]
+    },
+    "webhook.update": {
+      "kind": "update",
+      "method": "updateWebhook",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "webhook": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["id", "body"]
+    },
+    "webhook.patch": {
+      "kind": "update",
+      "method": "patchWebhook",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "webhook": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["id", "body"]
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhook",
+      "input": { "id": { "type": "string", "required": true } },
+      "args": ["id"]
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@friggframework/api-module-chargebee",
+  "version": "1.0.0",
+  "description": "Chargebee Billing API v2 module — customers, subscriptions, invoices, transactions, items/item prices, events, and webhook endpoints",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint:fix": "prettier --write --loglevel error . && eslint . --fix"
+  },
+  "keywords": [
+    "frigg",
+    "chargebee",
+    "billing",
+    "subscriptions",
+    "api-module"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^2.0.0-next.107"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-scheduler": "^3.1113.0",
+    "dotenv": "^16.0.3",
+    "jest": "^28.1.3",
+    "js-yaml": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,788 @@
+openapi: 3.0.3
+info:
+  title: Freshdesk REST API v2 (subset)
+  version: "1.0.0"
+  description: >-
+    Freshdesk is a Freshworks helpdesk / customer support product. This is Left
+    Hook's curated subset of the public REST API v2 documented at
+    https://developers.freshdesk.com/api/. Freshdesk does not publish an official
+    OpenAPI document; this file is authored from the official HTML reference and
+    covers exactly the endpoints the @friggframework/api-module-freshdesk client
+    in api.js implements (one method per operationId): account, agents, tickets,
+    conversations, contacts, companies, and groups.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Freshdesk API reference
+    url: https://developers.freshdesk.com/api/
+servers:
+  - url: https://domain.freshdesk.com/api/v2
+    description: >-
+      Placeholder helpdesk host matching the Api default (domain=`domain`).
+      Real instances use https://{your-subdomain}.freshdesk.com/api/v2.
+security:
+  - BasicAuth: []
+tags:
+  - name: Account
+  - name: Agents
+  - name: Tickets
+  - name: Conversations
+  - name: Contacts
+  - name: Companies
+  - name: Groups
+paths:
+  /account:
+    get:
+      tags: [Account]
+      operationId: getAccount
+      summary: View Account
+      description: >-
+        Returns account identity details including account_id, account_name,
+        account_domain, organisation_*, timezone, data_center, and tier_type.
+      responses:
+        "200": { $ref: "#/components/responses/AccountResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /agents/me:
+    get:
+      tags: [Agents]
+      operationId: getAuthenticatedAgent
+      summary: Currently Authenticated Agent
+      description: Returns the agent corresponding to the API key in use.
+      responses:
+        "200": { $ref: "#/components/responses/AgentResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /agents:
+    get:
+      tags: [Agents]
+      operationId: listAgents
+      summary: List All Agents
+      parameters:
+        - in: query
+          name: email
+          schema: { type: string, format: email }
+        - in: query
+          name: mobile
+          schema: { type: string }
+        - in: query
+          name: phone
+          schema: { type: string }
+        - in: query
+          name: state
+          schema: { type: string, enum: [fulltime, occasional] }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200": { $ref: "#/components/responses/AgentListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /agents/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Agents]
+      operationId: getAgent
+      summary: View an Agent
+      responses:
+        "200": { $ref: "#/components/responses/AgentResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /tickets:
+    get:
+      tags: [Tickets]
+      operationId: listTickets
+      summary: List All Tickets
+      parameters:
+        - in: query
+          name: filter
+          schema:
+            type: string
+            enum: [new_and_my_open, watching, spam, deleted]
+        - in: query
+          name: requester_id
+          schema: { type: integer }
+        - in: query
+          name: email
+          schema: { type: string, format: email }
+        - in: query
+          name: company_id
+          schema: { type: integer }
+        - in: query
+          name: updated_since
+          schema: { type: string, format: date-time }
+        - in: query
+          name: order_by
+          schema:
+            type: string
+            enum: [created_at, due_by, updated_at, status]
+        - in: query
+          name: order_type
+          schema: { type: string, enum: [asc, desc] }
+        - in: query
+          name: include
+          schema: { type: string }
+          description: Comma-separated embeds (stats, requester, description).
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200": { $ref: "#/components/responses/TicketListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Tickets]
+      operationId: createTicket
+      summary: Create a Ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TicketCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/TicketResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /tickets/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Tickets]
+      operationId: getTicket
+      summary: View a Ticket
+      parameters:
+        - in: query
+          name: include
+          schema: { type: string }
+          description: >-
+            Comma-separated embeds (conversations, requester, company, stats).
+      responses:
+        "200": { $ref: "#/components/responses/TicketResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Tickets]
+      operationId: updateTicket
+      summary: Update a Ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TicketUpdate" }
+      responses:
+        "200": { $ref: "#/components/responses/TicketResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /contacts:
+    get:
+      tags: [Contacts]
+      operationId: listContacts
+      summary: List All Contacts
+      parameters:
+        - in: query
+          name: email
+          schema: { type: string, format: email }
+        - in: query
+          name: mobile
+          schema: { type: string }
+        - in: query
+          name: phone
+          schema: { type: string }
+        - in: query
+          name: company_id
+          schema: { type: integer }
+        - in: query
+          name: state
+          schema:
+            type: string
+            enum: [blocked, deleted, unverified, verified]
+        - in: query
+          name: contact_type
+          schema: { type: string, enum: [contact, visitor] }
+        - in: query
+          name: updated_since
+          schema: { type: string, format: date-time }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200": { $ref: "#/components/responses/ContactListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Contacts]
+      operationId: createContact
+      summary: Create a Contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContactCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/ContactResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /contacts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Contacts]
+      operationId: getContact
+      summary: View a Contact
+      responses:
+        "200": { $ref: "#/components/responses/ContactResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Contacts]
+      operationId: updateContact
+      summary: Update a Contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContactUpdate" }
+      responses:
+        "200": { $ref: "#/components/responses/ContactResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /companies:
+    get:
+      tags: [Companies]
+      operationId: listCompanies
+      summary: List All Companies
+      parameters:
+        - in: query
+          name: updated_since
+          schema: { type: string, format: date-time }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200": { $ref: "#/components/responses/CompanyListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Companies]
+      operationId: createCompany
+      summary: Create a Company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CompanyCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/CompanyResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /companies/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Companies]
+      operationId: getCompany
+      summary: View a Company
+      responses:
+        "200": { $ref: "#/components/responses/CompanyResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Companies]
+      operationId: updateCompany
+      summary: Update a Company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CompanyUpdate" }
+      responses:
+        "200": { $ref: "#/components/responses/CompanyResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /tickets/{id}/conversations:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Conversations]
+      operationId: listTicketConversations
+      summary: List All Conversations of a Ticket
+      parameters:
+        - $ref: "#/components/parameters/Page"
+      responses:
+        "200": { $ref: "#/components/responses/ConversationListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /tickets/{id}/reply:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    post:
+      tags: [Conversations]
+      operationId: createReply
+      summary: Create a Reply
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReplyCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/ConversationResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /tickets/{id}/notes:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    post:
+      tags: [Conversations]
+      operationId: createNote
+      summary: Create a Note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NoteCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/ConversationResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /conversations/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    put:
+      tags: [Conversations]
+      operationId: updateConversation
+      summary: Update a conversation
+      description: Only public and private notes can be edited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConversationUpdate" }
+      responses:
+        "200": { $ref: "#/components/responses/ConversationResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /groups:
+    get:
+      tags: [Groups]
+      operationId: listGroups
+      summary: List All Groups
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200": { $ref: "#/components/responses/GroupListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Groups]
+      operationId: createGroup
+      summary: Create a Group
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GroupCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/GroupResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /groups/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Groups]
+      operationId: getGroup
+      summary: View a Group
+      responses:
+        "200": { $ref: "#/components/responses/GroupResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Groups]
+      operationId: updateGroup
+      summary: Update a Group
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GroupUpdate" }
+      responses:
+        "200": { $ref: "#/components/responses/GroupResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: >-
+        API key as username, dummy password (conventionally `X`). Equivalent to
+        `Authorization: Basic base64(api_key:X)`.
+  parameters:
+    ResourceId:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer }
+    Page:
+      in: query
+      name: page
+      schema: { type: integer, minimum: 1 }
+    PerPage:
+      in: query
+      name: per_page
+      schema: { type: integer, minimum: 1, maximum: 100 }
+  schemas:
+    Account:
+      type: object
+      properties:
+        organisation_id: { type: integer }
+        organisation_name: { type: string }
+        account_id: { type: integer }
+        account_name: { type: string }
+        account_domain: { type: string }
+        timezone: { type: string }
+        data_center: { type: string }
+        tier_type: { type: string }
+        hipaa_compliant: { type: boolean }
+    Agent:
+      type: object
+      properties:
+        id: { type: integer }
+        available: { type: boolean }
+        occasional: { type: boolean }
+        ticket_scope: { type: integer }
+        type: { type: string }
+        group_ids: { type: array, items: { type: integer } }
+        role_ids: { type: array, items: { type: integer } }
+        skill_ids: { type: array, items: { type: integer } }
+        contact:
+          type: object
+          properties:
+            email: { type: string, format: email }
+            name: { type: string }
+            active: { type: boolean }
+            phone: { type: string }
+            mobile: { type: string }
+            job_title: { type: string }
+            language: { type: string }
+            time_zone: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    Ticket:
+      type: object
+      properties:
+        id: { type: integer }
+        subject: { type: string }
+        description: { type: string }
+        description_text: { type: string }
+        status: { type: integer, description: "2 Open, 3 Pending, 4 Resolved, 5 Closed" }
+        priority: { type: integer, description: "1 Low, 2 Medium, 3 High, 4 Urgent" }
+        source: { type: integer }
+        type: { type: string }
+        email: { type: string, format: email }
+        requester_id: { type: integer }
+        responder_id: { type: integer }
+        company_id: { type: integer }
+        group_id: { type: integer }
+        product_id: { type: integer }
+        tags: { type: array, items: { type: string } }
+        custom_fields: { type: object, additionalProperties: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    TicketCreate:
+      type: object
+      description: >-
+        One of email, requester_id, phone, facebook_id, twitter_id, or
+        unique_external_id identifies the requester. subject/description are
+        typical; status defaults to 2, priority to 1, source to 2.
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        requester_id: { type: integer }
+        phone: { type: string }
+        subject: { type: string }
+        description: { type: string }
+        status: { type: integer }
+        priority: { type: integer }
+        source: { type: integer }
+        type: { type: string }
+        responder_id: { type: integer }
+        group_id: { type: integer }
+        company_id: { type: integer }
+        product_id: { type: integer }
+        cc_emails: { type: array, items: { type: string, format: email } }
+        tags: { type: array, items: { type: string } }
+        custom_fields: { type: object, additionalProperties: true }
+    TicketUpdate:
+      type: object
+      additionalProperties: true
+      properties:
+        subject: { type: string }
+        description: { type: string }
+        status: { type: integer }
+        priority: { type: integer }
+        type: { type: string }
+        responder_id: { type: integer }
+        group_id: { type: integer }
+        company_id: { type: integer }
+        tags: { type: array, items: { type: string } }
+        custom_fields: { type: object, additionalProperties: true }
+    Contact:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        mobile: { type: string }
+        company_id: { type: integer }
+        unique_external_id: { type: string }
+        other_emails: { type: array, items: { type: string, format: email } }
+        tags: { type: array, items: { type: string } }
+        active: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    ContactCreate:
+      type: object
+      required: [name]
+      description: >-
+        name is mandatory. One of email, phone, mobile, twitter_id,
+        unique_external_id, or social_handler is required.
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        mobile: { type: string }
+        company_id: { type: integer }
+        unique_external_id: { type: string }
+        other_emails: { type: array, items: { type: string, format: email } }
+        tags: { type: array, items: { type: string } }
+        job_title: { type: string }
+        description: { type: string }
+        custom_fields: { type: object, additionalProperties: true }
+    ContactUpdate:
+      type: object
+      additionalProperties: true
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        mobile: { type: string }
+        company_id: { type: integer }
+        tags: { type: array, items: { type: string } }
+        custom_fields: { type: object, additionalProperties: true }
+    Company:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        note: { type: string }
+        domains: { type: array, items: { type: string } }
+        health_score: { type: string }
+        account_tier: { type: string }
+        renewal_date: { type: string, format: date }
+        industry: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    CompanyCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        note: { type: string }
+        domains: { type: array, items: { type: string } }
+        health_score: { type: string }
+        account_tier: { type: string }
+        renewal_date: { type: string, format: date }
+        industry: { type: string }
+        custom_fields: { type: object, additionalProperties: true }
+    CompanyUpdate:
+      type: object
+      additionalProperties: true
+      properties:
+        name: { type: string }
+        description: { type: string }
+        note: { type: string }
+        domains: { type: array, items: { type: string } }
+        health_score: { type: string }
+        account_tier: { type: string }
+        renewal_date: { type: string, format: date }
+        industry: { type: string }
+        custom_fields: { type: object, additionalProperties: true }
+    Conversation:
+      type: object
+      properties:
+        id: { type: integer }
+        body: { type: string }
+        body_text: { type: string }
+        incoming: { type: boolean }
+        private: { type: boolean }
+        source: { type: integer }
+        ticket_id: { type: integer }
+        user_id: { type: integer }
+        support_email: { type: string, nullable: true }
+        to_emails: { type: array, items: { type: string } }
+        attachments: { type: array, items: { type: object } }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    ReplyCreate:
+      type: object
+      description: body or structured_body is mandatory.
+      properties:
+        body: { type: string }
+        structured_body: { type: object, additionalProperties: true }
+        from_email: { type: string, format: email }
+        user_id: { type: integer }
+        cc_emails: { type: array, items: { type: string, format: email } }
+        bcc_emails: { type: array, items: { type: string, format: email } }
+    NoteCreate:
+      type: object
+      description: body or structured_body is mandatory. Notes are private by default.
+      properties:
+        body: { type: string }
+        structured_body: { type: object, additionalProperties: true }
+        incoming: { type: boolean }
+        private: { type: boolean }
+        notify_emails: { type: array, items: { type: string, format: email } }
+        user_id: { type: integer }
+    ConversationUpdate:
+      type: object
+      properties:
+        body: { type: string }
+    Group:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        escalate_to: { type: integer, nullable: true }
+        unassigned_for: { type: string }
+        agent_ids: { type: array, items: { type: integer } }
+        auto_ticket_assign: { type: integer }
+        business_hour_id: { type: integer, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    GroupCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        agent_ids: { type: array, items: { type: integer } }
+        auto_ticket_assign: { type: integer }
+        escalate_to: { type: integer, nullable: true }
+        unassigned_for: { type: string }
+    GroupUpdate:
+      type: object
+      additionalProperties: true
+      properties:
+        name: { type: string }
+        description: { type: string }
+        agent_ids: { type: array, items: { type: integer } }
+        auto_ticket_assign: { type: integer }
+        escalate_to: { type: integer, nullable: true }
+        unassigned_for: { type: string }
+
+    Error:
+      type: object
+      properties:
+        description: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              message: { type: string }
+              code: { type: string }
+  responses:
+    AccountResponse:
+      description: Account details
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Account" }
+    AgentResponse:
+      description: Agent
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Agent" }
+    AgentListResponse:
+      description: Array of agents
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/Agent" }
+    TicketResponse:
+      description: Ticket
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Ticket" }
+    TicketListResponse:
+      description: Array of tickets
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/Ticket" }
+    ContactResponse:
+      description: Contact
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Contact" }
+    ContactListResponse:
+      description: Array of contacts
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/Contact" }
+    CompanyResponse:
+      description: Company
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Company" }
+    CompanyListResponse:
+      description: Array of companies
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/Company" }
+    ConversationResponse:
+      description: Conversation (reply or note)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Conversation" }
+    ConversationListResponse:
+      description: Array of conversations
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/Conversation" }
+    GroupResponse:
+      description: Group
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Group" }
+    GroupListResponse:
+      description: Array of groups
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/Group" }
+
+    BadRequest:
+      description: Validation / bad request
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: Invalid or missing API key
+    NotFound:
+      description: Resource not found

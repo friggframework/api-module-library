@@ -1,0 +1,303 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "dropbox",
+  "label": "Dropbox",
+  "package": "@friggframework/api-module-dropbox",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Dropbox account identity from OpenID userinfo `sub` (account_id), falling back to get_current_account.",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "string",
+        "description": "Dropbox account_id / OpenID sub used as entity externalId."
+      }
+    ]
+  },
+  "objects": {
+    "account": {
+      "label": "Account",
+      "fields": [
+        { "name": "account_id", "type": "id", "readOnly": true },
+        { "name": "sub", "type": "id", "readOnly": true },
+        { "name": "name", "type": "json", "tag": "person.fullName" },
+        { "name": "given_name", "type": "string", "tag": "person.givenName" },
+        { "name": "family_name", "type": "string", "tag": "person.familyName" },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "email_verified", "type": "boolean", "readOnly": true },
+        { "name": "profile_photo_url", "type": "string", "readOnly": true },
+        { "name": "disabled", "type": "boolean", "readOnly": true },
+        { "name": "country", "type": "string", "readOnly": true },
+        { "name": "locale", "type": "string", "readOnly": true },
+        { "name": "referral_link", "type": "string", "readOnly": true },
+        { "name": "is_paired", "type": "boolean", "readOnly": true },
+        { "name": "account_type", "type": "json", "readOnly": true },
+        { "name": "root_info", "type": "json", "readOnly": true },
+        { "name": "team", "type": "json", "readOnly": true },
+        { "name": "team_member_id", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "account_id",
+        "get": {
+          "capability": "account.userinfo.get",
+          "id": "account_id"
+        }
+      }
+    },
+    "shared_folder": {
+      "label": "Shared folder",
+      "fields": [
+        { "name": "shared_folder_id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "file.name" },
+        { "name": "path_lower", "type": "string", "readOnly": true },
+        { "name": "path_display", "type": "string", "readOnly": true },
+        { "name": "access_type", "type": "json", "readOnly": true },
+        { "name": "is_inside_team_folder", "type": "boolean", "readOnly": true },
+        { "name": "is_team_folder", "type": "boolean", "readOnly": true }
+      ],
+      "sync": {
+        "id": "shared_folder_id",
+        "list": {
+          "capability": "sharing.folder.list",
+          "cursor": "cursor",
+          "items": "entries",
+          "next": "cursor"
+        }
+      }
+    },
+    "file": {
+      "label": "File",
+      "fields": [
+        { "name": "tag", "type": "string", "readOnly": true },
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "file.name" },
+        { "name": "path_lower", "type": "string", "readOnly": true },
+        { "name": "path_display", "type": "string", "readOnly": true },
+        { "name": "size", "type": "integer", "tag": "file.size", "readOnly": true },
+        { "name": "client_modified", "type": "datetime", "readOnly": true },
+        { "name": "server_modified", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "rev", "type": "string", "readOnly": true },
+        { "name": "content_hash", "type": "string", "readOnly": true },
+        { "name": "is_downloadable", "type": "boolean", "readOnly": true },
+        { "name": "sharing_info", "type": "json", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "server_modified",
+        "list": {
+          "capability": "folder.list",
+          "limit": "limit",
+          "cursor": "cursor",
+          "items": "entries",
+          "next": "cursor"
+        },
+        "get": {
+          "capability": "file.get",
+          "id": "path"
+        },
+        "create": {
+          "capability": "file.upload",
+          "body": "arg"
+        }
+      }
+    },
+    "folder": {
+      "label": "Folder",
+      "fields": [
+        { "name": "tag", "type": "string", "readOnly": true },
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "file.name" },
+        { "name": "path_lower", "type": "string", "readOnly": true },
+        { "name": "path_display", "type": "string", "readOnly": true },
+        { "name": "sharing_info", "type": "json", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "folder.list",
+          "limit": "limit",
+          "cursor": "cursor",
+          "items": "entries",
+          "next": "cursor"
+        },
+        "get": {
+          "capability": "folder.get",
+          "id": "path"
+        },
+        "create": {
+          "capability": "folder.create",
+          "body": "data"
+        }
+      }
+    }
+  },
+  "webhook": {
+    "scope": "app",
+    "topic": "list_folder",
+    "eventId": "{{body.list_folder.accounts}}",
+    "account": "{{body.list_folder.accounts[0]}}",
+    "verify": "verifyWebhookSignature",
+    "note": "Dropbox webhooks are registered in the App Console (no HTTP CRUD). Notifications are opaque change notices for account_ids; call listFolderContinue with the stored cursor to fetch changes. Signature is HMAC-SHA256 of the raw body with the app secret, hex-encoded in X-Dropbox-Signature. Entity externalId is OpenID sub / account_id."
+  },
+  "events": {
+    "list_folder.changed": {
+      "delivery": "webhook",
+      "object": "file",
+      "description": "App Console webhook notification that one or more linked accounts have file changes (payload lists account ids only)."
+    }
+  },
+  "capabilities": {
+    "account.userinfo.get": {
+      "kind": "read",
+      "method": "getUserDetails",
+      "output": "account"
+    },
+    "account.current.get": {
+      "kind": "read",
+      "method": "getCurrentAccount",
+      "output": "account"
+    },
+    "account.space.get": {
+      "kind": "read",
+      "method": "getSpaceUsage",
+      "output": "json"
+    },
+    "folder.list": {
+      "kind": "read",
+      "method": "listFolder",
+      "args": ["data"],
+      "input": {
+        "path": { "type": "string" },
+        "recursive": { "type": "boolean" },
+        "include_deleted": { "type": "boolean" },
+        "limit": { "type": "integer" }
+      },
+      "output": "page<file|folder>"
+    },
+    "folder.list.continue": {
+      "kind": "read",
+      "method": "listFolderContinue",
+      "args": ["data"],
+      "input": {
+        "cursor": { "type": "string" }
+      },
+      "output": "page<file|folder>"
+    },
+    "sharing.folder.list": {
+      "kind": "read",
+      "method": "listSharedFolders",
+      "args": ["data"],
+      "input": {
+        "limit": { "type": "integer" }
+      },
+      "output": "page<shared_folder>"
+    },
+    "sharing.folder.list.continue": {
+      "kind": "read",
+      "method": "listSharedFoldersContinue",
+      "args": ["data"],
+      "input": {
+        "cursor": { "type": "string" }
+      },
+      "output": "page<shared_folder>"
+    },
+    "file.get": {
+      "kind": "read",
+      "method": "getMetadata",
+      "args": ["data"],
+      "input": {
+        "path": { "type": "string" },
+        "include_deleted": { "type": "boolean" }
+      },
+      "output": "file"
+    },
+    "folder.get": {
+      "kind": "read",
+      "method": "getMetadata",
+      "args": ["data"],
+      "input": {
+        "path": { "type": "string" },
+        "include_deleted": { "type": "boolean" }
+      },
+      "output": "folder"
+    },
+    "folder.create": {
+      "kind": "write",
+      "method": "createFolderV2",
+      "args": ["data"],
+      "input": {
+        "path": { "type": "string" },
+        "autorename": { "type": "boolean" }
+      },
+      "output": "folder"
+    },
+    "file.delete": {
+      "kind": "delete",
+      "method": "deleteV2",
+      "args": ["data"],
+      "input": {
+        "path": { "type": "string" }
+      }
+    },
+    "folder.delete": {
+      "kind": "delete",
+      "method": "deleteV2",
+      "args": ["data"],
+      "input": {
+        "path": { "type": "string" }
+      }
+    },
+    "file.move": {
+      "kind": "write",
+      "method": "moveV2",
+      "args": ["data"],
+      "input": {
+        "from_path": { "type": "string" },
+        "to_path": { "type": "string" },
+        "autorename": { "type": "boolean" }
+      },
+      "output": "file|folder"
+    },
+    "file.copy": {
+      "kind": "write",
+      "method": "copyV2",
+      "args": ["data"],
+      "input": {
+        "from_path": { "type": "string" },
+        "to_path": { "type": "string" },
+        "autorename": { "type": "boolean" }
+      },
+      "output": "file|folder"
+    },
+    "file.download": {
+      "kind": "read",
+      "method": "downloadFile",
+      "args": ["arg"],
+      "input": {
+        "path": { "type": "string" }
+      }
+    },
+    "file.upload": {
+      "kind": "write",
+      "method": "uploadFile",
+      "args": ["arg", "contents"],
+      "input": {
+        "path": { "type": "string" },
+        "mode": { "type": "json" },
+        "autorename": { "type": "boolean" }
+      },
+      "output": "file"
+    },
+    "content.search": {
+      "kind": "search",
+      "method": "searchV2",
+      "args": ["data"],
+      "input": {
+        "query": { "type": "string" },
+        "options": { "type": "json" }
+      },
+      "output": "page<file|folder>"
+    }
+  }
+}

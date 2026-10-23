@@ -1,0 +1,95 @@
+# Fenestra Document: Workday UI Extensions (draft)
+#
+# Workday is listed in specs/fenestra/PLATFORMS.md (HRIS — Iframe + Coded /
+# Workday HCM / Extend). Partner / developer-site access may be required to
+# deploy Extend apps into a customer tenant.
+
+fenestra: "0.1.0"
+
+info:
+  title: Workday Extend UI Ecosystem
+  version: "1.0.0"
+  summary: Workday Extend application UI and Canvas Kit components
+  description: |
+    Workday Extend lets partners and customers build applications that run
+    inside Workday. In-tenant UI is primarily described with Application Model
+    Definitions (AMD) and Page Model Definitions (PMD), which bind widgets
+    (for example instanceList) to Workday REST/Graph data providers with SSO
+    authentication.
+
+    Separately, Workday publishes Canvas Kit as a React component library for
+    building Workday-styled experiences. This Fenestra draft covers both
+    surfaces based on public developer documentation.
+
+platform:
+  name: Workday
+  vendor: Workday, Inc.
+  documentation: https://developer.workday.com/
+  appMarketplace: https://www.workday.com/marketplace.html
+
+sdks:
+  workday-canvas-kit:
+    name: Workday Canvas Kit (React)
+    packageManager: npm
+    package: "@workday/canvas-kit-react"
+    repository: https://github.com/Workday/canvas-kit
+    documentation: https://canvas.workday.com/
+    description: >
+      Workday's open-source React component library (Canvas Design System).
+      Used for Workday-styled UIs; Extend in-tenant pages also use declarative
+      PMD/AMD models documented on the Developer Site.
+    exports:
+      Button:
+        type: component
+        description: Primary action button
+      TextInput:
+        type: component
+        description: Text input field
+      Card:
+        type: component
+        description: Content card container
+      Modal:
+        type: component
+        description: Modal dialog
+      instanceList:
+        type: component
+        description: >
+          Extend PMD widget (not an npm export) that renders Workday instances
+          (id, descriptor, wid) against SSO REST endpoints.
+
+extensionPoints:
+  - id: workday.extend.app.page
+    name: Extend application page
+    type: fullPage
+    extensionType: codedComponents
+    description: >
+      Custom pages hosted inside Workday for an Extend app, routed via the
+      app's task / page (PMD) definitions and bound to Workday REST data
+      providers.
+    supportedComponents:
+      - instanceList
+      - Button
+      - TextInput
+      - Card
+
+  - id: workday.extend.card
+    name: Extend card / presentation
+    type: card
+    extensionType: iframe
+    description: >
+      In-context cards and presentations composed for Workday business objects
+      (workers, organizations, etc.), often delivered as embedded experiences.
+    supportedComponents:
+      - Card
+      - instanceList
+
+policies:
+  authentication:
+    description: >
+      Extend apps use Workday OAuth 2.0 (authorization code, PKCE, implicit, or
+      client credentials) via auth.api.workday.com. In-tenant UI calls REST with
+      SSO authType on PMD endpoints.
+  distribution:
+    description: >
+      Apps are registered on the Workday Developer Site Console and deployed to
+      customer tenants. Marketplace listing and partner program access may apply.

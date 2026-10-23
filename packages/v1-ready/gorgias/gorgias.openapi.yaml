@@ -1,0 +1,510 @@
+openapi: 3.0.3
+info:
+  title: Gorgias REST API (subset)
+  version: "1.0.0"
+  description: >-
+    Gorgias (gorgias.com) is a helpdesk / customer support platform. This is the
+    subset of Gorgias's public REST API used by the
+    @friggframework/api-module-gorgias module, authored by Left Hook from
+    Gorgias's published API reference
+    (https://developers.gorgias.com/reference/introduction). It is the source of
+    truth the hand-written client in api.js mirrors (one method per operationId).
+    Paths are relative to the per-account base URL
+    https://{domain}.gorgias.com/api.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://{domain}.gorgias.com/api
+    description: Per-account Gorgias REST API base (domain = account subdomain).
+    variables:
+      domain:
+        default: your-domain
+security:
+  - BearerAuth: []
+  - BasicAuth: []
+tags:
+  - name: Account
+  - name: Tickets
+  - name: Messages
+  - name: Customers
+  - name: Users
+  - name: Tags
+  - name: SatisfactionSurveys
+  - name: Integrations
+  - name: Widgets
+paths:
+  /account:
+    get:
+      tags: [Account]
+      operationId: getAccount
+      summary: Retrieve your account
+      responses:
+        "200":
+          description: Account object
+        "401":
+          description: Unauthorized
+
+  /tickets:
+    get:
+      tags: [Tickets]
+      operationId: listTickets
+      summary: List tickets
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 30 }
+        - in: query
+          name: order_by
+          schema:
+            type: string
+            enum:
+              - created_datetime:asc
+              - created_datetime:desc
+              - updated_datetime:asc
+              - updated_datetime:desc
+        - in: query
+          name: customer_id
+          schema: { type: integer }
+        - in: query
+          name: view_id
+          schema: { type: integer }
+        - in: query
+          name: external_id
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated list of tickets
+    post:
+      tags: [Tickets]
+      operationId: createTicket
+      summary: Create a ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created ticket
+
+  /tickets/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Tickets]
+      operationId: getTicket
+      summary: Retrieve a ticket
+      parameters:
+        - in: query
+          name: relationships
+          schema:
+            type: array
+            items: { type: string }
+      responses:
+        "200":
+          description: Ticket object
+    put:
+      tags: [Tickets]
+      operationId: updateTicket
+      summary: Update a ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated ticket
+    delete:
+      tags: [Tickets]
+      operationId: deleteTicket
+      summary: Delete a ticket
+      responses:
+        "204":
+          description: Deleted
+
+  /messages:
+    get:
+      tags: [Messages]
+      operationId: listMessages
+      summary: List messages
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 30 }
+        - in: query
+          name: order_by
+          schema:
+            type: string
+            enum: [created_datetime:asc, created_datetime:desc]
+        - in: query
+          name: ticket_id
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Paginated list of messages
+
+  /tickets/{ticket_id}/messages:
+    post:
+      tags: [Messages]
+      operationId: createTicketMessage
+      summary: Create a message on a ticket
+      parameters:
+        - in: path
+          name: ticket_id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created message
+
+  /tickets/{ticket_id}/messages/{id}:
+    get:
+      tags: [Messages]
+      operationId: getMessage
+      summary: Retrieve a message
+      parameters:
+        - in: path
+          name: ticket_id
+          required: true
+          schema: { type: integer }
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Message object
+
+  /customers:
+    get:
+      tags: [Customers]
+      operationId: listCustomers
+      summary: List customers
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 30 }
+        - in: query
+          name: email
+          schema: { type: string }
+        - in: query
+          name: external_id
+          schema: { type: string }
+        - in: query
+          name: name
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated list of customers
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: Create a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created customer
+
+  /customers/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Customers]
+      operationId: getCustomer
+      summary: Retrieve a customer
+      responses:
+        "200":
+          description: Customer object
+    put:
+      tags: [Customers]
+      operationId: updateCustomer
+      summary: Update a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated customer
+    delete:
+      tags: [Customers]
+      operationId: deleteCustomer
+      summary: Delete a customer
+      responses:
+        "204":
+          description: Deleted
+
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List users
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 30 }
+        - in: query
+          name: email
+          schema: { type: string }
+        - in: query
+          name: search
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated list of users
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Retrieve a user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: User object
+
+  /tags:
+    get:
+      tags: [Tags]
+      operationId: listTags
+      summary: List tags
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 30 }
+        - in: query
+          name: search
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated list of tags
+
+  /tags/{id}:
+    get:
+      tags: [Tags]
+      operationId: getTag
+      summary: Retrieve a tag
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Tag object
+
+  /satisfaction-surveys:
+    get:
+      tags: [SatisfactionSurveys]
+      operationId: listSatisfactionSurveys
+      summary: List satisfaction surveys
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 30 }
+        - in: query
+          name: ticket_id
+          schema: { type: integer }
+        - in: query
+          name: order_by
+          schema:
+            type: string
+            enum: [created_datetime:asc, created_datetime:desc]
+      responses:
+        "200":
+          description: Paginated list of satisfaction surveys
+
+  /satisfaction-surveys/{id}:
+    get:
+      tags: [SatisfactionSurveys]
+      operationId: getSatisfactionSurvey
+      summary: Retrieve a satisfaction survey
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Satisfaction survey object
+
+  /integrations:
+    get:
+      tags: [Integrations]
+      operationId: listIntegrations
+      summary: List integrations
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 30 }
+        - in: query
+          name: type
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated list of integrations
+    post:
+      tags: [Integrations]
+      operationId: createIntegration
+      summary: Create an integration (including HTTP / webhook subscriptions)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created integration
+
+  /integrations/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Integrations]
+      operationId: getIntegration
+      summary: Retrieve an integration
+      responses:
+        "200":
+          description: Integration object
+    put:
+      tags: [Integrations]
+      operationId: updateIntegration
+      summary: Update an integration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated integration
+    delete:
+      tags: [Integrations]
+      operationId: deleteIntegration
+      summary: Delete an integration
+      responses:
+        "204":
+          description: Deleted
+
+  /widgets:
+    get:
+      tags: [Widgets]
+      operationId: listWidgets
+      summary: List widgets
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 30 }
+      responses:
+        "200":
+          description: Paginated list of widgets
+    post:
+      tags: [Widgets]
+      operationId: createWidget
+      summary: Create a widget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created widget
+
+  /widgets/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Widgets]
+      operationId: getWidget
+      summary: Retrieve a widget
+      responses:
+        "200":
+          description: Widget object
+    put:
+      tags: [Widgets]
+      operationId: updateWidget
+      summary: Update a widget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated widget
+    delete:
+      tags: [Widgets]
+      operationId: deleteWidget
+      summary: Delete a widget
+      responses:
+        "204":
+          description: Deleted
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        OAuth2 access token (public apps). See
+        https://developers.gorgias.com/docs/oauth2-bearer-token
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: >-
+        Private apps only: username = account email, password = API key.
+        https://developers.gorgias.com/docs/access-tokens-api-keys

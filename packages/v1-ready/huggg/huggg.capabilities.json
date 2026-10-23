@@ -1,0 +1,274 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "huggg",
+  "label": "Huggg",
+  "package": "@friggframework/api-module-huggg",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Huggg has no documented identity endpoint; the module fingerprints the API key for a stable externalId.",
+    "fields": []
+  },
+  "objects": {
+    "product": {
+      "label": "Product",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "brandId", "type": "string" },
+        { "name": "description", "type": "text" },
+        { "name": "senderPrice", "type": "number", "tag": "product.price" },
+        { "name": "active", "type": "boolean" },
+        { "name": "outOfStock", "type": "boolean" },
+        { "name": "imageUrl", "type": "string" },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updatedAt",
+        "list": {
+          "capability": "product.list",
+          "limit": "pagination-limit",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "product.get",
+          "id": "id"
+        }
+      }
+    },
+    "brand": {
+      "label": "Brand",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" },
+        { "name": "description", "type": "text" },
+        { "name": "website", "type": "string" },
+        { "name": "logoUrl", "type": "string" },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ]
+    },
+    "wallet": {
+      "label": "Wallet",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "balance", "type": "number" },
+        { "name": "available", "type": "number" },
+        { "name": "currency", "type": "string" },
+        { "name": "teamId", "type": "string" },
+        { "name": "ownerId", "type": "string" },
+        { "name": "referenceId", "type": "string", "tag": "record.displayId" }
+      ]
+    },
+    "transaction": {
+      "label": "Transaction",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "status", "type": "string" },
+        { "name": "retail", "type": "string" },
+        { "name": "processing", "type": "number" },
+        { "name": "notes", "type": "text" },
+        { "name": "purchased_at_date", "type": "date" },
+        { "name": "purchased_at_time", "type": "string" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "hugggs", "type": "string[]", "readOnly": true }
+      ]
+    },
+    "huggg": {
+      "label": "Huggg",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "shortcode", "type": "string", "tag": "record.displayId" },
+        { "name": "launch_url", "type": "string" },
+        { "name": "status_id", "type": "number" },
+        { "name": "sender_id", "type": "string" },
+        { "name": "receiver_id", "type": "string" },
+        { "name": "purchase_id", "type": "string" },
+        { "name": "transaction_id", "type": "string" },
+        { "name": "expiry_date", "type": "date" },
+        { "name": "notes", "type": "text" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ]
+    },
+    "bankPaymentOrder": {
+      "label": "Bank-payment order",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "status", "type": "string" },
+        { "name": "sendingMethod", "type": "string" },
+        { "name": "autoClaim", "type": "boolean" },
+        { "name": "requireNameOnAccount", "type": "boolean" },
+        { "name": "totalRecipients", "type": "number" },
+        { "name": "totalAmount", "type": "number" },
+        { "name": "failReasons", "type": "string[]" },
+        { "name": "dateCreated", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "dateModified", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ]
+    }
+  },
+  "events": {},
+  "webhook": null,
+  "capabilities": {
+    "product.list": {
+      "kind": "read",
+      "method": "listProducts",
+      "input": {
+        "pagination-limit": { "type": "number" },
+        "pagination-offset": { "type": "number" },
+        "active": { "type": "boolean" },
+        "id": { "type": "string" }
+      },
+      "output": "page<product>",
+      "args": ["$rest"]
+    },
+    "product.get": {
+      "kind": "read",
+      "method": "getProduct",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "product",
+      "args": ["id"]
+    },
+    "product.segments": {
+      "kind": "read",
+      "method": "getProductSegments",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "json",
+      "args": ["id"]
+    },
+    "brand.list": {
+      "kind": "read",
+      "method": "listBrands",
+      "input": {
+        "pagination-limit": { "type": "number" },
+        "pagination-offset": { "type": "number" }
+      },
+      "output": "page<brand>",
+      "args": ["$rest"]
+    },
+    "brand.get": {
+      "kind": "read",
+      "method": "getBrand",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "brand",
+      "args": ["id"]
+    },
+    "wallet.listForTeam": {
+      "kind": "read",
+      "method": "getTeamWallets",
+      "input": {
+        "teamId": { "type": "string", "required": true }
+      },
+      "output": "wallet[]",
+      "args": ["teamId"]
+    },
+    "transaction.create": {
+      "kind": "write",
+      "method": "createTransaction",
+      "input": {
+        "body": { "type": "object", "required": true },
+        "embed": { "type": "string[]" }
+      },
+      "output": "transaction",
+      "args": ["body", "$rest"]
+    },
+    "transaction.get": {
+      "kind": "read",
+      "method": "getTransaction",
+      "input": {
+        "transactionId": { "type": "string", "required": true }
+      },
+      "output": "transaction",
+      "args": ["transactionId"]
+    },
+    "transaction.cancel": {
+      "kind": "write",
+      "method": "cancelTransaction",
+      "input": {
+        "transactionId": { "type": "string", "required": true }
+      },
+      "output": "transaction",
+      "args": ["transactionId"]
+    },
+    "huggg.listForTransaction": {
+      "kind": "read",
+      "method": "getHugggsFromTransaction",
+      "input": {
+        "transactionId": { "type": "string", "required": true },
+        "embed": { "type": "string[]" }
+      },
+      "output": "page<huggg>",
+      "args": ["transactionId", "$rest"]
+    },
+    "huggg.get": {
+      "kind": "read",
+      "method": "getHuggg",
+      "input": {
+        "hugggId": { "type": "string", "required": true },
+        "embed": { "type": "string[]" }
+      },
+      "output": "huggg",
+      "args": ["hugggId", "$rest"]
+    },
+    "huggg.cancel": {
+      "kind": "write",
+      "method": "cancelHuggg",
+      "input": {
+        "hugggId": { "type": "string", "required": true }
+      },
+      "output": "json",
+      "args": ["hugggId"]
+    },
+    "huggg.search": {
+      "kind": "search",
+      "method": "searchHugggs",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "json",
+      "args": ["body"]
+    },
+    "bankPaymentOrder.create": {
+      "kind": "write",
+      "method": "createBankPaymentOrder",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "bankPaymentOrder",
+      "args": ["body"]
+    },
+    "bankPaymentOrder.get": {
+      "kind": "read",
+      "method": "getBankPaymentOrder",
+      "input": {
+        "orderId": { "type": "string", "required": true }
+      },
+      "output": "bankPaymentOrder",
+      "args": ["orderId"]
+    }
+  },
+  "options": {
+    "product": {
+      "capability": "product.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id"
+    },
+    "brand": {
+      "capability": "brand.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id"
+    }
+  }
+}

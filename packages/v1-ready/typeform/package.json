@@ -1,0 +1,32 @@
+{
+  "name": "@friggframework/api-module-typeform",
+  "version": "1.0.0",
+  "description": "Typeform API module that lets the Frigg Framework interact with Typeform forms, responses, and webhooks via OAuth 2.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint:fix": "prettier --write --loglevel error . && eslint . --fix"
+  },
+  "keywords": [
+    "frigg",
+    "typeform",
+    "api-module",
+    "forms",
+    "surveys",
+    "webhooks"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^2.0.0-next.107"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-scheduler": "^3.1113.0",
+    "dotenv": "^16.0.3",
+    "jest": "^28.1.3",
+    "js-yaml": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

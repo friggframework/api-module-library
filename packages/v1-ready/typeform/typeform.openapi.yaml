@@ -1,0 +1,485 @@
+openapi: 3.0.3
+info:
+  title: Typeform Public API (curated subset)
+  version: "1.0.0"
+  description: >-
+    Typeform is a conversational forms and surveys platform. This file is Left
+    Hook's curated subset of the Create, Responses, and Webhooks APIs covering
+    exactly the endpoints the @friggframework/api-module-typeform client in
+    api.js implements. It is the source of truth the hand-written client mirrors
+    1:1 (one method per operationId). Typeform does not publish a downloadable
+    OpenAPI document; paths, methods, params, and scopes are taken from the
+    official developer docs at https://www.typeform.com/developers/.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.typeform.com
+    description: Default (US) data center
+  - url: https://api.eu.typeform.com
+    description: EU data center (when the account stores responses in the EU)
+security:
+  - BearerAuth: []
+tags:
+  - name: Account
+  - name: Forms
+  - name: Responses
+  - name: Webhooks
+paths:
+  /me:
+    get:
+      tags: [Account]
+      operationId: getMe
+      summary: Retrieve authenticated account profile
+      description: >-
+        Returns the authenticated account's alias, email, and language.
+        Scope: accounts:read.
+        Docs: https://www.typeform.com/developers/get-started/hands-on/
+      responses:
+        "200":
+          description: Account profile
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Account" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /forms:
+    get:
+      tags: [Forms]
+      operationId: listForms
+      summary: Retrieve forms
+      description: >-
+        List JSON descriptions for all forms in the account.
+        Scope: forms:read.
+        Docs: https://www.typeform.com/developers/create/reference/retrieve-forms/
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: page_size
+          schema: { type: integer, default: 10, maximum: 200 }
+        - in: query
+          name: workspace_id
+          schema: { type: string }
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [created_at, last_updated_at]
+        - in: query
+          name: order_by
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: is_public
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Paginated form list
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FormList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Forms]
+      operationId: createForm
+      summary: Create form
+      description: >-
+        Create a new form. Scope: forms:write.
+        Docs: https://www.typeform.com/developers/create/reference/create-form/
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FormWrite" }
+      responses:
+        "201":
+          description: Form created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Form" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /forms/{form_id}:
+    parameters:
+      - $ref: "#/components/parameters/FormId"
+    get:
+      tags: [Forms]
+      operationId: getForm
+      summary: Retrieve form
+      description: >-
+        Retrieve a form by form_id. Scope: forms:read.
+        Docs: https://www.typeform.com/developers/create/reference/retrieve-form/
+      responses:
+        "200":
+          description: Form details
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Form" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Forms]
+      operationId: updateForm
+      summary: Update form (full replace)
+      description: >-
+        Overwrites the previously stored form. Omit a field to delete it.
+        Scope: forms:write.
+        Docs: https://www.typeform.com/developers/create/reference/update-form/
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FormWrite" }
+      responses:
+        "200":
+          description: Form updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Form" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Forms]
+      operationId: deleteForm
+      summary: Delete form
+      description: >-
+        Deletes the form and all of its responses. Scope: forms:write.
+        Docs: https://www.typeform.com/developers/create/reference/delete-form/
+      responses:
+        "204":
+          description: Form deleted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /forms/{form_id}/responses:
+    parameters:
+      - $ref: "#/components/parameters/FormId"
+    get:
+      tags: [Responses]
+      operationId: listResponses
+      summary: Retrieve responses
+      description: >-
+        Returns form responses and landing/submission metadata.
+        Very recent responses may not appear; prefer webhooks for real-time.
+        Scope: responses:read.
+        Docs: https://www.typeform.com/developers/responses/reference/retrieve-responses/
+      parameters:
+        - in: query
+          name: page_size
+          schema: { type: integer }
+        - in: query
+          name: since
+          schema: { type: string }
+          description: Timestamp (seconds) or ISO 8601 UTC.
+        - in: query
+          name: until
+          schema: { type: string }
+        - in: query
+          name: after
+          schema: { type: string }
+          description: Cursor — responses after this token (exclusive).
+        - in: query
+          name: before
+          schema: { type: string }
+        - in: query
+          name: included_response_ids
+          schema: { type: string }
+          description: Comma-separated response_id values.
+        - in: query
+          name: excluded_response_ids
+          schema: { type: string }
+        - in: query
+          name: response_type
+          schema: { type: string }
+          description: Comma-separated, e.g. partial,completed. Default completed.
+        - in: query
+          name: completed
+          schema: { type: boolean }
+          description: Deprecated — prefer response_type.
+        - in: query
+          name: sort
+          schema: { type: string }
+        - in: query
+          name: query
+          schema: { type: string }
+          description: Exact-phrase search across answers, hidden fields, variables.
+        - in: query
+          name: fields
+          schema: { type: string }
+          description: Comma-separated field ids to include in answers.
+      responses:
+        "200":
+          description: Paginated responses
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResponseList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /forms/{form_id}/webhooks:
+    parameters:
+      - $ref: "#/components/parameters/FormId"
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: Retrieve webhooks
+      description: >-
+        List all webhooks for the form. Scope: webhooks:read.
+        Docs: https://www.typeform.com/developers/webhooks/reference/retrieve-webhooks/
+      responses:
+        "200":
+          description: Webhook list
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /forms/{form_id}/webhooks/{tag}:
+    parameters:
+      - $ref: "#/components/parameters/FormId"
+      - $ref: "#/components/parameters/WebhookTag"
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Retrieve webhook
+      description: >-
+        Retrieve a webhook by tag. Scope: webhooks:read.
+      responses:
+        "200":
+          description: Webhook
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Webhook" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Webhooks]
+      operationId: createOrUpdateWebhook
+      summary: Create or update webhook
+      description: >-
+        Upsert a webhook identified by tag. New URLs must use https.
+        Scope: webhooks:write.
+        Docs: https://www.typeform.com/developers/webhooks/reference/create-or-update-webhook/
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookWrite" }
+      responses:
+        "200":
+          description: Webhook created or updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Webhook" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete webhook
+      description: >-
+        Delete a webhook by tag. Scope: webhooks:write.
+        Docs: https://www.typeform.com/developers/webhooks/reference/delete-webhook/
+      responses:
+        "204":
+          description: Webhook deleted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        OAuth 2.0 access token or personal access token.
+        Authorize: https://api.typeform.com/oauth/authorize
+        Token: https://api.typeform.com/oauth/token
+  parameters:
+    FormId:
+      in: path
+      name: form_id
+      required: true
+      schema: { type: string }
+      description: >-
+        Unique form id (from the form URL, e.g. u6nXL7 in
+        https://mysite.typeform.com/to/u6nXL7).
+    WebhookTag:
+      in: path
+      name: tag
+      required: true
+      schema: { type: string }
+      description: Unique name for the webhook on this form.
+  responses:
+    BadRequest:
+      description: Invalid query parameters or request body.
+    Unauthorized:
+      description: Missing or invalid access token.
+    NotFound:
+      description: Resource not found.
+  schemas:
+    Account:
+      type: object
+      description: Authenticated account profile from GET /me.
+      properties:
+        alias: { type: string }
+        email: { type: string, format: email }
+        language: { type: string }
+    FormList:
+      type: object
+      properties:
+        total_items: { type: integer }
+        page_count: { type: integer }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/FormSummary" }
+    FormSummary:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        created_at: { type: string, format: date-time }
+        last_updated_at: { type: string, format: date-time }
+        settings:
+          type: object
+          properties:
+            is_public: { type: boolean }
+        self:
+          type: object
+          properties:
+            href: { type: string, format: uri }
+        theme:
+          type: object
+          properties:
+            href: { type: string, format: uri }
+        _links:
+          type: object
+          properties:
+            display: { type: string, format: uri }
+            responses: { type: string, format: uri }
+    Form:
+      type: object
+      description: Full form resource (create/retrieve/update).
+      properties:
+        id: { type: string }
+        title: { type: string }
+        type: { type: string }
+        language: { type: string }
+        fields:
+          type: array
+          items: { type: object }
+        settings: { type: object }
+        theme: { type: object }
+        workspace: { type: object }
+        welcome_screens:
+          type: array
+          items: { type: object }
+        thankyou_screens:
+          type: array
+          items: { type: object }
+        logic:
+          type: array
+          items: { type: object }
+        hidden:
+          type: array
+          items: { type: string }
+        variables: { type: object }
+    FormWrite:
+      type: object
+      description: Request body for create/update form.
+      properties:
+        title: { type: string }
+        type: { type: string }
+        fields:
+          type: array
+          items: { type: object }
+        settings: { type: object }
+        theme: { type: object }
+        workspace: { type: object }
+        welcome_screens:
+          type: array
+          items: { type: object }
+        thankyou_screens:
+          type: array
+          items: { type: object }
+        logic:
+          type: array
+          items: { type: object }
+        hidden:
+          type: array
+          items: { type: string }
+        variables: { type: object }
+    ResponseList:
+      type: object
+      properties:
+        total_items: { type: integer }
+        page_count: { type: integer }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/FormResponse" }
+    FormResponse:
+      type: object
+      properties:
+        landing_id: { type: string }
+        token: { type: string }
+        response_id: { type: string }
+        landed_at: { type: string, format: date-time }
+        submitted_at: { type: string, format: date-time }
+        metadata: { type: object }
+        answers:
+          type: array
+          items: { type: object }
+        hidden: { type: object }
+        calculated: { type: object }
+        variables:
+          type: array
+          items: { type: object }
+    WebhookList:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Webhook" }
+    Webhook:
+      type: object
+      properties:
+        id: { type: string }
+        form_id: { type: string }
+        tag: { type: string }
+        url: { type: string, format: uri }
+        enabled: { type: boolean }
+        verify_ssl: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        event_types:
+          type: object
+          properties:
+            form_response: { type: boolean }
+            form_response_partial: { type: boolean }
+        secret:
+          type: string
+          description: HMAC secret used to sign deliveries (Typeform-Signature).
+    WebhookWrite:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Destination URL (must be https for new webhooks).
+        enabled: { type: boolean }
+        secret:
+          type: string
+          description: Secret used to sign payloads (HMAC SHA-256).
+        event_types:
+          type: object
+          properties:
+            form_response: { type: boolean }
+            form_response_partial: { type: boolean }
+        verify_ssl:
+          type: boolean
+          description: >-
+            Read-only / ignored on write — derived from the URL scheme
+            (https → true). See secure-your-webhooks docs.

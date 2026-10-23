@@ -1,0 +1,105 @@
+# Fenestra Document: Confluence Cloud (Atlassian Forge UI)
+#
+# Confluence Cloud exposes in-product UI extension points via Atlassian Forge
+# (UI Kit / Custom UI) and legacy Connect modules. Listed in
+# specs/fenestra/PLATFORMS.md on branch claude/fenestra-spec-draft-Q367t as
+# "Iframe + Coded".
+#
+# Sources:
+#   https://developer.atlassian.com/platform/forge/ui-kit/
+#   https://developer.atlassian.com/platform/forge/manifest-reference/modules/confluence-content-action/
+#   https://developer.atlassian.com/cloud/confluence/
+#
+# The @friggframework/api-module-confluence package implements the Platform REST
+# API (OAuth 3LO + spaces/pages/blogposts), not a Forge app. This draft documents
+# the host UI surface for agents that compose Confluence UI extensions.
+
+fenestra: "0.1.0"
+
+info:
+  title: Confluence Cloud Forge UI Extensions
+  version: "1.0.0"
+  description: |
+    Atlassian Forge apps can inject UI into Confluence Cloud using UI Kit
+    (`@forge/react`, render: native) or Custom UI (iframe + `@forge/bridge`).
+    Extension points are declared as Forge manifest modules (for example
+    `confluence:contentAction`, which adds a more-actions menu item that opens
+    a modal). Connect app modules remain documented for existing apps but new
+    Marketplace publishing for Connect is ending.
+
+    This document covers the published Forge UI Kit / Custom UI surface for
+    Confluence Cloud. It is not exhaustive of every Confluence Forge module.
+
+platform:
+  name: Confluence
+  vendor: Atlassian
+  documentation: https://developer.atlassian.com/cloud/confluence/
+  appMarketplace: https://marketplace.atlassian.com
+
+sdks:
+  forge-react:
+    name: Forge UI Kit (React)
+    packageManager: npm
+    package: "@forge/react"
+    platform: web
+    documentation: https://developer.atlassian.com/platform/forge/ui-kit/
+    description: |
+      Declarative UI Kit components rendered natively inside Confluence.
+      Requires `@forge/react` major version 10+ for the latest component APIs.
+    exports:
+      Text:
+        type: component
+        description: Body text
+      Button:
+        type: component
+        description: Interactive button
+      Modal:
+        type: component
+        description: Modal dialog container
+      Form:
+        type: component
+        description: Form layout
+  forge-bridge:
+    name: Forge Bridge
+    packageManager: npm
+    package: "@forge/bridge"
+    platform: web
+    documentation: https://developer.atlassian.com/platform/forge/apis-reference/ui-api-bridge/
+    description: |
+      Client bridge for Custom UI / UI Kit — routing, context, and
+      requestConfluence / view.getContext.
+    exports:
+      view:
+        type: utility
+        description: Host view context and close helpers
+      router:
+        type: utility
+        description: In-iframe navigation (required for clickable links in sandboxed iframes)
+      requestConfluence:
+        type: utility
+        description: Call Confluence REST APIs from the frontend
+
+extensionPoints:
+  - id: confluence-content-action
+    name: Content action
+    type: modal
+    extensionType: codedComponents
+    description: |
+      Adds a menu item to the more actions (•••) menu for pages and blog posts.
+      Clicking the item renders a modal (UI Kit native or Custom UI resource).
+    documentation: https://developer.atlassian.com/platform/forge/manifest-reference/modules/confluence-content-action/
+    supportedComponents:
+      - Text
+      - Button
+      - Modal
+      - Form
+
+  - id: confluence-custom-ui
+    name: Custom UI iframe
+    type: embedded
+    extensionType: iframe
+    description: |
+      Forge Custom UI modules render app HTML inside a sandboxed iframe.
+      Use `@forge/bridge` for navigation and product requests.
+    documentation: https://developer.atlassian.com/platform/forge/custom-ui/
+    supportedComponents: []

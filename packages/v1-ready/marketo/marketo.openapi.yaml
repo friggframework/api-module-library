@@ -1,0 +1,408 @@
+openapi: 3.0.3
+info:
+  title: Adobe Marketo Engage REST API (Frigg subset)
+  version: "1.0.0"
+  description: >-
+    Curated OpenAPI subset of the Adobe Marketo Engage REST API covering exactly
+    the endpoints implemented by @friggframework/api-module-marketo in api.js.
+    Source of truth for the hand-written client (one method per operationId).
+
+    Official docs:
+      - https://experienceleague.adobe.com/en/docs/marketo-developer/marketo/rest/authentication
+      - https://experienceleague.adobe.com/en/docs/marketo-developer/marketo/rest/rest-api
+      - https://experienceleague.adobe.com/en/docs/marketo-developer/marketo/rest/lead-database/leads
+      - https://experienceleague.adobe.com/en/docs/marketo-developer/marketo/rest/lead-database/list-membership
+      - https://experienceleague.adobe.com/en/docs/marketo-developer/marketo/rest/endpoint-reference
+
+    Auth is OAuth 2.0 client credentials against the Identity host
+    `https://{munchkinId}.mktorest.com/identity/oauth/token`. REST calls use
+    `Authorization: Bearer <access_token>`. The placeholder munchkinId
+    `000-AAA-000` matches the client's default baseUrl; real instances
+    substitute their Munchkin ID.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://000-AAA-000.mktorest.com/rest
+    description: Marketo REST API (placeholder munchkinId; replace with your instance)
+security:
+  - BearerAuth: []
+tags:
+  - name: Leads
+  - name: Lists
+  - name: List Membership
+paths:
+  /v1/lead/{id}.json:
+    parameters:
+      - $ref: "#/components/parameters/LeadId"
+    get:
+      tags: [Leads]
+      operationId: getLeadById
+      summary: Get Lead by Id
+      description: >-
+        Returns one lead record. Optional `fields` selects which API fields to
+        return; when omitted the response includes id, email, updatedAt,
+        createdAt, firstName, and lastName.
+      parameters:
+        - $ref: "#/components/parameters/Fields"
+      responses:
+        "200": { $ref: "#/components/responses/LeadResultResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /v1/leads.json:
+    get:
+      tags: [Leads]
+      operationId: getLeadsByFilterType
+      summary: Get Leads by Filter Type
+      description: >-
+        Required `filterType` and `filterValues` (comma-separated, up to 300).
+        `filterType` accepts searchable fields from Describe Lead2.
+      parameters:
+        - in: query
+          name: filterType
+          required: true
+          schema: { type: string }
+          description: Lead field to filter on (e.g. email, id).
+        - in: query
+          name: filterValues
+          required: true
+          schema: { type: string }
+          description: Comma-separated values (max 300).
+        - $ref: "#/components/parameters/Fields"
+        - $ref: "#/components/parameters/BatchSize"
+        - $ref: "#/components/parameters/NextPageToken"
+      responses:
+        "200": { $ref: "#/components/responses/LeadResultResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Leads]
+      operationId: syncLeads
+      summary: Sync Leads (create / update)
+      description: >-
+        Create and/or update up to 300 lead records. `action` defaults to
+        createOrUpdate; `lookupField` defaults to email.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SyncLeadsRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/SyncResultResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /v1/leads/delete.json:
+    post:
+      tags: [Leads]
+      operationId: deleteLeads
+      summary: Delete Leads
+      description: Delete up to 300 lead records by id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DeleteLeadsRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/SyncResultResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /v1/leads/describe2.json:
+    get:
+      tags: [Leads]
+      operationId: describeLeads
+      summary: Describe Lead (v2)
+      description: >-
+        Returns lead field metadata including which fields are searchable for
+        Get Leads by Filter Type.
+      responses:
+        "200":
+          description: Lead describe2 payload
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MarketoResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /v1/lists.json:
+    get:
+      tags: [Lists]
+      operationId: getLists
+      summary: Get Lists
+      description: Browse or filter static lists in the Lead Database.
+      parameters:
+        - in: query
+          name: id
+          schema: { type: integer }
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: programName
+          schema: { type: string }
+        - in: query
+          name: workspaceName
+          schema: { type: string }
+        - $ref: "#/components/parameters/BatchSize"
+        - $ref: "#/components/parameters/NextPageToken"
+      responses:
+        "200": { $ref: "#/components/responses/ListResultResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /v1/lists/{id}.json:
+    parameters:
+      - $ref: "#/components/parameters/ListId"
+    get:
+      tags: [Lists]
+      operationId: getListById
+      summary: Get List by Id
+      responses:
+        "200": { $ref: "#/components/responses/ListResultResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /v1/lists/{listId}/leads.json:
+    parameters:
+      - $ref: "#/components/parameters/ListIdPath"
+    get:
+      tags: [List Membership]
+      operationId: getLeadsByListId
+      summary: Get Leads by List Id
+      parameters:
+        - $ref: "#/components/parameters/BatchSize"
+        - $ref: "#/components/parameters/NextPageToken"
+        - $ref: "#/components/parameters/Fields"
+      responses:
+        "200": { $ref: "#/components/responses/LeadResultResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [List Membership]
+      operationId: addToList
+      summary: Add to List
+      description: >-
+        Add up to 300 leads to a static list. Lead ids are passed as repeated
+        `id` query parameters.
+      parameters:
+        - $ref: "#/components/parameters/RepeatedLeadIds"
+      responses:
+        "200": { $ref: "#/components/responses/MembershipResultResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [List Membership]
+      operationId: removeFromList
+      summary: Remove from List
+      description: >-
+        Remove up to 300 leads from a static list. Lead ids are passed as
+        repeated `id` query parameters.
+      parameters:
+        - $ref: "#/components/parameters/RepeatedLeadIds"
+      responses:
+        "200": { $ref: "#/components/responses/MembershipResultResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /v1/lists/{listId}/leads/ismember.json:
+    parameters:
+      - $ref: "#/components/parameters/ListIdPath"
+    get:
+      tags: [List Membership]
+      operationId: isMemberOfList
+      summary: Member of List
+      description: >-
+        Check whether up to 300 leads are members of a static list. Lead ids
+        are passed as repeated `id` query parameters.
+      parameters:
+        - $ref: "#/components/parameters/RepeatedLeadIds"
+      responses:
+        "200": { $ref: "#/components/responses/MembershipResultResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Marketo access token
+      description: >-
+        Obtained via GET {identity}/oauth/token?grant_type=client_credentials
+        &client_id=...&client_secret=...
+  parameters:
+    LeadId:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer }
+      description: Marketo lead id.
+    ListId:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer }
+      description: Marketo static list id.
+    ListIdPath:
+      in: path
+      name: listId
+      required: true
+      schema: { type: integer }
+      description: Marketo static list id.
+    Fields:
+      in: query
+      name: fields
+      schema: { type: string }
+      description: Comma-separated list of lead API field names to return.
+    BatchSize:
+      in: query
+      name: batchSize
+      schema: { type: integer, maximum: 300, default: 300 }
+    NextPageToken:
+      in: query
+      name: nextPageToken
+      schema: { type: string }
+    RepeatedLeadIds:
+      in: query
+      name: id
+      required: true
+      schema:
+        type: array
+        maxItems: 300
+        items: { type: integer }
+      style: form
+      explode: true
+      description: Repeated lead id query parameters (max 300).
+  responses:
+    LeadResultResponse:
+      description: Marketo success envelope with lead records.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/MarketoResponse"
+              - type: object
+                properties:
+                  result:
+                    type: array
+                    items: { $ref: "#/components/schemas/Lead" }
+                  nextPageToken: { type: string }
+    ListResultResponse:
+      description: Marketo success envelope with list records.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/MarketoResponse"
+              - type: object
+                properties:
+                  result:
+                    type: array
+                    items: { $ref: "#/components/schemas/List" }
+                  nextPageToken: { type: string }
+    SyncResultResponse:
+      description: Per-record status for sync/delete.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/MarketoResponse"
+              - type: object
+                properties:
+                  result:
+                    type: array
+                    items: { $ref: "#/components/schemas/SyncStatus" }
+    MembershipResultResponse:
+      description: Per-lead membership status.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/MarketoResponse"
+              - type: object
+                properties:
+                  result:
+                    type: array
+                    items: { $ref: "#/components/schemas/MembershipStatus" }
+    Unauthorized:
+      description: Missing or invalid Bearer token (or Marketo 601/602/603).
+  schemas:
+    MarketoResponse:
+      type: object
+      properties:
+        requestId: { type: string }
+        success: { type: boolean }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code: { type: string }
+              message: { type: string }
+        warnings:
+          type: array
+          items: { type: string }
+    Lead:
+      type: object
+      properties:
+        id: { type: integer }
+        email: { type: string, format: email }
+        firstName: { type: string }
+        lastName: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      additionalProperties: true
+    List:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        programName: { type: string }
+        workspaceName: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    SyncLeadsRequest:
+      type: object
+      required: [input]
+      properties:
+        action:
+          type: string
+          enum: [createOrUpdate, createOnly, updateOnly, createDuplicate]
+          default: createOrUpdate
+        lookupField:
+          type: string
+          default: email
+        partitionName: { type: string }
+        input:
+          type: array
+          maxItems: 300
+          items:
+            type: object
+            additionalProperties: true
+            properties:
+              id: { type: integer }
+              email: { type: string, format: email }
+              firstName: { type: string }
+              lastName: { type: string }
+    DeleteLeadsRequest:
+      type: object
+      required: [input]
+      properties:
+        input:
+          type: array
+          maxItems: 300
+          items:
+            type: object
+            required: [id]
+            properties:
+              id: { type: integer }
+    SyncStatus:
+      type: object
+      properties:
+        id: { type: integer }
+        status: { type: string }
+        reasons:
+          type: array
+          items:
+            type: object
+            properties:
+              code: { type: string }
+              message: { type: string }
+    MembershipStatus:
+      type: object
+      properties:
+        id: { type: integer }
+        status:
+          type: string
+          description: added | removed | memberof | notmemberof | skipped
+        reasons:
+          type: array
+          items:
+            type: object
+            properties:
+              code: { type: string }
+              message: { type: string }

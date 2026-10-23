@@ -1,0 +1,32 @@
+{
+  "name": "@friggframework/api-module-marketo",
+  "version": "1.0.0",
+  "description": "Adobe Marketo Engage API module that lets the Frigg Framework interact with Marketo leads, static lists, and list membership via the REST API (OAuth 2.0 client credentials)",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint:fix": "prettier --write --loglevel error . && eslint . --fix"
+  },
+  "keywords": [
+    "frigg",
+    "marketo",
+    "adobe",
+    "api-module",
+    "leads",
+    "marketing-automation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^2.0.0-next.107"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-scheduler": "^3.1113.0",
+    "dotenv": "^16.0.3",
+    "jest": "^28.1.3",
+    "js-yaml": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

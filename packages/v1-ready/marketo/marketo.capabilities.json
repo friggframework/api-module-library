@@ -1,0 +1,118 @@
+{
+  "schema": "capability-manifest/v0.1",
+  "module": "marketo",
+  "package": "@friggframework/api-module-marketo",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "grant": "client_credentials",
+    "methods": {
+      "getToken": "getTokenFromClientCredentials",
+      "testAuth": "describeLeads"
+    },
+    "credentials": ["client_id", "client_secret", "munchkin_id"],
+    "docs": "https://experienceleague.adobe.com/en/docs/marketo-developer/marketo/rest/authentication"
+  },
+  "objects": {
+    "lead": {
+      "description": "Marketo person / lead records in the Lead Database",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "email", "tags": ["pii", "identity", "lookup"] },
+        { "name": "firstName", "tags": ["pii"] },
+        { "name": "lastName", "tags": ["pii"] },
+        { "name": "createdAt", "tags": ["timestamp"] },
+        { "name": "updatedAt", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "get": {
+          "method": "getLeadById",
+          "spec": "marketo.openapi.yaml#/paths/~1v1~1lead~1{id}.json/get"
+        },
+        "list": {
+          "method": "getLeadsByFilterType",
+          "spec": "marketo.openapi.yaml#/paths/~1v1~1leads.json/get"
+        },
+        "create": {
+          "method": "syncLeads",
+          "spec": "marketo.openapi.yaml#/paths/~1v1~1leads.json/post",
+          "notes": "Use action=createOnly or createOrUpdate"
+        },
+        "update": {
+          "method": "syncLeads",
+          "spec": "marketo.openapi.yaml#/paths/~1v1~1leads.json/post",
+          "notes": "Use action=updateOnly or createOrUpdate"
+        },
+        "delete": {
+          "method": "deleteLeads",
+          "spec": "marketo.openapi.yaml#/paths/~1v1~1leads~1delete.json/post"
+        },
+        "describe": {
+          "method": "describeLeads",
+          "spec": "marketo.openapi.yaml#/paths/~1v1~1leads~1describe2.json/get"
+        }
+      }
+    },
+    "list": {
+      "description": "Marketo static lists (Lead Database)",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "name", "tags": ["display"] },
+        { "name": "description", "tags": [] },
+        { "name": "programName", "tags": [] },
+        { "name": "workspaceName", "tags": [] },
+        { "name": "createdAt", "tags": ["timestamp"] },
+        { "name": "updatedAt", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "getLists",
+          "spec": "marketo.openapi.yaml#/paths/~1v1~1lists.json/get"
+        },
+        "get": {
+          "method": "getListById",
+          "spec": "marketo.openapi.yaml#/paths/~1v1~1lists~1{id}.json/get"
+        }
+      }
+    },
+    "listMembership": {
+      "description": "Membership of leads in a static list",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "lead"] },
+        { "name": "status", "tags": ["enum"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "getLeadsByListId",
+          "spec": "marketo.openapi.yaml#/paths/~1v1~1lists~1{listId}~1leads.json/get"
+        },
+        "add": {
+          "method": "addToList",
+          "spec": "marketo.openapi.yaml#/paths/~1v1~1lists~1{listId}~1leads.json/post"
+        },
+        "remove": {
+          "method": "removeFromList",
+          "spec": "marketo.openapi.yaml#/paths/~1v1~1lists~1{listId}~1leads.json/delete"
+        },
+        "check": {
+          "method": "isMemberOfList",
+          "spec": "marketo.openapi.yaml#/paths/~1v1~1lists~1{listId}~1leads~1ismember.json/get"
+        }
+      }
+    }
+  },
+  "skipped": {
+    "webhooks": {
+      "reason": "Marketo webhooks are Smart Campaign outbound HTTP actions configured in the UI, not a REST subscription management API. There are no create/list/delete webhook subscription endpoints on the public REST API.",
+      "docs": "https://experienceleague.adobe.com/en/docs/marketo-developer/marketo/webhooks/webhooks"
+    },
+    "bulk": {
+      "reason": "Bulk import/export (/bulk/v1/...) omitted from this first v2 cut; prior v1 carried an unused bulk OpenAPI client. Revisit if an integration needs high-volume extract/load.",
+      "docs": "https://experienceleague.adobe.com/en/docs/marketo-developer/marketo/rest/bulk-endpoints"
+    },
+    "assets": {
+      "reason": "Asset APIs (programs, emails, forms, /asset/v1/staticLists) are out of scope for the core lead-database integration surface.",
+      "docs": "https://experienceleague.adobe.com/en/docs/marketo-developer/marketo/rest/assets/static-lists"
+    }
+  }
+}

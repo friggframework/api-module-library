@@ -1,0 +1,17 @@
+{
+    "name": "marketo",
+    "label": "Adobe Marketo Engage",
+    "productUrl": "https://experienceleague.adobe.com/en/docs/marketo",
+    "apiDocs": "https://experienceleague.adobe.com/en/docs/marketo-developer/marketo/rest/rest-api",
+    "logoUrl": "https://friggframework.org/assets/img/marketo-icon.jpeg",
+    "categories": [
+        "Marketing Automation"
+    ],
+    "description": "Adobe Marketo Engage REST API (leads, lists, list membership)",
+    "config": {
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

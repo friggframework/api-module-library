@@ -62,12 +62,12 @@ describe('ServiceNow Definition', () => {
             data: {
                 instance: 'dev99',
                 username: 'alice',
-                password: 's3cret',
+                password: 'test-password',
             },
         });
         expect(api.instance).toBe('dev99');
         expect(api.username).toBe('alice');
-        expect(api.password).toBe('s3cret');
+        expect(api.password).toBe('test-password');
         expect(api.isRefreshable).toBe(false);
         expect(result.username).toBe('alice');
     });

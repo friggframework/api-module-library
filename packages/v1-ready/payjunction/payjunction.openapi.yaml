@@ -1,0 +1,529 @@
+openapi: 3.0.3
+info:
+  title: PayJunction REST API (subset)
+  version: "1.0.0"
+  description: >-
+    Curated subset of PayJunction's REST API used by
+    @friggframework/api-module-payjunction. Paths and request shapes are taken
+    from PayJunction's public developer documentation
+    (https://developer.payjunction.com/). PayJunction does not publish a public
+    OpenAPI document; this file is the source of truth the hand-written client
+    in api.js mirrors 1:1 (one method per operationId).
+
+    Auth note: public docs document HTTP Basic (apiLogin:apiPassword) plus
+    X-PJ-Application-Key. This module also ports a partner Trinity OAuth2
+    authorization-code flow (Bearer access token + Application Key) from the
+    Left Hook source module.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.payjunction.com
+    description: PayJunction production API
+  - url: https://api.payjunctionlabs.com
+    description: PayJunction Labs (sandbox) API
+security:
+  - BearerAuth: []
+    ApplicationKey: []
+tags:
+  - name: Merchant
+  - name: Transactions
+  - name: Customers
+  - name: Invoices
+  - name: Settlements
+  - name: Deposits
+  - name: Terminals
+  - name: SmartTerminals
+  - name: Webhooks
+paths:
+  /merchant:
+    get:
+      tags: [Merchant]
+      operationId: getMerchant
+      summary: Retrieve merchant profile
+      description: >-
+        Returns company name, address, and `id` (Pj-Merchant UUID used in
+        webhook headers).
+        Docs: https://developer.payjunction.com/hc/en-us/articles/12090782110619-GET-merchant
+      responses:
+        "200":
+          description: Merchant profile
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /transactions:
+    get:
+      tags: [Transactions]
+      operationId: listTransactions
+      summary: Search / list transactions
+      description: >-
+        Docs: https://developer.payjunction.com/hc/en-us/articles/1260802694490-GET-transactions-query-parameters
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - in: query
+          name: action
+          schema: { type: string, enum: [CHARGE, REFUND, VERIFY] }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: terminalId
+          schema: { type: integer }
+        - in: query
+          name: settlementId
+          schema: { type: integer }
+        - in: query
+          name: startDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: endDate
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated transaction results
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Transactions]
+      operationId: createTransaction
+      summary: Create a transaction (CHARGE / REFUND / VERIFY)
+      description: >-
+        Form-urlencoded body. Docs:
+        https://developer.payjunction.com/hc/en-us/articles/216477407-POST-transactions
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                action: { type: string }
+                amountBase: { type: string }
+                cardNumber: { type: string }
+                cardExpMonth: { type: string }
+                cardExpYear: { type: string }
+                cardCvv: { type: string }
+                tokenId: { type: string }
+                terminalId: { type: integer }
+      responses:
+        "200":
+          description: Transaction result
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /transactions/{transactionId}:
+    get:
+      tags: [Transactions]
+      operationId: getTransaction
+      summary: Retrieve a transaction
+      parameters:
+        - $ref: "#/components/parameters/TransactionId"
+      responses:
+        "200":
+          description: Transaction
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /transactions/{transactionId}/receipts/latest:
+    get:
+      tags: [Transactions]
+      operationId: getTransactionReceipt
+      summary: Retrieve the latest receipt for a transaction
+      parameters:
+        - $ref: "#/components/parameters/TransactionId"
+        - in: query
+          name: format
+          schema: { type: string, default: HTML }
+      responses:
+        "200":
+          description: Receipt
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /customers:
+    get:
+      tags: [Customers]
+      operationId: listCustomers
+      summary: List customers
+      description: >-
+        Docs: https://developer.payjunction.com/hc/en-us/articles/232222208-GET-customers-query-parameters
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - in: query
+          name: firstName
+          schema: { type: string }
+        - in: query
+          name: lastName
+          schema: { type: string }
+        - in: query
+          name: companyName
+          schema: { type: string }
+        - in: query
+          name: identifier
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated customer results
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: Create a customer
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+                companyName: { type: string }
+                identifier: { type: string }
+                email: { type: string }
+      responses:
+        "200":
+          description: Created customer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /customers/{customerId}:
+    get:
+      tags: [Customers]
+      operationId: getCustomer
+      summary: Retrieve a customer
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+      responses:
+        "200":
+          description: Customer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Customers]
+      operationId: updateCustomer
+      summary: Update a customer
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated customer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /invoices:
+    get:
+      tags: [Invoices]
+      operationId: listInvoices
+      summary: List invoices
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Paginated invoice results
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Invoices]
+      operationId: createInvoice
+      summary: Create and send an invoice
+      description: >-
+        Form-urlencoded body. Docs:
+        https://developer.payjunction.com/hc/en-us/articles/1260800368569-POST-invoices
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [amountBase, terminalId]
+              additionalProperties: true
+              properties:
+                amountBase: { type: string }
+                customerEmail: { type: string }
+                customerPhone: { type: string }
+                customerFirstName: { type: string }
+                customerLastName: { type: string }
+                terminalId: { type: integer }
+                notificationType:
+                  type: string
+                  enum: [EMAIL, TEXT, BOTH, NONE]
+      responses:
+        "200":
+          description: Created invoice
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /invoices/{invoiceId}:
+    get:
+      tags: [Invoices]
+      operationId: getInvoice
+      summary: Retrieve an invoice
+      parameters:
+        - $ref: "#/components/parameters/InvoiceId"
+      responses:
+        "200":
+          description: Invoice
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /settlements:
+    get:
+      tags: [Settlements]
+      operationId: listSettlements
+      summary: List settlements
+      description: >-
+        Docs: https://developer.payjunction.com/hc/en-us/articles/360008644993-GET-settlements-offset-index
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - in: query
+          name: terminalId
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Paginated settlement results
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /settlements/{settlementId}:
+    get:
+      tags: [Settlements]
+      operationId: getSettlement
+      summary: Retrieve a settlement
+      parameters:
+        - $ref: "#/components/parameters/SettlementId"
+      responses:
+        "200":
+          description: Settlement
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /deposits:
+    get:
+      tags: [Deposits]
+      operationId: listDeposits
+      summary: List deposits
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Paginated deposit results
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /deposits/{depositId}:
+    get:
+      tags: [Deposits]
+      operationId: getDeposit
+      summary: Retrieve a deposit
+      description: >-
+        Docs: https://developer.payjunction.com/hc/en-us/articles/360009731153-GET-deposits-depositId
+      parameters:
+        - $ref: "#/components/parameters/DepositId"
+      responses:
+        "200":
+          description: Deposit
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /terminals:
+    get:
+      tags: [Terminals]
+      operationId: listTerminals
+      summary: List terminals / accounts
+      description: >-
+        Docs: https://developer.payjunction.com/hc/en-us/articles/360005458674-GET-terminals
+      responses:
+        "200":
+          description: Terminal results
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /smartterminals:
+    get:
+      tags: [SmartTerminals]
+      operationId: listSmartTerminals
+      summary: List Smart Terminals
+      description: >-
+        Docs: https://developer.payjunction.com/hc/en-us/articles/221121127-GET-smartterminals
+      responses:
+        "200":
+          description: Smart Terminal results
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List webhook subscriptions
+      description: >-
+        Docs: https://developer.payjunction.com/hc/en-us/articles/115004486287-Available-Webhooks
+      responses:
+        "200":
+          description: Webhook subscriptions
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a webhook subscription
+      description: >-
+        Form-urlencoded. Max 10 subscriptions per PJMID.
+        Docs: https://developer.payjunction.com/hc/en-us/articles/219594068-POST-webhooks
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [event, url]
+              properties:
+                event:
+                  type: string
+                  enum:
+                    - CUSTOMER
+                    - DEPOSIT
+                    - SETTLEMENT
+                    - SMARTTERMINAL_REQUEST
+                    - TRANSACTION
+                    - TRANSACTION_SIGNATURE
+                url:
+                  type: string
+                  format: uri
+                secret:
+                  type: string
+                  description: >-
+                    When set, deliveries include X-Pj-Signature (HMAC-SHA256 of
+                    the JSON body).
+      responses:
+        "200":
+          description: Created webhook
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /webhooks/{webhookId}:
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update a webhook subscription
+      description: >-
+        Docs: https://developer.payjunction.com/hc/en-us/articles/219594268-PUT-webhooks-webhookId
+      parameters:
+        - $ref: "#/components/parameters/WebhookId"
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                url: { type: string, format: uri }
+                secret: { type: string }
+      responses:
+        "200":
+          description: Updated webhook
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook subscription
+      parameters:
+        - $ref: "#/components/parameters/WebhookId"
+      responses:
+        "200":
+          description: Deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        Partner Trinity OAuth2 access token. Public docs alternatively use
+        HTTP Basic (apiLogin:apiPassword).
+    ApplicationKey:
+      type: apiKey
+      in: header
+      name: X-PJ-Application-Key
+      description: >-
+        Application key identifying the integrating application.
+        Docs: https://developer.payjunction.com/hc/en-us/articles/216477387-Application-Keys
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: Public-docs API User login and password.
+  parameters:
+    Limit:
+      in: query
+      name: limit
+      schema: { type: integer, maximum: 50, default: 50 }
+    Offset:
+      in: query
+      name: offset
+      schema: { type: integer, default: 0 }
+    TransactionId:
+      in: path
+      name: transactionId
+      required: true
+      schema: { type: integer }
+    CustomerId:
+      in: path
+      name: customerId
+      required: true
+      schema: { type: integer }
+    InvoiceId:
+      in: path
+      name: invoiceId
+      required: true
+      schema: { type: string }
+    SettlementId:
+      in: path
+      name: settlementId
+      required: true
+      schema: { type: integer }
+    DepositId:
+      in: path
+      name: depositId
+      required: true
+      schema: { type: string }
+    WebhookId:
+      in: path
+      name: webhookId
+      required: true
+      schema: { type: string }
+  responses:
+    Unauthorized:
+      description: Missing or invalid credentials / application key
+    NotFound:
+      description: Resource not found

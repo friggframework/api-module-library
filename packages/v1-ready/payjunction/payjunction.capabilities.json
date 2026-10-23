@@ -1,0 +1,297 @@
+{
+  "schema": "capability-manifest/v0.1",
+  "module": "payjunction",
+  "package": "@friggframework/api-module-payjunction",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "grant": "authorization_code",
+    "tokenAuth": "http_basic_client_credentials",
+    "apiAuth": "bearer_plus_application_key",
+    "headers": ["Authorization", "X-PJ-Application-Key"],
+    "scope": "read write",
+    "scopeStatus": "UNVALIDATED",
+    "identityMethod": "GET /merchant → id (Pj-Merchant)",
+    "entityKey": "id",
+    "credentialFields": [
+      "access_token",
+      "refresh_token",
+      "accessTokenExpire",
+      "refreshTokenExpire",
+      "app_key"
+    ],
+    "authorizeUrl": "https://www.payjunction.com/trinity/oauth/authorize",
+    "tokenUrl": "https://www.payjunction.com/trinity/oauth/token",
+    "docs": "https://developer.payjunction.com/hc/en-us/articles/218162588-User-Authentication",
+    "notes": "Public developer portal documents HTTP Basic (apiLogin:apiPassword) + Application Key. This module ports partner Trinity OAuth2 (Bearer + Application Key) from the Left Hook source."
+  },
+  "objects": {
+    "merchant": {
+      "methods": ["getMerchant"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "companyDba", "tags": ["display", "company"] },
+        { "name": "companyLegal", "tags": ["display", "company"] },
+        { "name": "phone1", "tags": ["contact"] },
+        { "name": "address", "tags": ["address"] }
+      ]
+    },
+    "customer": {
+      "methods": [
+        "listCustomers",
+        "getCustomer",
+        "createCustomer",
+        "updateCustomer"
+      ],
+      "fields": [
+        { "name": "customerId", "tags": ["identifier"] },
+        { "name": "firstName", "tags": ["pii", "contact"] },
+        { "name": "lastName", "tags": ["pii", "contact"] },
+        { "name": "companyName", "tags": ["display", "company"] },
+        { "name": "identifier", "tags": ["identifier"] },
+        { "name": "email", "tags": ["pii", "contact"] },
+        { "name": "created", "tags": ["timestamp"] },
+        { "name": "lastModified", "tags": ["timestamp"] }
+      ]
+    },
+    "transaction": {
+      "methods": [
+        "listTransactions",
+        "getTransaction",
+        "createTransaction",
+        "getTransactionReceipt"
+      ],
+      "fields": [
+        { "name": "transactionId", "tags": ["identifier"] },
+        { "name": "action", "tags": ["enum"] },
+        { "name": "status", "tags": ["lifecycle"] },
+        { "name": "amountBase", "tags": ["money"] },
+        { "name": "amountTotal", "tags": ["money"] },
+        { "name": "terminalId", "tags": ["relation"] },
+        { "name": "settlementId", "tags": ["relation"] },
+        { "name": "created", "tags": ["timestamp"] }
+      ]
+    },
+    "invoice": {
+      "methods": ["listInvoices", "getInvoice", "createInvoice"],
+      "fields": [
+        { "name": "invoiceId", "tags": ["identifier"] },
+        { "name": "invoiceNumber", "tags": ["identifier"] },
+        { "name": "status", "tags": ["lifecycle"] },
+        { "name": "amountBase", "tags": ["money"] },
+        { "name": "amountTotal", "tags": ["money"] },
+        { "name": "customerEmail", "tags": ["pii", "contact"] },
+        { "name": "terminalId", "tags": ["relation"] },
+        { "name": "transactionId", "tags": ["relation"] },
+        { "name": "hostedInvoiceUrl", "tags": ["uri"] },
+        { "name": "created", "tags": ["timestamp"] }
+      ]
+    },
+    "settlement": {
+      "methods": ["listSettlements", "getSettlement"],
+      "fields": [
+        { "name": "settlementId", "tags": ["identifier"] },
+        { "name": "terminalId", "tags": ["relation"] },
+        { "name": "amountNet", "tags": ["money"] },
+        { "name": "status", "tags": ["lifecycle"] },
+        { "name": "created", "tags": ["timestamp"] }
+      ]
+    },
+    "deposit": {
+      "methods": ["listDeposits", "getDeposit"],
+      "fields": [
+        { "name": "depositId", "tags": ["identifier"] }
+      ]
+    },
+    "terminal": {
+      "methods": ["listTerminals"],
+      "fields": [
+        { "name": "terminalId", "tags": ["identifier"] },
+        { "name": "accountId", "tags": ["identifier"] }
+      ]
+    },
+    "smartTerminal": {
+      "methods": ["listSmartTerminals"],
+      "fields": [
+        { "name": "smartTerminalId", "tags": ["identifier"] },
+        { "name": "serialNumber", "tags": ["identifier"] },
+        { "name": "nickName", "tags": ["display"] },
+        { "name": "created", "tags": ["timestamp"] }
+      ]
+    },
+    "webhook": {
+      "methods": [
+        "listWebhooks",
+        "createWebhook",
+        "updateWebhook",
+        "deleteWebhook"
+      ],
+      "fields": [
+        { "name": "webhookId", "tags": ["identifier"] },
+        { "name": "events", "tags": ["enum", "webhook"] },
+        { "name": "url", "tags": ["uri"] },
+        { "name": "created", "tags": ["timestamp"] }
+      ]
+    }
+  },
+  "capabilities": {
+    "merchant.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getMerchant"
+      },
+      "spec": {
+        "kind": "openapi",
+        "ref": "./payjunction.openapi.yaml#/paths/~1merchant/get"
+      }
+    },
+    "customer.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listCustomers"
+      }
+    },
+    "customer.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getCustomer"
+      }
+    },
+    "customer.create": {
+      "surface": "data-write",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.createCustomer"
+      }
+    },
+    "customer.update": {
+      "surface": "data-write",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.updateCustomer"
+      }
+    },
+    "transaction.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listTransactions"
+      }
+    },
+    "transaction.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getTransaction"
+      }
+    },
+    "transaction.create": {
+      "surface": "data-write",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.createTransaction"
+      }
+    },
+    "transaction.receipt.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getTransactionReceipt"
+      }
+    },
+    "invoice.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listInvoices"
+      }
+    },
+    "invoice.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getInvoice"
+      }
+    },
+    "invoice.create": {
+      "surface": "data-write",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.createInvoice"
+      }
+    },
+    "settlement.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listSettlements"
+      }
+    },
+    "settlement.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getSettlement"
+      }
+    },
+    "deposit.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listDeposits"
+      }
+    },
+    "deposit.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getDeposit"
+      }
+    },
+    "terminal.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listTerminals"
+      }
+    },
+    "smartTerminal.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listSmartTerminals"
+      }
+    },
+    "webhook.list": {
+      "surface": "webhook",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listWebhooks"
+      }
+    },
+    "webhook.create": {
+      "surface": "webhook",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.createWebhook"
+      }
+    },
+    "webhook.update": {
+      "surface": "webhook",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.updateWebhook"
+      }
+    },
+    "webhook.delete": {
+      "surface": "webhook",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.deleteWebhook"
+      }
+    }
+  }
+}

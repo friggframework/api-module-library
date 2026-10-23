@@ -1,0 +1,322 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "aes",
+  "label": "AES (Auction Conductor)",
+  "package": "@friggframework/api-module-aes",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "AES organization authenticated by ConductorLink API key. Identity is an MD5 fingerprint of the API key; display name prefers the first organization event title when available.",
+    "fields": [
+      {
+        "name": "externalId",
+        "type": "id",
+        "description": "MD5 hex digest of the organization API key"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "Friendly org label (first event_title or 'AES Organization')"
+      }
+    ]
+  },
+  "objects": {
+    "event": {
+      "label": "Event",
+      "description": "Auction / fundraising event",
+      "fields": [
+        { "name": "event_id", "type": "id", "readOnly": true },
+        { "name": "event_title", "type": "string", "tag": "record.name" }
+      ],
+      "sync": {
+        "id": "event_id",
+        "list": {
+          "capability": "event.list",
+          "items": "$",
+          "paging": "none"
+        },
+        "get": { "capability": "event.get", "id": "event_id" }
+      }
+    },
+    "contributor": {
+      "label": "Contributor",
+      "description": "Person involved with the organization or an event (Patron, Attendee, Sponsor, Volunteer, Donor, etc.)",
+      "fields": [
+        { "name": "contributor_id", "type": "id", "readOnly": true },
+        { "name": "first_name", "type": "string", "tag": "person.givenName" },
+        { "name": "last_name", "type": "string", "tag": "person.familyName" },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "cell", "type": "phone", "tag": "contact.phone" },
+        { "name": "phone", "type": "phone", "tag": "contact.phone" },
+        { "name": "company", "type": "string", "tag": "organization.name" },
+        { "name": "title", "type": "string" },
+        { "name": "address1", "type": "string", "tag": "address.street" },
+        { "name": "city", "type": "string", "tag": "address.city" },
+        { "name": "state", "type": "string", "tag": "address.region" },
+        { "name": "zip", "type": "string", "tag": "address.postalCode" },
+        { "name": "website", "type": "string", "tag": "organization.domain" }
+      ],
+      "sync": {
+        "id": "contributor_id",
+        "list": {
+          "capability": "contributor.list",
+          "items": "$",
+          "paging": "none"
+        },
+        "get": { "capability": "contributor.get", "id": "contributor_id" },
+        "create": { "capability": "contributor.create", "body": "contributor" },
+        "update": {
+          "capability": "contributor.update",
+          "body": "contributor"
+        },
+        "delete": {
+          "capability": "contributor.delete",
+          "id": "contributor_id"
+        }
+      }
+    },
+    "eventContributor": {
+      "label": "Event Contributor",
+      "description": "Event-scoped contributor record (bidder number, types, household)",
+      "fields": [
+        { "name": "event_contributor_id", "type": "id", "readOnly": true },
+        { "name": "contributor_id", "type": "id" },
+        { "name": "event_id", "type": "id" },
+        { "name": "bidder_number", "type": "string" },
+        { "name": "contributor_types", "type": "string" },
+        { "name": "household_id", "type": "id" },
+        { "name": "household_name", "type": "string" },
+        { "name": "group_id", "type": "id" },
+        { "name": "is_billing", "type": "boolean" }
+      ],
+      "sync": {
+        "id": "event_contributor_id",
+        "get": {
+          "capability": "eventContributor.get",
+          "id": "event_contributor_id"
+        },
+        "create": {
+          "capability": "eventContributor.create",
+          "body": "eventContributor"
+        },
+        "update": {
+          "capability": "eventContributor.update",
+          "body": "eventContributor"
+        },
+        "delete": {
+          "capability": "eventContributor.delete",
+          "id": "event_contributor_id"
+        }
+      }
+    },
+    "package": {
+      "label": "Package",
+      "description": "Item/package sold at an event (silent, live, fixed price, tickets, etc.)",
+      "fields": [
+        { "name": "event_id", "type": "id" }
+      ],
+      "sync": {
+        "list": {
+          "capability": "package.list",
+          "items": "$",
+          "paging": "none"
+        }
+      }
+    },
+    "packageCategory": {
+      "label": "Package Category",
+      "description": "Category that assigns friendly package number ranges",
+      "fields": [
+        { "name": "event_id", "type": "id" }
+      ],
+      "sync": {
+        "list": {
+          "capability": "packageCategory.list",
+          "items": "$",
+          "paging": "none"
+        }
+      }
+    },
+    "sale": {
+      "label": "Sale",
+      "description": "Purchase or winning bid for a closed package",
+      "fields": [
+        { "name": "event_id", "type": "id" }
+      ],
+      "sync": {
+        "list": {
+          "capability": "sale.list",
+          "items": "$",
+          "paging": "none"
+        }
+      }
+    },
+    "payment": {
+      "label": "Payment",
+      "description": "Cash, check, or credit card payment collected in AES",
+      "fields": [
+        { "name": "event_id", "type": "id" }
+      ],
+      "sync": {
+        "list": {
+          "capability": "payment.list",
+          "items": "$",
+          "paging": "none"
+        }
+      }
+    },
+    "activity": {
+      "label": "Activity",
+      "description": "Combined contributor, sale, and payment data for one event contributor",
+      "fields": [
+        { "name": "event_contributor_id", "type": "id" }
+      ],
+      "sync": {
+        "get": {
+          "capability": "activity.get",
+          "id": "event_contributor_id"
+        }
+      }
+    }
+  },
+  "events": {
+    "MicrositeCheckout": {
+      "source": "webhook",
+      "object": "eventContributor",
+      "action": "updated",
+      "description": "Vendor-configured webhook fired when a Contributor checks out successfully from the event Microsite only. Not managed via ConductorLink REST (no subscribe/list/delete API documented)."
+    }
+  },
+  "capabilities": {
+    "event.get": {
+      "kind": "read",
+      "method": "getEvent",
+      "input": { "eventId": { "type": "integer", "required": true } },
+      "output": "event",
+      "args": ["eventId"]
+    },
+    "event.list": {
+      "kind": "list",
+      "method": "getOrganizationEvents",
+      "output": "event[]",
+      "args": []
+    },
+    "contributor.get": {
+      "kind": "read",
+      "method": "getContributor",
+      "input": { "contributorId": { "type": "integer", "required": true } },
+      "output": "contributor",
+      "args": ["contributorId"]
+    },
+    "contributor.list": {
+      "kind": "list",
+      "method": "getContributors",
+      "input": { "eventId": { "type": "integer", "required": true } },
+      "output": "contributor[]",
+      "args": ["eventId"]
+    },
+    "contributor.create": {
+      "kind": "create",
+      "method": "createContributor",
+      "input": { "contributor": { "type": "object", "required": true } },
+      "output": "contributor",
+      "args": ["data"]
+    },
+    "contributor.update": {
+      "kind": "update",
+      "method": "updateContributor",
+      "input": { "contributor": { "type": "object", "required": true } },
+      "output": "contributor",
+      "args": ["data"]
+    },
+    "contributor.delete": {
+      "kind": "delete",
+      "method": "deleteContributor",
+      "input": { "contributorId": { "type": "integer", "required": true } },
+      "args": ["contributorId"]
+    },
+    "eventContributor.get": {
+      "kind": "read",
+      "method": "getEventContributor",
+      "input": {
+        "eventContributorId": { "type": "integer", "required": true }
+      },
+      "output": "eventContributor",
+      "args": ["eventContributorId"]
+    },
+    "eventContributor.create": {
+      "kind": "create",
+      "method": "createEventContributor",
+      "input": { "eventContributor": { "type": "object", "required": true } },
+      "output": "eventContributor",
+      "args": ["data"]
+    },
+    "eventContributor.update": {
+      "kind": "update",
+      "method": "updateEventContributor",
+      "input": { "eventContributor": { "type": "object", "required": true } },
+      "output": "eventContributor",
+      "args": ["data"]
+    },
+    "eventContributor.delete": {
+      "kind": "delete",
+      "method": "deleteEventContributor",
+      "input": {
+        "eventContributorId": { "type": "integer", "required": true }
+      },
+      "args": ["eventContributorId"]
+    },
+    "eventContributor.associate": {
+      "kind": "action",
+      "method": "associateEventContributors",
+      "input": { "association": { "type": "object", "required": true } },
+      "args": ["data"]
+    },
+    "activity.get": {
+      "kind": "read",
+      "method": "getActivity",
+      "input": {
+        "eventContributorId": { "type": "integer", "required": true }
+      },
+      "output": "activity",
+      "args": ["eventContributorId"]
+    },
+    "sale.list": {
+      "kind": "list",
+      "method": "getSales",
+      "input": { "eventId": { "type": "integer", "required": true } },
+      "output": "sale[]",
+      "args": ["eventId"]
+    },
+    "payment.list": {
+      "kind": "list",
+      "method": "getPayments",
+      "input": { "eventId": { "type": "integer", "required": true } },
+      "output": "payment[]",
+      "args": ["eventId", "paymentTypes"]
+    },
+    "package.list": {
+      "kind": "list",
+      "method": "getPackages",
+      "input": { "eventId": { "type": "integer", "required": true } },
+      "output": "package[]",
+      "args": ["eventId"]
+    },
+    "packageCategory.list": {
+      "kind": "list",
+      "method": "getPackageCategories",
+      "input": { "eventId": { "type": "integer", "required": true } },
+      "output": "packageCategory[]",
+      "args": ["eventId"]
+    },
+    "event.lock": {
+      "kind": "action",
+      "method": "lockEvent",
+      "input": {
+        "eventId": { "type": "integer", "required": true },
+        "lock": { "type": "boolean" }
+      },
+      "args": ["eventId", "lock"]
+    }
+  }
+}

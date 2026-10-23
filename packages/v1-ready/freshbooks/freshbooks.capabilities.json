@@ -1,0 +1,383 @@
+{
+  "schema": "capability-manifest/v0.1",
+  "module": "freshbooks",
+  "package": "@friggframework/api-module-freshbooks",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "grant": "authorization_code",
+    "authorizationUrl": "https://auth.freshbooks.com/oauth/authorize/",
+    "tokenUrl": "https://api.freshbooks.com/auth/oauth/token",
+    "refresh": {
+      "grant": "refresh_token",
+      "rotatesRefreshToken": true,
+      "notes": "Refresh tokens are one-time-use; each refresh invalidates the previous refresh_token and access_token."
+    },
+    "scopes": [
+      "user:profile:read",
+      "user:clients:read",
+      "user:clients:write",
+      "user:invoices:read",
+      "user:invoices:write",
+      "user:expenses:read",
+      "user:expenses:write",
+      "user:payments:read",
+      "user:payments:write",
+      "user:other_income:read",
+      "user:other_income:write",
+      "user:bill_vendors:read",
+      "user:bill_vendors:write",
+      "user:teams:read"
+    ],
+    "identityMethod": "getUserDetails",
+    "entityKey": "accountId",
+    "credentialFields": ["access_token", "refresh_token", "freshbooksUserId"],
+    "tokenBody": "application/json",
+    "singleUseGrants": true
+  },
+  "objects": {
+    "identity": {
+      "methods": [
+        "getUserDetails",
+        "getUserInfo",
+        "getUserEmail",
+        "listBusinessAccounts",
+        "retrieveAccounts"
+      ],
+      "fields": [
+        { "name": "id", "tags": ["identifier", "identity"] },
+        { "name": "email", "tags": ["pii", "identity"] },
+        { "name": "first_name", "tags": ["pii"] },
+        { "name": "last_name", "tags": ["pii"] },
+        {
+          "name": "business_memberships[].business.account_id",
+          "tags": ["identifier", "account"]
+        },
+        {
+          "name": "business_memberships[].business.id",
+          "tags": ["identifier", "business"]
+        },
+        {
+          "name": "business_memberships[].business.name",
+          "tags": ["display"]
+        }
+      ]
+    },
+    "client": {
+      "methods": [
+        "listClients",
+        "getClient",
+        "getClientById",
+        "findClientsByEmail",
+        "searchClientByEmail",
+        "createClient",
+        "updateClient"
+      ],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "userid", "tags": ["identifier"] },
+        { "name": "email", "tags": ["pii", "contact"] },
+        { "name": "fname", "tags": ["pii", "contact"] },
+        { "name": "lname", "tags": ["pii", "contact"] },
+        { "name": "organization", "tags": ["display", "company"] },
+        { "name": "currency_code", "tags": ["money"] },
+        { "name": "vis_state", "tags": ["lifecycle"] },
+        { "name": "updated", "tags": ["timestamp"] }
+      ]
+    },
+    "invoice": {
+      "methods": [
+        "listInvoices",
+        "listClientInvoices",
+        "getClientInvoices",
+        "getInvoice",
+        "getInvoiceById",
+        "createInvoice",
+        "updateInvoice",
+        "deleteInvoice",
+        "invoiceStatusName"
+      ],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "invoiceid", "tags": ["identifier"] },
+        { "name": "customerid", "tags": ["relation", "client"] },
+        { "name": "status", "tags": ["lifecycle"] },
+        { "name": "amount", "tags": ["money"] },
+        { "name": "create_date", "tags": ["timestamp"] },
+        { "name": "vis_state", "tags": ["lifecycle"] }
+      ]
+    },
+    "expense": {
+      "methods": [
+        "listExpenses",
+        "getExpense",
+        "createExpense",
+        "updateExpense"
+      ],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "expenseid", "tags": ["identifier"] },
+        { "name": "amount", "tags": ["money", "required-on-create"] },
+        { "name": "categoryid", "tags": ["relation", "required-on-create"] },
+        { "name": "staffid", "tags": ["relation", "required-on-create"] },
+        { "name": "date", "tags": ["timestamp", "required-on-create"] },
+        { "name": "vendor", "tags": ["display"] },
+        { "name": "notes", "tags": ["freeform"] },
+        { "name": "vis_state", "tags": ["lifecycle"] }
+      ]
+    },
+    "expense_category": {
+      "methods": ["listExpenseCategories", "getExpenseCategory"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "categoryid", "tags": ["identifier"] },
+        { "name": "category", "tags": ["display"] },
+        { "name": "parentid", "tags": ["relation"] },
+        { "name": "vis_state", "tags": ["lifecycle"] }
+      ]
+    },
+    "payment": {
+      "methods": [
+        "listPayments",
+        "listClientPayments",
+        "getClientPayments",
+        "getPayment",
+        "getPaymentById",
+        "createPayment",
+        "updatePayment"
+      ],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "invoiceid", "tags": ["relation", "invoice"] },
+        { "name": "clientid", "tags": ["relation", "client"] },
+        { "name": "amount", "tags": ["money"] },
+        { "name": "date", "tags": ["timestamp"] },
+        { "name": "type", "tags": ["enum"] },
+        { "name": "vis_state", "tags": ["lifecycle"] }
+      ]
+    },
+    "staff": {
+      "methods": ["listStaff", "getStaff"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "email", "tags": ["pii", "contact"] },
+        { "name": "fname", "tags": ["pii"] },
+        { "name": "lname", "tags": ["pii"] }
+      ]
+    },
+    "other_income": {
+      "methods": [
+        "listOtherIncomes",
+        "getOtherIncome",
+        "createOtherIncome",
+        "updateOtherIncome"
+      ],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "amount", "tags": ["money"] },
+        { "name": "date", "tags": ["timestamp"] },
+        { "name": "source", "tags": ["display"] }
+      ]
+    },
+    "bill_vendor": {
+      "methods": [
+        "listBillVendors",
+        "createBillVendor",
+        "updateBillVendor"
+      ],
+      "fields": [
+        { "name": "vendorid", "tags": ["identifier"] },
+        { "name": "vendor_name", "tags": ["display", "required-on-create"] },
+        { "name": "website", "tags": ["url"] },
+        { "name": "currency_code", "tags": ["money"] },
+        { "name": "vis_state", "tags": ["lifecycle"] }
+      ]
+    },
+    "callback": {
+      "methods": [
+        "listCallbacks",
+        "getCallback",
+        "createCallback",
+        "createEventCallback",
+        "verifyCallback",
+        "verifyEventCallback",
+        "resendCallbackVerification",
+        "deleteCallback",
+        "deleteEventCallback"
+      ],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "callbackid", "tags": ["identifier"] },
+        { "name": "event", "tags": ["enum", "webhook"] },
+        { "name": "uri", "tags": ["url"] },
+        { "name": "verified", "tags": ["lifecycle"] }
+      ]
+    }
+  },
+  "capabilities": {
+    "accounting.identity.read": {
+      "surface": "data-read",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.getUserDetails" },
+      "spec": {
+        "kind": "openapi",
+        "ref": "./freshbooks.openapi.yaml#/paths/~1auth~1api~1v1~1users~1me/get"
+      }
+    },
+    "accounting.client.find_by_email": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.findClientsByEmail"
+      }
+    },
+    "accounting.invoice.list_for_client": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listClientInvoices"
+      }
+    },
+    "accounting.payment.list_for_client": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listClientPayments"
+      }
+    },
+    "accounting.webhook.get": {
+      "surface": "webhook-source",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.getCallback" }
+    },
+    "accounting.client.list": {
+      "surface": "data-read",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.listClients" },
+      "spec": {
+        "kind": "openapi",
+        "ref": "./freshbooks.openapi.yaml#/paths/~1accounting~1account~1{accountId}~1users~1clients/get"
+      }
+    },
+    "accounting.client.get": {
+      "surface": "data-read",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.getClient" }
+    },
+    "accounting.client.create": {
+      "surface": "data-write",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.createClient" }
+    },
+    "accounting.client.update": {
+      "surface": "data-write",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.updateClient" }
+    },
+    "accounting.invoice.list": {
+      "surface": "data-read",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.listInvoices" }
+    },
+    "accounting.invoice.get": {
+      "surface": "data-read",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.getInvoice" }
+    },
+    "accounting.invoice.create": {
+      "surface": "data-write",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.createInvoice" }
+    },
+    "accounting.invoice.update": {
+      "surface": "data-write",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.updateInvoice" }
+    },
+    "accounting.invoice.delete": {
+      "surface": "data-write",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.deleteInvoice" }
+    },
+    "accounting.expense.list": {
+      "surface": "data-read",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.listExpenses" }
+    },
+    "accounting.expense.get": {
+      "surface": "data-read",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.getExpense" }
+    },
+    "accounting.expense.create": {
+      "surface": "data-write",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.createExpense" }
+    },
+    "accounting.expense.update": {
+      "surface": "data-write",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.updateExpense" }
+    },
+    "accounting.expense_category.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listExpenseCategories"
+      }
+    },
+    "accounting.payment.list": {
+      "surface": "data-read",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.listPayments" }
+    },
+    "accounting.payment.create": {
+      "surface": "data-write",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.createPayment" }
+    },
+    "accounting.staff.list": {
+      "surface": "data-read",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.listStaff" }
+    },
+    "accounting.other_income.create": {
+      "surface": "data-write",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.createOtherIncome"
+      }
+    },
+    "accounting.bill_vendor.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listBillVendors"
+      },
+      "spec": {
+        "kind": "openapi",
+        "ref": "./freshbooks.openapi.yaml#/paths/~1accounting~1account~1{accountId}~1bill_vendors~1bill_vendors/get"
+      }
+    },
+    "accounting.bill_vendor.create": {
+      "surface": "data-write",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.createBillVendor"
+      },
+      "spec": {
+        "kind": "openapi",
+        "ref": "./freshbooks.openapi.yaml#/paths/~1accounting~1account~1{accountId}~1bill_vendors~1bill_vendors/post"
+      }
+    },
+    "accounting.bill_vendor.update": {
+      "surface": "data-write",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.updateBillVendor"
+      },
+      "spec": {
+        "kind": "openapi",
+        "ref": "./freshbooks.openapi.yaml#/paths/~1accounting~1account~1{accountId}~1bill_vendors~1bill_vendors~1{vendorId}/put"
+      }
+    },
+    "accounting.webhook.create": {
+      "surface": "webhook-source",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.createCallback" }
+    },
+    "accounting.webhook.verify": {
+      "surface": "webhook-source",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.verifyCallback" }
+    },
+    "accounting.webhook.list": {
+      "surface": "webhook-source",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.listCallbacks" }
+    },
+    "accounting.webhook.delete": {
+      "surface": "webhook-source",
+      "implementedBy": { "kind": "api-class-method", "ref": "Api.deleteCallback" }
+    }
+  }
+}

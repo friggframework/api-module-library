@@ -3,6 +3,7 @@ const {Definition} = require('./definition');
 const Config = require('./defaultConfig');
 const webhooks = require('./extensions/webhooks');
 const fields = require('./fields');
+const { ReconcileHubSpotSubscriptions } = require('./scripts/reconcile-subscriptions');
 
 module.exports = {
     Api,
@@ -12,4 +13,5 @@ module.exports = {
         webhooks,
     },
     fields,
+    scripts: [ReconcileHubSpotSubscriptions],
 };

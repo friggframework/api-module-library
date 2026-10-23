@@ -137,3 +137,28 @@ describe('fields', () => {
         expect(await f.options(new Api({ access_token: 't' }))).toEqual([{ const: 'p1', title: 'Sales' }]);
     });
 });
+
+describe('admin script', () => {
+    it('is exported as a module script with prune, dryRun and the CLI flags', () => {
+        const [Script] = hubspot.scripts;
+        expect(Script.Definition).toMatchObject({ name: 'hubspot.reconcile-subscriptions', config: { requireIntegrationInstance: false } });
+        expect(Object.keys(Script.Definition.inputSchema.properties)).toEqual(['prune', 'dryRun', 'args']);
+    });
+
+    it('runs core\'s reconcile for this extension, and says so when core is too old', async () => {
+        const [Script] = hubspot.scripts;
+        const execute = jest.fn(async (input) => ({ ran: input }));
+        const create = jest.fn(() => class { execute(input) { return execute(input); } });
+        jest.resetModules();
+        jest.doMock('@friggframework/core', () => ({ createReconcileSubscriptionsScript: create }));
+        const { ReconcileHubSpotSubscriptions } = require('../../scripts/reconcile-subscriptions');
+        expect(await new ReconcileHubSpotSubscriptions().execute({ args: ['--dry-run'] })).toEqual({ ran: { args: ['--dry-run'] } });
+        expect(create).toHaveBeenCalledWith({ name: 'hubspot.reconcile-subscriptions', extension: 'hubspot-webhooks' });
+        jest.resetModules();
+        jest.doMock('@friggframework/core', () => ({}));
+        const { ReconcileHubSpotSubscriptions: OnOldCore } = require('../../scripts/reconcile-subscriptions');
+        await expect(new OnOldCore().execute({})).rejects.toThrow(/needs @friggframework\/core with defineIntegration/);
+        jest.dontMock('@friggframework/core');
+        expect(Script.Definition.name).toBe('hubspot.reconcile-subscriptions');
+    });
+});

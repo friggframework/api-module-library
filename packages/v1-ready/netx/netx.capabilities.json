@@ -1,0 +1,434 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "netx",
+  "label": "NetX",
+  "package": "@friggframework/api-module-netx",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected NetX account, persisted by the module (apiPropertiesToPersist). Definitions read them as $.install.accounts.<module key>.<name>.",
+    "fields": [
+      {
+        "name": "baseUrl",
+        "type": "string",
+        "description": "NetX instance root the connection was authorized against (e.g. https://acme.netx.net)"
+      }
+    ]
+  },
+  "objects": {
+    "asset": {
+      "label": "Asset",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "fileName",
+          "type": "string",
+          "tag": "file.name"
+        },
+        {
+          "name": "creationDate",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "importDate",
+          "type": "datetime",
+          "readOnly": true
+        },
+        {
+          "name": "modDate",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        {
+          "name": "file.name",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "file.size",
+          "type": "number",
+          "tag": "file.size",
+          "readOnly": true
+        },
+        {
+          "name": "file.width",
+          "type": "number",
+          "readOnly": true
+        },
+        {
+          "name": "file.height",
+          "type": "number",
+          "readOnly": true
+        },
+        {
+          "name": "file.url",
+          "type": "string",
+          "tag": "file.url",
+          "readOnly": true
+        },
+        {
+          "name": "file.checksum",
+          "type": "string",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "modDate",
+        "list": {
+          "capability": "asset.listByFolder",
+          "items": "result.results",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "asset.get",
+          "id": "assetIds"
+        },
+        "create": {
+          "capability": "asset.import",
+          "body": "asset"
+        }
+      }
+    },
+    "folder": {
+      "label": "Folder",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "parentId",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "children.assetCount",
+          "type": "number",
+          "readOnly": true
+        },
+        {
+          "name": "children.folderCount",
+          "type": "number",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "folder.listByParent",
+          "items": "result.results",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "folder.get",
+          "id": "folderId"
+        },
+        "create": {
+          "capability": "folder.create",
+          "body": "folder"
+        }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName",
+          "required": true
+        },
+        {
+          "name": "endpointUrl",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "actions",
+          "type": "json",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "string"
+        }
+      ]
+    },
+    "user": {
+      "label": "User (token owner)",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "username",
+          "type": "string",
+          "tag": "person.username"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "firstName",
+          "type": "string",
+          "tag": "person.givenName"
+        },
+        {
+          "name": "lastName",
+          "type": "string",
+          "tag": "person.familyName"
+        },
+        {
+          "name": "organization",
+          "type": "string",
+          "tag": "organization.name"
+        }
+      ]
+    }
+  },
+  "events": {
+    "asset.create": {
+      "delivery": "webhook",
+      "object": "asset",
+      "subscribe": "webhook.set",
+      "description": "Fired when an asset is created/imported in NetX."
+    },
+    "asset.delete": {
+      "delivery": "webhook",
+      "object": "asset",
+      "subscribe": "webhook.set",
+      "description": "Fired when an asset is deleted."
+    },
+    "asset.updateAttributes": {
+      "delivery": "webhook",
+      "object": "asset",
+      "subscribe": "webhook.set",
+      "description": "Fired when asset attributes change."
+    },
+    "folder.create": {
+      "delivery": "webhook",
+      "object": "folder",
+      "subscribe": "webhook.set",
+      "description": "Fired when a folder is created."
+    },
+    "folder.delete": {
+      "delivery": "webhook",
+      "object": "folder",
+      "subscribe": "webhook.set",
+      "description": "Fired when a folder is deleted."
+    },
+    "folder.update": {
+      "delivery": "webhook",
+      "object": "folder",
+      "subscribe": "webhook.set",
+      "description": "Fired when a folder is updated."
+    }
+  },
+  "webhook": {
+    "scope": "installation",
+    "note": "NetX POSTs JSON event payloads to endpointUrl. Public API docs state webhook signing secrets exist but are never returned from getWebhooks; signature verification algorithm is not documented on developer.netx.net — see open questions."
+  },
+  "capabilities": {
+    "user.self": {
+      "kind": "read",
+      "method": "getSelf",
+      "output": "user"
+    },
+    "asset.get": {
+      "kind": "read",
+      "method": "getAssets",
+      "input": {
+        "assetIds": {
+          "type": "array",
+          "required": true
+        },
+        "options": {
+          "type": "object"
+        }
+      },
+      "output": "asset[]",
+      "args": ["assetIds", "options"]
+    },
+    "asset.listByFolder": {
+      "kind": "read",
+      "method": "getAssetsByFolder",
+      "input": {
+        "folderId": {
+          "type": "number",
+          "required": true
+        },
+        "recursive": {
+          "type": "boolean"
+        },
+        "options": {
+          "type": "object"
+        }
+      },
+      "output": "page<asset>",
+      "args": ["folderId", "recursive", "options"]
+    },
+    "asset.search": {
+      "kind": "search",
+      "method": "getAssetsByQuery",
+      "input": {
+        "query": {
+          "type": "object",
+          "required": true
+        },
+        "options": {
+          "type": "object"
+        }
+      },
+      "output": "page<asset>",
+      "args": ["query", "options"]
+    },
+    "asset.update": {
+      "kind": "write",
+      "method": "updateAsset",
+      "input": {
+        "asset": {
+          "type": "object",
+          "required": true
+        },
+        "options": {
+          "type": "object"
+        }
+      },
+      "output": "asset",
+      "args": ["asset", "options"]
+    },
+    "asset.import": {
+      "kind": "write",
+      "method": "importAsset",
+      "input": {
+        "asset": {
+          "type": "object",
+          "required": true
+        },
+        "folderId": {
+          "type": "number",
+          "required": true
+        }
+      },
+      "output": "asset",
+      "args": ["asset", "folderId"]
+    },
+    "folder.create": {
+      "kind": "write",
+      "method": "createFolder",
+      "input": {
+        "folder": {
+          "type": "object",
+          "required": true
+        },
+        "options": {
+          "type": "object"
+        }
+      },
+      "output": "folder",
+      "args": ["folder", "options"]
+    },
+    "folder.get": {
+      "kind": "read",
+      "method": "getFolderById",
+      "input": {
+        "folderId": {
+          "type": "number",
+          "required": true
+        },
+        "options": {
+          "type": "object"
+        }
+      },
+      "output": "folder",
+      "args": ["folderId", "options"]
+    },
+    "folder.listByParent": {
+      "kind": "read",
+      "method": "getFoldersByParent",
+      "input": {
+        "parentId": {
+          "type": "number",
+          "required": true
+        },
+        "options": {
+          "type": "object"
+        }
+      },
+      "output": "page<folder>",
+      "args": ["parentId", "options"]
+    },
+    "webhook.set": {
+      "kind": "subscribe",
+      "method": "setWebhook",
+      "input": {
+        "webhook": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "webhook",
+      "args": ["webhook"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "getWebhooks",
+      "input": {
+        "options": {
+          "type": "object"
+        }
+      },
+      "output": "page<webhook>",
+      "args": ["options"]
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhook",
+      "input": {
+        "webhookId": {
+          "type": "number",
+          "required": true
+        }
+      },
+      "output": "void",
+      "args": ["webhookId"]
+    }
+  }
+}

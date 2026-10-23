@@ -1,0 +1,288 @@
+openapi: 3.0.3
+info:
+  title: Paylocity WebLink API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Curated OpenAPI subset of the Paylocity Web Services / WebLink API (api/v2)
+    covering exactly the endpoints implemented by
+    @friggframework/api-module-paylocity in api.js. Source of truth for the
+    hand-written client (one method per operationId).
+
+    Official docs:
+      - https://developer.paylocity.com/integrations/docs/getting-started
+      - https://developer.paylocity.com/integrations/reference/authentication-weblink
+      - https://developer.paylocity.com/integrations/reference/get-all-employees
+      - https://developer.paylocity.com/integrations/reference/get-employee
+      - https://developer.paylocity.com/integrations/reference/add-employee
+      - https://developer.paylocity.com/integrations/reference/update-employee
+      - https://developer.paylocity.com/integrations/reference/get-all-company-codes-and-descriptions-by-resource
+      - https://developer.paylocity.com/integrations/reference/get-company-specific-open-api-documentation
+
+    Auth is OAuth 2.0 client credentials against
+    `https://api.paylocity.com/IdentityServer/connect/token` (production) or
+    `https://dc1demogw.paylocity.com/IdentityServer/connect/token` (sandbox)
+    with `grant_type=client_credentials` and `scope=WebLinkAPI`. REST calls use
+    `Authorization: Bearer <access_token>`. Token host differs from this API
+    base URL and is therefore not listed under `paths` here.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.paylocity.com/api/v2
+    description: Paylocity WebLink API (production)
+security:
+  - BearerAuth: []
+tags:
+  - name: Employees
+  - name: Company
+paths:
+  /companies/{companyId}/employees:
+    parameters:
+      - $ref: "#/components/parameters/CompanyId"
+    get:
+      tags: [Employees]
+      operationId: listEmployees
+      summary: Get All Employees
+      description: >-
+        Returns employee data currently available in Paylocity Payroll/HR.
+        Page size defaults to 25; page numbers are 0-based. When
+        `includetotalcount` is true the response may include header
+        `X-Pcty-Total-Count`.
+      parameters:
+        - in: query
+          name: pagesize
+          schema: { type: integer, default: 25 }
+          description: Number of records per page. Default 25.
+        - in: query
+          name: pagenumber
+          schema: { type: integer, default: 0 }
+          description: 0-based page number. Default 0.
+        - in: query
+          name: includetotalcount
+          schema: { type: boolean, default: true }
+          description: Include X-Pcty-Total-Count response header.
+      responses:
+        "200":
+          description: Successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/EmployeeSummary" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+    post:
+      tags: [Employees]
+      operationId: createEmployee
+      summary: Create New Employee
+      description: >-
+        Sends new employee data to Paylocity Payroll/HR. Companies using a New
+        Hire Template may require additional fields; requests honor those
+        required fields. Leave `employeeId` blank to auto-assign.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Employee" }
+      responses:
+        "201":
+          description: Successfully added
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    employeeId: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /companies/{companyId}/employees/{employeeId}:
+    parameters:
+      - $ref: "#/components/parameters/CompanyId"
+      - $ref: "#/components/parameters/EmployeeId"
+    get:
+      tags: [Employees]
+      operationId: getEmployee
+      summary: Get Employee
+      description: Returns one employee record for the company.
+      responses:
+        "200":
+          description: Successfully retrieved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Employee" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+    patch:
+      tags: [Employees]
+      operationId: updateEmployee
+      summary: Update Employee
+      description: >-
+        Updates existing employee data in WebPay. Status changes (including
+        termination via status.employeeStatus=T) use this endpoint.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Employee" }
+      responses:
+        "200":
+          description: Successfully updated
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /companies/{companyId}/codes/{codeResource}:
+    parameters:
+      - $ref: "#/components/parameters/CompanyId"
+      - in: path
+        name: codeResource
+        required: true
+        schema: { type: string }
+        description: >-
+          Type of company code. Common values: costcenter1, costcenter2,
+          costcenter3, deductions, earnings, taxes, paygrade, positions.
+    get:
+      tags: [Company]
+      operationId: listCompanyCodes
+      summary: Get All Company Codes
+      description: Returns company codes and descriptions for the selected resource.
+      responses:
+        "200":
+          description: Successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CompanyCode" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /companies/{companyId}/openapi:
+    parameters:
+      - $ref: "#/components/parameters/CompanyId"
+    get:
+      tags: [Company]
+      operationId: getCompanyOpenApi
+      summary: Get Company-Specific Open API Documentation
+      description: >-
+        Returns an OpenAPI document customized with company-specific resource
+        schemas (enums and required fields matching Payroll/HR setup).
+      responses:
+        "200":
+          description: Successfully retrieved
+          content:
+            application/json:
+              schema: { type: object }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        Bearer token from POST …/IdentityServer/connect/token with
+        grant_type=client_credentials and scope=WebLinkAPI.
+  parameters:
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      schema: { type: string, maxLength: 9 }
+      description: >-
+        Paylocity Company Identifier unique per Payroll Entity. Max 9 chars.
+    EmployeeId:
+      name: employeeId
+      in: path
+      required: true
+      schema: { type: string, maxLength: 10 }
+      description: Paylocity Employee ID unique per company. Max 10 chars.
+  schemas:
+    EmployeeSummary:
+      type: object
+      properties:
+        employeeId: { type: string, maxLength: 10 }
+        statusCode:
+          type: string
+          description: >-
+            Employee current work status. Common values A (Active),
+            L (Leave of Absence), T (Terminated).
+        statusTypeCode: { type: string, maxLength: 10 }
+    EmployeeStatus:
+      type: object
+      properties:
+        changeReason: { type: string, maxLength: 15 }
+        effectiveDate: { type: string }
+        employeeStatus: { type: string, maxLength: 20 }
+        hireDate: { type: string }
+        isEligibleForRehire: { type: boolean }
+        reHireDate: { type: string }
+        terminationDate: { type: string }
+    Employee:
+      type: object
+      description: >-
+        Employee model used by create/update/get. Field set mirrors official
+        Create/Update/Get Employee docs; company New Hire Templates may require
+        additional fields.
+      properties:
+        employeeId: { type: string, maxLength: 10 }
+        firstName: { type: string, maxLength: 40 }
+        middleName: { type: string, maxLength: 20 }
+        lastName: { type: string, maxLength: 40 }
+        preferredName: { type: string, maxLength: 20 }
+        birthDate: { type: string }
+        gender: { type: string, maxLength: 1 }
+        ethnicity: { type: string, maxLength: 10 }
+        maritalStatus: { type: string, maxLength: 10 }
+        ssn: { type: string, maxLength: 11 }
+        currency: { type: string, maxLength: 30 }
+        status: { $ref: "#/components/schemas/EmployeeStatus" }
+        homeAddress: { type: object }
+        workAddress: { type: object }
+        departmentPosition: { type: object }
+        primaryPayRate: { type: object }
+        federalTax: { type: object }
+        primaryStateTax: { type: object }
+        nonPrimaryStateTax: { type: object }
+        mainDirectDeposit: { type: object }
+        additionalDirectDeposit:
+          type: array
+          items: { type: object }
+        emergencyContacts:
+          type: array
+          items: { type: object }
+        benefitSetup: { type: object }
+        webTime: { type: object }
+        workEligibility: { type: object }
+        taxSetup: { type: object }
+    CompanyCode:
+      type: object
+      properties:
+        code: { type: string, maxLength: 40 }
+        description: { type: string, maxLength: 150 }
+  responses:
+    BadRequest:
+      description: Bad Request
+    Unauthorized:
+      description: Unauthorized
+    Forbidden:
+      description: Forbidden
+    NotFound:
+      description: Not Found
+    TooManyRequests:
+      description: Too Many Requests

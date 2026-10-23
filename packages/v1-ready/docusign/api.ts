@@ -1,6 +1,6 @@
 import { OAuth2Requester } from '@friggframework/core';
 
-interface DocuSignConstructorParams {
+interface DocusignConstructorParams {
     client_id: string;
     client_secret: string;
     redirect_uri: string;
@@ -67,7 +67,7 @@ export class Api extends OAuth2Requester {
     declare public client_secret: string;
     declare public redirect_uri: string;
 
-    constructor(params: DocuSignConstructorParams) {
+    constructor(params: DocusignConstructorParams) {
         super(params);
         this.environment = params.environment || 'dev';
 

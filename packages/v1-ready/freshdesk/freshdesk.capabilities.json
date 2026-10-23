@@ -1,0 +1,182 @@
+{
+  "schema": "capability-manifest/v0.1",
+  "module": "freshdesk",
+  "package": "@friggframework/api-module-freshdesk",
+  "version": "1.0.0",
+  "auth": {
+    "type": "basic",
+    "methods": {
+      "testAuth": "testAuth"
+    },
+    "credentials": ["domain", "api_key"],
+    "docs": "https://developers.freshdesk.com/api/#authentication"
+  },
+  "objects": {
+    "account": {
+      "description": "Freshdesk helpdesk account identity (GET /account)",
+      "fields": [
+        { "name": "account_id", "tags": ["identifier", "required"] },
+        { "name": "account_name", "tags": ["display"] },
+        { "name": "account_domain", "tags": ["identity"] },
+        { "name": "organisation_id", "tags": ["identifier"] },
+        { "name": "organisation_name", "tags": ["display"] },
+        { "name": "timezone", "tags": [] },
+        { "name": "data_center", "tags": [] },
+        { "name": "tier_type", "tags": [] }
+      ],
+      "capabilities": {
+        "get": {
+          "method": "getAccount",
+          "spec": "freshdesk.openapi.yaml#/paths/~1account/get"
+        }
+      }
+    },
+    "agent": {
+      "description": "Freshdesk agents (support staff)",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "occasional", "tags": [] },
+        { "name": "ticket_scope", "tags": ["enum"] },
+        { "name": "type", "tags": ["enum"] },
+        { "name": "contact.email", "tags": ["pii", "identity"] },
+        { "name": "contact.name", "tags": ["pii", "display"] },
+        { "name": "available", "tags": [] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listAgents",
+          "spec": "freshdesk.openapi.yaml#/paths/~1agents/get"
+        },
+        "get": {
+          "method": "getAgent",
+          "spec": "freshdesk.openapi.yaml#/paths/~1agents~1{id}/get"
+        },
+        "me": {
+          "method": "getAuthenticatedAgent",
+          "spec": "freshdesk.openapi.yaml#/paths/~1agents~1me/get"
+        }
+      }
+    },
+    "ticket": {
+      "description": "Freshdesk support tickets",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "subject", "tags": ["display", "required"] },
+        { "name": "description", "tags": [] },
+        { "name": "description_text", "tags": [] },
+        { "name": "status", "tags": ["enum"] },
+        { "name": "priority", "tags": ["enum"] },
+        { "name": "source", "tags": ["enum"] },
+        { "name": "type", "tags": [] },
+        { "name": "email", "tags": ["pii", "identity"] },
+        { "name": "requester_id", "tags": ["identifier"] },
+        { "name": "responder_id", "tags": ["identifier"] },
+        { "name": "company_id", "tags": ["identifier"] },
+        { "name": "group_id", "tags": ["identifier"] },
+        { "name": "tags", "tags": [] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listTickets",
+          "spec": "freshdesk.openapi.yaml#/paths/~1tickets/get"
+        },
+        "get": {
+          "method": "getTicket",
+          "spec": "freshdesk.openapi.yaml#/paths/~1tickets~1{id}/get"
+        },
+        "create": {
+          "method": "createTicket",
+          "spec": "freshdesk.openapi.yaml#/paths/~1tickets/post"
+        },
+        "update": {
+          "method": "updateTicket",
+          "spec": "freshdesk.openapi.yaml#/paths/~1tickets~1{id}/put"
+        }
+      }
+    },
+    "contact": {
+      "description": "Freshdesk contacts (customers / requesters)",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "name", "tags": ["pii", "display", "required"] },
+        { "name": "email", "tags": ["pii", "identity", "lookup"] },
+        { "name": "phone", "tags": ["pii"] },
+        { "name": "mobile", "tags": ["pii"] },
+        { "name": "company_id", "tags": ["identifier"] },
+        { "name": "unique_external_id", "tags": ["identifier"] },
+        { "name": "tags", "tags": [] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listContacts",
+          "spec": "freshdesk.openapi.yaml#/paths/~1contacts/get"
+        },
+        "get": {
+          "method": "getContact",
+          "spec": "freshdesk.openapi.yaml#/paths/~1contacts~1{id}/get"
+        },
+        "create": {
+          "method": "createContact",
+          "spec": "freshdesk.openapi.yaml#/paths/~1contacts/post"
+        },
+        "update": {
+          "method": "updateContact",
+          "spec": "freshdesk.openapi.yaml#/paths/~1contacts~1{id}/put"
+        }
+      }
+    },
+    "company": {
+      "description": "Freshdesk companies (customer organizations)",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "name", "tags": ["display", "required"] },
+        { "name": "description", "tags": [] },
+        { "name": "domains", "tags": [] },
+        { "name": "note", "tags": [] },
+        { "name": "health_score", "tags": [] },
+        { "name": "account_tier", "tags": [] },
+        { "name": "renewal_date", "tags": ["timestamp"] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listCompanies",
+          "spec": "freshdesk.openapi.yaml#/paths/~1companies/get"
+        },
+        "get": {
+          "method": "getCompany",
+          "spec": "freshdesk.openapi.yaml#/paths/~1companies~1{id}/get"
+        },
+        "create": {
+          "method": "createCompany",
+          "spec": "freshdesk.openapi.yaml#/paths/~1companies/post"
+        },
+        "update": {
+          "method": "updateCompany",
+          "spec": "freshdesk.openapi.yaml#/paths/~1companies~1{id}/put"
+        }
+      }
+    }
+  },
+  "skipped": {
+    "webhooks": {
+      "reason": "Freshdesk outbound webhooks are configured as Trigger Webhook / Trigger API actions inside Admin → Workflows → Automations. There is no public REST create/list/delete subscription API for webhook endpoints.",
+      "docs": "https://support.freshdesk.com/support/solutions/articles/132589-using-webhooks-in-automation-rules"
+    },
+    "conversations": {
+      "reason": "Ticket conversations / replies are available via the API but deferred from this first cut; use include=conversations on getTicket or the dedicated conversations endpoints in a follow-up.",
+      "docs": "https://developers.freshdesk.com/api/#conversations"
+    },
+    "delete": {
+      "reason": "Delete endpoints exist for tickets/contacts/companies/agents but are omitted from the core list/get/create/update surface for this first cut.",
+      "docs": "https://developers.freshdesk.com/api/"
+    }
+  }
+}

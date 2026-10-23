@@ -1,0 +1,8 @@
+{
+    "name": "figma",
+    "label": "Figma",
+    "productUrl": "https://www.figma.com",
+    "apiDocs": "https://developers.figma.com/docs/rest-api/",
+    "categories": ["Design", "Collaboration"],
+    "description": "Figma"
+}

@@ -1,0 +1,606 @@
+openapi: 3.0.3
+info:
+  title: Open Dental API Service (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Open Dental (opendental.com) is an open-source dental practice management
+    system. This OpenAPI document is Left Hook's curated subset covering exactly
+    the endpoints the @friggframework/api-module-opendental client in api.js
+    implements. It is the source of truth the hand-written client mirrors 1:1
+    (one method per operationId).
+
+    Open Dental publishes HTML reference pages and a PDF specification; there is
+    no vendor-downloadable OpenAPI export. Paths and verbs below are taken from
+    the official documentation.
+
+    Auth: Authorization: ODFHIR {DeveloperKey}/{CustomerKey}
+    Base: https://api.opendental.com/api/v1
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Open Dental API Developer Setup
+    url: https://www.opendental.com/site/apisetup.html
+servers:
+  - url: https://api.opendental.com/api/v1
+    description: Open Dental cloud-hosted API Service
+security:
+  - OdfhirAuth: []
+tags:
+  - name: Preferences
+  - name: Clinics
+  - name: Patients
+  - name: Appointments
+  - name: ProcedureLogs
+  - name: Statements
+  - name: Payments
+  - name: Reports
+  - name: Claims
+  - name: InsPlans
+  - name: PatPlans
+  - name: FeeScheds
+  - name: Fees
+  - name: Subscriptions
+paths:
+  /preferences:
+    get:
+      tags: [Preferences]
+      operationId: listPreferences
+      summary: List preferences (optional PrefName filter)
+      description: >-
+        Docs: https://www.opendental.com/site/apipreferences.html
+      parameters:
+        - in: query
+          name: PrefName
+          schema: { type: string }
+        - in: query
+          name: Offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Preference list
+  /clinics:
+    get:
+      tags: [Clinics]
+      operationId: listClinics
+      summary: List non-hidden clinics
+      description: >-
+        Docs: https://www.opendental.com/site/apiclinics.html
+      parameters:
+        - in: query
+          name: Offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Clinic list
+  /patients:
+    get:
+      tags: [Patients]
+      operationId: listPatients
+      summary: List patients (Patient Select-style)
+      description: >-
+        Docs: https://www.opendental.com/site/apipatients.html
+      parameters:
+        - in: query
+          name: LName
+          schema: { type: string }
+        - in: query
+          name: FName
+          schema: { type: string }
+        - in: query
+          name: Birthdate
+          schema: { type: string, format: date }
+        - in: query
+          name: Offset
+          schema: { type: integer }
+        - in: query
+          name: Limit
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Patient list
+    post:
+      tags: [Patients]
+      operationId: createPatient
+      summary: Create a patient
+      description: >-
+        Docs: https://www.opendental.com/site/apipatients.html
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Patient created
+  /patients/Simple:
+    get:
+      tags: [Patients]
+      operationId: listPatientsSimple
+      summary: List patients (Simple / faster search)
+      description: >-
+        Docs: https://www.opendental.com/site/apipatients.html
+      parameters:
+        - in: query
+          name: LName
+          schema: { type: string }
+        - in: query
+          name: FName
+          schema: { type: string }
+        - in: query
+          name: Birthdate
+          schema: { type: string, format: date }
+        - in: query
+          name: PatStatus
+          schema: { type: string }
+        - in: query
+          name: DateTStamp
+          schema: { type: string }
+        - in: query
+          name: Offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Patient list
+  /patients/{PatNum}:
+    get:
+      tags: [Patients]
+      operationId: getPatient
+      summary: Get a patient by PatNum
+      parameters:
+        - in: path
+          name: PatNum
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Patient
+    put:
+      tags: [Patients]
+      operationId: updatePatient
+      summary: Update a patient
+      parameters:
+        - in: path
+          name: PatNum
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Patient updated
+  /accountmodules/{PatNum}/PatientBalances:
+    get:
+      tags: [Patients]
+      operationId: getPatientBalances
+      summary: Get patient / family balances
+      description: >-
+        Docs: https://www.opendental.com/site/apiaccountmodules.html
+      parameters:
+        - in: path
+          name: PatNum
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Balance rows
+  /appointments:
+    get:
+      tags: [Appointments]
+      operationId: listAppointments
+      summary: List appointments
+      description: >-
+        Docs: https://www.opendental.com/site/apiappointments.html
+      parameters:
+        - in: query
+          name: PatNum
+          schema: { type: integer }
+        - in: query
+          name: AptStatus
+          schema: { type: string }
+        - in: query
+          name: date
+          schema: { type: string, format: date }
+        - in: query
+          name: dateStart
+          schema: { type: string, format: date }
+        - in: query
+          name: dateEnd
+          schema: { type: string, format: date }
+        - in: query
+          name: ClinicNum
+          schema: { type: integer }
+        - in: query
+          name: DateTStamp
+          schema: { type: string }
+        - in: query
+          name: Offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Appointment list
+    post:
+      tags: [Appointments]
+      operationId: createAppointment
+      summary: Create an appointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Appointment created
+  /appointments/{AptNum}:
+    get:
+      tags: [Appointments]
+      operationId: getAppointment
+      summary: Get an appointment
+      parameters:
+        - in: path
+          name: AptNum
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Appointment
+    put:
+      tags: [Appointments]
+      operationId: updateAppointment
+      summary: Update an appointment
+      parameters:
+        - in: path
+          name: AptNum
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Appointment updated
+  /procedurelogs:
+    get:
+      tags: [ProcedureLogs]
+      operationId: listProcedureLogs
+      summary: List procedure logs
+      description: >-
+        Docs: https://www.opendental.com/site/apiprocedurelogs.html
+      parameters:
+        - in: query
+          name: PatNum
+          schema: { type: integer }
+        - in: query
+          name: DateTStamp
+          schema: { type: string }
+        - in: query
+          name: Offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Procedure log list
+  /procedurelogs/{ProcNum}:
+    get:
+      tags: [ProcedureLogs]
+      operationId: getProcedureLog
+      summary: Get a procedure log
+      parameters:
+        - in: path
+          name: ProcNum
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Procedure log
+  /statements:
+    get:
+      tags: [Statements]
+      operationId: listStatements
+      summary: List statements
+      description: >-
+        Docs: https://www.opendental.com/site/apistatements.html
+      parameters:
+        - in: query
+          name: PatNum
+          schema: { type: integer }
+        - in: query
+          name: Offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Statement list
+  /statements/{StatementNum}:
+    get:
+      tags: [Statements]
+      operationId: getStatement
+      summary: Get a statement
+      parameters:
+        - in: path
+          name: StatementNum
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Statement
+  /payments:
+    get:
+      tags: [Payments]
+      operationId: listPayments
+      summary: List payments
+      description: >-
+        Docs: https://www.opendental.com/site/apipayments.html
+        There is no documented Payments GET (single) by PayNum.
+      parameters:
+        - in: query
+          name: PatNum
+          schema: { type: integer }
+        - in: query
+          name: PayType
+          schema: { type: integer }
+        - in: query
+          name: DateEntry
+          schema: { type: string, format: date }
+        - in: query
+          name: Offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Payment list
+    post:
+      tags: [Payments]
+      operationId: createPayment
+      summary: Create a payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Payment created
+  /payments/{PayNum}:
+    put:
+      tags: [Payments]
+      operationId: updatePayment
+      summary: Update a payment
+      parameters:
+        - in: path
+          name: PayNum
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Payment updated
+  /reports/Aging:
+    get:
+      tags: [Reports]
+      operationId: listAging
+      summary: Aging report
+      description: >-
+        Docs: https://www.opendental.com/site/apireports.html
+      parameters:
+        - in: query
+          name: DateAsOf
+          schema: { type: string, format: date }
+        - in: query
+          name: ClinicNum
+          schema: { type: integer }
+        - in: query
+          name: Offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Aging rows
+  /claims:
+    get:
+      tags: [Claims]
+      operationId: listClaims
+      summary: List claims
+      description: >-
+        Docs: https://www.opendental.com/site/apiclaims.html
+      parameters:
+        - in: query
+          name: PatNum
+          schema: { type: integer }
+        - in: query
+          name: ClaimStatus
+          schema: { type: string }
+        - in: query
+          name: ClaimType
+          schema: { type: string }
+        - in: query
+          name: Offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Claim list
+  /claims/{ClaimNum}:
+    get:
+      tags: [Claims]
+      operationId: getClaim
+      summary: Get a claim
+      parameters:
+        - in: path
+          name: ClaimNum
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Claim
+  /insplans:
+    get:
+      tags: [InsPlans]
+      operationId: listInsPlans
+      summary: List insurance plans
+      description: >-
+        Docs: https://www.opendental.com/site/apiinsplans.html
+      parameters:
+        - in: query
+          name: PlanType
+          schema: { type: string }
+        - in: query
+          name: CarrierNum
+          schema: { type: integer }
+        - in: query
+          name: Offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: InsPlan list
+  /insplans/{PlanNum}:
+    get:
+      tags: [InsPlans]
+      operationId: getInsPlan
+      summary: Get an insurance plan
+      parameters:
+        - in: path
+          name: PlanNum
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: InsPlan
+  /patplans:
+    get:
+      tags: [PatPlans]
+      operationId: listPatPlans
+      summary: List patient plan attachments
+      description: >-
+        Docs: https://www.opendental.com/site/apipatplans.html
+      parameters:
+        - in: query
+          name: PatNum
+          schema: { type: integer }
+        - in: query
+          name: InsSubNum
+          schema: { type: integer }
+        - in: query
+          name: Offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: PatPlan list
+  /feescheds:
+    get:
+      tags: [FeeScheds]
+      operationId: listFeeScheds
+      summary: List fee schedules
+      description: >-
+        Docs: https://www.opendental.com/site/apifeescheds.html
+      parameters:
+        - in: query
+          name: Offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: FeeSched list
+  /fees:
+    get:
+      tags: [Fees]
+      operationId: listFees
+      summary: List fees
+      description: >-
+        Docs: https://www.opendental.com/site/apifees.html
+      parameters:
+        - in: query
+          name: FeeSched
+          schema: { type: integer }
+        - in: query
+          name: CodeNum
+          schema: { type: integer }
+        - in: query
+          name: ClinicNum
+          schema: { type: integer }
+        - in: query
+          name: ProvNum
+          schema: { type: integer }
+        - in: query
+          name: Offset
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Fee list
+  /fees/{FeeNum}:
+    get:
+      tags: [Fees]
+      operationId: getFee
+      summary: Get a fee
+      parameters:
+        - in: path
+          name: FeeNum
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Fee
+  /subscriptions:
+    get:
+      tags: [Subscriptions]
+      operationId: listSubscriptions
+      summary: List API event subscriptions
+      description: >-
+        Docs: https://www.opendental.com/site/apisubscriptions.html
+      responses:
+        "200":
+          description: Subscription list
+    post:
+      tags: [Subscriptions]
+      operationId: createSubscription
+      summary: Create an API event subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Subscription created
+  /subscriptions/{SubscriptionNum}:
+    put:
+      tags: [Subscriptions]
+      operationId: updateSubscription
+      summary: Update an API event subscription
+      parameters:
+        - in: path
+          name: SubscriptionNum
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Subscription updated
+    delete:
+      tags: [Subscriptions]
+      operationId: deleteSubscription
+      summary: Delete an API event subscription
+      parameters:
+        - in: path
+          name: SubscriptionNum
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Subscription deleted
+components:
+  securitySchemes:
+    OdfhirAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >-
+        Authorization: ODFHIR {DeveloperKey}/{CustomerKey}
+        (https://www.opendental.com/site/apisetup.html)

@@ -1,0 +1,244 @@
+# Fenestra Document: PandaDoc Platform
+#
+# PandaDoc exposes iframe-based UI extension points for embedding document
+# editing and signing inside a host application via official npm packages:
+# - pandadoc-editor  (Embedded Editing / Embedded Sending)
+# - pandadoc-signing (Embedded Signing)
+#
+# Session credentials come from the Public API:
+# - POST /public/v1/documents/{id}/editing-sessions → E-Token
+# - POST /public/v1/documents/{id}/session → signing session id
+#
+# Sources:
+# - https://developers.pandadoc.com/docs/editor-embed
+# - https://developers.pandadoc.com/docs/signing-session-embed
+# - https://developers.pandadoc.com/docs/embedded-signing
+
+fenestra: "0.1.0"
+
+info:
+  title: PandaDoc Platform UI Ecosystem
+  version: "1.0.0"
+  description: |
+    PandaDoc's developer platform lets you embed the document editor and the
+    signing experience inside your product using official TypeScript SDKs.
+
+    Key characteristics:
+    - Embedded Editing: open draft documents/templates in an iframe via E-Token
+    - Embedded Signing: open a sent document for a recipient via session id
+    - postMessage event bridge for load/complete/error lifecycle
+    - Region support (`com` / `eu`) for signing
+
+platform:
+  name: PandaDoc
+  vendor: PandaDoc, Inc.
+  documentation: https://developers.pandadoc.com/
+  appMarketplace: https://www.pandadoc.com/integrations/
+
+sdks:
+  pandadoc-editor:
+    name: PandaDoc Editor Embed SDK
+    packageManager: npm
+    package: "pandadoc-editor"
+    documentation: https://developers.pandadoc.com/docs/editor-embed
+    installCommand: "npm install pandadoc-editor"
+    exports:
+      Editor:
+        type: utility
+        description: Embeds the PandaDoc editor iframe for draft documents/templates
+      UIElement:
+        type: type
+        description: Named UI elements that can be hidden (recipients, roles, variables)
+
+  pandadoc-signing:
+    name: PandaDoc Signing Embed SDK
+    packageManager: npm
+    package: "pandadoc-signing"
+    documentation: https://developers.pandadoc.com/docs/signing-session-embed
+    installCommand: "npm install pandadoc-signing"
+    exports:
+      Signing:
+        type: utility
+        description: Embeds the PandaDoc signing experience for a session id
+      Region:
+        type: type
+        description: "Region enum: com (global) or eu"
+
+componentCatalog:
+  categories:
+    embeddedEditing:
+      name: Embedded Editing
+      description: Components for embedding the PandaDoc editor
+      components:
+        - DocumentEditor
+    embeddedSigning:
+      name: Embedded Signing
+      description: Components for embedding recipient signing
+      components:
+        - SigningSession
+
+  components:
+    DocumentEditor:
+      name: Document Editor
+      description: |
+        Embeds the PandaDoc editor for a document or template in `draft` status.
+        Requires an E-Token from POST /public/v1/documents/{id}/editing-sessions
+        (or the template editing-sessions endpoint).
+      category: embeddedEditing
+      sdkBinding:
+        sdk: pandadoc-editor
+        export: Editor
+      webStandardMapping:
+        htmlElement: iframe
+        ariaRole: document
+        semanticType: container
+      props:
+        type: object
+        properties:
+          token:
+            type: string
+            description: Editing session E-Token from the Public API
+          width:
+            type: number
+          height:
+            type: number
+          fieldPlacementOnly:
+            type: boolean
+          hiddenElements:
+            type: array
+            items:
+              type: string
+        required:
+          - token
+      examples:
+        - title: Open Embedded Editor
+          language: javascript
+          code: |
+            import { Editor } from 'pandadoc-editor';
+
+            const editor = new Editor('editor-container', {
+              width: 800,
+              height: 600,
+              token: 'E-TOKEN-FROM-API',
+            });
+            editor.open();
+            editor.on('content.rendered', () => console.log('ready'));
+
+    SigningSession:
+      name: Signing Session
+      description: |
+        Embeds the PandaDoc signing experience for a recipient. Requires a
+        session id from POST /public/v1/documents/{id}/session after the
+        document is in `document.sent` status (typically with silent: true).
+      category: embeddedSigning
+      sdkBinding:
+        sdk: pandadoc-signing
+        export: Signing
+      webStandardMapping:
+        htmlElement: iframe
+        ariaRole: document
+        semanticType: container
+      props:
+        type: object
+        properties:
+          sessionId:
+            type: string
+            description: Session id from createDocumentLink / Create Document Session
+          width:
+            type: number
+          height:
+            type: number
+          region:
+            type: string
+            description: "com (default) or eu"
+        required:
+          - sessionId
+      examples:
+        - title: Open Embedded Signing
+          language: javascript
+          code: |
+            import { Signing } from 'pandadoc-signing';
+
+            const signing = new Signing(
+              'signing-container',
+              { sessionId: 'SESSION_ID', width: 800, height: 600 },
+              { region: 'com' }
+            );
+            await signing.open();
+            signing.on('document.completed', () => console.log('signed'));
+
+extensionPoints:
+  - id: embedded-editor
+    name: Embedded Editor
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Embed the PandaDoc document/template editor inside your application.
+      Only documents (or templates) in draft status can be opened. Creating a
+      new editing session for the same user-document pair invalidates the prior
+      session. Max 250 editing sessions per document per week.
+    supportedComponents:
+      - DocumentEditor
+    extensionTypeConfig:
+      sdk:
+        package: pandadoc-editor
+        cdnRequired: false
+      mountPattern: function
+      communication:
+        pattern: events
+        events:
+          - content.rendered
+          - document.loading
+          - document.loading.error
+          - template.loading
+          - template.loading.error
+    constraints:
+      responsive: true
+    context:
+      provides:
+        - documentId
+        - eToken
+      actions:
+        - createDocumentEditingSession
+        - openEditor
+        - closeEditor
+    documentation: https://developers.pandadoc.com/docs/editor-embed
+
+  - id: embedded-signing
+    name: Embedded Signing
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Embed the PandaDoc signing experience so recipients can view and sign
+      without leaving your app. Create the session via the Public API after
+      sending the document (silent: true skips email). Recipient redirect
+      settings do not apply — handle document.completed in your app.
+    supportedComponents:
+      - SigningSession
+    extensionTypeConfig:
+      sdk:
+        package: pandadoc-signing
+        cdnRequired: false
+      mountPattern: function
+      communication:
+        pattern: events
+        events:
+          - document.loading
+          - document.loaded
+          - document.rendered
+          - document.completed
+          - document.exception
+          - document.not.found
+          - document.protected
+    constraints:
+      responsive: true
+    context:
+      provides:
+        - documentId
+        - sessionId
+        - recipientEmail
+      actions:
+        - createDocumentLink
+        - openSigning
+        - handleDocumentCompleted
+    documentation: https://developers.pandadoc.com/docs/embedded-signing

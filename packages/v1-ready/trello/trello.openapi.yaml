@@ -1,0 +1,2263 @@
+openapi: 3.0.0
+info:
+  title: Trello REST API (subset)
+  version: 1.0.0
+  description: Left Hook curated subset of the official Trello REST OpenAPI (https://developer.atlassian.com/cloud/trello/swagger.v3.json)
+    covering exactly the endpoints implemented by @friggframework/api-module-trello. Parameters and schemas
+    are taken from that vendor document. One method per operationId — keep in sync with api.js. Global
+    security matches the vendor document (APIKey + APIToken query params). Operation-level OAuth2-only
+    security entries in the full vendor swagger are omitted here because the Authorization and Webhooks
+    guides document classic key+token for these same routes.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+- url: https://api.trello.com/1
+security:
+- APIKey: []
+  APIToken: []
+tags:
+- name: Members
+- name: Boards
+- name: Lists
+- name: Cards
+- name: Organizations
+- name: Labels
+- name: Webhooks
+paths:
+  /members/{id}:
+    get:
+      tags:
+      - Members
+      operationId: getMember
+      summary: Get a Member
+      description: 'Official operationId: get-members=id.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID or username of the member
+        schema:
+          oneOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{24}$
+          - type: string
+      - name: actions
+        in: query
+        description: See the [Actions Nested Resource](/cloud/trello/guides/rest-api/nested-resources/#actions-nested-resource)
+        schema:
+          type: string
+      - name: boards
+        in: query
+        description: See the [Boards Nested Resource](/cloud/trello/guides/rest-api/nested-resources/#boards-nested-resource)
+        schema:
+          type: string
+      - name: boardBackgrounds
+        in: query
+        description: 'One of: `all`, `custom`, `default`, `none`, `premium`'
+        schema:
+          type: string
+          enum:
+          - all
+          - custom
+          - default
+          - none
+          - premium
+          default: none
+      - name: boardsInvited
+        in: query
+        description: '`all` or a comma-separated list of: closed, members, open, organization, pinned,
+          public, starred, unpinned'
+        schema:
+          enum:
+          - closed
+          - members
+          - open
+          - organization
+          - pinned
+          - public
+          - starred
+          - unpinned
+          type: string
+      - name: boardsInvited_fields
+        in: query
+        description: '`all` or a comma-separated list of board [fields](/cloud/trello/guides/rest-api/object-definitions/)'
+        schema:
+          type: string
+          enum: &id002
+          - id
+          - name
+          - desc
+          - descData
+          - closed
+          - idMemberCreator
+          - idOrganization
+          - pinned
+          - url
+          - shortUrl
+          - prefs
+          - labelNames
+          - starred
+          - limits
+          - memberships
+          - enterpriseOwned
+      - name: boardStars
+        in: query
+        description: Whether to return the boardStars or not
+        schema:
+          type: boolean
+          default: false
+      - name: cards
+        in: query
+        description: See the [Cards Nested Resource](/cloud/trello/guides/rest-api/nested-resources/#cards-nested-resource)
+          for additional options
+        schema:
+          type: string
+          default: none
+      - name: customBoardBackgrounds
+        in: query
+        description: '`all` or `none`'
+        schema:
+          type: string
+          enum:
+          - all
+          - none
+          default: none
+      - name: customEmoji
+        in: query
+        description: '`all` or `none`'
+        schema:
+          type: string
+          enum:
+          - all
+          - none
+          default: none
+      - name: customStickers
+        in: query
+        description: '`all` or `none`'
+        schema:
+          type: string
+          enum:
+          - all
+          - none
+          default: none
+      - name: fields
+        in: query
+        description: '`all` or a comma-separated list of member [fields](/cloud/trello/guides/rest-api/object-definitions/)'
+        schema:
+          type: string
+          enum:
+          - id
+      - name: notifications
+        in: query
+        description: See the [Notifications Nested Resource](/cloud/trello/guides/rest-api/nested-resources/#notifications-nested-resource)
+        schema:
+          type: string
+      - name: organizations
+        in: query
+        description: 'One of: `all`, `members`, `none`, `public`'
+        schema:
+          type: string
+          enum:
+          - all
+          - members
+          - none
+          - public
+          default: none
+      - name: organization_fields
+        in: query
+        description: '`all` or a comma-separated list of organization [fields](/cloud/trello/guides/rest-api/object-definitions/)'
+        schema:
+          type: string
+          enum: &id001
+          - id
+          - name
+      - name: organization_paid_account
+        in: query
+        description: Whether or not to include paid account information in the returned workspace object
+        schema:
+          type: boolean
+          default: false
+      - name: organizationsInvited
+        in: query
+        description: 'One of: `all`, `members`, `none`, `public`'
+        schema:
+          type: string
+          enum:
+          - all
+          - members
+          - none
+          - public
+          default: none
+      - name: organizationsInvited_fields
+        in: query
+        description: '`all` or a comma-separated list of organization [fields](/cloud/trello/guides/rest-api/object-definitions/)'
+        schema:
+          type: string
+          enum: *id001
+      - name: paid_account
+        in: query
+        description: Whether or not to include paid account information in the returned member object
+        schema:
+          type: boolean
+          default: false
+      - name: savedSearches
+        in: query
+        schema:
+          type: boolean
+          default: false
+      - name: tokens
+        in: query
+        description: '`all` or `none`'
+        schema:
+          type: string
+          enum:
+          - all
+          - none
+          default: none
+  /members/{id}/boards:
+    get:
+      tags:
+      - Members
+      operationId: listBoards
+      summary: Get Boards that Member belongs to
+      description: 'Official operationId: get-members-id-boards.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Board'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID or username of the member
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: filter
+        in: query
+        description: '`all` or a comma-separated list of: `closed`, `members`, `open`, `organization`,
+          `public`, `starred`'
+        schema:
+          enum:
+          - all
+          - closed
+          - members
+          - open
+          - organization
+          - public
+          - starred
+          type: string
+          default: all
+      - name: fields
+        in: query
+        description: '`all` or a comma-separated list of board [fields](/cloud/trello/guides/rest-api/object-definitions/)'
+        schema:
+          type: string
+          enum: *id002
+      - name: lists
+        in: query
+        description: 'Which lists to include with the boards. One of: `all`, `closed`, `none`, `open`'
+        schema:
+          enum:
+          - all
+          - closed
+          - none
+          - open
+          type: string
+          default: none
+      - name: organization
+        in: query
+        description: Whether to include the Organization object with the Boards
+        schema:
+          type: boolean
+          default: false
+      - name: organization_fields
+        in: query
+        description: '`all` or a comma-separated list of organization [fields](/cloud/trello/guides/rest-api/object-definitions/)'
+        schema:
+          type: string
+          enum: *id001
+  /boards/{id}:
+    get:
+      tags:
+      - Boards
+      operationId: getBoard
+      summary: Get a Board
+      description: 'Official operationId: get-boards-id.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Board'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: actions
+        in: query
+        description: This is a nested resource. Read more about actions as nested resources [here](/cloud/trello/guides/rest-api/nested-resources/).
+        schema:
+          type: string
+          default: all
+      - name: boardStars
+        in: query
+        description: 'Valid values are one of: `mine` or `none`.'
+        schema:
+          type: string
+          default: none
+      - name: cards
+        in: query
+        description: This is a nested resource. Read more about cards as nested resources [here](/cloud/trello/guides/rest-api/nested-resources/).
+        schema:
+          type: string
+          default: none
+      - name: card_pluginData
+        in: query
+        description: Use with the `cards` param to include card pluginData with the response
+        schema:
+          type: boolean
+          default: false
+      - name: checklists
+        in: query
+        description: This is a nested resource. Read more about checklists as nested resources [here](/cloud/trello/guides/rest-api/nested-resources/).
+        schema:
+          type: string
+          default: none
+      - name: customFields
+        in: query
+        description: This is a nested resource. Read more about custom fields as nested resources [here](#custom-fields-nested-resource).
+        schema:
+          type: boolean
+          default: false
+      - name: fields
+        in: query
+        description: 'The fields of the board to be included in the response. Valid values: all or a comma-separated
+          list of: closed, dateLastActivity, dateLastView, desc, descData, idMemberCreator, idOrganization,
+          invitations, invited, labelNames, memberships, name, pinned, powerUps, prefs, shortLink, shortUrl,
+          starred, subscribed, url'
+        schema:
+          type: string
+          default: name,desc,descData,closed,idOrganization,pinned,url,shortUrl,prefs,labelNames
+      - name: labels
+        in: query
+        description: This is a nested resource. Read more about labels as nested resources [here](/cloud/trello/guides/rest-api/nested-resources/).
+        schema:
+          type: string
+      - name: lists
+        in: query
+        description: This is a nested resource. Read more about lists as nested resources [here](/cloud/trello/guides/rest-api/nested-resources/).
+        schema:
+          type: string
+          default: open
+      - name: members
+        in: query
+        description: This is a nested resource. Read more about members as nested resources [here](/cloud/trello/guides/rest-api/nested-resources/).
+        schema:
+          type: string
+          default: none
+      - name: memberships
+        in: query
+        description: This is a nested resource. Read more about memberships as nested resources [here](/cloud/trello/guides/rest-api/nested-resources/).
+        schema:
+          type: string
+          default: none
+      - name: pluginData
+        in: query
+        description: 'Determines whether the pluginData for this board should be returned. Valid values:
+          true or false.'
+        schema:
+          type: boolean
+          default: false
+      - name: organization
+        in: query
+        description: This is a nested resource. Read more about organizations as nested resources [here](/cloud/trello/guides/rest-api/nested-resources/).
+        schema:
+          type: boolean
+          default: false
+      - name: organization_pluginData
+        in: query
+        description: Use with the `organization` param to include organization pluginData with the response
+        schema:
+          type: boolean
+          default: false
+      - name: myPrefs
+        in: query
+        schema:
+          type: boolean
+          default: false
+      - name: tags
+        in: query
+        description: Also known as collections, tags, refer to the collection(s) that a Board belongs
+          to.
+        schema:
+          type: boolean
+          default: false
+    put:
+      tags:
+      - Boards
+      operationId: updateBoard
+      summary: Update a Board
+      description: 'Official operationId: put-boards-id.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Board'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: name
+        in: query
+        description: The new name for the board. 1 to 16384 characters long.
+        schema:
+          type: string
+      - name: desc
+        in: query
+        description: A new description for the board, 0 to 16384 characters long
+        schema:
+          type: string
+      - name: closed
+        in: query
+        description: Whether the board is closed
+        schema:
+          type: boolean
+      - name: subscribed
+        in: query
+        description: Whether the acting user is subscribed to the board
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: idOrganization
+        in: query
+        description: The id of the Workspace the board should be moved to
+        schema:
+          type: string
+      - name: prefs/permissionLevel
+        in: query
+        description: 'One of: org, private, public'
+        schema:
+          type: string
+      - name: prefs/selfJoin
+        in: query
+        description: Whether Workspace members can join the board themselves
+        schema:
+          type: boolean
+      - name: prefs/cardCovers
+        in: query
+        description: Whether card covers should be displayed on this board
+        schema:
+          type: boolean
+      - name: prefs/hideVotes
+        in: query
+        description: Determines whether the Voting Power-Up should hide who voted on cards or not.
+        schema:
+          type: boolean
+      - name: prefs/invitations
+        in: query
+        description: 'Who can invite people to this board. One of: admins, members'
+        schema:
+          type: string
+      - name: prefs/voting
+        in: query
+        description: Who can vote on this board. One of disabled, members, observers, org, public
+        schema:
+          type: string
+      - name: prefs/comments
+        in: query
+        description: 'Who can comment on cards on this board. One of: disabled, members, observers, org,
+          public'
+        schema:
+          type: string
+      - name: prefs/background
+        in: query
+        description: 'The id of a custom background or one of: blue, orange, green, red, purple, pink,
+          lime, sky, grey'
+        schema:
+          type: string
+      - name: prefs/cardAging
+        in: query
+        description: 'One of: pirate, regular'
+        schema:
+          type: string
+      - name: prefs/calendarFeedEnabled
+        in: query
+        description: Determines whether the calendar feed is enabled or not.
+        schema:
+          type: boolean
+  /boards/:
+    post:
+      tags:
+      - Boards
+      operationId: createBoard
+      summary: Create a Board
+      description: 'Official operationId: post-boards.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Board'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: name
+        in: query
+        required: true
+        description: The new name for the board. 1 to 16384 characters long.
+        schema:
+          type: string
+          maxLength: 16384
+          minLength: 1
+      - name: defaultLabels
+        in: query
+        description: Determines whether to use the default set of labels.
+        schema:
+          type: boolean
+          default: true
+      - name: defaultLists
+        in: query
+        description: Determines whether to add the default set of lists to a board (To Do, Doing, Done).
+          It is ignored if `idBoardSource` is provided.
+        schema:
+          type: boolean
+          default: true
+      - name: desc
+        in: query
+        description: A new description for the board, 0 to 16384 characters long
+        schema:
+          type: string
+          minLength: 0
+          maxLength: 16384
+      - name: idOrganization
+        in: query
+        description: The id or name of the Workspace the board should belong to.
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: idBoardSource
+        in: query
+        description: The id of a board to copy into the new board.
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: keepFromSource
+        in: query
+        description: To keep cards from the original board pass in the value `cards`
+        schema:
+          type: string
+          default: none
+          enum:
+          - cards
+          - none
+      - name: powerUps
+        in: query
+        description: 'The Power-Ups that should be enabled on the new board. One of: `all`, `calendar`,
+          `cardAging`, `recap`, `voting`.'
+        schema:
+          type: string
+          enum:
+          - all
+          - calendar
+          - cardAging
+          - recap
+          - voting
+      - name: prefs_permissionLevel
+        in: query
+        description: 'The permissions level of the board. One of: `org`, `private`, `public`.'
+        schema:
+          type: string
+          default: private
+          enum:
+          - org
+          - private
+          - public
+      - name: prefs_voting
+        in: query
+        description: Who can vote on this board. One of `disabled`, `members`, `observers`, `org`, `public`.
+        schema:
+          type: string
+          default: disabled
+          enum:
+          - disabled
+          - members
+          - observers
+          - org
+          - public
+      - name: prefs_comments
+        in: query
+        description: 'Who can comment on cards on this board. One of: `disabled`, `members`, `observers`,
+          `org`, `public`.'
+        schema:
+          type: string
+          default: members
+          enum:
+          - disabled
+          - members
+          - observers
+          - org
+          - public
+      - name: prefs_invitations
+        in: query
+        description: 'Determines what types of members can invite users to join. One of: `admins`, `members`.'
+        schema:
+          type: string
+          default: members
+          enum:
+          - members
+          - admins
+      - name: prefs_selfJoin
+        in: query
+        description: Determines whether users can join the boards themselves or whether they have to be
+          invited.
+        schema:
+          type: boolean
+          default: true
+      - name: prefs_cardCovers
+        in: query
+        description: Determines whether card covers are enabled.
+        schema:
+          type: boolean
+          default: true
+      - name: prefs_background
+        in: query
+        description: 'The id of a custom background or one of: `blue`, `orange`, `green`, `red`, `purple`,
+          `pink`, `lime`, `sky`, `grey`.'
+        schema:
+          type: string
+          default: blue
+          enum:
+          - blue
+          - orange
+          - green
+          - red
+          - purple
+          - pink
+          - lime
+          - sky
+          - grey
+      - name: prefs_cardAging
+        in: query
+        description: 'Determines the type of card aging that should take place on the board if card aging
+          is enabled. One of: `pirate`, `regular`.'
+        schema:
+          type: string
+          default: regular
+          enum:
+          - pirate
+          - regular
+  /boards/{id}/lists:
+    get:
+      tags:
+      - Boards
+      operationId: listLists
+      summary: Get Lists on a Board
+      description: 'Official operationId: get-boards-id-lists.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TrelloList'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: cards
+        in: query
+        description: Filter to apply to Cards.
+        schema:
+          type: string
+          enum: &id003
+          - all
+          - closed
+          - none
+          - open
+      - name: card_fields
+        in: query
+        description: '`all` or a comma-separated list of card [fields](/cloud/trello/guides/rest-api/object-definitions/#card-object)'
+        schema:
+          type: string
+          default: all
+      - name: filter
+        in: query
+        description: Filter to apply to Lists
+        schema:
+          type: string
+          enum: *id003
+      - name: fields
+        in: query
+        description: '`all` or a comma-separated list of list [fields](/cloud/trello/guides/rest-api/object-definitions/)'
+        schema:
+          type: string
+          default: all
+  /boards/{id}/cards:
+    get:
+      tags:
+      - Boards
+      operationId: listCards
+      summary: Get Cards on a Board
+      description: 'Official operationId: get-boards-id-cards.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Card'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+  /boards/{id}/labels:
+    get:
+      tags:
+      - Boards
+      operationId: listLabels
+      summary: Get Labels on a Board
+      description: 'Official operationId: get-boards-id-labels.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Label'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID of the Board.
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: fields
+        in: query
+        description: The fields to be returned for the Labels.
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+              pattern: ^[0-9a-fA-F]{24}$
+            idBoard:
+              type: string
+              pattern: ^[0-9a-fA-F]{24}$
+            name:
+              type: string
+              description: The name displayed for the label.
+              nullable: true
+              minLength: 0
+              maxLength: 16384
+            color:
+              type: string
+              nullable: true
+              enum:
+              - yellow
+              - purple
+              - blue
+              - red
+              - green
+              - orange
+              - black
+              - sky
+              - pink
+              - lime
+      - name: limit
+        in: query
+        description: The number of Labels to be returned.
+        schema:
+          type: integer
+          format: int32
+          default: 50
+          minimum: 0
+          maximum: 1000
+  /lists:
+    post:
+      tags:
+      - Lists
+      operationId: createList
+      summary: Create a new List
+      description: 'Official operationId: post-lists.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrelloList'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: name
+        in: query
+        required: true
+        description: Name for the list
+        schema:
+          type: string
+      - name: idBoard
+        in: query
+        required: true
+        description: The long ID of the board the list should be created on
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: idListSource
+        in: query
+        description: ID of the List to copy into the new List
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: pos
+        in: query
+        description: Position of the list. `top`, `bottom`, or a positive floating point number
+        schema:
+          oneOf:
+          - type: number
+            format: float
+          - type: string
+            enum:
+            - top
+            - bottom
+  /lists/{id}:
+    get:
+      tags:
+      - Lists
+      operationId: getList
+      summary: Get a List
+      description: 'Official operationId: get-lists-id.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrelloList'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: fields
+        in: query
+        description: '`all` or a comma separated list of List field names.'
+        schema:
+          type: string
+          default: name,closed,idBoard,pos
+    put:
+      tags:
+      - Lists
+      operationId: updateList
+      summary: Update a List
+      description: 'Official operationId: put-lists-id.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrelloList'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: name
+        in: query
+        description: New name for the list
+        schema:
+          type: string
+      - name: closed
+        in: query
+        description: Whether the list should be closed (archived)
+        schema:
+          type: boolean
+      - name: idBoard
+        in: query
+        description: ID of a board the list should be moved to
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: pos
+        in: query
+        description: 'New position for the list: `top`, `bottom`, or a positive floating point number'
+        schema:
+          oneOf:
+          - type: number
+            format: float
+          - type: string
+            enum:
+            - top
+            - bottom
+      - name: subscribed
+        in: query
+        description: Whether the active member is subscribed to this list
+        schema:
+          type: boolean
+  /lists/{id}/cards:
+    get:
+      tags:
+      - Lists
+      operationId: listListCards
+      summary: Get Cards in a List
+      description: 'Official operationId: get-lists-id-cards.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Card'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID of the list
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+  /cards:
+    post:
+      tags:
+      - Cards
+      operationId: createCard
+      summary: Create a new Card
+      description: 'Official operationId: post-cards.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: name
+        in: query
+        description: The name for the card
+        schema:
+          type: string
+      - name: desc
+        in: query
+        description: The description for the card
+        schema:
+          type: string
+      - name: pos
+        in: query
+        description: The position of the new card. `top`, `bottom`, or a positive float
+        schema:
+          oneOf:
+          - type: string
+            enum:
+            - top
+            - bottom
+          - type: number
+            format: float
+            minimum: 0
+      - name: due
+        in: query
+        description: A due date for the card
+        schema:
+          type: string
+          format: date
+      - name: start
+        in: query
+        description: The start date of a card, or `null`
+        schema:
+          nullable: true
+          type: string
+          format: date
+      - name: dueComplete
+        in: query
+        description: Whether the status of the card is complete
+        schema:
+          type: boolean
+      - name: idList
+        in: query
+        required: true
+        description: The ID of the list the card should be created in
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: idMembers
+        in: query
+        description: Comma-separated list of member IDs to add to the card
+        schema:
+          type: array
+          items:
+            oneOf:
+            - type: string
+              pattern: ^[0-9a-fA-F]{24}$
+      - name: idLabels
+        in: query
+        description: Comma-separated list of label IDs to add to the card
+        schema:
+          type: array
+          items:
+            oneOf:
+            - type: string
+              pattern: ^[0-9a-fA-F]{24}$
+      - name: urlSource
+        in: query
+        description: A URL starting with `http://` or `https://`. The URL will be attached to the card
+          upon creation.
+        schema:
+          type: string
+          format: url
+      - name: fileSource
+        in: query
+        schema:
+          type: string
+          format: binary
+      - name: mimeType
+        in: query
+        description: The mimeType of the attachment. Max length 256
+        schema:
+          type: string
+      - name: idCardSource
+        in: query
+        description: The ID of a card to copy into the new card
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: keepFromSource
+        in: query
+        description: 'If using `idCardSource` you can specify which properties to copy over. `all` or
+          comma-separated list of: `attachments,checklists,customFields,comments,due,start,labels,members,start,stickers`'
+        schema:
+          type: string
+          default: all
+          enum:
+          - all
+          - attachments
+          - checklists
+          - comments
+          - customFields
+          - due
+          - start
+          - labels
+          - members
+          - start
+          - stickers
+      - name: address
+        in: query
+        description: For use with/by the Map View
+        schema:
+          type: string
+      - name: locationName
+        in: query
+        description: For use with/by the Map View
+        schema:
+          type: string
+      - name: coordinates
+        in: query
+        description: For use with/by the Map View. Should take the form latitude,longitude
+        schema:
+          type: string
+      - name: cardRole
+        in: query
+        description: For displaying cards in different ways based on the card name. Board cards must have
+          a name that is a link to a Trello board. Mirror cards must have a name that is a link to a Trello
+          card.
+        schema:
+          type: string
+          enum:
+          - separator
+          - board
+          - mirror
+          - link
+          nullable: true
+  /cards/{id}:
+    get:
+      tags:
+      - Cards
+      operationId: getCard
+      summary: Get a Card
+      description: 'Official operationId: get-cards-id.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: fields
+        in: query
+        description: '`all` or a comma-separated list of [fields](/cloud/trello/guides/rest-api/object-definitions/).
+          **Defaults**: `badges, checkItemStates, closed, dateLastActivity, desc, descData, due, start,
+          idBoard, idChecklists, idLabels, idList, idMembers, idShort, idAttachmentCover, manualCoverAttachment,
+          labels, name, pos, shortUrl, url`'
+        schema:
+          type: string
+      - name: actions
+        in: query
+        description: See the [Actions Nested Resource](/cloud/trello/guides/rest-api/nested-resources/#actions-nested-resource)
+        schema:
+          type: string
+      - name: attachments
+        in: query
+        description: '`true`, `false`, or `cover`'
+        schema:
+          type: string
+          oneOf:
+          - type: string
+            enum:
+            - cover
+          - type: boolean
+          default: false
+      - name: attachment_fields
+        in: query
+        description: '`all` or a comma-separated list of attachment [fields](/cloud/trello/guides/rest-api/object-definitions/)'
+        schema:
+          type: string
+          default: all
+      - name: members
+        in: query
+        description: Whether to return member objects for members on the card
+        schema:
+          type: boolean
+          default: false
+      - name: member_fields
+        in: query
+        description: '`all` or a comma-separated list of member [fields](/cloud/trello/guides/rest-api/object-definitions/).
+          **Defaults**: `avatarHash, fullName, initials, username`'
+        schema:
+          type: string
+      - name: membersVoted
+        in: query
+        description: Whether to return member objects for members who voted on the card
+        schema:
+          type: boolean
+          default: false
+      - name: memberVoted_fields
+        in: query
+        description: '`all` or a comma-separated list of member [fields](/cloud/trello/guides/rest-api/object-definitions/).
+          **Defaults**: `avatarHash, fullName, initials, username`'
+        schema:
+          type: string
+      - name: checkItemStates
+        in: query
+        schema:
+          type: boolean
+          default: false
+      - name: checklists
+        in: query
+        description: Whether to return the checklists on the card. `all` or `none`
+        schema:
+          type: string
+          default: none
+      - name: checklist_fields
+        in: query
+        description: '`all` or a comma-separated list of `idBoard,idCard,name,pos`'
+        schema:
+          type: string
+          default: all
+      - name: board
+        in: query
+        description: Whether to return the board object the card is on
+        schema:
+          type: boolean
+          default: false
+      - name: board_fields
+        in: query
+        description: '`all` or a comma-separated list of board [fields](/cloud/trello/guides/rest-api/object-definitions/#board-object).
+          **Defaults**: `name, desc, descData, closed, idOrganization, pinned, url, prefs`'
+        schema:
+          type: string
+      - name: list
+        in: query
+        description: See the [Lists Nested Resource](/cloud/trello/guides/rest-api/nested-resources/)
+        schema:
+          type: boolean
+          default: false
+      - name: pluginData
+        in: query
+        description: Whether to include pluginData on the card with the response
+        schema:
+          type: boolean
+          default: false
+      - name: stickers
+        in: query
+        description: Whether to include sticker models with the response
+        schema:
+          type: boolean
+          default: false
+      - name: sticker_fields
+        in: query
+        description: '`all` or a comma-separated list of sticker [fields](/cloud/trello/guides/rest-api/object-definitions/)'
+        schema:
+          type: string
+          default: all
+      - name: customFieldItems
+        in: query
+        description: Whether to include the customFieldItems
+        schema:
+          type: boolean
+          default: false
+    put:
+      tags:
+      - Cards
+      operationId: updateCard
+      summary: Update a Card
+      description: 'Official operationId: put-cards-id.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: name
+        in: query
+        description: The new name for the card
+        schema:
+          type: string
+      - name: desc
+        in: query
+        description: The new description for the card
+        schema:
+          type: string
+      - name: closed
+        in: query
+        description: 'Whether the card should be archived (closed: true)'
+        schema:
+          type: boolean
+      - name: idMembers
+        in: query
+        description: Comma-separated list of member IDs
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: idAttachmentCover
+        in: query
+        description: The ID of the image attachment the card should use as its cover, or null for none
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: idList
+        in: query
+        description: The ID of the list the card should be in
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: idLabels
+        in: query
+        description: Comma-separated list of label IDs
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: idBoard
+        in: query
+        description: The ID of the board the card should be on
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: pos
+        in: query
+        description: The position of the card in its list. `top`, `bottom`, or a positive float
+        schema:
+          oneOf:
+          - type: string
+            enum:
+            - top
+            - bottom
+          - type: number
+            format: float
+      - name: due
+        in: query
+        description: When the card is due, or `null`
+        schema:
+          nullable: true
+          type: string
+          format: date
+      - name: start
+        in: query
+        description: The start date of a card, or `null`
+        schema:
+          nullable: true
+          type: string
+          format: date
+      - name: dueComplete
+        in: query
+        description: Whether the status of the card is complete
+        schema:
+          type: boolean
+      - name: subscribed
+        in: query
+        description: Whether the member is should be subscribed to the card
+        schema:
+          type: boolean
+      - name: address
+        in: query
+        description: For use with/by the Map View
+        schema:
+          type: string
+      - name: locationName
+        in: query
+        description: For use with/by the Map View
+        schema:
+          type: string
+      - name: coordinates
+        in: query
+        description: For use with/by the Map View. Should be latitude,longitude
+        schema:
+          type: string
+      - name: cover
+        in: query
+        description: "Updates the card's cover\n | Option | Values | About |\n |--------|--------|-------|\n\
+          \ | color | `pink`, `yellow`, `lime`, `blue`, `black`, `orange`, `red`, `purple`, `sky`, `green`\
+          \ | Makes the cover a solid color . |\n | brightness | `dark`, `light` | Determines whether\
+          \ the text on the cover should be dark or light.\n | url | An unsplash URL: https://images.unsplash.com\
+          \ | Used if making an image the cover. Only Unsplash URLs work.\n | idAttachment | ID of an\
+          \ attachment on the card | Used if setting an attached image as the cover. |\n | size | `normal`,\
+          \ `full` | Determines whether to show the card name on the cover, or below it. |\n \n `brightness`\
+          \ can be sent alongside any of the other parameters, but all of the other parameters are mutually\
+          \ exclusive; you can not have the cover be a `color` and an `idAttachment` at the same time.\
+          \ \n \n On the brightness options, setting it to light will make the text on the card cover\
+          \ dark:\n ![](/cloud/trello/images/rest/cards/cover-brightness-dark.png)\n \n And vice versa,\
+          \ setting it to dark will make the text on the card cover light: \n ![](/cloud/trello/images/rest/cards/cover-brightness-light.png) "
+        schema:
+          type: object
+          properties:
+            value:
+              type: object
+              description: "An object containing information regarding the card's cover \n `brightness`\
+                \ can be sent alongside any of the other parameters, but all of the other parameters are\
+                \ mutually exclusive; you can not have the cover be a color and an `idAttachment` at the\
+                \ same time."
+              properties:
+                color:
+                  type: string
+                  enum:
+                  - pink
+                  - yellow
+                  - lime
+                  - blue
+                  - black
+                  - orange
+                  - red
+                  - purple
+                  - sky
+                  - green
+                  description: 'One of: `pink, yellow, lime, blue, black, orange, red, purple, sky, green`'
+                brightness:
+                  type: string
+                  enum:
+                  - dark
+                  - light
+                  description: Determines whether the text on the cover should be dark or light. Setting
+                    it to `light` will make the text on the card cover dark. And vice versa, setting it
+                    to dark will make the text on the card cover light
+                url:
+                  type: string
+                  format: url
+                  description: Used if making an image the cover. Only Unsplash URLs (https://images.unsplash.com/)
+                    work.
+  /members/{id}/organizations:
+    get:
+      tags:
+      - Members
+      operationId: listOrganizations
+      summary: Get Member's Organizations
+      description: 'Official operationId: get-members-id-organizations.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organization'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID or username of the member
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: filter
+        in: query
+        description: 'One of: `all`, `members`, `none`, `public` (Note: `members` filters to only private
+          Workspaces)'
+        schema:
+          type: string
+          default: all
+          enum:
+          - all
+          - members
+          - none
+          - public
+      - name: fields
+        in: query
+        description: '`all` or a comma-separated list of organization [fields](/cloud/trello/guides/rest-api/object-definitions/)'
+        schema:
+          type: string
+          enum: *id001
+      - name: paid_account
+        in: query
+        description: Whether or not to include paid account information in the returned workspace object
+        schema:
+          type: boolean
+          default: false
+  /organizations/{id}:
+    get:
+      tags:
+      - Organizations
+      operationId: getOrganization
+      summary: Get an Organization
+      description: 'Official operationId: get-organizations-id.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+  /labels:
+    post:
+      tags:
+      - Labels
+      operationId: createLabel
+      summary: Create a Label
+      description: 'Official operationId: post-labels.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Label'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: name
+        in: query
+        required: true
+        description: Name for the label
+        schema:
+          type: string
+      - name: color
+        in: query
+        required: true
+        description: The color for the label.
+        schema:
+          type: string
+          nullable: true
+          enum:
+          - yellow
+          - purple
+          - blue
+          - red
+          - green
+          - orange
+          - black
+          - sky
+          - pink
+          - lime
+      - name: idBoard
+        in: query
+        required: true
+        description: The ID of the Board to create the Label on.
+        schema:
+          type: string
+  /webhooks/:
+    post:
+      tags:
+      - Webhooks
+      operationId: createWebhook
+      summary: Create a Webhook
+      description: 'Official operationId: post-webhooks.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: description
+        in: query
+        description: A string with a length from `0` to `16384`.
+        schema:
+          type: string
+          maxLength: 16384
+          minLength: 0
+      - name: callbackURL
+        in: query
+        required: true
+        description: A valid URL that is reachable with a `HEAD` and `POST` request.
+        schema:
+          type: string
+          format: url
+      - name: idModel
+        in: query
+        required: true
+        description: ID of the model to be monitored
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: active
+        in: query
+        description: Determines whether the webhook is active and sending `POST` requests.
+        schema:
+          type: boolean
+  /webhooks/{id}:
+    get:
+      tags:
+      - Webhooks
+      operationId: getWebhook
+      summary: Get a Webhook
+      description: 'Official operationId: get-webhooks-id.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+    put:
+      tags:
+      - Webhooks
+      operationId: updateWebhook
+      summary: Update a Webhook
+      description: 'Official operationId: put-webhooks-id.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: description
+        in: query
+        description: A string with a length from `0` to `16384`.
+        schema:
+          type: string
+          maxLength: 16384
+          minLength: 0
+      - name: callbackURL
+        in: query
+        description: A valid URL that is reachable with a `HEAD` and `POST` request.
+        schema:
+          type: string
+          format: url
+      - name: idModel
+        in: query
+        description: ID of the model to be monitored
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+      - name: active
+        in: query
+        description: Determines whether the webhook is active and sending `POST` requests.
+        schema:
+          type: boolean
+    delete:
+      tags:
+      - Webhooks
+      operationId: deleteWebhook
+      summary: Delete a Webhook
+      description: 'Official operationId: delete-webhooks-id.'
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+  /tokens/{token}/webhooks:
+    get:
+      tags:
+      - Webhooks
+      operationId: listTokenWebhooks
+      summary: Get Webhooks for Token
+      description: 'Official operationId: get-tokens-token-webhooks.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Webhook'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags:
+      - Webhooks
+      operationId: createTokenWebhook
+      summary: Create Webhooks for Token
+      description: 'Official operationId: post-tokens-token-webhooks.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '401':
+          description: Unauthorized
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: description
+        in: query
+        description: A description to be displayed when retrieving information about the webhook.
+        schema:
+          type: string
+      - name: callbackURL
+        in: query
+        required: true
+        description: The URL that the webhook should POST information to.
+        schema:
+          type: string
+          format: url
+      - name: idModel
+        in: query
+        required: true
+        description: ID of the object to create a webhook on.
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+components:
+  securitySchemes:
+    APIKey:
+      type: apiKey
+      in: query
+      name: key
+      description: Trello Power-Up API key (official swagger.v3.json).
+    APIToken:
+      type: apiKey
+      in: query
+      name: token
+      description: User token authorized for the API key (official swagger.v3.json).
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.atlassian.com/authorize
+          tokenUrl: https://auth.atlassian.com/authorize/oauth/token
+          scopes:
+            read:board:trello: Read cards, lists, and comments in boards.
+            write:board:trello: Create and update cards, lists, and comments in boards.
+            write:board:membership:trello: Add, remove, or modify memberships on boards.
+            read:organization:trello: Read workspaces.
+            write:organization:trello: Update workspaces.
+            write:organization:membership:trello: Add, remove, or modify memberships on workspaces.
+            read:member:trello: Read email address, public name, public avatar, and memberships of boards,
+              workspaces, and enterprises.
+            write:member:trello: Upload custom emojis and stickers, star boards, and save searches.
+            read:enterprise:trello: Read enterprises.
+            write:enterprise:trello: Update and manage enterprises.
+  schemas:
+    TrelloID:
+      type: string
+      pattern: ^[0-9a-fA-F]{24}$
+      example: 5abbe4b7ddc1b351ef961414
+    Color:
+      type: string
+      enum:
+      - yellow
+      - purple
+      - blue
+      - red
+      - green
+      - orange
+      - black
+      - sky
+      - pink
+      - lime
+      nullable: true
+    Member:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        fullName:
+          type: string
+        username:
+          type: string
+        url:
+          type: string
+          format: url
+        email:
+          type: string
+        avatarUrl:
+          type: string
+          format: url
+        initials:
+          type: string
+        idBoards:
+          type: array
+          items:
+            type: string
+            pattern: ^[0-9a-fA-F]{24}$
+        idOrganizations:
+          type: array
+          items:
+            type: string
+            pattern: ^[0-9a-fA-F]{24}$
+        bio:
+          type: string
+        memberType:
+          type: string
+          enum:
+          - normal
+          - ghost
+        status:
+          type: string
+          enum:
+          - disconnected
+    Board:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        name:
+          type: string
+          description: The name of the board.
+        desc:
+          type: string
+        closed:
+          type: boolean
+        idOrganization:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        url:
+          type: string
+          format: url
+        shortUrl:
+          type: string
+          format: url
+        shortLink:
+          type: string
+        dateLastActivity:
+          type: string
+          format: date
+        prefs:
+          type: object
+          properties:
+            permissionLevel:
+              type: string
+              enum:
+              - org
+              - board
+            hideVotes:
+              type: boolean
+            voting:
+              type: string
+              enum:
+              - disabled
+              - enabled
+            comments:
+              type: string
+            invitations:
+              enum:
+              - admins
+              - members
+            selfJoin:
+              type: boolean
+            cardCovers:
+              type: boolean
+            isTemplate:
+              type: boolean
+            cardAging:
+              type: string
+              enum:
+              - pirate
+              - regular
+            calendarFeedEnabled:
+              type: boolean
+            background:
+              type: string
+              pattern: ^[0-9a-fA-F]{24}$
+            backgroundImage:
+              type: string
+              format: uri
+            backgroundImageScaled:
+              type: array
+              items:
+                type: object
+                properties:
+                  width:
+                    description: The width of the image.
+                    type: integer
+                    example: 100
+                  height:
+                    description: The height of the image.
+                    type: integer
+                    example: 64
+                  url:
+                    description: The URL of the image.
+                    format: url
+                    type: string
+                    example: https://trello-backgrounds.s3.amazonaws.com/SharedBackground/100x64/abc/photo-123.jpg
+            backgroundTile:
+              type: boolean
+            backgroundBrightness:
+              type: string
+            backgroundBottomColor:
+              type: string
+            backgroundTopColor:
+              type: string
+            canBePublic:
+              type: boolean
+            canBeEnterprise:
+              type: boolean
+            canBeOrg:
+              type: boolean
+            canBePrivate:
+              type: boolean
+            canInvite:
+              type: boolean
+        labelNames:
+          type: object
+          properties:
+            green:
+              type: string
+            yellow:
+              type: string
+            orange:
+              type: string
+            red:
+              type: string
+            purple:
+              type: string
+            blue:
+              type: string
+            sky:
+              type: string
+            lime:
+              type: string
+            pink:
+              type: string
+            black:
+              type: string
+        starred:
+          type: boolean
+        subscribed:
+          type: boolean
+        pinned:
+          type: boolean
+        idMemberCreator:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        enterpriseOwned:
+          type: boolean
+    TrelloList:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        name:
+          type: string
+          description: The name of the list
+        closed:
+          type: boolean
+        pos:
+          type: number
+        idBoard:
+          type: string
+        subscribed:
+          type: boolean
+        softLimit:
+          type: string
+    Card:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        name:
+          type: string
+        desc:
+          type: string
+        closed:
+          type: boolean
+        idBoard:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        idList:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        idMembers:
+          type: array
+          items:
+            oneOf:
+            - type: string
+              pattern: ^[0-9a-fA-F]{24}$
+        idLabels:
+          type: array
+          items:
+            oneOf:
+            - type: object
+              properties:
+                id:
+                  description: The ID of the label.
+                  type: string
+                  $ref: '#/components/schemas/TrelloID'
+                idBoard:
+                  type: string
+                  description: The ID of the board the label is on.
+                  $ref: '#/components/schemas/TrelloID'
+                  example: 5abbe4b7ddc1b351ef961414
+                name:
+                  type: string
+                  description: The name displayed for the label.
+                  example: Overdue
+                  nullable: true
+                  minLength: 0
+                  maxLength: 16384
+                color:
+                  type: string
+                  $ref: '#/components/schemas/Color'
+                  description: The color of the label. Null means no color and the label will not be shown
+                    on the front of Cards.
+            - type: string
+              pattern: ^[0-9a-fA-F]{24}$
+        url:
+          type: string
+          format: url
+        shortUrl:
+          type: string
+          format: url
+        shortLink:
+          type: string
+        due:
+          type: string
+          format: date
+          nullable: true
+        dueReminder:
+          type: string
+          nullable: true
+        dateLastActivity:
+          type: string
+          format: date-time
+        pos:
+          type: number
+          format: float
+        subscribed:
+          type: boolean
+        cover:
+          type: object
+          properties:
+            idAttachment:
+              type: string
+              pattern: ^[0-9a-fA-F]{24}$
+            color:
+              type: string
+              nullable: true
+              enum:
+              - yellow
+              - purple
+              - blue
+              - red
+              - green
+              - orange
+              - black
+              - sky
+              - pink
+              - lime
+            idUploadedBackground:
+              type: boolean
+              nullable: true
+            size:
+              type: string
+              enum:
+              - normal
+            brightness:
+              type: string
+              enum:
+              - light
+              - dark
+            isTemplate:
+              type: boolean
+        badges:
+          type: object
+          properties:
+            attachmentsByType:
+              type: object
+              properties:
+                trello:
+                  type: object
+                  properties:
+                    board:
+                      type: number
+                    card:
+                      type: number
+            location:
+              type: boolean
+            votes:
+              type: integer
+            viewingMemberVoted:
+              type: boolean
+            subscribed:
+              type: boolean
+            fogbugz:
+              type: string
+            checkItems:
+              type: integer
+            checkItemsChecked:
+              type: integer
+            comments:
+              type: integer
+            attachments:
+              type: integer
+            description:
+              type: boolean
+            due:
+              type: string
+              format: date
+              nullable: true
+            start:
+              type: string
+              format: date
+              nullable: true
+            dueComplete:
+              type: boolean
+        idShort:
+          type: integer
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        name:
+          type: string
+        displayName:
+          type: string
+        url:
+          type: string
+          format: url
+        idBoards:
+          type: array
+          items:
+            type: string
+            pattern: ^[0-9a-fA-F]{24}$
+        idEnterprise:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        dateLastActivity:
+          type: string
+          format: date
+        prefs:
+          type: object
+          properties:
+            boardVisibilityRestrict:
+              type: object
+            boardDeleteRestrict:
+              type: object
+            attachmentRestrictions:
+              type: array
+              items:
+                type: string
+                enum:
+                - computer
+                - trello
+                - google-drive
+                - box
+                - onedrive
+                - link
+            permissionLevel:
+              type: string
+              enum:
+              - org
+              - private
+              - public
+              - enterprise
+              - domain
+        offering:
+          type: string
+        memberships:
+          type: array
+          items:
+            type: string
+            pattern: ^[0-9a-fA-F]{24}$
+        premiumFeatures:
+          type: array
+          items:
+            type: string
+    Label:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        idBoard:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        name:
+          type: string
+          description: The name displayed for the label.
+          nullable: true
+          minLength: 0
+          maxLength: 16384
+        color:
+          type: string
+          nullable: true
+          enum:
+          - yellow
+          - purple
+          - blue
+          - red
+          - green
+          - orange
+          - black
+          - sky
+          - pink
+          - lime
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        description:
+          type: string
+        idModel:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+        callbackURL:
+          type: string
+          format: url
+        active:
+          type: boolean
+        consecutiveFailures:
+          type: number
+        firstConsecutiveFailDate:
+          type: string
+          format: date
+          nullable: true

@@ -1,6 +1,18 @@
 const {get, BasicAuthRequester} = require('@friggframework/core');
 const FormatPatchBody = require('./formatPatchBody');
 
+/** Default PSA REST Accept-header version. See ConnectWise PSA Developer Guide. */
+const DEFAULT_API_VERSION = '2019.1';
+
+/**
+ * Default cloud site used when no `site` is provided. Matches
+ * connectwise.openapi.yaml servers[0].url for spec ↔ client sync.
+ */
+const DEFAULT_SITE = 'https://api-na.myconnectwise.net';
+
+/** Codebase path segment the module hardcodes today (trailing slash). */
+const DEFAULT_CODEBASE = 'v4_6_release/';
+
 class Api extends BasicAuthRequester {
     constructor(params) {
         super(params);
@@ -9,35 +21,50 @@ class Api extends BasicAuthRequester {
         this.private_key = get(params, 'private_key', null);
         this.client_id = get(params, 'client_id', null);
         this.site = get(params, 'site', null);
+        this.api_version = get(
+            params,
+            'api_version',
+            process.env.CONNECTWISE_API_VERSION || DEFAULT_API_VERSION
+        );
         this.setup();
     }
 
     setup() {
-        this.site = this.site && this.cleanSiteUrl(this.site);
+        this.site = this.site
+            ? this.cleanSiteUrl(this.site)
+            : DEFAULT_SITE;
+        this.baseUrl = this.site;
+        this.codebase = DEFAULT_CODEBASE;
+        const apiRoot = `${this.site}/${this.codebase}apis/3.0`;
         this.urls = {
-            companies: `${this.site}/v4_6_release/apis/3.0/company/companies`,
-            companyById: (id) => `${this.site}/v4_6_release/apis/3.0/company/companies/${id}`,
-            companyTypeAssociation: (id) => `${this.site}/v4_6_release/apis/3.0/company/companies/${id}/typeAssociations`,
-            communicationTypes: `${this.site}/v4_6_release/apis/3.0/company/communicationTypes`,
-            contacts: `${this.site}/v4_6_release/apis/3.0/company/contacts`,
-            contactById: (id) => `${this.site}/v4_6_release/apis/3.0/company/contacts/${id}`,
-            invoices: `${this.site}/v4_6_release/apis/3.0/finance/invoices`,
-            invoicePayments: (id) => `${this.site}/v4_6_release/apis/3.0/finance/invoices/${id}/payments`,
-            procurement: `${this.site}/v4_6_release/apis/3.0/procurement`,
-            companyTypes: `${this.site}/v4_6_release/apis/3.0/company/companies/types`,
-            countries: `${this.site}/v4_6_release/apis/3.0/company/countries`,
-            callbacks: `${this.site}/v4_6_release/apis/3.0/system/callbacks`,
-            callbackById: (id) => `${this.site}/v4_6_release/apis/3.0/system/callbacks/${id}`,
+            companies: `${apiRoot}/company/companies`,
+            companyById: (id) => `${apiRoot}/company/companies/${id}`,
+            companyTypeAssociation: (id) => `${apiRoot}/company/companies/${id}/typeAssociations`,
+            communicationTypes: `${apiRoot}/company/communicationTypes`,
+            contacts: `${apiRoot}/company/contacts`,
+            contactById: (id) => `${apiRoot}/company/contacts/${id}`,
+            invoices: `${apiRoot}/finance/invoices`,
+            invoicePayments: (id) => `${apiRoot}/finance/invoices/${id}/payments`,
+            procurement: `${apiRoot}/procurement`,
+            companyTypes: `${apiRoot}/company/companies/types`,
+            countries: `${apiRoot}/company/countries`,
+            callbacks: `${apiRoot}/system/callbacks`,
+            callbackById: (id) => `${apiRoot}/system/callbacks/${id}`,
         }
         const credentials = `${this.company_id}+${this.public_key}:${this.private_key}`;
         const buff = new Buffer.from(credentials);
         this.Credentials = `Basic ${buff.toString('base64')}`
     }
 
+    getAcceptHeader() {
+        return `application/vnd.connectwise.com+json; version=${this.api_version}`;
+    }
+
     addAuthHeaders(headers) {
         const authHeaders = {
             clientId: this.client_id,
             authorization: this.Credentials,
+            Accept: this.getAcceptHeader(),
         }
         return {...headers, ...authHeaders}
     }
@@ -45,7 +72,6 @@ class Api extends BasicAuthRequester {
     async _post(options) {
         const postHeaders = {
             'content-type': 'application/json',
-            Accept: 'application/vnd.connectwise.com+json; version=2019.1',
         }
         options.headers = {...options.headers, ...postHeaders}
         return super._post(options);
@@ -54,7 +80,6 @@ class Api extends BasicAuthRequester {
     async _patch(options) {
         const patchHeaders = {
             'content-type': 'application/json',
-            Accept: 'application/vnd.connectwise.com+json; version=2019.1',
         }
         options.headers = {...options.headers, ...patchHeaders}
         return super._patch(options);
@@ -318,7 +343,7 @@ class Api extends BasicAuthRequester {
             name: get(params, 'name'),
         };
         const options = {
-            url: `${this.site}/v4_6_release/apis/3.0/procurement/types`,
+            url: `${this.urls.procurement}/types`,
             body,
         };
         return this._post(options);
@@ -401,4 +426,4 @@ class Api extends BasicAuthRequester {
     }
 }
 
-module.exports = {Api};
+module.exports = {Api, DEFAULT_API_VERSION, DEFAULT_SITE, DEFAULT_CODEBASE};

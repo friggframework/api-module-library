@@ -1,0 +1,768 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "factorial",
+  "label": "Factorial HR",
+  "package": "@friggframework/api-module-factorial",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected Factorial company, persisted by the module (apiPropertiesToPersist).",
+    "fields": [
+      {
+        "name": "company_id",
+        "type": "string",
+        "description": "Factorial company id from GET /resources/api_public/credentials (company_id)"
+      }
+    ]
+  },
+  "objects": {
+    "credential": {
+      "label": "Credential / auth context",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "company_id",
+          "type": "string",
+          "readOnly": true,
+          "tag": "organization.id"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "organization.name"
+        },
+        {
+          "name": "legal_name",
+          "type": "string",
+          "tag": "organization.legalName"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "employee_id",
+          "type": "string",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "credential.list"
+        }
+      }
+    },
+    "legal_entity": {
+      "label": "Legal entity",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "company_id",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "legal_name",
+          "type": "string",
+          "tag": "organization.legalName"
+        },
+        {
+          "name": "country",
+          "type": "string",
+          "tag": "address.country"
+        },
+        {
+          "name": "currency",
+          "type": "string"
+        },
+        {
+          "name": "tin",
+          "type": "string"
+        },
+        {
+          "name": "city",
+          "type": "string",
+          "tag": "address.city"
+        },
+        {
+          "name": "address_line_1",
+          "type": "string",
+          "tag": "address.line1"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "legal_entity.list"
+        },
+        "get": {
+          "capability": "legal_entity.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "legal_entity.create",
+          "body": "body"
+        }
+      }
+    },
+    "employee": {
+      "label": "Employee",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "first_name",
+          "type": "string",
+          "tag": "person.givenName"
+        },
+        {
+          "name": "last_name",
+          "type": "string",
+          "tag": "person.familyName"
+        },
+        {
+          "name": "full_name",
+          "type": "string",
+          "tag": "person.fullName",
+          "readOnly": true
+        },
+        {
+          "name": "preferred_name",
+          "type": "string",
+          "tag": "person.preferredName"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "login_email",
+          "type": "email",
+          "tag": "contact.loginEmail"
+        },
+        {
+          "name": "phone_number",
+          "type": "string",
+          "tag": "contact.phone"
+        },
+        {
+          "name": "company_id",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "legal_entity_id",
+          "type": "string"
+        },
+        {
+          "name": "location_id",
+          "type": "string"
+        },
+        {
+          "name": "manager_id",
+          "type": "string"
+        },
+        {
+          "name": "is_terminating",
+          "type": "boolean",
+          "readOnly": true
+        },
+        {
+          "name": "terminated_on",
+          "type": "date"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "employee.list",
+          "cursor": "after_id",
+          "limit": "limit",
+          "paging": "cursor"
+        },
+        "get": {
+          "capability": "employee.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "employee.create",
+          "body": "body"
+        },
+        "update": {
+          "capability": "employee.update",
+          "id": "id",
+          "body": "body"
+        }
+      }
+    },
+    "team": {
+      "label": "Team",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "team.name"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "company_id",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "parent_team_id",
+          "type": "string"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "team.list"
+        },
+        "get": {
+          "capability": "team.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "team.create",
+          "body": "body"
+        },
+        "update": {
+          "capability": "team.update",
+          "id": "id",
+          "body": "body"
+        }
+      }
+    },
+    "membership": {
+      "label": "Team membership",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "team_id",
+          "type": "string"
+        },
+        {
+          "name": "lead",
+          "type": "boolean"
+        },
+        {
+          "name": "company_id",
+          "type": "string",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "membership.list"
+        },
+        "get": {
+          "capability": "membership.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "membership.create",
+          "body": "body"
+        },
+        "update": {
+          "capability": "membership.update",
+          "id": "id",
+          "body": "body"
+        }
+      }
+    },
+    "location": {
+      "label": "Location",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "location.name"
+        },
+        {
+          "name": "company_id",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "timezone",
+          "type": "string"
+        },
+        {
+          "name": "country",
+          "type": "string",
+          "tag": "address.country"
+        },
+        {
+          "name": "city",
+          "type": "string",
+          "tag": "address.city"
+        },
+        {
+          "name": "main",
+          "type": "boolean"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "location.list"
+        },
+        "get": {
+          "capability": "location.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "location.create",
+          "body": "body"
+        },
+        "update": {
+          "capability": "location.update",
+          "id": "id",
+          "body": "body"
+        }
+      }
+    },
+    "webhook_subscription": {
+      "label": "Webhook subscription",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "target_url",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "tag": "webhook.subscriptionType"
+        },
+        {
+          "name": "company_id",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "challenge",
+          "type": "string"
+        },
+        {
+          "name": "enabled",
+          "type": "boolean"
+        },
+        {
+          "name": "api_version",
+          "type": "string",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "webhook.list"
+        },
+        "get": {
+          "capability": "webhook.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "webhook.create",
+          "body": "body"
+        },
+        "update": {
+          "capability": "webhook.update",
+          "id": "id",
+          "body": "body"
+        }
+      }
+    }
+  },
+  "events": {
+    "employees.employee.update": {
+      "delivery": "webhook",
+      "object": "employee",
+      "subscribe": "webhook.create",
+      "match": "employees/employee/update",
+      "description": "Fired when an employee record is modified. Payload is the employee resource.",
+      "payload": {
+        "id": 2,
+        "company_id": 1,
+        "first_name": "Ana",
+        "last_name": "Blanco Perez",
+        "email": "ana@factorial.com"
+      },
+      "idPath": "id",
+      "recordId": "id"
+    },
+    "employees.employee.create_with_contract": {
+      "delivery": "webhook",
+      "object": "employee",
+      "subscribe": "webhook.create",
+      "match": "employees/employee/create_with_contract",
+      "description": "Fired when a new employee is created together with a contract.",
+      "payload": {
+        "id": 2,
+        "company_id": 1,
+        "first_name": "Ana",
+        "last_name": "Blanco Perez"
+      },
+      "idPath": "id",
+      "recordId": "id"
+    },
+    "employees.employee.terminate": {
+      "delivery": "webhook",
+      "object": "employee",
+      "subscribe": "webhook.create",
+      "match": "employees/employee/terminate",
+      "description": "Fired when an employee is marked as terminated.",
+      "payload": {
+        "id": 2,
+        "company_id": 1,
+        "is_terminating": true
+      },
+      "idPath": "id",
+      "recordId": "id"
+    }
+  },
+  "webhook": {
+    "scope": "app",
+    "topic": "{{headers.x-factorial-subscription-type|body}}",
+    "eventId": "{{body.id}}",
+    "account": "{{body.company_id}}",
+    "verify": "verifyWebhookChallenge",
+    "note": "Compare x-factorial-wh-challenge to the subscription challenge (no HMAC). Pass subscription_type when creating the subscription."
+  },
+  "capabilities": {
+    "credential.list": {
+      "kind": "read",
+      "method": "listCredentials",
+      "input": {
+        "query": { "type": "object" }
+      },
+      "output": "page<credential>",
+      "args": ["query"]
+    },
+    "legal_entity.list": {
+      "kind": "read",
+      "method": "listLegalEntities",
+      "input": {
+        "query": { "type": "object" }
+      },
+      "output": "page<legal_entity>",
+      "args": ["query"]
+    },
+    "legal_entity.get": {
+      "kind": "read",
+      "method": "getLegalEntity",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "legal_entity",
+      "args": ["id"]
+    },
+    "legal_entity.create": {
+      "kind": "write",
+      "method": "createLegalEntity",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "legal_entity",
+      "args": ["body"]
+    },
+    "employee.list": {
+      "kind": "read",
+      "method": "listEmployees",
+      "input": {
+        "query": { "type": "object" }
+      },
+      "output": "page<employee>",
+      "args": ["query"]
+    },
+    "employee.get": {
+      "kind": "read",
+      "method": "getEmployee",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "employee",
+      "args": ["id"]
+    },
+    "employee.create": {
+      "kind": "write",
+      "method": "createEmployeeWithContract",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "employee",
+      "args": ["body"]
+    },
+    "employee.update": {
+      "kind": "write",
+      "method": "updateEmployee",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "employee",
+      "args": ["id", "body"]
+    },
+    "employee.invite": {
+      "kind": "write",
+      "method": "inviteEmployee",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "args": ["body"]
+    },
+    "employee.terminate": {
+      "kind": "write",
+      "method": "terminateEmployee",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "employee",
+      "args": ["body"]
+    },
+    "employee.unterminate": {
+      "kind": "write",
+      "method": "unterminateEmployee",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "employee",
+      "args": ["body"]
+    },
+    "team.list": {
+      "kind": "read",
+      "method": "listTeams",
+      "input": {
+        "query": { "type": "object" }
+      },
+      "output": "page<team>",
+      "args": ["query"]
+    },
+    "team.get": {
+      "kind": "read",
+      "method": "getTeam",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "team",
+      "args": ["id"]
+    },
+    "team.create": {
+      "kind": "write",
+      "method": "createTeam",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "team",
+      "args": ["body"]
+    },
+    "team.update": {
+      "kind": "write",
+      "method": "updateTeam",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "team",
+      "args": ["id", "body"]
+    },
+    "team.delete": {
+      "kind": "delete",
+      "method": "deleteTeam",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "args": ["id"]
+    },
+    "membership.list": {
+      "kind": "read",
+      "method": "listMemberships",
+      "input": {
+        "query": { "type": "object" }
+      },
+      "output": "page<membership>",
+      "args": ["query"]
+    },
+    "membership.get": {
+      "kind": "read",
+      "method": "getMembership",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "membership",
+      "args": ["id"]
+    },
+    "membership.create": {
+      "kind": "write",
+      "method": "createMembership",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "membership",
+      "args": ["body"]
+    },
+    "membership.update": {
+      "kind": "write",
+      "method": "updateMembership",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "membership",
+      "args": ["id", "body"]
+    },
+    "membership.delete": {
+      "kind": "delete",
+      "method": "deleteMembership",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "args": ["id"]
+    },
+    "location.list": {
+      "kind": "read",
+      "method": "listLocations",
+      "input": {
+        "query": { "type": "object" }
+      },
+      "output": "page<location>",
+      "args": ["query"]
+    },
+    "location.get": {
+      "kind": "read",
+      "method": "getLocation",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "location",
+      "args": ["id"]
+    },
+    "location.create": {
+      "kind": "write",
+      "method": "createLocation",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "location",
+      "args": ["body"]
+    },
+    "location.update": {
+      "kind": "write",
+      "method": "updateLocation",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "location",
+      "args": ["id", "body"]
+    },
+    "location.delete": {
+      "kind": "delete",
+      "method": "deleteLocation",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "args": ["id"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhookSubscriptions",
+      "input": {
+        "query": { "type": "object" }
+      },
+      "output": "page<webhook_subscription>",
+      "args": ["query"]
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhookSubscription",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "webhook_subscription",
+      "args": ["id"]
+    },
+    "webhook.create": {
+      "kind": "subscribe",
+      "method": "createWebhookSubscription",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "webhook_subscription",
+      "args": ["body"]
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhookSubscription",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "webhook_subscription",
+      "args": ["id", "body"]
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhookSubscription",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "args": ["id"]
+    },
+    "webhook.verify": {
+      "kind": "read",
+      "method": "verifyWebhookChallenge",
+      "input": {
+        "challengeHeader": { "type": "string" },
+        "challenge": { "type": "string", "required": true }
+      },
+      "output": "verificationResult"
+    }
+  }
+}

@@ -1,0 +1,824 @@
+openapi: 3.0.3
+info:
+  title: Factorial HR Public API (curated)
+  version: "2026-10-01"
+  description: >-
+    Factorial HR public REST API. Official docs live at https://apidoc.factorialhr.com/
+    and the full OpenAPI at https://api.factorialhr.com/oas/?version=2026-10-01.
+    This file is Left Hook's curated subset covering exactly the endpoints the
+    @friggframework/api-module-factorial client in api.js implements. It is the
+    source of truth the hand-written client mirrors 1:1 (one method per operationId).
+    Paths are relative to the pinned version base URL.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.factorialhr.com/api/2026-10-01
+    description: Factorial production API (pinned 2026-10-01)
+security:
+  - OAuth2: [read]
+  - ApiKeyAuth: []
+tags:
+  - name: Credentials
+  - name: Legal Entities
+  - name: Employees
+  - name: Teams
+  - name: Memberships
+  - name: Locations
+  - name: Webhooks
+paths:
+  /resources/api_public/credentials:
+    get:
+      tags: [Credentials]
+      operationId: listCredentials
+      summary: Reads all Credentials
+      description: >-
+        Returns credential / authenticated-context records for the token or API
+        key. Used for company identity (company_id, name, legal_name).
+      responses:
+        "200":
+          description: Credential list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Credential"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/companies/legal_entities:
+    get:
+      tags: [Legal Entities]
+      operationId: listLegalEntities
+      summary: Reads all Legal entities
+      parameters:
+        - in: query
+          name: ids[]
+          schema: { type: array, items: { type: integer } }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Legal entity list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/LegalEntity"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Legal Entities]
+      operationId: createLegalEntity
+      summary: Creates a Legal entity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [company_id, country, legal_name, currency]
+              properties:
+                company_id: { type: integer }
+                country: { type: string }
+                legal_name: { type: string }
+                currency: { type: string }
+                tin: { type: string }
+                city: { type: string }
+                state: { type: string }
+                postal_code: { type: string }
+                address_line_1: { type: string }
+                address_line_2: { type: string }
+      responses:
+        "201":
+          description: Created legal entity
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LegalEntity" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/companies/legal_entities/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Legal Entities]
+      operationId: getLegalEntity
+      summary: Reads a single Legal entity
+      responses:
+        "200":
+          description: Legal entity
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LegalEntity" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/employees/employees:
+    get:
+      tags: [Employees]
+      operationId: listEmployees
+      summary: Reads all Employees
+      description: >-
+        only_active and only_managers are required query params in the official
+        OpenAPI. Defaults in the client: only_active=true, only_managers=false.
+      parameters:
+        - in: query
+          name: only_active
+          required: true
+          schema: { type: boolean, default: true }
+        - in: query
+          name: only_managers
+          required: true
+          schema: { type: boolean, default: false }
+        - in: query
+          name: ids[]
+          schema: { type: array, items: { type: integer } }
+          style: form
+          explode: true
+        - in: query
+          name: emails[]
+          schema: { type: array, items: { type: string } }
+          style: form
+          explode: true
+        - in: query
+          name: updated_at_gteq
+          schema: { type: string, format: date-time }
+        - in: query
+          name: after_id
+          schema: { type: string }
+          description: Cursor pagination pointer
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Employee list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Employee"
+                  meta:
+                    $ref: "#/components/schemas/PageMeta"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/employees/employees/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Employees]
+      operationId: getEmployee
+      summary: Reads a single Employee
+      responses:
+        "200":
+          description: Employee
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Employee" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [Employees]
+      operationId: updateEmployee
+      summary: Updates an Employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id: { type: integer }
+                first_name: { type: string }
+                last_name: { type: string }
+                preferred_name: { type: string }
+                gender: { type: string }
+                phone_number: { type: string }
+                personal_email: { type: string }
+                communications_email: { type: string }
+                manager_id: { type: integer }
+                location_id: { type: integer }
+                legal_entity_id: { type: integer }
+      responses:
+        "200":
+          description: Updated employee
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Employee" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/employees/employees/create_with_contract:
+    post:
+      tags: [Employees]
+      operationId: createEmployeeWithContract
+      summary: Create an employee with a contract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [company_id, first_name, last_name, email]
+              properties:
+                company_id: { type: integer }
+                first_name: { type: string }
+                last_name: { type: string }
+                email: { type: string, format: email }
+                legal_entity_id: { type: integer }
+                location_id: { type: integer }
+                team_id: { type: integer }
+                contract_starts_on: { type: string, format: date }
+                contract_effective_on: { type: string, format: date }
+      responses:
+        "200":
+          description: Created employee
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Employee" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/employees/employees/invite:
+    post:
+      tags: [Employees]
+      operationId: inviteEmployee
+      summary: Invites an Employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: { type: integer }
+                employee_ids:
+                  type: array
+                  items: { type: integer }
+      responses:
+        "200":
+          description: Invite accepted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/employees/employees/terminate:
+    post:
+      tags: [Employees]
+      operationId: terminateEmployee
+      summary: Terminates an Employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: { type: integer }
+                terminated_on: { type: string, format: date }
+                termination_reason: { type: string }
+      responses:
+        "200":
+          description: Terminated employee
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Employee" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/employees/employees/unterminate:
+    post:
+      tags: [Employees]
+      operationId: unterminateEmployee
+      summary: Unterminates an Employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: { type: integer }
+      responses:
+        "200":
+          description: Unterminated employee
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Employee" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/teams/teams:
+    get:
+      tags: [Teams]
+      operationId: listTeams
+      summary: Reads all Teams
+      responses:
+        "200":
+          description: Team list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Team"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Teams]
+      operationId: createTeam
+      summary: Creates a Team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                parent_team_id: { type: integer }
+      responses:
+        "201":
+          description: Created team
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Team" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/teams/teams/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Teams]
+      operationId: getTeam
+      summary: Reads a single Team
+      responses:
+        "200":
+          description: Team
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Team" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [Teams]
+      operationId: updateTeam
+      summary: Updates a Team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+      responses:
+        "200":
+          description: Updated team
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Team" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Teams]
+      operationId: deleteTeam
+      summary: Deletes a Team
+      responses:
+        "200":
+          description: Deleted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/teams/memberships:
+    get:
+      tags: [Memberships]
+      operationId: listMemberships
+      summary: Reads all Memberships
+      responses:
+        "200":
+          description: Membership list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Membership"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Memberships]
+      operationId: createMembership
+      summary: Creates a Membership
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [team_id, employee_id]
+              properties:
+                team_id: { type: integer }
+                employee_id: { type: integer }
+                lead: { type: boolean }
+      responses:
+        "201":
+          description: Created membership
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Membership" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/teams/memberships/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Memberships]
+      operationId: getMembership
+      summary: Reads a single Membership
+      responses:
+        "200":
+          description: Membership
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Membership" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [Memberships]
+      operationId: updateMembership
+      summary: Updates a Membership
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lead: { type: boolean }
+      responses:
+        "200":
+          description: Updated membership
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Membership" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Memberships]
+      operationId: deleteMembership
+      summary: Deletes a Membership
+      responses:
+        "200":
+          description: Deleted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/locations/locations:
+    get:
+      tags: [Locations]
+      operationId: listLocations
+      summary: Reads all Locations
+      responses:
+        "200":
+          description: Location list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Location"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Locations]
+      operationId: createLocation
+      summary: Creates a Location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, country, timezone, company_id]
+              properties:
+                name: { type: string }
+                country: { type: string }
+                timezone: { type: string }
+                company_id: { type: integer }
+                main: { type: boolean }
+                city: { type: string }
+                state: { type: string }
+                postal_code: { type: string }
+                address_line_one: { type: string }
+                address_line_two: { type: string }
+      responses:
+        "201":
+          description: Created location
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Location" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/locations/locations/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Locations]
+      operationId: getLocation
+      summary: Reads a single Location
+      responses:
+        "200":
+          description: Location
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Location" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [Locations]
+      operationId: updateLocation
+      summary: Updates a Location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                timezone: { type: string }
+                main: { type: boolean }
+                city: { type: string }
+      responses:
+        "200":
+          description: Updated location
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Location" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Locations]
+      operationId: deleteLocation
+      summary: Deletes a Location
+      responses:
+        "200":
+          description: Deleted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/api_public/webhook_subscriptions:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookSubscriptions
+      summary: Reads all Webhook subscriptions
+      parameters:
+        - in: query
+          name: company_id
+          schema: { type: integer }
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: enabled
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Subscription list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WebhookSubscription"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Webhooks]
+      operationId: createWebhookSubscription
+      summary: Creates a Webhook subscription
+      description: >-
+        Required: subscription_type, target_url, company_id. Optional challenge
+        is echoed on deliveries as x-factorial-wh-challenge.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subscription_type, target_url, company_id]
+              properties:
+                subscription_type:
+                  type: string
+                  description: e.g. employees/employee/update
+                target_url: { type: string, format: uri }
+                company_id: { type: integer }
+                name: { type: string }
+                challenge: { type: string }
+                enabled: { type: boolean, default: true }
+                api_version: { type: string }
+      responses:
+        "201":
+          description: Created subscription
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookSubscription" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /resources/api_public/webhook_subscriptions/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Webhooks]
+      operationId: getWebhookSubscription
+      summary: Reads a single Webhook subscription
+      responses:
+        "200":
+          description: Subscription
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookSubscription" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhookSubscription
+      summary: Updates a Webhook subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                name: { type: string }
+                target_url: { type: string, format: uri }
+                challenge: { type: string }
+      responses:
+        "200":
+          description: Updated subscription
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookSubscription" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhookSubscription
+      summary: Deletes a Webhook subscription
+      responses:
+        "200":
+          description: Deleted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://id.factorialhr.com/oauth/authorize
+          tokenUrl: https://id.factorialhr.com/api/oauth/token
+          refreshUrl: https://id.factorialhr.com/api/oauth/token
+          scopes:
+            read: Required for all operations
+            write: Required for write operations
+            employees: Access to employees
+            company_legal_entities: Access to company legal entities
+            company_locations: Access to company locations
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  parameters:
+    ResourceId:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer }
+  responses:
+    Unauthorized:
+      description: Missing or invalid credentials
+  schemas:
+    PageMeta:
+      type: object
+      properties:
+        has_next_page: { type: boolean }
+        has_previous_page: { type: boolean }
+        start_cursor: { type: string }
+        end_cursor: { type: string }
+        total: { type: integer }
+        limit: { type: integer }
+    Credential:
+      type: object
+      required: [company_id, id, employee_id]
+      properties:
+        id: { type: integer }
+        company_id: { type: integer }
+        employee_id: { type: integer }
+        email: { type: string }
+        login_email: { type: string }
+        full_name: { type: string }
+        first_name: { type: string }
+        last_name: { type: string }
+        name: { type: string }
+        legal_name: { type: string }
+        role: { type: string }
+        locale: { type: string }
+        subscription_plan: { type: string }
+    LegalEntity:
+      type: object
+      required: [id, company_id, country, legal_name, currency]
+      properties:
+        id: { type: integer }
+        company_id: { type: integer }
+        country: { type: string }
+        legal_name: { type: string }
+        currency: { type: string }
+        tin: { type: string }
+        siret: { type: string }
+        city: { type: string }
+        state: { type: string }
+        postal_code: { type: string }
+        address_line_1: { type: string }
+        address_line_2: { type: string }
+    Employee:
+      type: object
+      required: [id, access_id, first_name, last_name, full_name, company_id]
+      properties:
+        id: { type: integer }
+        access_id: { type: integer }
+        first_name: { type: string }
+        last_name: { type: string }
+        full_name: { type: string }
+        preferred_name: { type: string }
+        email: { type: string, format: email }
+        login_email: { type: string, format: email }
+        company_id: { type: integer }
+        legal_entity_id: { type: integer }
+        location_id: { type: integer }
+        manager_id: { type: integer }
+        phone_number: { type: string }
+        is_terminating: { type: boolean }
+        terminated_on: { type: string, format: date, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    Team:
+      type: object
+      required: [id, name, company_id]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        company_id: { type: integer }
+        employee_ids:
+          type: array
+          items: { type: integer }
+        lead_ids:
+          type: array
+          items: { type: integer }
+        parent_team_id: { type: integer, nullable: true }
+        depth: { type: integer }
+    Membership:
+      type: object
+      required: [id, employee_id, team_id, lead]
+      properties:
+        id: { type: integer }
+        company_id: { type: integer }
+        employee_id: { type: integer }
+        team_id: { type: integer }
+        lead: { type: boolean }
+        direct: { type: boolean }
+    Location:
+      type: object
+      required: [id, company_id, name, main]
+      properties:
+        id: { type: integer }
+        company_id: { type: integer }
+        name: { type: string }
+        timezone: { type: string }
+        country: { type: string }
+        state: { type: string }
+        city: { type: string }
+        address_line_1: { type: string }
+        address_line_2: { type: string }
+        postal_code: { type: string }
+        phone_number: { type: string }
+        main: { type: boolean }
+    WebhookSubscription:
+      type: object
+      required: [id, target_url, type, company_id, enabled, api_version]
+      properties:
+        id: { type: integer }
+        target_url: { type: string, format: uri }
+        type: { type: string }
+        company_id: { type: integer }
+        name: { type: string }
+        challenge: { type: string }
+        enabled: { type: boolean }
+        api_version: { type: string }

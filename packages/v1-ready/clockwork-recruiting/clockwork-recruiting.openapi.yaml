@@ -1,0 +1,2019 @@
+openapi: 3.0.3
+info:
+  title: Clockwork Recruiting API v3
+  version: 3.0.0
+  description: 'Curated OpenAPI subset for @friggframework/api-module-clockwork-recruiting. Clockwork
+    does not publish a public OpenAPI document; developer documentation is distributed by Clockwork support
+    (https://api.clockworkrecruiting.com/v3.0). Paths and operationIds mirror the Api client 1:1 for the
+    core people/companies/projects/candidacies/tags/webhooks surface. Resource base is per-firm: https://{firm}.clockworkrecruiting.com/api/v3.
+    OAuth authorize/token live on https://account.clockworkrecruiting.com.'
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+- url: https://example.clockworkrecruiting.com/api/v3
+  description: Per-firm resource API (prod). Substitute the firm subdomain for `example`. QA uses {firm}.qa.clockworkrecruiting.com.
+security:
+- OAuth2: []
+tags:
+- name: People
+- name: PersonAddresses
+- name: PersonEmails
+- name: PersonPhones
+- name: PersonLinkedIn
+- name: PersonPositions
+- name: PersonTags
+- name: PersonNotes
+- name: Companies
+- name: Projects
+- name: Candidacies
+- name: Users
+- name: Tags
+- name: Reference
+- name: Utility
+- name: Webhooks
+paths:
+  /people:
+    get:
+      tags:
+      - People
+      operationId: listPeople
+      summary: List people
+      description: 'List firm people (candidates/contacts). Query: limit, offset, sort, include, linkedin_url,
+        updated_since.'
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    post:
+      tags:
+      - People
+      operationId: createPerson
+      summary: Create person
+      description: 'Create a person. Body envelope: { person: {...} }.'
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /people/{id}:
+    get:
+      tags:
+      - People
+      operationId: getPerson
+      summary: Get person
+      description: Get a person by id. Optional include.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    put:
+      tags:
+      - People
+      operationId: updatePerson
+      summary: Update person
+      description: 'Update a person. Body envelope: { person: {...} }.'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+    delete:
+      tags:
+      - People
+      operationId: deletePerson
+      summary: Delete person
+      description: Delete a person by id.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /people_search:
+    get:
+      tags:
+      - People
+      operationId: searchPeople
+      summary: Search people
+      description: Full-text / filtered people search.
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /people/{personId}/addresses:
+    get:
+      tags:
+      - PersonAddresses
+      operationId: listPersonAddresses
+      summary: List person addresses
+      description: List person addresses
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    post:
+      tags:
+      - PersonAddresses
+      operationId: createPersonAddress
+      summary: Create person address
+      description: 'Body: { address: {...} }'
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /people/{personId}/addresses/{id}:
+    get:
+      tags:
+      - PersonAddresses
+      operationId: getPersonAddress
+      summary: Get person address
+      description: Get person address
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    put:
+      tags:
+      - PersonAddresses
+      operationId: updatePersonAddress
+      summary: Update person address
+      description: 'Body: { address: {...} }'
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+    delete:
+      tags:
+      - PersonAddresses
+      operationId: deletePersonAddress
+      summary: Delete person address
+      description: Delete person address
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /people/{personId}/email_addresses:
+    get:
+      tags:
+      - PersonEmails
+      operationId: listPersonEmailAddresses
+      summary: List person email addresses
+      description: List person email addresses
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    post:
+      tags:
+      - PersonEmails
+      operationId: createPersonEmailAddress
+      summary: Create person email address
+      description: 'Body: { email: {...} }'
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /people/{personId}/email_addresses/{id}:
+    get:
+      tags:
+      - PersonEmails
+      operationId: getPersonEmailAddress
+      summary: Get person email address
+      description: Get person email address
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    put:
+      tags:
+      - PersonEmails
+      operationId: updatePersonEmailAddress
+      summary: Update person email address
+      description: 'Body: { email: {...} }'
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+    delete:
+      tags:
+      - PersonEmails
+      operationId: deletePersonEmailAddress
+      summary: Delete person email address
+      description: Delete person email address
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /people/{personId}/phone_numbers:
+    get:
+      tags:
+      - PersonPhones
+      operationId: listPersonPhoneNumbers
+      summary: List person phone numbers
+      description: List person phone numbers
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    post:
+      tags:
+      - PersonPhones
+      operationId: createPersonPhoneNumber
+      summary: Create person phone number
+      description: 'Body: { phone_number: {...} }'
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /people/{personId}/phone_numbers/{id}:
+    get:
+      tags:
+      - PersonPhones
+      operationId: getPersonPhoneNumber
+      summary: Get person phone number
+      description: Get person phone number
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    put:
+      tags:
+      - PersonPhones
+      operationId: updatePersonPhoneNumber
+      summary: Update person phone number
+      description: 'Body: { phone_number: {...} }'
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+    delete:
+      tags:
+      - PersonPhones
+      operationId: deletePersonPhoneNumber
+      summary: Delete person phone number
+      description: Delete person phone number
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /people/{personId}/linkedin_urls:
+    get:
+      tags:
+      - PersonLinkedIn
+      operationId: listPersonLinkedinUrls
+      summary: List person LinkedIn URLs
+      description: List person LinkedIn URLs
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    post:
+      tags:
+      - PersonLinkedIn
+      operationId: createPersonLinkedinUrl
+      summary: Create person LinkedIn URL
+      description: 'Body: { linkedin_url: {...} }'
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /people/{personId}/linkedin_urls/{id}:
+    get:
+      tags:
+      - PersonLinkedIn
+      operationId: getPersonLinkedinUrl
+      summary: Get person LinkedIn URL
+      description: Get person LinkedIn URL
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    put:
+      tags:
+      - PersonLinkedIn
+      operationId: updatePersonLinkedinUrl
+      summary: Update person LinkedIn URL
+      description: 'Body: { linkedin_url: {...} }'
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+    delete:
+      tags:
+      - PersonLinkedIn
+      operationId: deletePersonLinkedinUrl
+      summary: Delete person LinkedIn URL
+      description: Delete person LinkedIn URL
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /people/{personId}/positions:
+    get:
+      tags:
+      - PersonPositions
+      operationId: listPersonPositions
+      summary: List person positions
+      description: List person positions
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    post:
+      tags:
+      - PersonPositions
+      operationId: createPersonPosition
+      summary: Create person position
+      description: 'Body: { position: {...} }'
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /people/{personId}/positions/{id}:
+    get:
+      tags:
+      - PersonPositions
+      operationId: getPersonPosition
+      summary: Get person position
+      description: Get person position
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    put:
+      tags:
+      - PersonPositions
+      operationId: updatePersonPosition
+      summary: Update person position
+      description: 'Body: { position: {...} }'
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+    delete:
+      tags:
+      - PersonPositions
+      operationId: deletePersonPosition
+      summary: Delete person position
+      description: Delete person position
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /people/{personId}/tags:
+    get:
+      tags:
+      - PersonTags
+      operationId: listPersonTags
+      summary: List person tags
+      description: List person tags
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    post:
+      tags:
+      - PersonTags
+      operationId: createPersonTag
+      summary: Create person tag
+      description: 'Body: { tag: {...} }'
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /people/{personId}/tags/{id}:
+    delete:
+      tags:
+      - PersonTags
+      operationId: deletePersonTag
+      summary: Delete person tag
+      description: Delete person tag
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /people/{personId}/notes:
+    get:
+      tags:
+      - PersonNotes
+      operationId: listPersonNotes
+      summary: List person notes
+      description: List person notes
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    post:
+      tags:
+      - PersonNotes
+      operationId: createPersonNote
+      summary: Create person note
+      description: 'Body: { note: {...} }'
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /people/{personId}/notes/{id}:
+    get:
+      tags:
+      - PersonNotes
+      operationId: getPersonNote
+      summary: Get person note
+      description: Get person note
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    put:
+      tags:
+      - PersonNotes
+      operationId: updatePersonNote
+      summary: Update person note
+      description: 'Body: { note: {...} }'
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+    delete:
+      tags:
+      - PersonNotes
+      operationId: deletePersonNote
+      summary: Delete person note
+      description: Delete person note
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /companies:
+    get:
+      tags:
+      - Companies
+      operationId: listCompanies
+      summary: List companies
+      description: List firms' companies. Optional name / do-not-contact / client filters.
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    post:
+      tags:
+      - Companies
+      operationId: createCompany
+      summary: Create company
+      description: 'Body: { company: {...} }'
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /companies/{id}:
+    get:
+      tags:
+      - Companies
+      operationId: getCompany
+      summary: Get company
+      description: Get a company by id.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    put:
+      tags:
+      - Companies
+      operationId: updateCompany
+      summary: Update company
+      description: 'Body: { company: {...} }'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /projects:
+    get:
+      tags:
+      - Projects
+      operationId: listProjects
+      summary: List projects
+      description: List search projects. Optional status / type / user filters.
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /projects/{id}:
+    get:
+      tags:
+      - Projects
+      operationId: getProject
+      summary: Get project
+      description: Get a search project by id. Optional include.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /projects/{projectId}/admin:
+    get:
+      tags:
+      - Projects
+      operationId: getProjectAdmin
+      summary: Get project admin
+      description: Get project admin
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /projects/{projectId}/clients:
+    get:
+      tags:
+      - Projects
+      operationId: listProjectClients
+      summary: List project clients
+      description: List project clients
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /projects/{projectId}/clients/{id}:
+    get:
+      tags:
+      - Projects
+      operationId: getProjectClient
+      summary: Get project client
+      description: Get project client
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /projects/{projectId}/users:
+    get:
+      tags:
+      - Projects
+      operationId: listProjectUsers
+      summary: List project users
+      description: List project users
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /projects/{projectId}/users/{id}:
+    get:
+      tags:
+      - Projects
+      operationId: getProjectUser
+      summary: Get project user
+      description: Get project user
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /projects/{projectId}/candidacies:
+    get:
+      tags:
+      - Candidacies
+      operationId: listCandidacies
+      summary: List candidacies
+      description: List candidacies on a search project.
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    post:
+      tags:
+      - Candidacies
+      operationId: createCandidacy
+      summary: Create candidacy
+      description: 'Body: { candidacy: {...} }'
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /projects/{projectId}/candidacies/{id}:
+    get:
+      tags:
+      - Candidacies
+      operationId: getCandidacy
+      summary: Get candidacy
+      description: Get candidacy
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    put:
+      tags:
+      - Candidacies
+      operationId: updateCandidacy
+      summary: Update candidacy
+      description: 'Body: { candidacy: {...} }'
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+    delete:
+      tags:
+      - Candidacies
+      operationId: deleteCandidacy
+      summary: Delete candidacy
+      description: Only candidacies with no notes can be deleted.
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /projects/{projectId}/candidacies/{candidacyId}/notes:
+    get:
+      tags:
+      - Candidacies
+      operationId: listCandidacyNotes
+      summary: List candidacy notes
+      description: List candidacy notes
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: candidacyId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /projects/{projectId}/candidacies/{candidacyId}/notes/{id}:
+    get:
+      tags:
+      - Candidacies
+      operationId: getCandidacyNote
+      summary: Get candidacy note
+      description: Get candidacy note
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: candidacyId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /users:
+    get:
+      tags:
+      - Users
+      operationId: listUsers
+      summary: List users
+      description: List firm users (identity / assignee reference).
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /tags:
+    get:
+      tags:
+      - Tags
+      operationId: listTags
+      summary: List tags
+      description: List tags
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    post:
+      tags:
+      - Tags
+      operationId: createTag
+      summary: Create tag
+      description: 'Body: { tag: {...} }'
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /tags/{id}:
+    get:
+      tags:
+      - Tags
+      operationId: getTag
+      summary: Get tag
+      description: Get tag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    put:
+      tags:
+      - Tags
+      operationId: updateTag
+      summary: Update tag
+      description: 'Body: { tag: {...} }'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+    delete:
+      tags:
+      - Tags
+      operationId: deleteTag
+      summary: Delete tag
+      description: Delete tag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /regions:
+    get:
+      tags:
+      - Reference
+      operationId: listRegions
+      summary: List regions
+      description: List regions
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /schools:
+    get:
+      tags:
+      - Reference
+      operationId: listSchools
+      summary: List schools
+      description: List schools
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    post:
+      tags:
+      - Reference
+      operationId: createSchool
+      summary: Create school
+      description: 'Body: { school: {...} }'
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /schools/{id}:
+    get:
+      tags:
+      - Reference
+      operationId: getSchool
+      summary: Get school
+      description: Get school
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+    put:
+      tags:
+      - Reference
+      operationId: updateSchool
+      summary: Update school
+      description: 'Body: { school: {...} }'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /note_categories:
+    get:
+      tags:
+      - Reference
+      operationId: listNoteCategories
+      summary: List note categories
+      description: List note categories
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /statuses:
+    get:
+      tags:
+      - Reference
+      operationId: listStatuses
+      summary: List statuses
+      description: List statuses
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /firm_fields:
+    get:
+      tags:
+      - Reference
+      operationId: listFirmFields
+      summary: List firm fields
+      description: Custom field definitions for the firm.
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+  /upload_signatures:
+    post:
+      tags:
+      - Utility
+      operationId: createUploadSignature
+      summary: Create upload signature
+      description: 'Body: { upload_signature: {...} }'
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /webhooks:
+    post:
+      tags:
+      - Webhooks
+      operationId: createWebhook
+      summary: Create webhook
+      description: Register a webhook subscription. Parameters may be passed as query and/or JSON body
+        per Clockwork developer docs.
+      parameters: null
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+  /webhooks/{id}:
+    delete:
+      tags:
+      - Webhooks
+      operationId: deleteWebhook
+      summary: Delete webhook
+      description: Delete a webhook subscription by id.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successful response
+        201:
+          description: Created
+        204:
+          description: No content
+        401:
+          description: Unauthorized
+        404:
+          description: Not found
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: 'OAuth 2.0 Authorization Code against Clockwork''s central account host. Scope: `read
+        write`. Access token sent as Bearer on resource calls.'
+      flows:
+        authorizationCode:
+          authorizationUrl: https://account.clockworkrecruiting.com/oauth/authorize
+          tokenUrl: https://account.clockworkrecruiting.com/oauth/token
+          scopes:
+            read: Read firm data
+            write: Write firm data

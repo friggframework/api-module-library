@@ -1,0 +1,497 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "clockwork-recruiting",
+  "label": "Clockwork Recruiting",
+  "package": "@friggframework/api-module-clockwork-recruiting",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Clockwork firm. Identity is firm_subdomain from OAuth callback/state or access-token JWT firm_hostname.",
+    "fields": [
+      {
+        "name": "firm_subdomain",
+        "type": "string",
+        "description": "Firm subdomain used in https://{firm}.clockworkrecruiting.com/api/v3"
+      }
+    ]
+  },
+  "objects": {
+    "person": {
+      "label": "Person",
+      "description": "Candidate or contact in the firm database",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "first_name",
+          "type": "string",
+          "tag": "person.givenName"
+        },
+        {
+          "name": "last_name",
+          "type": "string",
+          "tag": "person.familyName"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "person.fullName"
+        },
+        {
+          "name": "biography",
+          "type": "string"
+        },
+        {
+          "name": "linkedin_url",
+          "type": "string"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "person.list",
+          "limit": "limit",
+          "offset": "offset",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "person.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "person.create",
+          "body": "person"
+        },
+        "update": {
+          "capability": "person.update",
+          "id": "id",
+          "body": "person"
+        },
+        "delete": {
+          "capability": "person.delete",
+          "id": "id"
+        }
+      }
+    },
+    "company": {
+      "label": "Company",
+      "description": "Organization tracked by the firm",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "organization.name"
+        },
+        {
+          "name": "website",
+          "type": "string",
+          "tag": "organization.domain"
+        },
+        {
+          "name": "linkedin_url",
+          "type": "string"
+        },
+        {
+          "name": "is_client",
+          "type": "boolean"
+        },
+        {
+          "name": "do_not_contact",
+          "type": "boolean"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "company.list",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "company.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "company.create",
+          "body": "company"
+        },
+        "update": {
+          "capability": "company.update",
+          "id": "id",
+          "body": "company"
+        }
+      }
+    },
+    "project": {
+      "label": "Project",
+      "description": "Executive search project / engagement",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "project_type",
+          "type": "string"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "project.list",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "project.get",
+          "id": "id"
+        }
+      }
+    },
+    "candidacy": {
+      "label": "Candidacy",
+      "description": "Person being considered on a search project",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "person_id",
+          "type": "id"
+        },
+        {
+          "name": "project_id",
+          "type": "id"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "candidacy.list",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "candidacy.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "candidacy.create",
+          "body": "candidacy"
+        },
+        "update": {
+          "capability": "candidacy.update",
+          "id": "id",
+          "body": "candidacy"
+        },
+        "delete": {
+          "capability": "candidacy.delete",
+          "id": "id"
+        }
+      }
+    },
+    "user": {
+      "label": "User",
+      "description": "Firm user / assignee",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "person.fullName"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "user.list",
+          "paging": "offset"
+        }
+      }
+    },
+    "tag": {
+      "label": "Tag",
+      "description": "Firm-defined classifier for people",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "tag.list",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "tag.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "tag.create",
+          "body": "tag"
+        },
+        "update": {
+          "capability": "tag.update",
+          "id": "id",
+          "body": "tag"
+        },
+        "delete": {
+          "capability": "tag.delete",
+          "id": "id"
+        }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "description": "Event subscription",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "url",
+          "type": "string"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "create": {
+          "capability": "webhook.create",
+          "body": "webhook"
+        },
+        "delete": {
+          "capability": "webhook.delete",
+          "id": "id"
+        }
+      }
+    }
+  },
+  "capabilities": {
+    "person.list": {
+      "object": "person",
+      "operation": "list",
+      "method": "listPeople",
+      "path": "GET /people",
+      "description": "List people"
+    },
+    "person.get": {
+      "object": "person",
+      "operation": "get",
+      "method": "getPerson",
+      "path": "GET /people/{id}",
+      "description": "Get person"
+    },
+    "person.create": {
+      "object": "person",
+      "operation": "create",
+      "method": "createPerson",
+      "path": "POST /people",
+      "description": "Create person"
+    },
+    "person.update": {
+      "object": "person",
+      "operation": "update",
+      "method": "updatePerson",
+      "path": "PUT /people/{id}",
+      "description": "Update person"
+    },
+    "person.delete": {
+      "object": "person",
+      "operation": "delete",
+      "method": "deletePerson",
+      "path": "DELETE /people/{id}",
+      "description": "Delete person"
+    },
+    "person.search": {
+      "object": "person",
+      "operation": "search",
+      "method": "searchPeople",
+      "path": "GET /people_search",
+      "description": "Search people"
+    },
+    "company.list": {
+      "object": "company",
+      "operation": "list",
+      "method": "listCompanies",
+      "path": "GET /companies",
+      "description": "List companies"
+    },
+    "company.get": {
+      "object": "company",
+      "operation": "get",
+      "method": "getCompany",
+      "path": "GET /companies/{id}",
+      "description": "Get company"
+    },
+    "company.create": {
+      "object": "company",
+      "operation": "create",
+      "method": "createCompany",
+      "path": "POST /companies",
+      "description": "Create company"
+    },
+    "company.update": {
+      "object": "company",
+      "operation": "update",
+      "method": "updateCompany",
+      "path": "PUT /companies/{id}",
+      "description": "Update company"
+    },
+    "project.list": {
+      "object": "project",
+      "operation": "list",
+      "method": "listProjects",
+      "path": "GET /projects",
+      "description": "List projects"
+    },
+    "project.get": {
+      "object": "project",
+      "operation": "get",
+      "method": "getProject",
+      "path": "GET /projects/{id}",
+      "description": "Get project"
+    },
+    "candidacy.list": {
+      "object": "candidacy",
+      "operation": "list",
+      "method": "listCandidacies",
+      "path": "GET /projects/{projectId}/candidacies",
+      "description": "List candidacies"
+    },
+    "candidacy.get": {
+      "object": "candidacy",
+      "operation": "get",
+      "method": "getCandidacy",
+      "path": "GET /projects/{projectId}/candidacies/{id}",
+      "description": "Get candidacy"
+    },
+    "candidacy.create": {
+      "object": "candidacy",
+      "operation": "create",
+      "method": "createCandidacy",
+      "path": "POST /projects/{projectId}/candidacies",
+      "description": "Create candidacy"
+    },
+    "candidacy.update": {
+      "object": "candidacy",
+      "operation": "update",
+      "method": "updateCandidacy",
+      "path": "PUT /projects/{projectId}/candidacies/{id}",
+      "description": "Update candidacy"
+    },
+    "candidacy.delete": {
+      "object": "candidacy",
+      "operation": "delete",
+      "method": "deleteCandidacy",
+      "path": "DELETE /projects/{projectId}/candidacies/{id}",
+      "description": "Delete candidacy"
+    },
+    "user.list": {
+      "object": "user",
+      "operation": "list",
+      "method": "listUsers",
+      "path": "GET /users",
+      "description": "List users"
+    },
+    "tag.list": {
+      "object": "tag",
+      "operation": "list",
+      "method": "listTags",
+      "path": "GET /tags",
+      "description": "List tags"
+    },
+    "tag.get": {
+      "object": "tag",
+      "operation": "get",
+      "method": "getTag",
+      "path": "GET /tags/{id}",
+      "description": "Get tag"
+    },
+    "tag.create": {
+      "object": "tag",
+      "operation": "create",
+      "method": "createTag",
+      "path": "POST /tags",
+      "description": "Create tag"
+    },
+    "tag.update": {
+      "object": "tag",
+      "operation": "update",
+      "method": "updateTag",
+      "path": "PUT /tags/{id}",
+      "description": "Update tag"
+    },
+    "tag.delete": {
+      "object": "tag",
+      "operation": "delete",
+      "method": "deleteTag",
+      "path": "DELETE /tags/{id}",
+      "description": "Delete tag"
+    },
+    "webhook.create": {
+      "object": "webhook",
+      "operation": "create",
+      "method": "createWebhook",
+      "path": "POST /webhooks",
+      "description": "Create webhook"
+    },
+    "webhook.delete": {
+      "object": "webhook",
+      "operation": "delete",
+      "method": "deleteWebhook",
+      "path": "DELETE /webhooks/{id}",
+      "description": "Delete webhook"
+    }
+  }
+}

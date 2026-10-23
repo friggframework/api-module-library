@@ -1,0 +1,613 @@
+openapi: 3.0.3
+info:
+  title: CallRail API v3 (subset)
+  version: "3.0.0"
+  description: >-
+    CallRail is a call tracking and conversation intelligence platform.
+    This is Left Hook's curated subset of CallRail's public REST API v3,
+    covering exactly the endpoints the @friggframework/api-module-callrail
+    client in api.js implements. Authored from the official docs at
+    https://apidocs.callrail.com/. One method per operationId.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.callrail.com/v3
+    description: CallRail production API
+security:
+  - TokenAuth: []
+tags:
+  - name: Accounts
+  - name: Companies
+  - name: Calls
+  - name: FormSubmissions
+  - name: TextMessages
+  - name: Trackers
+  - name: Users
+  - name: Integrations
+paths:
+  /a.json:
+    get:
+      tags: [Accounts]
+      operationId: listAccounts
+      summary: List accounts accessible to the API key
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        "200":
+          description: Paginated list of accounts
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "429":
+          $ref: '#/components/responses/RateLimited'
+  /a/{account_id}.json:
+    get:
+      tags: [Accounts]
+      operationId: getAccount
+      summary: Retrieve a single account
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        "200":
+          description: Account details
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+  /a/{account_id}/companies.json:
+    get:
+      tags: [Companies]
+      operationId: listCompanies
+      summary: List companies in an account
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        "200":
+          description: Paginated list of companies
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Companies]
+      operationId: createCompany
+      summary: Create a company
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                time_zone: { type: string }
+      responses:
+        "201":
+          description: Company created
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+  /a/{account_id}/companies/{company_id}.json:
+    get:
+      tags: [Companies]
+      operationId: getCompany
+      summary: Retrieve a single company
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/CompanyId'
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        "200":
+          description: Company details
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Companies]
+      operationId: updateCompany
+      summary: Update a company
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/CompanyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Company updated
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+  /a/{account_id}/calls.json:
+    get:
+      tags: [Calls]
+      operationId: listCalls
+      summary: List calls in an account
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - name: relative_pagination
+          in: query
+          schema: { type: boolean }
+        - name: start_date
+          in: query
+          schema: { type: string }
+        - name: end_date
+          in: query
+          schema: { type: string }
+        - name: direction
+          in: query
+          schema: { type: string, enum: [inbound, outbound] }
+        - name: answered
+          in: query
+          schema: { type: boolean }
+        - name: company_id
+          in: query
+          schema: { type: string }
+        - name: tracker_id
+          in: query
+          schema: { type: string }
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        "200":
+          description: Paginated list of calls
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "429":
+          $ref: '#/components/responses/RateLimited'
+    post:
+      tags: [Calls]
+      operationId: createCall
+      summary: Create an outbound phone call
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - caller_id
+                - customer_phone_number
+                - business_phone_number
+              properties:
+                caller_id: { type: string }
+                customer_phone_number: { type: string }
+                business_phone_number: { type: string }
+                recording_enabled: { type: boolean }
+      responses:
+        "201":
+          description: Call created
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+  /a/{account_id}/calls/{call_id}.json:
+    get:
+      tags: [Calls]
+      operationId: getCall
+      summary: Retrieve a single call
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/CallId'
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        "200":
+          description: Call details
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Calls]
+      operationId: updateCall
+      summary: Update a call (tags, note, lead_status, value, customer_name, spam)
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/CallId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tags:
+                  type: array
+                  items: { type: string }
+                note: { type: string }
+                value: { type: string }
+                lead_status:
+                  type: string
+                  enum: [good_lead, not_a_lead]
+                  nullable: true
+                append_tags: { type: boolean }
+                customer_name: { type: string }
+                spam: { type: boolean }
+      responses:
+        "200":
+          description: Call updated
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+  /a/{account_id}/form_submissions.json:
+    get:
+      tags: [FormSubmissions]
+      operationId: listFormSubmissions
+      summary: List form submissions
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - name: company_id
+          in: query
+          schema: { type: string }
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        "200":
+          description: Paginated list of form submissions
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [FormSubmissions]
+      operationId: createFormSubmission
+      summary: Create a form submission
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: >-
+                Official examples wrap fields in a form_submission object.
+              additionalProperties: true
+      responses:
+        "201":
+          description: Form submission created
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+  /a/{account_id}/form_submissions/{form_submission_id}.json:
+    put:
+      tags: [FormSubmissions]
+      operationId: updateFormSubmission
+      summary: Update a form submission
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/FormSubmissionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tags:
+                  type: array
+                  items: { type: string }
+                note: { type: string }
+                value: { type: string }
+                lead_status: { type: string }
+                append_tags: { type: boolean }
+      responses:
+        "200":
+          description: Form submission updated
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+  /a/{account_id}/text-messages.json:
+    get:
+      tags: [TextMessages]
+      operationId: listTextConversations
+      summary: List text message conversations
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - name: company_id
+          in: query
+          schema: { type: string }
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        "200":
+          description: Paginated list of conversations
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [TextMessages]
+      operationId: sendTextMessage
+      summary: Send a text message (SMS or MMS)
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - company_id
+                - customer_phone_number
+                - tracking_number
+                - content
+              properties:
+                company_id: { type: string }
+                customer_phone_number: { type: string }
+                tracking_number: { type: string }
+                content: { type: string }
+                media_url: { type: string, format: uri }
+      responses:
+        "201":
+          description: Message sent
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "429":
+          $ref: '#/components/responses/RateLimited'
+  /a/{account_id}/text-messages/{conversation_id}.json:
+    get:
+      tags: [TextMessages]
+      operationId: getTextConversation
+      summary: Retrieve a single text conversation
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/ConversationId'
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        "200":
+          description: Conversation with messages
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+  /a/{account_id}/trackers.json:
+    get:
+      tags: [Trackers]
+      operationId: listTrackers
+      summary: List trackers
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - name: company_id
+          in: query
+          schema: { type: string }
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        "200":
+          description: Paginated list of trackers
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+  /a/{account_id}/trackers/{tracker_id}.json:
+    get:
+      tags: [Trackers]
+      operationId: getTracker
+      summary: Retrieve a single tracker
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/TrackerId'
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        "200":
+          description: Tracker details
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+  /a/{account_id}/users.json:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List users in an account
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - name: company_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated list of users
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+  /a/{account_id}/users/{user_id}.json:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Retrieve a single user
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        "200":
+          description: User details
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+  /a/{account_id}/integrations.json:
+    get:
+      tags: [Integrations]
+      operationId: listIntegrations
+      summary: List integrations for a company
+      description: company_id query parameter is required by CallRail.
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - name: company_id
+          in: query
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        "200":
+          description: Paginated list of integrations
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Integrations]
+      operationId: createIntegration
+      summary: Create an integration (Webhooks or Custom)
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, company_id, config]
+              properties:
+                type:
+                  type: string
+                  enum: [Webhooks, Custom]
+                company_id: { type: string }
+                config:
+                  type: object
+                  additionalProperties: true
+                  description: >-
+                    For Webhooks: arrays of URLs keyed by event
+                    (pre_call_webhook, post_call_webhook, etc.).
+      responses:
+        "201":
+          description: Integration created (includes signing_key for Webhooks)
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+  /a/{account_id}/integrations/{integration_id}.json:
+    get:
+      tags: [Integrations]
+      operationId: getIntegration
+      summary: Retrieve a single integration
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/IntegrationId'
+        - $ref: '#/components/parameters/Fields'
+      responses:
+        "200":
+          description: Integration details
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Integrations]
+      operationId: updateIntegration
+      summary: Update an integration (state and/or config)
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/IntegrationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                state:
+                  type: string
+                  enum: [active, disabled]
+                config:
+                  type: object
+                  additionalProperties: true
+      responses:
+        "200":
+          description: Integration updated
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      tags: [Integrations]
+      operationId: deleteIntegration
+      summary: Disable an integration
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/IntegrationId'
+      responses:
+        "204":
+          description: Integration disabled
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >-
+        Send as `Authorization: Token token="YOUR_API_KEY"`. CallRail does not
+        use Bearer tokens for the v3 REST API.
+  parameters:
+    AccountId:
+      name: account_id
+      in: path
+      required: true
+      schema: { type: string }
+    CompanyId:
+      name: company_id
+      in: path
+      required: true
+      schema: { type: string }
+    CallId:
+      name: call_id
+      in: path
+      required: true
+      schema: { type: string }
+    FormSubmissionId:
+      name: form_submission_id
+      in: path
+      required: true
+      schema: { type: string }
+    ConversationId:
+      name: conversation_id
+      in: path
+      required: true
+      schema: { type: string }
+    TrackerId:
+      name: tracker_id
+      in: path
+      required: true
+      schema: { type: string }
+    UserId:
+      name: user_id
+      in: path
+      required: true
+      schema: { type: string }
+    IntegrationId:
+      name: integration_id
+      in: path
+      required: true
+      schema: { type: string }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PerPage:
+      name: per_page
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 250, default: 100 }
+    Fields:
+      name: fields
+      in: query
+      description: Comma-separated list of additional fields to include
+      schema: { type: string }
+  responses:
+    Unauthorized:
+      description: Missing or invalid API key
+    NotFound:
+      description: Resource not found
+    BadRequest:
+      description: Invalid request
+    RateLimited:
+      description: Rate limit exceeded (1,000/hour or 10,000/day by default)

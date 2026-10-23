@@ -1,0 +1,507 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "dentrixascend",
+  "label": "Dentrix Ascend",
+  "package": "@friggframework/api-module-dentrixascend",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Dentrix Ascend dental organization. Identity is the Organization-ID used on Public API requests (from config or OrgMapper LinkedOrgs).",
+    "fields": [
+      {
+        "name": "organizationId",
+        "type": "id",
+        "description": "Organization-ID header value / entity externalId"
+      }
+    ]
+  },
+  "objects": {
+    "organization": {
+      "label": "Organization",
+      "description": "Dental organization (company) in Ascend",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "organization.get", "id": "id" }
+      }
+    },
+    "location": {
+      "label": "Location",
+      "description": "Physical dental office / location",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "location.list",
+          "items": "data",
+          "paging": "cursor"
+        },
+        "get": { "capability": "location.get", "id": "id" },
+        "update": {
+          "capability": "location.update",
+          "id": "id",
+          "body": "location"
+        }
+      }
+    },
+    "provider": {
+      "label": "Provider",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "firstName", "type": "string", "tag": "person.givenName" },
+        { "name": "lastName", "type": "string", "tag": "person.familyName" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "provider.list",
+          "items": "data",
+          "paging": "cursor"
+        },
+        "get": { "capability": "provider.get", "id": "id" },
+        "create": { "capability": "provider.create", "body": "provider" },
+        "update": {
+          "capability": "provider.update",
+          "id": "id",
+          "body": "provider"
+        }
+      }
+    },
+    "patient": {
+      "label": "Patient",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "firstName", "type": "string", "tag": "person.givenName" },
+        { "name": "lastName", "type": "string", "tag": "person.familyName" },
+        { "name": "emailAddress", "type": "email", "tag": "contact.email" },
+        { "name": "chartNumber", "type": "string" },
+        { "name": "dateOfBirth", "type": "date" },
+        { "name": "patientStatus", "type": "string" },
+        {
+          "name": "lastModified",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "lastModified",
+        "list": {
+          "capability": "patient.list",
+          "cursor": "lastId",
+          "limit": "pageSize",
+          "items": "data",
+          "paging": "cursor"
+        },
+        "get": { "capability": "patient.get", "id": "id" },
+        "create": { "capability": "patient.create", "body": "patient" },
+        "update": {
+          "capability": "patient.update",
+          "id": "id",
+          "body": "patient"
+        }
+      }
+    },
+    "appointment": {
+      "label": "Appointment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "start", "type": "datetime" },
+        { "name": "status", "type": "string" },
+        {
+          "name": "lastModified",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "lastModified",
+        "list": {
+          "capability": "appointment.list",
+          "cursor": "lastId",
+          "limit": "pageSize",
+          "items": "data",
+          "paging": "cursor"
+        },
+        "get": { "capability": "appointment.get", "id": "id" },
+        "create": {
+          "capability": "appointment.create",
+          "body": "appointment"
+        },
+        "update": {
+          "capability": "appointment.update",
+          "id": "id",
+          "body": "appointment"
+        },
+        "delete": { "capability": "appointment.delete", "id": "id" }
+      }
+    },
+    "transaction": {
+      "label": "Ledger transaction",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "ledgerType", "type": "string" },
+        { "name": "amount", "type": "number", "tag": "money.amount" },
+        { "name": "transactionDate", "type": "date" },
+        {
+          "name": "lastModified",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "lastModified",
+        "list": {
+          "capability": "transaction.list",
+          "cursor": "lastId",
+          "limit": "pageSize",
+          "items": "data",
+          "paging": "cursor"
+        },
+        "get": { "capability": "transaction.get", "id": "id" }
+      }
+    },
+    "patientPayment": {
+      "label": "Patient payment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "amount", "type": "number", "tag": "money.amount" },
+        { "name": "transactionDate", "type": "date" },
+        { "name": "ledgerType", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "patientPayment.list",
+          "cursor": "lastId",
+          "limit": "pageSize",
+          "items": "data",
+          "paging": "cursor"
+        },
+        "get": { "capability": "patientPayment.get", "id": "id" }
+      }
+    },
+    "insuranceClaim": {
+      "label": "Insurance claim",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "insuranceClaim.list",
+          "items": "data",
+          "paging": "cursor"
+        },
+        "get": { "capability": "insuranceClaim.get", "id": "id" }
+      }
+    },
+    "feeSchedule": {
+      "label": "Fee schedule",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "feeSchedule.list",
+          "items": "data",
+          "paging": "cursor"
+        },
+        "get": { "capability": "feeSchedule.get", "id": "id" }
+      }
+    },
+    "patientProcedure": {
+      "label": "Patient procedure",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "patientProcedure.list",
+          "items": "data",
+          "paging": "cursor"
+        },
+        "get": { "capability": "patientProcedure.get", "id": "id" }
+      }
+    },
+    "patientStatement": {
+      "label": "Patient statement",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "patientStatement.list",
+          "items": "data",
+          "paging": "cursor"
+        },
+        "get": { "capability": "patientStatement.get", "id": "id" }
+      }
+    },
+    "patientInsurancePlan": {
+      "label": "Patient insurance plan",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "patientInsurancePlan.list",
+          "items": "data",
+          "paging": "cursor"
+        },
+        "get": { "capability": "patientInsurancePlan.get", "id": "id" }
+      }
+    }
+  },
+  "events": {
+    "StreamAPI.Notification": {
+      "source": "webhook",
+      "description": "Amazon SNS StreamAPI notification (CREATE/UPDATE/DELETE). Registered via HS1 support ticket — no public REST subscription API."
+    },
+    "StreamAPI.SubscriptionConfirmation": {
+      "source": "webhook",
+      "description": "AWS SNS SubscriptionConfirmation; consumer must confirm SubscribeURL."
+    }
+  },
+  "capabilities": {
+    "organization.listLinked": {
+      "kind": "list",
+      "method": "listLinkedOrganizations",
+      "output": "organization[]",
+      "args": []
+    },
+    "organization.get": {
+      "kind": "read",
+      "method": "getOrganization",
+      "input": { "organizationId": { "type": "string" } },
+      "output": "organization",
+      "args": ["organizationId"]
+    },
+    "location.list": {
+      "kind": "list",
+      "method": "listLocations",
+      "output": "location[]",
+      "args": ["params"]
+    },
+    "location.get": {
+      "kind": "read",
+      "method": "getLocation",
+      "input": { "locationId": { "type": "string", "required": true } },
+      "output": "location",
+      "args": ["locationId"]
+    },
+    "location.update": {
+      "kind": "update",
+      "method": "updateLocation",
+      "input": {
+        "locationId": { "type": "string", "required": true },
+        "location": { "type": "object", "required": true }
+      },
+      "output": "location",
+      "args": ["locationId", "data"]
+    },
+    "provider.list": {
+      "kind": "list",
+      "method": "listProviders",
+      "output": "provider[]",
+      "args": ["params"]
+    },
+    "provider.get": {
+      "kind": "read",
+      "method": "getProvider",
+      "input": { "providerId": { "type": "string", "required": true } },
+      "output": "provider",
+      "args": ["providerId"]
+    },
+    "provider.create": {
+      "kind": "create",
+      "method": "createProvider",
+      "input": { "provider": { "type": "object", "required": true } },
+      "output": "provider",
+      "args": ["data"]
+    },
+    "provider.update": {
+      "kind": "update",
+      "method": "updateProvider",
+      "input": {
+        "providerId": { "type": "string", "required": true },
+        "provider": { "type": "object", "required": true }
+      },
+      "output": "provider",
+      "args": ["providerId", "data"]
+    },
+    "patient.list": {
+      "kind": "list",
+      "method": "listPatients",
+      "output": "patient[]",
+      "args": ["params"]
+    },
+    "patient.get": {
+      "kind": "read",
+      "method": "getPatient",
+      "input": { "patientId": { "type": "string", "required": true } },
+      "output": "patient",
+      "args": ["patientId"]
+    },
+    "patient.create": {
+      "kind": "create",
+      "method": "createPatient",
+      "input": { "patient": { "type": "object", "required": true } },
+      "output": "patient",
+      "args": ["data"]
+    },
+    "patient.update": {
+      "kind": "update",
+      "method": "updatePatient",
+      "input": {
+        "patientId": { "type": "string", "required": true },
+        "patient": { "type": "object", "required": true }
+      },
+      "output": "patient",
+      "args": ["patientId", "data"]
+    },
+    "appointment.list": {
+      "kind": "list",
+      "method": "listAppointments",
+      "output": "appointment[]",
+      "args": ["params"]
+    },
+    "appointment.get": {
+      "kind": "read",
+      "method": "getAppointment",
+      "input": { "appointmentId": { "type": "string", "required": true } },
+      "output": "appointment",
+      "args": ["appointmentId"]
+    },
+    "appointment.create": {
+      "kind": "create",
+      "method": "createAppointment",
+      "input": { "appointment": { "type": "object", "required": true } },
+      "output": "appointment",
+      "args": ["data"]
+    },
+    "appointment.update": {
+      "kind": "update",
+      "method": "updateAppointment",
+      "input": {
+        "appointmentId": { "type": "string", "required": true },
+        "appointment": { "type": "object", "required": true }
+      },
+      "output": "appointment",
+      "args": ["appointmentId", "data"]
+    },
+    "appointment.delete": {
+      "kind": "delete",
+      "method": "deleteAppointment",
+      "input": { "appointmentId": { "type": "string", "required": true } },
+      "args": ["appointmentId"]
+    },
+    "transaction.list": {
+      "kind": "list",
+      "method": "listTransactions",
+      "output": "transaction[]",
+      "args": ["params"]
+    },
+    "transaction.get": {
+      "kind": "read",
+      "method": "getTransaction",
+      "input": { "transactionId": { "type": "string", "required": true } },
+      "output": "transaction",
+      "args": ["transactionId"]
+    },
+    "patientPayment.list": {
+      "kind": "list",
+      "method": "listPatientPayments",
+      "output": "patientPayment[]",
+      "args": ["params"]
+    },
+    "patientPayment.get": {
+      "kind": "read",
+      "method": "getPatientPayment",
+      "input": { "transactionId": { "type": "string", "required": true } },
+      "output": "patientPayment",
+      "args": ["transactionId"]
+    },
+    "insuranceClaim.list": {
+      "kind": "list",
+      "method": "listInsuranceClaims",
+      "output": "insuranceClaim[]",
+      "args": ["params"]
+    },
+    "insuranceClaim.get": {
+      "kind": "read",
+      "method": "getInsuranceClaim",
+      "input": { "claimId": { "type": "string", "required": true } },
+      "output": "insuranceClaim",
+      "args": ["claimId"]
+    },
+    "feeSchedule.list": {
+      "kind": "list",
+      "method": "listFeeSchedules",
+      "output": "feeSchedule[]",
+      "args": ["params"]
+    },
+    "feeSchedule.get": {
+      "kind": "read",
+      "method": "getFeeSchedule",
+      "input": { "feeScheduleId": { "type": "string", "required": true } },
+      "output": "feeSchedule",
+      "args": ["feeScheduleId"]
+    },
+    "patientProcedure.list": {
+      "kind": "list",
+      "method": "listPatientProcedures",
+      "output": "patientProcedure[]",
+      "args": ["params"]
+    },
+    "patientProcedure.get": {
+      "kind": "read",
+      "method": "getPatientProcedure",
+      "input": { "procedureId": { "type": "string", "required": true } },
+      "output": "patientProcedure",
+      "args": ["procedureId"]
+    },
+    "patientStatement.list": {
+      "kind": "list",
+      "method": "listPatientStatements",
+      "output": "patientStatement[]",
+      "args": ["params"]
+    },
+    "patientStatement.get": {
+      "kind": "read",
+      "method": "getPatientStatement",
+      "input": { "statementId": { "type": "string", "required": true } },
+      "output": "patientStatement",
+      "args": ["statementId"]
+    },
+    "patientInsurancePlan.list": {
+      "kind": "list",
+      "method": "listPatientInsurancePlans",
+      "output": "patientInsurancePlan[]",
+      "args": ["params"]
+    },
+    "patientInsurancePlan.get": {
+      "kind": "read",
+      "method": "getPatientInsurancePlan",
+      "input": { "planId": { "type": "string", "required": true } },
+      "output": "patientInsurancePlan",
+      "args": ["planId"]
+    }
+  }
+}

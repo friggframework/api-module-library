@@ -1,0 +1,11 @@
+{
+    "name": "dentrixascend",
+    "config": {
+        "oauth2": true,
+        "grantType": "client_credentials",
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

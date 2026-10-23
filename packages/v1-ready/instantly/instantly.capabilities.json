@@ -1,0 +1,286 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "instantly",
+  "label": "Instantly",
+  "package": "@friggframework/api-module-instantly",
+  "version": "1.0.0",
+  "auth": {
+    "type": "apiKey",
+    "scheme": "bearer",
+    "header": "Authorization",
+    "testAuthRequest": "testAuth",
+    "scopesDocumentedAt": "https://developer.instantly.ai/getting-started/authorization",
+    "notes": [
+      "API v2 key sent as Authorization: Bearer <key>.",
+      "Create keys under Instantly Settings → Integrations → API; select only needed scopes.",
+      "Instantly's OAuth flow connects Google/Microsoft sending accounts into a workspace — it is not module auth."
+    ]
+  },
+  "source": {
+    "officialDocs": "https://developer.instantly.ai/",
+    "officialOpenApi": "https://api.instantly.ai/openapi/api_v2.json",
+    "overview": "https://developer.instantly.ai/api-reference/introduction",
+    "notes": [
+      "Curated subset for outreach integrations: workspace identity, campaigns, sending accounts, leads, lead lists, campaign analytics, webhook subscription CRUD.",
+      "instantly.openapi.yaml is a Frigg-curated contract transcribed from the vendor OpenAPI (paths relative to /api/v2)."
+    ]
+  },
+  "objects": {
+    "workspace": {
+      "label": "Workspace",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "owner", "type": "string", "tags": ["relation"], "readOnly": true }
+      ],
+      "operations": {
+        "get": { "method": "getWorkspace", "officialOperationId": "getWorkspace" }
+      }
+    },
+    "campaign": {
+      "label": "Campaign",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "status", "type": "integer", "tags": ["status"] },
+        { "name": "organization", "type": "string", "tags": ["relation"], "readOnly": true }
+      ],
+      "operations": {
+        "list": { "method": "listCampaigns", "officialOperationId": "listCampaign" },
+        "get": { "method": "getCampaign", "officialOperationId": "getCampaign" },
+        "create": { "method": "createCampaign", "officialOperationId": "createCampaign" },
+        "update": { "method": "patchCampaign", "officialOperationId": "patchCampaign" },
+        "analytics": {
+          "method": "getCampaignAnalytics",
+          "officialOperationId": "getCampaignAnalytics"
+        },
+        "analyticsDaily": {
+          "method": "getDailyCampaignAnalytics",
+          "officialOperationId": "getDailyCampaignAnalytics"
+        }
+      }
+    },
+    "account": {
+      "label": "Sending Account",
+      "fields": [
+        { "name": "email", "type": "string", "tags": ["identifier", "pii", "identity"] },
+        { "name": "first_name", "type": "string", "tags": ["display"] },
+        { "name": "last_name", "type": "string", "tags": ["display"] },
+        { "name": "status", "type": "integer", "tags": ["status"] },
+        { "name": "organization", "type": "string", "tags": ["relation"], "readOnly": true }
+      ],
+      "operations": {
+        "list": { "method": "listAccounts", "officialOperationId": "listAccount" },
+        "get": { "method": "getAccount", "officialOperationId": "getAccount" },
+        "create": { "method": "createAccount", "officialOperationId": "createAccount" },
+        "update": { "method": "patchAccount", "officialOperationId": "patchAccount" }
+      }
+    },
+    "lead": {
+      "label": "Lead",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "email", "type": "string", "tags": ["pii", "identity"] },
+        { "name": "first_name", "type": "string", "tags": ["display"] },
+        { "name": "last_name", "type": "string", "tags": ["display"] },
+        { "name": "company_name", "type": "string", "tags": [] },
+        { "name": "company_domain", "type": "string", "tags": [] },
+        { "name": "phone", "type": "string", "tags": ["pii"] },
+        { "name": "job_title", "type": "string", "tags": [] },
+        { "name": "campaign", "type": "string", "tags": ["relation"] },
+        { "name": "status", "type": "integer", "tags": ["status"] }
+      ],
+      "operations": {
+        "list": { "method": "listLeads", "officialOperationId": "listLeads" },
+        "get": { "method": "getLead", "officialOperationId": "getLead" },
+        "create": { "method": "createLead", "officialOperationId": "createLead" },
+        "update": { "method": "patchLead", "officialOperationId": "patchLead" }
+      }
+    },
+    "leadList": {
+      "label": "Lead List",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "organization_id", "type": "string", "tags": ["relation"], "readOnly": true }
+      ],
+      "operations": {
+        "list": { "method": "listLeadLists", "officialOperationId": "listLeadList" },
+        "get": { "method": "getLeadList", "officialOperationId": "getLeadList" },
+        "create": { "method": "createLeadList", "officialOperationId": "createLeadList" },
+        "update": { "method": "patchLeadList", "officialOperationId": "patchLeadList" }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "target_hook_url", "type": "string", "tags": [] },
+        { "name": "event_type", "type": "string", "tags": [] },
+        { "name": "campaign", "type": "string", "tags": ["relation"] },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "status", "type": "integer", "tags": ["status"] }
+      ],
+      "operations": {
+        "list": { "method": "listWebhooks", "officialOperationId": "listWebhook" },
+        "get": { "method": "getWebhook", "officialOperationId": "getWebhook" },
+        "create": { "method": "createWebhook", "officialOperationId": "createWebhook" },
+        "update": { "method": "patchWebhook", "officialOperationId": "patchWebhook" },
+        "delete": { "method": "deleteWebhook", "officialOperationId": "deleteWebhook" }
+      }
+    }
+  },
+  "capabilities": {
+    "workspace.get": {
+      "method": "getWorkspace",
+      "object": "workspace",
+      "op": "get"
+    },
+    "campaign.list": {
+      "method": "listCampaigns",
+      "object": "campaign",
+      "op": "list"
+    },
+    "campaign.get": {
+      "method": "getCampaign",
+      "object": "campaign",
+      "op": "get"
+    },
+    "campaign.create": {
+      "method": "createCampaign",
+      "object": "campaign",
+      "op": "create"
+    },
+    "campaign.update": {
+      "method": "patchCampaign",
+      "object": "campaign",
+      "op": "update"
+    },
+    "campaign.analytics.get": {
+      "method": "getCampaignAnalytics",
+      "object": "campaign",
+      "op": "analytics"
+    },
+    "campaign.analytics.daily": {
+      "method": "getDailyCampaignAnalytics",
+      "object": "campaign",
+      "op": "analyticsDaily"
+    },
+    "account.list": {
+      "method": "listAccounts",
+      "object": "account",
+      "op": "list"
+    },
+    "account.get": {
+      "method": "getAccount",
+      "object": "account",
+      "op": "get"
+    },
+    "account.create": {
+      "method": "createAccount",
+      "object": "account",
+      "op": "create"
+    },
+    "account.update": {
+      "method": "patchAccount",
+      "object": "account",
+      "op": "update"
+    },
+    "lead.list": {
+      "method": "listLeads",
+      "object": "lead",
+      "op": "list"
+    },
+    "lead.get": {
+      "method": "getLead",
+      "object": "lead",
+      "op": "get"
+    },
+    "lead.create": {
+      "method": "createLead",
+      "object": "lead",
+      "op": "create"
+    },
+    "lead.update": {
+      "method": "patchLead",
+      "object": "lead",
+      "op": "update"
+    },
+    "leadList.list": {
+      "method": "listLeadLists",
+      "object": "leadList",
+      "op": "list"
+    },
+    "leadList.get": {
+      "method": "getLeadList",
+      "object": "leadList",
+      "op": "get"
+    },
+    "leadList.create": {
+      "method": "createLeadList",
+      "object": "leadList",
+      "op": "create"
+    },
+    "leadList.update": {
+      "method": "patchLeadList",
+      "object": "leadList",
+      "op": "update"
+    },
+    "webhook.list": {
+      "method": "listWebhooks",
+      "object": "webhook",
+      "op": "list"
+    },
+    "webhook.get": {
+      "method": "getWebhook",
+      "object": "webhook",
+      "op": "get"
+    },
+    "webhook.create": {
+      "method": "createWebhook",
+      "object": "webhook",
+      "op": "create"
+    },
+    "webhook.update": {
+      "method": "patchWebhook",
+      "object": "webhook",
+      "op": "update"
+    },
+    "webhook.delete": {
+      "method": "deleteWebhook",
+      "object": "webhook",
+      "op": "delete"
+    },
+    "auth.test": {
+      "method": "testAuth",
+      "object": "workspace",
+      "op": "get"
+    }
+  },
+  "skipped": [
+    {
+      "draftMethod": "deleteCampaign",
+      "reason": "Destructive delete deferred; list/get/create/patch cover integration core."
+    },
+    {
+      "draftMethod": "deleteAccount",
+      "reason": "Destructive delete deferred."
+    },
+    {
+      "draftMethod": "deleteLead",
+      "reason": "Destructive delete deferred; bulk delete also skipped."
+    },
+    {
+      "draftMethod": "activateCampaign",
+      "reason": "Lifecycle helpers (activate/pause/duplicate/share) available in vendor API; out of READ+CRUD core for this pass."
+    },
+    {
+      "draftMethod": "listEmails",
+      "reason": "Unibox email surface is large and rate-limited (20/min); not required for campaign/lead sync core."
+    },
+    {
+      "draftMethod": "initializeGoogleOAuth",
+      "reason": "Vendor OAuth connects sending mailboxes into Instantly; not Frigg module auth."
+    }
+  ]
+}

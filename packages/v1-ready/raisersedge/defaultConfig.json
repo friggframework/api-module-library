@@ -1,0 +1,14 @@
+{
+    "name": "raisersedge",
+    "label": "Raiser's Edge NXT",
+    "productUrl": "https://www.blackbaud.com/products/blackbaud-raisers-edge-nxt",
+    "apiDocs": "https://developer.blackbaud.com/skyapi",
+    "categories": ["CRM", "Nonprofit", "Fundraising"],
+    "description": "Blackbaud Raiser's Edge NXT via SKY API — constituents, gifts, events, fundraising hierarchy, and webhook subscriptions",
+    "config": {
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

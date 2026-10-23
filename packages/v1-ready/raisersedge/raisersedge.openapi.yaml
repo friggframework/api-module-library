@@ -1,0 +1,576 @@
+openapi: 3.0.3
+info:
+  title: Blackbaud Raiser's Edge NXT (SKY API) — curated subset
+  version: "1.0.0"
+  description: >-
+    Curated OpenAPI covering exactly the endpoints implemented by
+    `@friggframework/api-module-raisersedge`. Blackbaud publishes interactive
+    endpoint references (not a single downloadable OpenAPI for the full SKY
+    surface); paths and operationIds here were verified against the official
+    SKY API docs listed below.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: SKY API Developer Portal
+    url: https://developer.blackbaud.com/skyapi
+servers:
+  - url: https://api.sky.blackbaud.com
+    description: Blackbaud SKY API
+security:
+  - OAuth2: []
+    SubscriptionKey: []
+tags:
+  - name: Constituents
+  - name: Gifts
+  - name: Events
+  - name: Fundraising
+  - name: Webhooks
+paths:
+  /constituent/v1/constituents:
+    get:
+      tags: [Constituents]
+      operationId: listConstituents
+      summary: List constituents
+      externalDocs:
+        url: https://developer.blackbaud.com/skyapi/products/renxt/constituent
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Constituent list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+                  value:
+                    type: array
+                    items: { $ref: "#/components/schemas/Constituent" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Constituents]
+      operationId: createConstituent
+      summary: Create a constituent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConstituentWrite" }
+      responses:
+        "200":
+          description: Created constituent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Constituent" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/constituents/{constituent_id}:
+    parameters:
+      - $ref: "#/components/parameters/ConstituentId"
+    get:
+      tags: [Constituents]
+      operationId: getConstituent
+      summary: Get a constituent by id
+      responses:
+        "200":
+          description: Constituent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Constituent" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    patch:
+      tags: [Constituents]
+      operationId: updateConstituent
+      summary: Update a constituent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConstituentWrite" }
+      responses:
+        "200":
+          description: Updated constituent
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/constituents/duplicatesearch:
+    get:
+      tags: [Constituents]
+      operationId: duplicateSearchConstituents
+      summary: Search for duplicate constituents
+      parameters:
+        - in: query
+          name: email_address
+          schema: { type: string }
+        - in: query
+          name: last_name
+          schema: { type: string }
+        - in: query
+          name: first_name
+          schema: { type: string }
+      responses:
+        "200":
+          description: Duplicate search results
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/constituents/{constituent_id}/emailaddresses:
+    parameters:
+      - $ref: "#/components/parameters/ConstituentId"
+    get:
+      tags: [Constituents]
+      operationId: listConstituentEmailAddresses
+      summary: List email addresses for a constituent
+      responses:
+        "200":
+          description: Email address list
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/emailaddresses:
+    post:
+      tags: [Constituents]
+      operationId: createEmailAddress
+      summary: Create an email address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created email address
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/emailaddresses/{email_address_id}:
+    parameters:
+      - in: path
+        name: email_address_id
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Constituents]
+      operationId: updateEmailAddress
+      summary: Update an email address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/constituents/{constituent_id}/phones:
+    parameters:
+      - $ref: "#/components/parameters/ConstituentId"
+    get:
+      tags: [Constituents]
+      operationId: listConstituentPhones
+      summary: List phones for a constituent
+      responses:
+        "200":
+          description: Phone list
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/phones:
+    post:
+      tags: [Constituents]
+      operationId: createPhone
+      summary: Create a phone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created phone
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/phones/{phone_id}:
+    parameters:
+      - in: path
+        name: phone_id
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Constituents]
+      operationId: updatePhone
+      summary: Update a phone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/constituents/{constituent_id}/addresses:
+    parameters:
+      - $ref: "#/components/parameters/ConstituentId"
+    get:
+      tags: [Constituents]
+      operationId: listConstituentAddresses
+      summary: List addresses for a constituent
+      responses:
+        "200":
+          description: Address list
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/addresses:
+    post:
+      tags: [Constituents]
+      operationId: createAddress
+      summary: Create an address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created address
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/addresses/{address_id}:
+    parameters:
+      - in: path
+        name: address_id
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Constituents]
+      operationId: updateAddress
+      summary: Update an address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/titles:
+    get:
+      tags: [Constituents]
+      operationId: listTitles
+      summary: List constituent titles
+      responses:
+        "200":
+          description: Title list
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/emailaddresstypes:
+    get:
+      tags: [Constituents]
+      operationId: listEmailAddressTypes
+      summary: List email address types
+      responses:
+        "200":
+          description: Type list
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/phonetypes:
+    get:
+      tags: [Constituents]
+      operationId: listPhoneTypes
+      summary: List phone types
+      responses:
+        "200":
+          description: Type list
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /constituent/v1/addresstypes:
+    get:
+      tags: [Constituents]
+      operationId: listAddressTypes
+      summary: List address types
+      responses:
+        "200":
+          description: Type list
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /gift/v1/gifts:
+    get:
+      tags: [Gifts]
+      operationId: listGifts
+      summary: List gifts
+      externalDocs:
+        url: https://developer.blackbaud.com/skyapi/products/renxt/gift
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Gift list
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Gifts]
+      operationId: createGift
+      summary: Create a gift
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created gift
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /gift/v1/gifts/{gift_id}:
+    parameters:
+      - in: path
+        name: gift_id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Gifts]
+      operationId: getGift
+      summary: Get a gift by id
+      responses:
+        "200":
+          description: Gift
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    patch:
+      tags: [Gifts]
+      operationId: updateGift
+      summary: Update a gift (requires If-Match)
+      parameters:
+        - in: header
+          name: If-Match
+          required: true
+          schema: { type: string, default: "*" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated gift
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /event/v1/eventlist:
+    get:
+      tags: [Events]
+      operationId: listEvents
+      summary: List events
+      externalDocs:
+        url: https://developer.blackbaud.com/skyapi/apis/event
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Event list
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /event/v1/events:
+    post:
+      tags: [Events]
+      operationId: createEvent
+      summary: Create an event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created event
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /event/v1/events/{event_id}:
+    parameters:
+      - in: path
+        name: event_id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Events]
+      operationId: getEvent
+      summary: Get an event by id
+      responses:
+        "200":
+          description: Event
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    patch:
+      tags: [Events]
+      operationId: updateEvent
+      summary: Update an event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated event
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /event/v1/events/{event_id}/participants:
+    parameters:
+      - in: path
+        name: event_id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Events]
+      operationId: listParticipants
+      summary: List participants for an event
+      responses:
+        "200":
+          description: Participant list
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Events]
+      operationId: createParticipant
+      summary: Create a participant on an event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created participant
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /event/v1/participants/{participant_id}:
+    parameters:
+      - in: path
+        name: participant_id
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Events]
+      operationId: updateParticipant
+      summary: Update a participant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated participant
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /fundraising/v1/funds:
+    get:
+      tags: [Fundraising]
+      operationId: listFunds
+      summary: List funds
+      responses:
+        "200":
+          description: Fund list
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /fundraising/v1/appeals:
+    get:
+      tags: [Fundraising]
+      operationId: listAppeals
+      summary: List appeals
+      responses:
+        "200":
+          description: Appeal list
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /webhook/v1/subscriptions:
+    post:
+      tags: [Webhooks]
+      operationId: createSubscription
+      summary: Create a webhook subscription
+      externalDocs:
+        url: https://developer.blackbaud.com/skyapi/docs/webhooks/tutorial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhook_url, event_type]
+              properties:
+                webhook_url: { type: string, format: uri }
+                event_type: { type: string }
+      responses:
+        "200":
+          description: Subscription created (Provisioning)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Subscription" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /webhook/v1/subscriptions/{subscription_id}:
+    parameters:
+      - in: path
+        name: subscription_id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Webhooks]
+      operationId: getSubscription
+      summary: Get a webhook subscription
+      responses:
+        "200":
+          description: Subscription
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Subscription" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Webhooks]
+      operationId: deleteSubscription
+      summary: Delete a webhook subscription
+      description: >-
+        Referenced by SubscriptionDeletedEvent when an application explicitly
+        deletes a subscription
+        (https://developer.blackbaud.com/skyapi/docs/webhooks/event-types/special).
+      responses:
+        "204":
+          description: Deleted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth2.sky.blackbaud.com/authorization
+          tokenUrl: https://oauth2.sky.blackbaud.com/token
+          scopes: {}
+    SubscriptionKey:
+      type: apiKey
+      in: header
+      name: Bb-Api-Subscription-Key
+  parameters:
+    ConstituentId:
+      in: path
+      name: constituent_id
+      required: true
+      schema: { type: string }
+    Limit:
+      in: query
+      name: limit
+      schema: { type: integer }
+    Offset:
+      in: query
+      name: offset
+      schema: { type: integer }
+  schemas:
+    Constituent:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string }
+        lookup_id: { type: string }
+        first: { type: string }
+        last: { type: string }
+        name: { type: string }
+        title: { type: string }
+        email:
+          type: object
+          properties:
+            address: { type: string, format: email }
+        phone:
+          type: object
+          properties:
+            number: { type: string }
+        date_added: { type: string, format: date-time }
+        date_modified: { type: string, format: date-time }
+    ConstituentWrite:
+      type: object
+      additionalProperties: true
+    Subscription:
+      type: object
+      properties:
+        id: { type: string }
+        environment_id: { type: string }
+        webhook_url: { type: string }
+        application_id: { type: string }
+        event_type: { type: string }
+        provisioning_status: { type: string }
+  responses:
+    Unauthorized:
+      description: Missing or invalid Authorization / subscription key

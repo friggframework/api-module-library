@@ -1,0 +1,894 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "zendesk",
+  "label": "Zendesk Support",
+  "package": "@friggframework/api-module-zendesk",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected Zendesk instance, persisted by the module (apiPropertiesToPersist). Definitions read them as $.install.accounts.zendesk.<name>.",
+    "fields": [
+      {
+        "name": "subdomain",
+        "type": "string",
+        "description": "Zendesk subdomain (acme from acme.zendesk.com)"
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "person.fullName"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "role",
+          "type": "enum",
+          "values": [
+            "end-user",
+            "agent",
+            "admin"
+          ]
+        },
+        {
+          "name": "organization_id",
+          "type": "number"
+        },
+        {
+          "name": "external_id",
+          "type": "string"
+        },
+        {
+          "name": "phone",
+          "type": "phone",
+          "tag": "contact.phone"
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "readOnly": true
+        },
+        {
+          "name": "verified",
+          "type": "boolean"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "user.list",
+          "items": "users"
+        }
+      }
+    },
+    "ticket": {
+      "label": "Ticket",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "subject",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "readOnly": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "values": [
+            "new",
+            "open",
+            "pending",
+            "hold",
+            "solved",
+            "closed"
+          ],
+          "tag": "ticket.status"
+        },
+        {
+          "name": "priority",
+          "type": "enum",
+          "values": [
+            "urgent",
+            "high",
+            "normal",
+            "low"
+          ],
+          "tag": "ticket.priority"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "values": [
+            "problem",
+            "incident",
+            "question",
+            "task"
+          ]
+        },
+        {
+          "name": "requester_id",
+          "type": "number"
+        },
+        {
+          "name": "assignee_id",
+          "type": "number",
+          "tag": "record.owner"
+        },
+        {
+          "name": "group_id",
+          "type": "number"
+        },
+        {
+          "name": "organization_id",
+          "type": "number"
+        },
+        {
+          "name": "external_id",
+          "type": "string",
+          "tag": "record.externalId"
+        },
+        {
+          "name": "tags",
+          "type": "json",
+          "tag": "record.tags"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "ticket.list",
+          "items": "tickets"
+        },
+        "get": {
+          "capability": "ticket.get",
+          "id": "ticketId"
+        },
+        "update": {
+          "capability": "ticket.update",
+          "id": "ticketId",
+          "body": "ticket"
+        }
+      }
+    },
+    "organization": {
+      "label": "Organization",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "external_id",
+          "type": "string",
+          "tag": "record.displayId"
+        },
+        {
+          "name": "domain_names",
+          "type": "json"
+        },
+        {
+          "name": "details",
+          "type": "text"
+        },
+        {
+          "name": "notes",
+          "type": "text"
+        },
+        {
+          "name": "tags",
+          "type": "json"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "organization.list",
+          "items": "organizations"
+        }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "values": [
+            "active",
+            "inactive"
+          ]
+        },
+        {
+          "name": "endpoint",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "http_method",
+          "type": "string"
+        },
+        {
+          "name": "request_format",
+          "type": "string"
+        },
+        {
+          "name": "subscriptions",
+          "type": "json"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ]
+    },
+    "group": {
+      "label": "Group",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "default",
+          "type": "boolean",
+          "readOnly": true
+        },
+        {
+          "name": "deleted",
+          "type": "boolean",
+          "readOnly": true
+        },
+        {
+          "name": "is_public",
+          "type": "boolean"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "group.list",
+          "items": "groups"
+        }
+      }
+    }
+  },
+  "events": {
+    "ticket.created": {
+      "delivery": "webhook",
+      "object": "ticket",
+      "description": "Subscribe via webhook subscriptions (zen:event-type:ticket.created or conditional_ticket_events).",
+      "match": "zen:event-type:ticket.created"
+    },
+    "ticket.updated": {
+      "delivery": "webhook",
+      "object": "ticket",
+      "description": "Subscribe via webhook subscriptions (zen:event-type:ticket.updated or conditional_ticket_events).",
+      "match": "zen:event-type:ticket.updated"
+    },
+    "user.created": {
+      "delivery": "webhook",
+      "object": "user",
+      "description": "Subscribe via zen:event-type:user.created.",
+      "match": "zen:event-type:user.created"
+    },
+    "organization.created": {
+      "delivery": "webhook",
+      "object": "organization",
+      "description": "Subscribe via zen:event-type:organization.created.",
+      "match": "zen:event-type:organization.created"
+    },
+    "ticket.tagsChanged": {
+      "delivery": "webhook",
+      "object": "ticket",
+      "subscribe": "webhook.create",
+      "description": "Event-subscription webhook zen:event-type:ticket.tags_changed (lefthook-bots draft). $.record is ticket detail; added/removed tags in event.",
+      "record": "detail",
+      "match": "zen:event-type:ticket.tags_changed"
+    },
+    "ticket.priorityChanged": {
+      "delivery": "webhook",
+      "object": "ticket",
+      "subscribe": "webhook.create",
+      "description": "Event-subscription webhook zen:event-type:ticket.priority_changed (lefthook-bots draft).",
+      "record": "detail",
+      "match": "zen:event-type:ticket.priority_changed"
+    },
+    "ticket.statusChanged": {
+      "delivery": "webhook",
+      "object": "ticket",
+      "subscribe": "webhook.create",
+      "description": "Event-subscription webhook zen:event-type:ticket.status_changed (lefthook-bots draft).",
+      "record": "detail",
+      "match": "zen:event-type:ticket.status_changed"
+    }
+  },
+  "webhook": {
+    "scope": "account",
+    "note": "Manage via Webhooks API (POST/GET/PUT/DELETE /api/v2/webhooks). These paths are NOT in https://developer.zendesk.com/zendesk/oas.yaml; source is https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/. Inbound verify: Api.verifyWebhookSignature \u2192 extensions/webhooks/signature-verifier.js#verifyZendeskSignature. Headers: X-Zendesk-Webhook-Signature / X-Zendesk-Webhook-Signature-Timestamp.",
+    "subscribe": "createWebhook",
+    "unsubscribe": "deleteWebhook",
+    "list": "listWebhooks",
+    "topic": "{{body.type}}",
+    "eventId": "{{body.id}}",
+    "verify": "verifyWebhookSignature"
+  },
+  "capabilities": {
+    "user.me": {
+      "kind": "read",
+      "method": "getCurrentUser",
+      "output": "user",
+      "args": []
+    },
+    "ticket.list": {
+      "kind": "read",
+      "method": "listTickets",
+      "input": {
+        "external_id": {
+          "type": "string"
+        },
+        "page": {
+          "type": "string"
+        },
+        "per_page": {
+          "type": "number"
+        },
+        "sort_by": {
+          "type": "string"
+        },
+        "sort_order": {
+          "type": "string"
+        }
+      },
+      "output": "page<ticket>",
+      "args": [
+        "$rest"
+      ]
+    },
+    "ticket.get": {
+      "kind": "read",
+      "method": "getTicket",
+      "input": {
+        "ticketId": {
+          "type": "number",
+          "required": true
+        }
+      },
+      "output": "ticket",
+      "args": [
+        "ticketId"
+      ]
+    },
+    "ticket.create": {
+      "kind": "write",
+      "method": "createTicket",
+      "input": {
+        "ticket": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "ticket",
+      "args": [
+        "ticket"
+      ]
+    },
+    "ticket.update": {
+      "kind": "write",
+      "method": "updateTicket",
+      "input": {
+        "ticketId": {
+          "type": "number",
+          "required": true
+        },
+        "ticket": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "ticket",
+      "args": [
+        "ticketId",
+        "ticket"
+      ]
+    },
+    "ticket.addComment": {
+      "kind": "write",
+      "method": "addTicketComment",
+      "input": {
+        "ticketId": {
+          "type": "number",
+          "required": true
+        },
+        "body": {
+          "type": "string",
+          "required": true
+        },
+        "public": {
+          "type": "boolean"
+        }
+      },
+      "output": "ticket",
+      "args": [
+        "ticketId",
+        "$rest"
+      ],
+      "note": "Helper wrapping updateTicket with ticket.comment (UpdateTicket / OAS)."
+    },
+    "ticket.delete": {
+      "kind": "write",
+      "method": "deleteTicket",
+      "input": {
+        "ticketId": {
+          "type": "number",
+          "required": true
+        }
+      },
+      "args": [
+        "ticketId"
+      ]
+    },
+    "ticket.comments.list": {
+      "kind": "read",
+      "method": "listTicketComments",
+      "input": {
+        "ticketId": {
+          "type": "number",
+          "required": true
+        },
+        "page": {
+          "type": "string"
+        },
+        "per_page": {
+          "type": "number"
+        }
+      },
+      "args": [
+        "ticketId",
+        "$rest"
+      ]
+    },
+    "ticket.search": {
+      "kind": "search",
+      "method": "searchTickets",
+      "input": {
+        "query": {
+          "type": "string",
+          "required": true
+        },
+        "sort_by": {
+          "type": "string"
+        },
+        "sort_order": {
+          "type": "string"
+        }
+      },
+      "output": "ticket[]",
+      "args": [
+        "$rest"
+      ],
+      "note": "GET /api/v2/search (ListSearchResults); ensures type:ticket in query."
+    },
+    "user.list": {
+      "kind": "read",
+      "method": "listUsers",
+      "input": {
+        "role": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "page": {
+          "type": "string"
+        },
+        "per_page": {
+          "type": "number"
+        }
+      },
+      "output": "page<user>",
+      "args": [
+        "$rest"
+      ]
+    },
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": {
+        "userId": {
+          "type": "number",
+          "required": true
+        }
+      },
+      "output": "user",
+      "args": [
+        "userId"
+      ]
+    },
+    "user.create": {
+      "kind": "write",
+      "method": "createUser",
+      "input": {
+        "user": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "user",
+      "args": [
+        "user"
+      ]
+    },
+    "user.update": {
+      "kind": "write",
+      "method": "updateUser",
+      "input": {
+        "userId": {
+          "type": "number",
+          "required": true
+        },
+        "user": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "user",
+      "args": [
+        "userId",
+        "user"
+      ]
+    },
+    "user.delete": {
+      "kind": "write",
+      "method": "deleteUser",
+      "input": {
+        "userId": {
+          "type": "number",
+          "required": true
+        }
+      },
+      "args": [
+        "userId"
+      ]
+    },
+    "organization.list": {
+      "kind": "read",
+      "method": "listOrganizations",
+      "input": {
+        "page": {
+          "type": "string"
+        },
+        "per_page": {
+          "type": "number"
+        }
+      },
+      "output": "page<organization>",
+      "args": [
+        "$rest"
+      ]
+    },
+    "organization.get": {
+      "kind": "read",
+      "method": "getOrganization",
+      "input": {
+        "organizationId": {
+          "type": "number",
+          "required": true
+        }
+      },
+      "output": "organization",
+      "args": [
+        "organizationId"
+      ]
+    },
+    "organization.create": {
+      "kind": "write",
+      "method": "createOrganization",
+      "input": {
+        "organization": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "organization",
+      "args": [
+        "organization"
+      ]
+    },
+    "organization.update": {
+      "kind": "write",
+      "method": "updateOrganization",
+      "input": {
+        "organizationId": {
+          "type": "number",
+          "required": true
+        },
+        "organization": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "organization",
+      "args": [
+        "organizationId",
+        "organization"
+      ]
+    },
+    "organization.delete": {
+      "kind": "write",
+      "method": "deleteOrganization",
+      "input": {
+        "organizationId": {
+          "type": "number",
+          "required": true
+        }
+      },
+      "args": [
+        "organizationId"
+      ]
+    },
+    "group.list": {
+      "kind": "read",
+      "method": "listGroups",
+      "input": {
+        "exclude_deleted": {
+          "type": "boolean"
+        },
+        "page": {
+          "type": "string"
+        },
+        "per_page": {
+          "type": "number"
+        }
+      },
+      "output": "group[]",
+      "args": [
+        "$rest"
+      ]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "output": "page<webhook>",
+      "args": [
+        "$rest"
+      ]
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": {
+        "webhookId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "webhook",
+      "args": [
+        "webhookId"
+      ]
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhook",
+      "input": {
+        "webhook": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "webhook",
+      "args": [
+        "webhook"
+      ]
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhook",
+      "input": {
+        "webhookId": {
+          "type": "string",
+          "required": true
+        },
+        "webhook": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "webhook",
+      "args": [
+        "webhookId",
+        "webhook"
+      ]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhook",
+      "input": {
+        "webhookId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "args": [
+        "webhookId"
+      ]
+    },
+    "webhook.signingSecret.get": {
+      "kind": "read",
+      "method": "getWebhookSigningSecret",
+      "input": {
+        "webhookId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "args": [
+        "webhookId"
+      ]
+    }
+  },
+  "options": {
+    "ticket": {
+      "capability": "ticket.list",
+      "label": "{{item.subject}} (#{{item.id}})",
+      "value": "$.item.id",
+      "items": "tickets"
+    },
+    "user": {
+      "capability": "user.list",
+      "label": "{{item.name}} ({{item.email}})",
+      "value": "$.item.id",
+      "items": "users"
+    },
+    "organization": {
+      "capability": "organization.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id",
+      "items": "organizations"
+    },
+    "group": {
+      "capability": "group.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id",
+      "items": "groups"
+    }
+  },
+  "skipped": {
+    "source": "lefthookhq/lefthook-bots definitions/manifests/zendesk.json (draft v1.6.0)",
+    "description": "All draft capabilities/objects are covered by live Api methods or Fenestra. Draft method aliases: showTicket\u2192getTicket, showUser\u2192getUser; verifyWebhookSignature is Api.verifyWebhookSignature (static).",
+    "draftMethodAliases": {
+      "showTicket": "getTicket",
+      "showUser": "getUser",
+      "verifyWebhookSignature": "Api.verifyWebhookSignature \u2192 verifyZendeskSignature"
+    }
+  }
+}

@@ -1,0 +1,109 @@
+# Fenestra Document: Google Sheets / Workspace Add-ons
+#
+# Google Sheets exposes UI extension points via Google Workspace Add-ons
+# (Editors Add-ons for Sheets) and the Apps Script Card Service / HTML service.
+# Documented at:
+#   https://developers.google.com/workspace/add-ons/editors/sheets
+#   https://developers.google.com/apps-script/guides/sheets
+#
+# Drafted against Fenestra 0.1.0
+# (api-module-library branch claude/fenestra-spec-draft-Q367t).
+# Google Sheets is not yet listed in specs/fenestra/PLATFORMS.md; this draft
+# covers the published Editors Add-on / Workspace Add-on surface. The
+# `@friggframework/api-module-google-sheets` package itself implements the
+# Sheets REST API (OAuth + spreadsheets/values), not the Add-ons SDK.
+
+fenestra: "0.1.0"
+
+info:
+  title: Google Sheets UI Extensions
+  version: "1.0.0"
+  description: |
+    Google Workspace Add-ons and Editors Add-ons let developers extend the
+    Google Sheets UI with sidebars, dialogs, custom menus, and card-based
+    interfaces that run inside the Sheets editor.
+
+    Surfaces covered (per Google docs):
+    - Workspace Add-ons for Sheets (Card Service UIs)
+    - Editors Add-ons (HTML service sidebars/dialogs, custom menus)
+    - Simple / installable triggers (onOpen, onEdit) that surface UI
+
+platform:
+  name: Google Sheets
+  vendor: Google LLC
+  documentation: https://developers.google.com/workspace/add-ons/editors/sheets
+  appMarketplace: https://workspace.google.com/marketplace
+
+sdks:
+  apps-script-card-service:
+    name: Google Apps Script Card Service
+    packageManager: npm
+    package: "@google/clasp"
+    platform: web
+    documentation: https://developers.google.com/apps-script/reference/card-service
+    description: |
+      Server-side Card Service used by Workspace Add-ons to render cards in
+      the Sheets sidebar and other host surfaces. Authored in Apps Script;
+      clasp is the npm tooling commonly used to push projects.
+    exports:
+      CardService:
+        type: utility
+        description: Build card-based UIs for Workspace Add-ons
+  apps-script-html-service:
+    name: Google Apps Script HTML Service
+    packageManager: npm
+    package: "@google/clasp"
+    platform: web
+    documentation: https://developers.google.com/apps-script/guides/html
+    description: |
+      HTML Service for Editors Add-on sidebars and modal/modeless dialogs
+      inside Google Sheets.
+    exports:
+      HtmlService:
+        type: utility
+        description: Serve HTML/JS/CSS UIs in Sheets sidebars and dialogs
+
+extensionPoints:
+  - id: sheets-homepage
+    name: Sheets homepage trigger
+    type: card
+    extensionType: embeddedSdk
+    description: |
+      Workspace Add-on homepage that appears when Sheets is open and no
+      specific contextual trigger applies.
+    documentation: https://developers.google.com/workspace/add-ons/editors/sheets
+    supportedComponents:
+      - CardService
+
+  - id: sheets-sidebar
+    name: Sheets sidebar
+    type: sidebar
+    extensionType: embeddedSdk
+    description: |
+      Editors Add-on sidebar opened via HtmlService (showSidebar) or Card
+      Service for Workspace Add-ons.
+    documentation: https://developers.google.com/apps-script/guides/dialogs
+    supportedComponents:
+      - HtmlService
+      - CardService
+
+  - id: sheets-dialog
+    name: Sheets dialog
+    type: modal
+    extensionType: embeddedSdk
+    description: |
+      Modal or modeless dialog hosted in Sheets via HtmlService.
+    documentation: https://developers.google.com/apps-script/guides/dialogs
+    supportedComponents:
+      - HtmlService
+
+  - id: sheets-custom-menu
+    name: Sheets custom menu
+    type: toolbar
+    extensionType: embeddedSdk
+    description: |
+      Custom menu entries added from an onOpen simple trigger or installable
+      trigger in an Editors Add-on.
+    documentation: https://developers.google.com/apps-script/guides/menus
+    supportedComponents:
+      - HtmlService

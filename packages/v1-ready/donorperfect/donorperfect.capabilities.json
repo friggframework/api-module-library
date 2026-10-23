@@ -1,0 +1,147 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "donorperfect",
+  "label": "DonorPerfect Online",
+  "package": "@friggframework/api-module-donorperfect",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "objects": {
+    "donor": {
+      "label": "Donor / constituent",
+      "fields": [
+        { "name": "donor_id", "type": "id", "tag": "record.id", "readOnly": true },
+        { "name": "first_name", "type": "string", "tag": "person.firstName" },
+        { "name": "last_name", "type": "string", "tag": "person.lastName" },
+        { "name": "email", "type": "string", "tag": "person.email" },
+        { "name": "home_phone", "type": "string", "tag": "person.phone" },
+        { "name": "mobile_phone", "type": "string", "tag": "person.mobilePhone" },
+        { "name": "business_phone", "type": "string", "tag": "person.workPhone" },
+        { "name": "address", "type": "string", "tag": "location.address" },
+        { "name": "city", "type": "string", "tag": "location.city" },
+        { "name": "state", "type": "string", "tag": "location.state" },
+        { "name": "zip", "type": "string", "tag": "location.postalCode" },
+        { "name": "country", "type": "string", "tag": "location.country" },
+        { "name": "org_rec", "type": "string", "tag": "account.type" },
+        { "name": "donor_type", "type": "string" },
+        { "name": "nomail", "type": "string" },
+        { "name": "narrative", "type": "text" }
+      ],
+      "sync": {
+        "id": "donor_id",
+        "get": { "capability": "donor.get", "id": "donorId" },
+        "create": { "capability": "donor.save" },
+        "update": { "capability": "donor.save" }
+      }
+    },
+    "gift": {
+      "label": "Gift / donation",
+      "fields": [
+        { "name": "gift_id", "type": "id", "tag": "record.id", "readOnly": true },
+        { "name": "donor_id", "type": "string", "tag": "record.parentId" },
+        { "name": "gift_date", "type": "date", "tag": "payment.paidAt" },
+        { "name": "amount", "type": "number", "tag": "payment.amount" },
+        { "name": "gift_type", "type": "string", "tag": "payment.method" },
+        { "name": "record_type", "type": "string" },
+        { "name": "campaign", "type": "string" },
+        { "name": "reference", "type": "string", "tag": "record.displayId" },
+        { "name": "gift_narrative", "type": "text" },
+        { "name": "gl_code", "type": "string" },
+        { "name": "receipt", "type": "string" }
+      ],
+      "sync": {
+        "id": "gift_id",
+        "list": { "capability": "gift.listByDonor" },
+        "create": { "capability": "gift.save" }
+      }
+    },
+    "code": {
+      "label": "DPCODES code-list value",
+      "fields": [
+        { "name": "code", "type": "string", "tag": "record.id" },
+        { "name": "description", "type": "string", "tag": "record.name" }
+      ]
+    }
+  },
+  "events": {},
+  "webhook": {
+    "scope": "none",
+    "note": "The public DonorPerfect Online XML API manual does not document webhook subscription create/list/delete procedures. Partner products (e.g. Klaviyo) describe inbound event sync privately; this module ships no webhook extension."
+  },
+  "capabilities": {
+    "auth.test": {
+      "kind": "read",
+      "method": "testAuthRequest",
+      "input": {},
+      "output": "auth"
+    },
+    "donor.list": {
+      "kind": "read",
+      "method": "listDonors",
+      "input": {
+        "top": { "type": "number" },
+        "afterDonorId": { "type": "number" }
+      },
+      "output": "page<donor>"
+    },
+    "donor.get": {
+      "kind": "read",
+      "method": "getDonorById",
+      "input": { "donorId": { "type": "number", "required": true } },
+      "output": "donor",
+      "args": ["donorId"]
+    },
+    "donor.findByEmail": {
+      "kind": "read",
+      "method": "findDonorByEmail",
+      "input": { "email": { "type": "string", "required": true } },
+      "output": "page<donor>",
+      "args": ["email"]
+    },
+    "donor.findByPhone": {
+      "kind": "read",
+      "method": "findDonorByPhone",
+      "input": {
+        "homePhone": { "type": "string" },
+        "mobilePhone": { "type": "string" }
+      },
+      "output": "page<donor>",
+      "args": ["homePhone", "mobilePhone"]
+    },
+    "donor.save": {
+      "kind": "write",
+      "method": "saveDonor",
+      "input": {
+        "donorId": { "type": "number" },
+        "values": { "type": "object", "required": true }
+      },
+      "output": "donor"
+    },
+    "gift.save": {
+      "kind": "write",
+      "method": "saveGift",
+      "input": { "values": { "type": "object", "required": true } },
+      "output": "gift"
+    },
+    "gift.listByDonor": {
+      "kind": "read",
+      "method": "listGiftsByDonorId",
+      "input": { "donorId": { "type": "number", "required": true } },
+      "output": "page<gift>",
+      "args": ["donorId"]
+    },
+    "gift.findByReference": {
+      "kind": "read",
+      "method": "findGiftsByReference",
+      "input": { "reference": { "type": "string", "required": true } },
+      "output": "page<gift>",
+      "args": ["reference"]
+    },
+    "code.list": {
+      "kind": "read",
+      "method": "getCodes",
+      "input": { "fieldName": { "type": "string", "required": true } },
+      "output": "page<code>",
+      "args": ["fieldName"]
+    }
+  }
+}

@@ -1,0 +1,538 @@
+openapi: 3.0.3
+info:
+  title: GoHighLevel LeadConnector API (curated Frigg subset)
+  description: |
+    Curated OpenAPI contract for `@friggframework/api-module-gohighlevel`.
+    Mirrors `api.js` 1:1 (one operationId per Api method).
+
+    Official docs (no vendor OpenAPI published for this curated surface):
+      - https://marketplace.gohighlevel.com/docs/
+      - https://marketplace.gohighlevel.com/docs/Authorization/Scopes
+      - https://marketplace.gohighlevel.com/docs/ghl/oauth/get-access-token
+      - https://marketplace.gohighlevel.com/docs/ghl/contacts/get-contact
+      - https://marketplace.gohighlevel.com/docs/ghl/opportunities/search-opportunity
+      - https://marketplace.gohighlevel.com/docs/webhook/WebhookIntegrationGuide
+
+    Auth: OAuth 2.0 Authorization Code, Location-scoped tokens (`user_type=Location`
+    on exchange and refresh). Refresh tokens are single-use and rotate.
+  version: 1.0.0
+  contact:
+    name: Frigg Framework
+servers:
+  - url: https://services.leadconnectorhq.com
+    description: LeadConnector / GoHighLevel API v2 base URL
+security:
+  - OAuth2: []
+tags:
+  - name: Locations
+  - name: Users
+  - name: Contacts
+  - name: Businesses
+  - name: Opportunities
+paths:
+  /locations/{locationId}:
+    get:
+      operationId: getLocation
+      tags: [Locations]
+      summary: Get Sub-Account (Location)
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: locationId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Location details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location: { type: object }
+
+  /users/:
+    get:
+      operationId: listUsers
+      tags: [Users]
+      summary: List users
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: locationId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema: { type: object }
+
+  /users/{userId}:
+    get:
+      operationId: getUser
+      tags: [Users]
+      summary: Get user by id
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: User
+          content:
+            application/json:
+              schema: { type: object }
+
+  /contacts/:
+    get:
+      operationId: listContacts
+      tags: [Contacts]
+      summary: List contacts for a location
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: locationId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer }
+        - name: startAfter
+          in: query
+          schema: { type: string }
+        - name: startAfterId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Contact list
+          content:
+            application/json:
+              schema: { type: object }
+    post:
+      operationId: createContact
+      tags: [Contacts]
+      summary: Create contact
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [locationId]
+              properties:
+                locationId: { type: string }
+                firstName: { type: string }
+                lastName: { type: string }
+                name: { type: string }
+                email: { type: string }
+                phone: { type: string }
+                companyName: { type: string }
+      responses:
+        '201':
+          description: Created contact
+          content:
+            application/json:
+              schema: { type: object }
+
+  /contacts/{contactId}:
+    get:
+      operationId: getContact
+      tags: [Contacts]
+      summary: Get contact by id
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: contactId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Contact
+          content:
+            application/json:
+              schema: { type: object }
+    put:
+      operationId: updateContact
+      tags: [Contacts]
+      summary: Update contact (PUT)
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: contactId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: Updated contact
+          content:
+            application/json:
+              schema: { type: object }
+
+  /contacts/search/duplicate:
+    get:
+      operationId: getDuplicateContact
+      tags: [Contacts]
+      summary: Find duplicate contact by email or phone
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: locationId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: email
+          in: query
+          schema: { type: string }
+        - name: number
+          in: query
+          schema: { type: string }
+          description: Phone number (URL-encoded)
+      responses:
+        '200':
+          description: Duplicate match or empty
+          content:
+            application/json:
+              schema: { type: object }
+
+  /contacts/{contactId}/notes:
+    get:
+      operationId: listContactNotes
+      tags: [Contacts]
+      summary: List notes for a contact
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: contactId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Notes
+          content:
+            application/json:
+              schema: { type: object }
+    post:
+      operationId: createContactNote
+      tags: [Contacts]
+      summary: Create a contact note
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: contactId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body: { type: string }
+                userId: { type: string }
+      responses:
+        '201':
+          description: Created note
+          content:
+            application/json:
+              schema: { type: object }
+
+  /contacts/{contactId}/notes/{noteId}:
+    put:
+      operationId: updateContactNote
+      tags: [Contacts]
+      summary: Update a contact note (PUT)
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: contactId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: noteId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body: { type: string }
+      responses:
+        '200':
+          description: Updated note
+          content:
+            application/json:
+              schema: { type: object }
+
+  /businesses:
+    get:
+      operationId: listBusinesses
+      tags: [Businesses]
+      summary: List businesses
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: locationId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Business list
+          content:
+            application/json:
+              schema: { type: object }
+    post:
+      operationId: createBusiness
+      tags: [Businesses]
+      summary: Create business
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                locationId: { type: string }
+                name: { type: string }
+      responses:
+        '201':
+          description: Created business
+          content:
+            application/json:
+              schema: { type: object }
+
+  /businesses/{businessId}:
+    get:
+      operationId: getBusiness
+      tags: [Businesses]
+      summary: Get business by id
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: businessId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Business
+          content:
+            application/json:
+              schema: { type: object }
+    put:
+      operationId: updateBusiness
+      tags: [Businesses]
+      summary: Update business
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: businessId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: Updated business
+          content:
+            application/json:
+              schema: { type: object }
+
+  /opportunities/search:
+    get:
+      operationId: listOpportunities
+      tags: [Opportunities]
+      summary: Search / list opportunities
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: locationId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, won, lost, abandoned, all]
+        - name: pipelineId
+          in: query
+          schema: { type: string }
+        - name: contactId
+          in: query
+          schema: { type: string }
+        - name: startAfter
+          in: query
+          schema: { type: string }
+        - name: startAfterId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Opportunity search results
+          content:
+            application/json:
+              schema: { type: object }
+
+  /opportunities:
+    post:
+      operationId: createOpportunity
+      tags: [Opportunities]
+      summary: Create opportunity
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                locationId: { type: string }
+                name: { type: string }
+                status: { type: string }
+                pipelineId: { type: string }
+                pipelineStageId: { type: string }
+                contactId: { type: string }
+                monetaryValue: { type: number }
+      responses:
+        '201':
+          description: Created opportunity
+          content:
+            application/json:
+              schema: { type: object }
+
+  /opportunities/{opportunityId}:
+    get:
+      operationId: getOpportunity
+      tags: [Opportunities]
+      summary: Get opportunity by id
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: opportunityId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Opportunity
+          content:
+            application/json:
+              schema: { type: object }
+    put:
+      operationId: updateOpportunity
+      tags: [Opportunities]
+      summary: Update opportunity
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: opportunityId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: Updated opportunity
+          content:
+            application/json:
+              schema: { type: object }
+
+  /opportunities/{opportunityId}/status:
+    put:
+      operationId: updateOpportunityStatus
+      tags: [Opportunities]
+      summary: Update opportunity status
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: opportunityId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string }
+      responses:
+        '200':
+          description: Updated status
+          content:
+            application/json:
+              schema: { type: object }
+
+  /opportunities/pipelines:
+    get:
+      operationId: listPipelines
+      tags: [Opportunities]
+      summary: List opportunity pipelines
+      parameters:
+        - $ref: '#/components/parameters/VersionHeader'
+        - name: locationId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Pipelines
+          content:
+            application/json:
+              schema: { type: object }
+
+components:
+  parameters:
+    VersionHeader:
+      name: Version
+      in: header
+      required: true
+      description: |
+        API Version header. This module defaults to `2021-07-28` (production-cleared).
+        Marketplace docs currently also document `v3`.
+      schema:
+        type: string
+        default: '2021-07-28'
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: |
+        Marketplace OAuth. Authorize via chooselocation; token endpoint requires
+        user_type=Location for Sub-Account tokens. Do not send scope on token exchange.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://marketplace.gohighlevel.com/v2/oauth/chooselocation
+          tokenUrl: https://services.leadconnectorhq.com/oauth/token
+          scopes:
+            contacts.readonly: Read contacts and notes
+            contacts.write: Create/update contacts and notes
+            businesses.readonly: Read businesses
+            businesses.write: Create/update businesses
+            opportunities.readonly: Read opportunities and pipelines
+            opportunities.write: Create/update opportunities
+            locations.readonly: Read location (sub-account)
+            users.readonly: Read users

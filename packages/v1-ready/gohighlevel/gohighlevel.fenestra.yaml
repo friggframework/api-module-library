@@ -1,0 +1,57 @@
+# Fenestra Document: GoHighLevel Marketplace Custom Pages (draft)
+#
+# GoHighLevel Marketplace apps can embed externally hosted HTTPS pages inside
+# HighLevel via iframe Custom Pages (app details page and/or left navigation).
+# Custom Menu Links are a related navigation surface (REST: /custom-menus).
+# There is no React/component SDK comparable to HubSpot UI Extensions; Custom
+# Pages load your URL and optionally pass location/user context via URL
+# placeholders or signed postMessage user context.
+# Status: UNVALIDATED against live GHL Marketplace UX.
+#
+# Sources:
+#   https://marketplace.gohighlevel.com/docs/marketplace-modules/CustomPages
+#   https://marketplace.gohighlevel.com/docs/other/user-context-marketplace-apps
+#   https://marketplace.gohighlevel.com/docs/ghl/custom-menus/custom-menu-links/
+
+fenestra: "0.1.0"
+
+info:
+  title: GoHighLevel Marketplace Custom Pages
+  version: "0.1.0"
+  description: |
+    GoHighLevel exposes Custom Pages as iframe-embedded external URLs for
+    Marketplace apps. Placement options: app details page, or left navigation
+    (sub-account and/or agency depending on distribution). Context can be passed
+    via URL template variables (e.g. {{location.id}}, {{user.email}}) or via
+    signed user-context postMessage (REQUEST_USER_DATA) decrypted with the app
+    Shared Secret.
+
+platform:
+  name: GoHighLevel
+  vendor: HighLevel
+  documentation: https://marketplace.gohighlevel.com/docs/marketplace-modules/CustomPages
+  appMarketplace: https://marketplace.gohighlevel.com/
+
+extensionPoints:
+  - id: marketplace.custom_page.app_details
+    name: Custom Page (App Details)
+    type: card
+    extensionType: iframe
+    description: |
+      Externally hosted HTTPS page embedded on the Marketplace app details
+      surface after install. Configured in the Marketplace app settings.
+  - id: marketplace.custom_page.left_nav
+    name: Custom Page (Left Navigation)
+    type: card
+    extensionType: iframe
+    description: |
+      Custom Page surfaced in agency and/or sub-account left navigation based
+      on the app's distribution type.
+  - id: marketplace.custom_menu_link
+    name: Custom Menu Link
+    type: card
+    extensionType: iframe
+    description: |
+      Custom menu / nav link managed via GET|POST|PUT|DELETE /custom-menus
+      (scopes custom-menu-link.readonly / custom-menu-link.write). Opens a URL
+      destination; not a sandboxed component framework.

@@ -1,0 +1,393 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "gohighlevel",
+  "label": "GoHighLevel",
+  "package": "@friggframework/api-module-gohighlevel",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected GoHighLevel Sub-Account (Location). Identity is locationId from the OAuth token response.",
+    "fields": [
+      {
+        "name": "locationId",
+        "type": "id",
+        "description": "Sub-Account / Location id (tokenResponse.locationId)"
+      },
+      {
+        "name": "companyId",
+        "type": "id",
+        "description": "Agency / company id when present on the token"
+      },
+      {
+        "name": "userId",
+        "type": "id",
+        "description": "Installing user id from the token response"
+      }
+    ]
+  },
+  "objects": {
+    "location": {
+      "label": "Location (Sub-Account)",
+      "description": "GoHighLevel sub-account / location",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "phone", "type": "phone", "tag": "contact.phone" },
+        { "name": "website", "type": "string", "tag": "organization.domain" },
+        { "name": "companyId", "type": "id" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "location.get", "id": "id" }
+      }
+    },
+    "contact": {
+      "label": "Contact",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "firstName", "type": "string", "tag": "person.givenName" },
+        { "name": "lastName", "type": "string", "tag": "person.familyName" },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "phone", "type": "phone", "tag": "contact.phone" },
+        { "name": "companyName", "type": "string", "tag": "organization.name" },
+        { "name": "locationId", "type": "id" },
+        {
+          "name": "dateAdded",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "dateUpdated",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "dateUpdated",
+        "list": {
+          "capability": "contact.list",
+          "cursor": "startAfterId",
+          "limit": "limit",
+          "items": "contacts",
+          "paging": "cursor"
+        },
+        "get": { "capability": "contact.get", "id": "id" },
+        "create": { "capability": "contact.create", "body": "contact" },
+        "update": {
+          "capability": "contact.update",
+          "id": "id",
+          "body": "contact"
+        }
+      }
+    },
+    "business": {
+      "label": "Business",
+      "description": "Company / business record",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" },
+        { "name": "phone", "type": "phone", "tag": "contact.phone" },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "website", "type": "string", "tag": "organization.domain" },
+        { "name": "locationId", "type": "id" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "business.list",
+          "items": "businesses",
+          "paging": "cursor"
+        },
+        "get": { "capability": "business.get", "id": "id" },
+        "create": { "capability": "business.create", "body": "business" },
+        "update": {
+          "capability": "business.update",
+          "id": "id",
+          "body": "business"
+        }
+      }
+    },
+    "opportunity": {
+      "label": "Opportunity",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "deal.name" },
+        { "name": "monetaryValue", "type": "number", "tag": "deal.amount" },
+        { "name": "status", "type": "string" },
+        { "name": "pipelineId", "type": "string" },
+        { "name": "pipelineStageId", "type": "string" },
+        { "name": "contactId", "type": "string" },
+        { "name": "assignedTo", "type": "string", "tag": "record.owner" },
+        { "name": "locationId", "type": "id" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "opportunity.list",
+          "cursor": "startAfterId",
+          "limit": "limit",
+          "items": "opportunities",
+          "paging": "cursor"
+        },
+        "get": { "capability": "opportunity.get", "id": "id" },
+        "create": {
+          "capability": "opportunity.create",
+          "body": "opportunity"
+        },
+        "update": {
+          "capability": "opportunity.update",
+          "id": "id",
+          "body": "opportunity"
+        }
+      }
+    },
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "firstName", "type": "string", "tag": "person.givenName" },
+        { "name": "lastName", "type": "string", "tag": "person.familyName" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "user.list",
+          "items": "users",
+          "paging": "offset"
+        },
+        "get": { "capability": "user.get", "id": "id" }
+      }
+    },
+    "pipeline": {
+      "label": "Pipeline",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "pipeline.list", "items": "pipelines" }
+      }
+    },
+    "note": {
+      "label": "Contact note",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "body", "type": "text" },
+        { "name": "userId", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "note.list", "items": "notes" },
+        "create": { "capability": "note.create", "body": "note" },
+        "update": { "capability": "note.update", "id": "id", "body": "note" }
+      }
+    }
+  },
+  "events": {
+    "ContactCreate": {
+      "source": "webhook",
+      "object": "contact",
+      "action": "created"
+    },
+    "ContactUpdate": {
+      "source": "webhook",
+      "object": "contact",
+      "action": "updated"
+    },
+    "ContactDelete": {
+      "source": "webhook",
+      "object": "contact",
+      "action": "deleted"
+    },
+    "OpportunityCreate": {
+      "source": "webhook",
+      "object": "opportunity",
+      "action": "created"
+    },
+    "OpportunityUpdate": {
+      "source": "webhook",
+      "object": "opportunity",
+      "action": "updated"
+    },
+    "OpportunityStatusUpdate": {
+      "source": "webhook",
+      "object": "opportunity",
+      "action": "updated"
+    },
+    "OpportunityDelete": {
+      "source": "webhook",
+      "object": "opportunity",
+      "action": "deleted"
+    }
+  },
+  "capabilities": {
+    "location.get": {
+      "kind": "read",
+      "method": "getLocation",
+      "input": { "locationId": { "type": "string" } },
+      "output": "location",
+      "args": ["locationId"]
+    },
+    "user.list": {
+      "kind": "list",
+      "method": "listUsers",
+      "output": "user[]",
+      "args": ["params"]
+    },
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": { "userId": { "type": "string", "required": true } },
+      "output": "user",
+      "args": ["userId"]
+    },
+    "contact.list": {
+      "kind": "list",
+      "method": "listContacts",
+      "output": "contact[]",
+      "args": ["params"]
+    },
+    "contact.get": {
+      "kind": "read",
+      "method": "getContact",
+      "input": { "contactId": { "type": "string", "required": true } },
+      "output": "contact",
+      "args": ["contactId"]
+    },
+    "contact.create": {
+      "kind": "create",
+      "method": "createContact",
+      "input": { "contact": { "type": "object", "required": true } },
+      "output": "contact",
+      "args": ["data"]
+    },
+    "contact.update": {
+      "kind": "update",
+      "method": "updateContact",
+      "input": {
+        "contactId": { "type": "string", "required": true },
+        "contact": { "type": "object", "required": true }
+      },
+      "output": "contact",
+      "args": ["contactId", "data"]
+    },
+    "contact.getDuplicate": {
+      "kind": "read",
+      "method": "getDuplicateContact",
+      "output": "contact",
+      "args": ["params"]
+    },
+    "business.list": {
+      "kind": "list",
+      "method": "listBusinesses",
+      "output": "business[]",
+      "args": ["params"]
+    },
+    "business.get": {
+      "kind": "read",
+      "method": "getBusiness",
+      "input": { "businessId": { "type": "string", "required": true } },
+      "output": "business",
+      "args": ["businessId"]
+    },
+    "business.create": {
+      "kind": "create",
+      "method": "createBusiness",
+      "input": { "business": { "type": "object", "required": true } },
+      "output": "business",
+      "args": ["data"]
+    },
+    "business.update": {
+      "kind": "update",
+      "method": "updateBusiness",
+      "input": {
+        "businessId": { "type": "string", "required": true },
+        "business": { "type": "object", "required": true }
+      },
+      "output": "business",
+      "args": ["businessId", "data"]
+    },
+    "opportunity.list": {
+      "kind": "list",
+      "method": "listOpportunities",
+      "output": "opportunity[]",
+      "args": ["params"]
+    },
+    "opportunity.get": {
+      "kind": "read",
+      "method": "getOpportunity",
+      "input": { "opportunityId": { "type": "string", "required": true } },
+      "output": "opportunity",
+      "args": ["opportunityId"]
+    },
+    "opportunity.create": {
+      "kind": "create",
+      "method": "createOpportunity",
+      "input": { "opportunity": { "type": "object", "required": true } },
+      "output": "opportunity",
+      "args": ["data"]
+    },
+    "opportunity.update": {
+      "kind": "update",
+      "method": "updateOpportunity",
+      "input": {
+        "opportunityId": { "type": "string", "required": true },
+        "opportunity": { "type": "object", "required": true }
+      },
+      "output": "opportunity",
+      "args": ["opportunityId", "data"]
+    },
+    "opportunity.updateStatus": {
+      "kind": "update",
+      "method": "updateOpportunityStatus",
+      "input": {
+        "opportunityId": { "type": "string", "required": true },
+        "status": { "type": "object", "required": true }
+      },
+      "output": "opportunity",
+      "args": ["opportunityId", "data"]
+    },
+    "pipeline.list": {
+      "kind": "list",
+      "method": "listPipelines",
+      "output": "pipeline[]",
+      "args": ["params"]
+    },
+    "note.list": {
+      "kind": "list",
+      "method": "listContactNotes",
+      "input": { "contactId": { "type": "string", "required": true } },
+      "output": "note[]",
+      "args": ["contactId"]
+    },
+    "note.create": {
+      "kind": "create",
+      "method": "createContactNote",
+      "input": {
+        "contactId": { "type": "string", "required": true },
+        "note": { "type": "object", "required": true }
+      },
+      "output": "note",
+      "args": ["contactId", "data"]
+    },
+    "note.update": {
+      "kind": "update",
+      "method": "updateContactNote",
+      "input": {
+        "contactId": { "type": "string", "required": true },
+        "noteId": { "type": "string", "required": true },
+        "note": { "type": "object", "required": true }
+      },
+      "output": "note",
+      "args": ["contactId", "noteId", "data"]
+    }
+  }
+}

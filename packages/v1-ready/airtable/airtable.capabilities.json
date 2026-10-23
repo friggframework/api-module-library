@@ -1,0 +1,270 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "airtable",
+  "label": "Airtable",
+  "package": "@friggframework/api-module-airtable",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Airtable user identity from GET /meta/whoami.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "string",
+        "description": "Airtable user id used as entity externalId."
+      },
+      {
+        "name": "email",
+        "type": "email",
+        "description": "Present when the token has user.email:read."
+      }
+    ]
+  },
+  "objects": {
+    "base": {
+      "label": "Base",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.name" },
+        { "name": "permissionLevel", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "base.list",
+          "items": "bases",
+          "cursor": "offset",
+          "next": "offset"
+        }
+      }
+    },
+    "record": {
+      "label": "Record",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "createdTime", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "fields", "type": "json", "tag": "record.properties" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "record.list",
+          "items": "records",
+          "cursor": "offset",
+          "next": "offset"
+        },
+        "get": {
+          "capability": "record.get",
+          "id": "recordId"
+        },
+        "create": {
+          "capability": "record.create",
+          "body": "body"
+        },
+        "update": {
+          "capability": "record.update",
+          "id": "recordId",
+          "body": "body"
+        }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "notificationUrl", "type": "string" },
+        { "name": "areNotificationsEnabled", "type": "boolean" },
+        { "name": "isHookEnabled", "type": "boolean", "readOnly": true },
+        { "name": "expirationTime", "type": "datetime", "readOnly": true },
+        { "name": "specification", "type": "json" },
+        { "name": "macSecretBase64", "type": "string", "readOnly": true }
+      ]
+    }
+  },
+  "events": {
+    "base.changed": {
+      "delivery": "webhook",
+      "object": "record",
+      "description": "Notification ping when base data matching the webhook specification changes. Fetch payloads via listWebhookPayloads.",
+      "payload": {
+        "base": { "id": "appXXXXXXXXXXXXXX" },
+        "webhook": { "id": "achXXXXXXXXXXXXXX" },
+        "timestamp": "2022-02-01T21:25:05.663Z"
+      },
+      "record": "base"
+    }
+  },
+  "webhook": {
+    "scope": "base",
+    "topic": "base.changed",
+    "eventId": "{{body.webhook.id}}-{{body.timestamp}}",
+    "account": "{{body.base.id}}",
+    "verify": "verifyWebhookContentMac"
+  },
+  "capabilities": {
+    "identity.whoami": {
+      "kind": "read",
+      "method": "getWhoami",
+      "input": {},
+      "output": "account",
+      "args": []
+    },
+    "base.list": {
+      "kind": "read",
+      "method": "listBases",
+      "input": {
+        "offset": { "type": "string" }
+      },
+      "output": "base[]",
+      "args": ["$rest"]
+    },
+    "base.schema.get": {
+      "kind": "read",
+      "method": "getBaseSchema",
+      "input": {
+        "baseId": { "type": "string", "required": true }
+      },
+      "output": "json",
+      "args": ["baseId", "$rest"]
+    },
+    "record.list": {
+      "kind": "read",
+      "method": "listRecords",
+      "input": {
+        "baseId": { "type": "string", "required": true },
+        "tableIdOrName": { "type": "string", "required": true },
+        "pageSize": { "type": "number" },
+        "offset": { "type": "string" },
+        "view": { "type": "string" },
+        "filterByFormula": { "type": "string" }
+      },
+      "output": "record[]",
+      "args": ["baseId", "tableIdOrName", "$rest"]
+    },
+    "record.get": {
+      "kind": "read",
+      "method": "getRecord",
+      "input": {
+        "baseId": { "type": "string", "required": true },
+        "tableIdOrName": { "type": "string", "required": true },
+        "recordId": { "type": "string", "required": true }
+      },
+      "output": "record",
+      "args": ["baseId", "tableIdOrName", "recordId", "$rest"]
+    },
+    "record.create": {
+      "kind": "write",
+      "method": "createRecords",
+      "input": {
+        "baseId": { "type": "string", "required": true },
+        "tableIdOrName": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "record[]",
+      "args": ["baseId", "tableIdOrName", "body"]
+    },
+    "record.update": {
+      "kind": "write",
+      "method": "updateRecord",
+      "input": {
+        "baseId": { "type": "string", "required": true },
+        "tableIdOrName": { "type": "string", "required": true },
+        "recordId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "record",
+      "args": ["baseId", "tableIdOrName", "recordId", "body"]
+    },
+    "record.updateMany": {
+      "kind": "write",
+      "method": "updateRecords",
+      "input": {
+        "baseId": { "type": "string", "required": true },
+        "tableIdOrName": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "record[]",
+      "args": ["baseId", "tableIdOrName", "body"]
+    },
+    "record.delete": {
+      "kind": "write",
+      "method": "deleteRecord",
+      "input": {
+        "baseId": { "type": "string", "required": true },
+        "tableIdOrName": { "type": "string", "required": true },
+        "recordId": { "type": "string", "required": true }
+      },
+      "output": "json",
+      "args": ["baseId", "tableIdOrName", "recordId"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "input": {
+        "baseId": { "type": "string", "required": true }
+      },
+      "output": "webhook[]",
+      "args": ["baseId"]
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhook",
+      "input": {
+        "baseId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["baseId", "body"]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhook",
+      "input": {
+        "baseId": { "type": "string", "required": true },
+        "webhookId": { "type": "string", "required": true }
+      },
+      "output": "json",
+      "args": ["baseId", "webhookId"]
+    },
+    "webhook.refresh": {
+      "kind": "write",
+      "method": "refreshWebhook",
+      "input": {
+        "baseId": { "type": "string", "required": true },
+        "webhookId": { "type": "string", "required": true }
+      },
+      "output": "json",
+      "args": ["baseId", "webhookId"]
+    },
+    "webhook.payloads.list": {
+      "kind": "read",
+      "method": "listWebhookPayloads",
+      "input": {
+        "baseId": { "type": "string", "required": true },
+        "webhookId": { "type": "string", "required": true },
+        "cursor": { "type": "number" },
+        "limit": { "type": "number" }
+      },
+      "output": "json",
+      "args": ["baseId", "webhookId", "$rest"]
+    },
+    "webhook.notifications.toggle": {
+      "kind": "write",
+      "method": "toggleWebhookNotifications",
+      "input": {
+        "baseId": { "type": "string", "required": true },
+        "webhookId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "json",
+      "args": ["baseId", "webhookId", "body"]
+    }
+  },
+  "options": {
+    "base": {
+      "capability": "base.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id"
+    }
+  }
+}

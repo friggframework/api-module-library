@@ -1,0 +1,619 @@
+openapi: 3.0.4
+info:
+  title: Microsoft OneDrive via Microsoft Graph
+  version: "1.0.0"
+  description: >-
+    Curated subset of Microsoft Graph v1.0 covering OneDrive drives, driveItems,
+    search, and change-notification subscriptions. Paths, methods, and parameter
+    names are aligned to the official Graph OpenAPI
+    (https://raw.githubusercontent.com/microsoftgraph/msgraph-metadata/master/openapi/v1.0/openapi.yaml
+    / https://aka.ms/graph/v1.0/openapi.yaml). operationIds are camelCase aliases
+    that match Api methods 1:1 (spec-sync enforced). The vendor OpenAPI does not
+    declare OAuth securitySchemes or Files.* scopes — auth/scopes are from
+    Microsoft identity platform + Graph permissions docs. Overview:
+    https://learn.microsoft.com/en-us/graph/api/resources/onedrive
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://graph.microsoft.com/v1.0
+    description: Microsoft Graph v1.0 (official OpenAPI servers[0].url)
+security:
+  - OAuth2: []
+tags:
+  - name: Identity
+  - name: Drives
+  - name: DriveItems
+  - name: Subscriptions
+paths:
+  /me:
+    get:
+      tags: [Identity]
+      operationId: getUser
+      summary: Get signed-in user
+      description: >-
+        Official operationId me.user.GetUser.
+        https://learn.microsoft.com/en-us/graph/api/user-get
+      parameters:
+        - in: query
+          name: $select
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - in: query
+          name: $expand
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+      responses:
+        "200":
+          description: user (vendor uses 2XX)
+  /me/drive:
+    get:
+      tags: [Drives]
+      operationId: getMyDrive
+      summary: Get the signed-in user's default OneDrive
+      description: >-
+        Official operationId me.GetDrive.
+        https://learn.microsoft.com/en-us/graph/api/drive-get
+      parameters:
+        - in: query
+          name: $select
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - in: query
+          name: $expand
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+      responses:
+        "200":
+          description: drive
+  /me/drives:
+    get:
+      tags: [Drives]
+      operationId: listMyDrives
+      summary: List OneDrive drives for the signed-in user
+      description: >-
+        Official operationId me.ListDrives.
+        https://learn.microsoft.com/en-us/graph/api/drive-list
+      parameters:
+        - in: query
+          name: $top
+          schema: { type: integer, minimum: 0 }
+        - in: query
+          name: $skip
+          schema: { type: integer, minimum: 0 }
+        - in: query
+          name: $search
+          schema: { type: string }
+        - in: query
+          name: $filter
+          schema: { type: string }
+        - in: query
+          name: $count
+          schema: { type: boolean }
+        - in: query
+          name: $orderby
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - in: query
+          name: $select
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - in: query
+          name: $expand
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+      responses:
+        "200":
+          description: drive collection
+  /drives/{drive-id}:
+    get:
+      tags: [Drives]
+      operationId: getDrive
+      summary: Get a drive by id
+      description: >-
+        Official operationId drives.drive.GetDrive.
+        https://learn.microsoft.com/en-us/graph/api/drive-get
+      parameters:
+        - $ref: "#/components/parameters/drive-id"
+        - in: query
+          name: $select
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - in: query
+          name: $expand
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+      responses:
+        "200":
+          description: drive
+  /drives/{drive-id}/items/{driveItem-id}/children:
+    get:
+      tags: [DriveItems]
+      operationId: listDriveItemChildren
+      summary: List children of a drive item
+      description: >-
+        Official operationId drives.items.ListChildren.
+        https://learn.microsoft.com/en-us/graph/api/driveitem-list-children
+        Use driveItem-id `root` for the drive root.
+      parameters:
+        - $ref: "#/components/parameters/drive-id"
+        - $ref: "#/components/parameters/driveItem-id"
+        - in: query
+          name: $top
+          schema: { type: integer, minimum: 0 }
+        - in: query
+          name: $skip
+          schema: { type: integer, minimum: 0 }
+        - in: query
+          name: $search
+          schema: { type: string }
+        - in: query
+          name: $filter
+          schema: { type: string }
+        - in: query
+          name: $count
+          schema: { type: boolean }
+        - in: query
+          name: $orderby
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - in: query
+          name: $select
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - in: query
+          name: $expand
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+      responses:
+        "200":
+          description: driveItem collection
+    post:
+      tags: [DriveItems]
+      operationId: createFolder
+      summary: Create a child driveItem (e.g. folder)
+      description: >-
+        Official operationId drives.items.CreateChildren. Request body is a
+        microsoft.graph.driveItem. To create a folder, include name and a folder
+        facet (see Learn driveitem-post-children). Optional
+        @microsoft.graph.conflictBehavior (fail|replace|rename) is documented
+        on Learn for create-folder but is not in the vendor OpenAPI schema —
+        callers may still send it; Api.createFolder accepts it on the body or
+        as a 4th argument.
+        https://learn.microsoft.com/en-us/graph/api/driveitem-post-children
+      parameters:
+        - $ref: "#/components/parameters/drive-id"
+        - $ref: "#/components/parameters/driveItem-id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: microsoft.graph.driveItem (vendor schema) + Learn annotations
+              properties:
+                name: { type: string }
+                folder: { type: object }
+                file: { type: object }
+                description: { type: string }
+                "@microsoft.graph.conflictBehavior":
+                  type: string
+                  enum: [fail, replace, rename]
+                  description: >-
+                    Learn-documented annotation (not in vendor OpenAPI).
+                    https://learn.microsoft.com/en-us/graph/api/driveitem-post-children
+                  x-frigg-docs-only: true
+      responses:
+        "201":
+          description: created driveItem (vendor uses 2XX)
+  /drives/{drive-id}/items/{driveItem-id}:
+    get:
+      tags: [DriveItems]
+      operationId: getDriveItem
+      summary: Get a drive item
+      description: >-
+        Official operationId drives.GetItems.
+        https://learn.microsoft.com/en-us/graph/api/driveitem-get
+      parameters:
+        - $ref: "#/components/parameters/drive-id"
+        - $ref: "#/components/parameters/driveItem-id"
+        - in: query
+          name: $select
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - in: query
+          name: $expand
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+      responses:
+        "200":
+          description: driveItem
+    patch:
+      tags: [DriveItems]
+      operationId: updateDriveItem
+      summary: Update drive item metadata
+      description: >-
+        Official operationId drives.UpdateItems.
+        https://learn.microsoft.com/en-us/graph/api/driveitem-update
+      parameters:
+        - $ref: "#/components/parameters/drive-id"
+        - $ref: "#/components/parameters/driveItem-id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: microsoft.graph.driveItem patch body
+      responses:
+        "200":
+          description: updated driveItem
+    delete:
+      tags: [DriveItems]
+      operationId: deleteDriveItem
+      summary: Delete a drive item
+      description: >-
+        Official operationId drives.DeleteItems.
+        https://learn.microsoft.com/en-us/graph/api/driveitem-delete
+      parameters:
+        - $ref: "#/components/parameters/drive-id"
+        - $ref: "#/components/parameters/driveItem-id"
+        - in: header
+          name: If-Match
+          schema: { type: string }
+          description: ETag (official OpenAPI)
+      responses:
+        "204":
+          description: deleted
+  /drives/{drive-id}/items/{driveItem-id}/content:
+    put:
+      tags: [DriveItems]
+      operationId: uploadDriveItemContent
+      summary: Upload / replace file content for a driveItem
+      description: >-
+        Official operationId drives.UpdateItemsContent.
+        PUT /drives/{drive-id}/items/{driveItem-id}/content
+        (vendor OpenAPI — no colon path template). To create by path, pass a
+        path-addressed driveItem-id such as `root:/folder/file.txt:` (Graph
+        item addressing). https://learn.microsoft.com/en-us/graph/api/driveitem-put-content
+      parameters:
+        - $ref: "#/components/parameters/drive-id"
+        - $ref: "#/components/parameters/driveItem-id"
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        "200":
+          description: driveItem (vendor uses 2XX)
+  /drives/{drive-id}/items/{driveItem-id}/createUploadSession:
+    post:
+      tags: [DriveItems]
+      operationId: createUploadSession
+      summary: Create an upload session for large files
+      description: >-
+        Official operationId drives.drive.items.driveItem.createUploadSession.
+        Request body is required (item: driveItemUploadableProperties).
+        https://learn.microsoft.com/en-us/graph/api/driveitem-createuploadsession
+      parameters:
+        - $ref: "#/components/parameters/drive-id"
+        - $ref: "#/components/parameters/driveItem-id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                item:
+                  type: object
+                  description: microsoft.graph.driveItemUploadableProperties
+                  nullable: true
+      responses:
+        "200":
+          description: uploadSession
+  /drives/{drive-id}/root:/{path}:/content:
+    put:
+      tags: [DriveItems]
+      operationId: uploadByPath
+      x-frigg-docs-only: true
+      summary: Upload / create file content by path under drive root (Learn)
+      description: >-
+        Documented on Microsoft Learn but absent from the vendor Graph OpenAPI
+        (no colon path templates). Frigg helper Api.uploadByPath.
+        PUT /drives/{drive-id}/root:/{path}:/content
+        https://learn.microsoft.com/en-us/graph/api/driveitem-put-content
+      parameters:
+        - $ref: "#/components/parameters/drive-id"
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+          description: Path relative to the drive root (e.g. folder/file.txt)
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        "200":
+          description: driveItem
+        "201":
+          description: created driveItem
+  /drives/{drive-id}/root:/{path}:/createUploadSession:
+    post:
+      tags: [DriveItems]
+      operationId: createUploadSessionByPath
+      x-frigg-docs-only: true
+      summary: Create upload session by path under drive root (Learn)
+      description: >-
+        Documented on Microsoft Learn but absent from the vendor Graph OpenAPI.
+        Frigg helper Api.createUploadSessionByPath.
+        POST /drives/{drive-id}/root:/{path}:/createUploadSession
+        https://learn.microsoft.com/en-us/graph/api/driveitem-createuploadsession
+      parameters:
+        - $ref: "#/components/parameters/drive-id"
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+          description: Path relative to the drive root (e.g. folder/big.bin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                item:
+                  type: object
+                  nullable: true
+      responses:
+        "200":
+          description: uploadSession
+  /drives/{drive-id}/search(q='{q}'):
+    get:
+      tags: [DriveItems]
+      operationId: searchDriveItems
+      summary: Search for drive items in a drive
+      description: >-
+        Official operationId drives.drive.search (also grouped with
+        /drives/{drive-id}/items/{driveItem-id}/search(q='{q}')).
+        https://learn.microsoft.com/en-us/graph/api/driveitem-search
+      parameters:
+        - $ref: "#/components/parameters/drive-id"
+        - name: q
+          in: path
+          required: true
+          schema: { type: string, nullable: true }
+          description: "Usage: q='{q}'"
+        - in: query
+          name: $top
+          schema: { type: integer, minimum: 0 }
+        - in: query
+          name: $skip
+          schema: { type: integer, minimum: 0 }
+        - in: query
+          name: $select
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - in: query
+          name: $orderby
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+        - in: query
+          name: $expand
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+      responses:
+        "200":
+          description: driveItem collection
+  /subscriptions:
+    get:
+      tags: [Subscriptions]
+      operationId: listSubscriptions
+      summary: List change-notification subscriptions
+      description: >-
+        Official operationId subscriptions.subscription.ListSubscription.
+        https://learn.microsoft.com/en-us/graph/api/subscription-list
+      parameters:
+        - in: query
+          name: $top
+          schema: { type: integer, minimum: 0 }
+        - in: query
+          name: $skip
+          schema: { type: integer, minimum: 0 }
+        - in: query
+          name: $select
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+      responses:
+        "200":
+          description: subscription collection
+    post:
+      tags: [Subscriptions]
+      operationId: createSubscription
+      summary: Create a change-notification subscription
+      description: >-
+        Official operationId subscriptions.subscription.CreateSubscription.
+        Body is microsoft.graph.subscription. Property docs mark changeType,
+        notificationUrl, resource, and expirationDateTime as required for
+        webhook subscriptions. OneDrive resource examples: /me/drive/root or
+        /drives/{drive-id}/root.
+        https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: microsoft.graph.subscription
+              required: [changeType, notificationUrl, resource, expirationDateTime]
+              properties:
+                changeType: { type: string }
+                notificationUrl: { type: string }
+                resource: { type: string }
+                expirationDateTime: { type: string, format: date-time }
+                clientState: { type: string, nullable: true }
+                lifecycleNotificationUrl: { type: string, nullable: true }
+                applicationId: { type: string, nullable: true, readOnly: true }
+                creatorId: { type: string, nullable: true, readOnly: true }
+                includeResourceData: { type: boolean, nullable: true }
+                latestSupportedTlsVersion: { type: string, nullable: true }
+                notificationUrlAppId: { type: string, nullable: true }
+                encryptionCertificate: { type: string, nullable: true }
+                encryptionCertificateId: { type: string, nullable: true }
+      responses:
+        "201":
+          description: created subscription (vendor uses 2XX)
+  /subscriptions/{subscription-id}:
+    get:
+      tags: [Subscriptions]
+      operationId: getSubscription
+      summary: Get a subscription
+      description: >-
+        Official operationId subscriptions.subscription.GetSubscription.
+        https://learn.microsoft.com/en-us/graph/api/subscription-get
+      parameters:
+        - $ref: "#/components/parameters/subscription-id"
+        - in: query
+          name: $select
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: false
+      responses:
+        "200":
+          description: subscription
+    patch:
+      tags: [Subscriptions]
+      operationId: updateSubscription
+      summary: Update / renew a subscription
+      description: >-
+        Official operationId subscriptions.subscription.UpdateSubscription.
+        https://learn.microsoft.com/en-us/graph/api/subscription-update
+      parameters:
+        - $ref: "#/components/parameters/subscription-id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: microsoft.graph.subscription patch body
+      responses:
+        "200":
+          description: updated subscription
+    delete:
+      tags: [Subscriptions]
+      operationId: deleteSubscription
+      summary: Delete a subscription
+      description: >-
+        Official operationId subscriptions.subscription.DeleteSubscription.
+        https://learn.microsoft.com/en-us/graph/api/subscription-delete
+      parameters:
+        - $ref: "#/components/parameters/subscription-id"
+        - in: header
+          name: If-Match
+          schema: { type: string }
+          description: ETag (official OpenAPI)
+      responses:
+        "204":
+          description: deleted
+components:
+  parameters:
+    drive-id:
+      name: drive-id
+      in: path
+      required: true
+      schema: { type: string }
+      description: The unique identifier of drive (official OpenAPI name)
+    driveItem-id:
+      name: driveItem-id
+      in: path
+      required: true
+      schema: { type: string }
+      description: >-
+        The unique identifier of driveItem (official OpenAPI name). May be
+        `root` or a path-addressed id such as `root:/folder/file.txt:`.
+    subscription-id:
+      name: subscription-id
+      in: path
+      required: true
+      schema: { type: string }
+      description: The unique identifier of subscription (official OpenAPI name)
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Not declared in the vendor Graph OpenAPI (no components.securitySchemes).
+        Documented here from the Microsoft identity platform authorization code
+        flow: https://learn.microsoft.com/en-us/graph/auth-v2-user
+        Files.* scope strings are from the Graph permissions reference, not the
+        OpenAPI file.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.microsoftonline.com/common/oauth2/v2.0/authorize
+          tokenUrl: https://login.microsoftonline.com/common/oauth2/v2.0/token
+          scopes:
+            offline_access: Obtain a refresh token
+            User.Read: Sign in and read user profile
+            Files.Read: Read user files
+            Files.ReadWrite: Read and write user files
+            Files.Read.All: Read all files user can access
+            Files.ReadWrite.All: Read and write all files user can access

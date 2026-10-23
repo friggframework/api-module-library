@@ -56,7 +56,7 @@ describe('Mailchimp Api', () => {
 
         it('derives server_prefix from an API key suffix', () => {
             const api = new Api({
-                api_key: 'abcdef0123456789abcdef0123456789-us19',
+                api_key: 'test-api-key-us19',
             });
             expect(api.server_prefix).toBe('us19');
             expect(api.baseUrl).toBe('https://us19.api.mailchimp.com/3.0');

@@ -1,0 +1,289 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "totango",
+  "label": "Totango",
+  "package": "@friggframework/api-module-totango",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Values about the connected Totango service. Identity prefers GET /api/v1/users/whoami, then Search response service_id, then an app-token fingerprint.",
+    "fields": [
+      {
+        "name": "service_id",
+        "type": "id",
+        "description": "Totango service id when returned from Search"
+      },
+      {
+        "name": "externalId",
+        "type": "string",
+        "description": "Stable entity external id used by Frigg credentials"
+      }
+    ]
+  },
+  "objects": {
+    "account": {
+      "label": "Account",
+      "description": "Customer account (company) — primary object in Totango Search",
+      "fields": [
+        { "name": "name", "type": "id", "tag": "organization.id", "readOnly": true },
+        { "name": "display_name", "type": "string", "tag": "organization.name" },
+        {
+          "name": "last_activity_time",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        { "name": "health", "type": "string", "tag": "account.health" },
+        { "name": "health_prev", "type": "string" },
+        { "name": "change_date", "type": "datetime" }
+      ],
+      "sync": {
+        "id": "name",
+        "list": {
+          "capability": "account.search",
+          "cursor": "offset",
+          "limit": "count",
+          "items": "response.accounts.hits",
+          "paging": "offset"
+        }
+      }
+    },
+    "user": {
+      "label": "User",
+      "description": "End-user / contact on an account",
+      "fields": [
+        { "name": "name", "type": "id", "tag": "person.id", "readOnly": true },
+        { "name": "display_name", "type": "string", "tag": "person.fullName" },
+        {
+          "name": "first_activity_time",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "last_activity_time",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "name",
+        "list": {
+          "capability": "user.search",
+          "cursor": "offset",
+          "limit": "count",
+          "items": "response.users.hits",
+          "paging": "offset"
+        }
+      }
+    },
+    "event": {
+      "label": "Timeline event",
+      "description": "Touchpoint (note), task, health-change alert, or campaign touch",
+      "fields": [
+        { "name": "id", "type": "id", "tag": "record.id", "readOnly": true },
+        { "name": "timestamp", "type": "datetime", "tag": "record.createdAt" },
+        { "name": "type", "type": "string" },
+        { "name": "account.id", "type": "string", "tag": "organization.id" },
+        { "name": "note_content.text", "type": "text" },
+        { "name": "note_content.note_id", "type": "string" },
+        { "name": "properties.subject", "type": "string" },
+        { "name": "properties.activity_type_id", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "event.search",
+          "cursor": "offset",
+          "limit": "count",
+          "items": "response.events.hits",
+          "paging": "offset"
+        }
+      }
+    },
+    "task": {
+      "label": "Task",
+      "description": "CTA-adjacent task; create/update/delete via Tasks API; read via event search (type=task)",
+      "fields": [
+        { "name": "title", "type": "string", "tag": "record.displayName" },
+        { "name": "description", "type": "text" },
+        { "name": "due_date", "type": "date" },
+        { "name": "priority", "type": "number" },
+        { "name": "status", "type": "string" },
+        { "name": "account_id", "type": "string", "tag": "organization.id" },
+        { "name": "assignee", "type": "string" },
+        { "name": "activity_type_id", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "task.search",
+          "items": "response.events.hits"
+        },
+        "create": { "capability": "task.create", "body": "task" },
+        "update": { "capability": "task.update", "id": "taskId", "body": "task" }
+      }
+    },
+    "activityType": {
+      "label": "Activity type (flow)",
+      "fields": [
+        { "name": "activity_type_id", "type": "id", "readOnly": true },
+        { "name": "display_name", "type": "string", "tag": "record.displayName" }
+      ],
+      "sync": {
+        "id": "activity_type_id",
+        "list": { "capability": "activityType.list" }
+      }
+    },
+    "touchpointType": {
+      "label": "Touchpoint type",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "touchpointType.list" }
+      }
+    },
+    "touchpointTag": {
+      "label": "Touchpoint tag (reason)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "touchpointTag.list" }
+      }
+    },
+    "team": {
+      "label": "Team",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "display_name", "type": "string", "tag": "record.displayName" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "team.get", "id": "teamId" }
+      }
+    },
+    "batchStatus": {
+      "label": "CDH batch status",
+      "fields": [
+        { "name": "batchId", "type": "id", "readOnly": true },
+        { "name": "status", "type": "string" },
+        { "name": "percentComplete", "type": "number" }
+      ],
+      "sync": {
+        "id": "batchId",
+        "get": { "capability": "batchStatus.get", "id": "batchId" }
+      }
+    }
+  },
+  "capabilities": {
+    "account.getWhoAmI": {
+      "kind": "read",
+      "method": "getWhoAmI",
+      "input": {},
+      "output": "user"
+    },
+    "account.search": {
+      "kind": "list",
+      "method": "searchAccounts",
+      "output": "account[]",
+      "args": ["query"]
+    },
+    "account.searchWithHealth": {
+      "kind": "list",
+      "method": "searchAccountsWithHealth",
+      "output": "account[]",
+      "args": ["query"]
+    },
+    "account.getPlanSummary": {
+      "kind": "read",
+      "method": "getAccountPlanSummary",
+      "input": { "accountId": { "type": "string", "required": true } },
+      "output": "planSummary",
+      "args": ["accountId"]
+    },
+    "user.search": {
+      "kind": "list",
+      "method": "searchUsers",
+      "output": "user[]",
+      "args": ["query"]
+    },
+    "event.list": {
+      "kind": "list",
+      "method": "listEvents",
+      "output": "event[]",
+      "args": ["params"]
+    },
+    "event.search": {
+      "kind": "list",
+      "method": "searchEvents",
+      "output": "event[]",
+      "args": ["query", "opts"]
+    },
+    "task.search": {
+      "kind": "list",
+      "method": "searchTasks",
+      "output": "event[]",
+      "args": ["query", "opts"]
+    },
+    "task.create": {
+      "kind": "write",
+      "method": "createTask",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "task",
+      "args": ["data"]
+    },
+    "task.update": {
+      "kind": "write",
+      "method": "updateTask",
+      "input": {
+        "taskId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "task",
+      "args": ["taskId", "data"]
+    },
+    "task.delete": {
+      "kind": "write",
+      "method": "deleteTask",
+      "input": { "taskId": { "type": "string", "required": true } },
+      "output": "result",
+      "args": ["taskId", "data"]
+    },
+    "activityType.list": {
+      "kind": "list",
+      "method": "listActivityTypes",
+      "output": "activityType[]"
+    },
+    "touchpointType.list": {
+      "kind": "list",
+      "method": "listTouchpointTypes",
+      "output": "touchpointType[]"
+    },
+    "touchpointTag.list": {
+      "kind": "list",
+      "method": "listTouchpointTags",
+      "output": "touchpointTag[]"
+    },
+    "team.get": {
+      "kind": "read",
+      "method": "getTeam",
+      "input": { "teamId": { "type": "string", "required": true } },
+      "output": "team",
+      "args": ["teamId"]
+    },
+    "batchStatus.get": {
+      "kind": "read",
+      "method": "getBatchStatus",
+      "input": { "batchId": { "type": "string", "required": true } },
+      "output": "batchStatus",
+      "args": ["batchId"]
+    }
+  }
+}

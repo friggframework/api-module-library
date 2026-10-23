@@ -1,0 +1,324 @@
+openapi: 3.0.3
+info:
+  title: Totango Public REST API (curated subset)
+  version: "1.0.0"
+  description: >-
+    Totango is a customer-success / account-health platform. This file is Left Hook's
+    curated OpenAPI subset covering exactly the endpoints the
+    @friggframework/api-module-totango client in api.js implements. It is the source
+    of truth the hand-written client mirrors 1:1 (one method per operationId).
+
+    Official vendor documentation lives under
+    https://support.totango.com/hc/en-us/sections/360005893212-Totango-API .
+    Totango publishes an official OpenAPI document only for the Customer Data Hub
+    (https://int-hub.totango.com/integration-hub-api_openApi.json); Search, Events,
+    Tasks, and related surfaces are documented as support articles without a full
+    public OAS. Paths and auth below are taken from those articles and from the
+    OAuth application scopes table.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.totango.com
+    description: Totango US REST API
+security:
+  - AppToken: []
+tags:
+  - name: Identity
+  - name: Accounts
+  - name: Users
+  - name: Events
+  - name: Tasks
+  - name: Definitions
+  - name: Teams
+  - name: CustomerDataHub
+paths:
+  /api/v1/users/whoami:
+    get:
+      tags: [Identity]
+      operationId: getWhoAmI
+      summary: Current system user
+      description: >-
+        Listed in Totango's OAuth scopes table with scope `system_user:read`.
+        Response schema is not published in support articles.
+      responses:
+        "200":
+          description: Current user (schema unpublished)
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+
+  /api/v1/search/accounts:
+    post:
+      tags: [Accounts]
+      operationId: searchAccounts
+      summary: Search accounts
+      description: >-
+        POST form field `query` (JSON). Mandatory `terms` and `fields`.
+        Account id is always returned as `name`; display name as `display_name`.
+        Health is requested via fields (`term=health`, `type=health_trend`).
+        Docs: Search API (accounts and users).
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query:
+                  type: string
+                  description: Stringified JSON search query object
+      responses:
+        "200":
+          description: Account search results
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+
+  /api/v1/search/users:
+    post:
+      tags: [Users]
+      operationId: searchUsers
+      summary: Search users (contacts)
+      description: >-
+        POST form field `query` (JSON). User name/id and parent account are
+        always returned. Docs: Search API (accounts and users).
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query: { type: string }
+      responses:
+        "200":
+          description: User search results
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+
+  /api/v2/events:
+    get:
+      tags: [Events]
+      operationId: listEvents
+      summary: List timeline events for an account
+      description: >-
+        Returns notes (touchpoints), tasks, and alerts for the account timeline.
+        Docs: Touchpoints API.
+      parameters:
+        - in: query
+          name: account_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Array of timeline events
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: object, additionalProperties: true }
+
+  /api/v2/events/search:
+    post:
+      tags: [Events]
+      operationId: searchEvents
+      summary: Search timeline events
+      description: >-
+        POST form fields `query` (JSON; `fields` must be []) and optional
+        `account_id`. event_type values include note, campaign_touch, alert, task.
+        Docs: Search API (events).
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query: { type: string }
+                account_id: { type: string }
+      responses:
+        "200":
+          description: Event search results
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+
+  /api/v3/accounts/{accountId}/plan_summary:
+    get:
+      tags: [Accounts]
+      operationId: getAccountPlanSummary
+      summary: Get account plan summary
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Plan summary
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+
+  /api/v3/tasks:
+    post:
+      tags: [Tasks]
+      operationId: createTask
+      summary: Create a task
+      description: Docs — Tasks API. Read path for tasks is via events search.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+
+  /api/v3/tasks/{taskId}:
+    put:
+      tags: [Tasks]
+      operationId: updateTask
+      summary: Update a task
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+    delete:
+      tags: [Tasks]
+      operationId: deleteTask
+      summary: Delete a task
+      description: >-
+        OAuth scopes table lists DELETE /api/v3/tasks/{task-id}. The Tasks API
+        support article delete sample uses PUT — see module open questions.
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+
+  /api/v3/activity-types:
+    get:
+      tags: [Definitions]
+      operationId: listActivityTypes
+      summary: List activity types (flow IDs)
+      responses:
+        "200":
+          description: Map of activity types
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+
+  /api/v3/touchpoint-types:
+    get:
+      tags: [Definitions]
+      operationId: listTouchpointTypes
+      summary: List touchpoint types
+      responses:
+        "200":
+          description: Map of touchpoint types
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+
+  /api/v3/touchpoint-tags:
+    get:
+      tags: [Definitions]
+      operationId: listTouchpointTags
+      summary: List touchpoint tags (reasons)
+      responses:
+        "200":
+          description: Map of touchpoint tags
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+
+  /api/v2/teams/{teamId}:
+    get:
+      tags: [Teams]
+      operationId: getTeam
+      summary: Get team detail
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Team
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+
+  # Convenience client methods (not separate vendor paths) are omitted from
+  # paths; they wrap searchAccounts / searchEvents. CDH status uses a different
+  # server — declared below with an absolute path pattern via servers override
+  # is not used; getBatchStatus is documented as a client method whose URL is
+  # `{cdhBaseUrl}/status/{batchId}` and is covered by operationId getBatchStatus
+  # on a synthetic path for spec-sync.
+  /status/{batchId}:
+    get:
+      tags: [CustomerDataHub]
+      operationId: getBatchStatus
+      summary: CDH batch processing status
+      description: >-
+        Official Customer Data Hub OpenAPI path on
+        https://int-hub.totango.com/api/v1 (not api.totango.com).
+        The client calls `{cdhBaseUrl}/status/{batchId}` with
+        `Authorization: app-token <token>`.
+        This path is listed so operationId ↔ Api method sync holds; the
+        server URL for this operation is the CDH host, not the root servers[0].
+      servers:
+        - url: https://int-hub.totango.com/api/v1
+      parameters:
+        - in: path
+          name: batchId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Batch status
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+
+components:
+  securitySchemes:
+    AppToken:
+      type: apiKey
+      in: header
+      name: app-token
+      description: >-
+        Totango personal access token. Create under Profile → Edit Profile →
+        Integration. CDH OpenAPI uses Authorization: app-token <token> instead.

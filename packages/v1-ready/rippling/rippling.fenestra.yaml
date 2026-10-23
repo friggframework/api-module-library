@@ -1,0 +1,86 @@
+# Fenestra Document: Rippling App Studio / Function Pages (SDUI)
+#
+# Rippling exposes in-product UI extension points beyond the REST API:
+# 1. Function Pages — server-driven UI (SDUI) backed by Rippling Functions
+# 2. App Studio — package and ship in-Rippling apps
+#
+# Drafted from Rippling's published docs against Fenestra 0.1.0
+# (api-module-library branch claude/fenestra-spec-draft-Q367t).
+# PLATFORMS.md lists Rippling under HR / workforce platforms.
+#
+# The @friggframework/api-module-rippling package implements the Platform
+# REST API (OAuth + companies/workers/users/org objects), not the SDUI
+# TypeScript catalog itself.
+
+fenestra: "0.1.0"
+
+info:
+  title: Rippling Function Pages and App Studio
+  version: "1.0.0"
+  description: |
+    Rippling App Studio Function Pages return an SDUI spec (JSON layout, state,
+    bindings, and handlers). Rippling renders native components from the
+    `custom-apps` / `@rippling/pebble-sdui-web` catalog. Authors write TypeScript
+    that returns `render({ root, state })` from `onRipplingEvent` when
+    `action === 'init'`.
+
+    This Fenestra document covers those UI surfaces. Partner App Shop listings
+    also support outbound webhooks configured in the Developer Portal (not a
+    REST subscription API).
+
+platform:
+  name: Rippling
+  vendor: Rippling
+  documentation: https://developer.rippling.com/documentation/rippling-platform/sdui/getting-started
+  appMarketplace: https://app.rippling.com/app-shop
+
+sdks:
+  pebble-sdui-web:
+    name: Rippling Pebble SDUI Web
+    packageManager: npm
+    package: "@rippling/pebble-sdui-web"
+    platform: web
+    documentation: https://developer.rippling.com/documentation/rippling-platform/sdui/getting-started
+    description: |
+      Author Function Page specs in TypeScript. Use catalog helpers (VStack,
+      Text, Button, …), `$bindState` / `$state`, and `triggerFunction` for
+      server round-trips. Always check npm for the current package version
+      before pinning.
+    exports:
+      render:
+        type: utility
+        description: Wrap root + state into an SDUI response
+      VStack:
+        type: component
+        description: Vertical stack layout
+      Text:
+        type: component
+        description: Text display
+      Button:
+        type: component
+        description: Action button that can triggerFunction
+
+extensionPoints:
+  - id: function-page
+    name: Function Page
+    type: fullPage
+    extensionType: codedComponents
+    description: |
+      App Studio page backed by a Rippling Function. On open, Rippling invokes
+      the function with action init; the function returns an SDUI spec that
+      Rippling renders with native components from the catalog (VStack, Text,
+      Button, …).
+    documentation: https://developer.rippling.com/documentation/rippling-platform/sdui/hello-world
+    supportedComponents:
+      - VStack
+      - Text
+      - Button
+
+  - id: app-studio
+    name: App Studio package
+    type: fullPage
+    extensionType: codedComponents
+    description: |
+      Build and package in-Rippling apps that can include Function Pages,
+      custom settings, and workflows.
+    documentation: https://developer.rippling.com/documentation/rippling-platform/app-studio

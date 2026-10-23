@@ -1,0 +1,32 @@
+{
+  "name": "@friggframework/api-module-rippling",
+  "version": "1.0.0",
+  "description": "Rippling Platform API (v2 REST) module that lets the Frigg Framework interact with Rippling companies, workers, users, departments, work locations, and draft hires via OAuth 2.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint:fix": "prettier --write --loglevel error . && eslint . --fix"
+  },
+  "keywords": [
+    "frigg",
+    "rippling",
+    "api-module",
+    "hris",
+    "workers",
+    "oauth2"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^2.0.0-next.107"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-scheduler": "^3.1113.0",
+    "dotenv": "^16.0.3",
+    "jest": "^28.1.3",
+    "js-yaml": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

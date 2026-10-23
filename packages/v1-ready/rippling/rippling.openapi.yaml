@@ -1,0 +1,534 @@
+openapi: 3.0.3
+info:
+  title: Rippling Platform API (Frigg subset)
+  version: "2024-08-01"
+  description: >-
+    Curated OpenAPI subset of the Rippling Platform API (v2 REST) covering exactly
+    the endpoints implemented by @friggframework/api-module-rippling in api.js.
+    Source of truth for the hand-written client (one method per operationId).
+
+    Official docs:
+      - https://developer.rippling.com/documentation/rest-api
+      - https://developer.rippling.com/documentation/rest-api/essentials/quickstart
+      - https://developer.rippling.com/documentation/rest-api/guides/hris-getting-started
+      - https://developer.rippling.com/documentation/rest-api/guides/org-data-getting-started
+      - https://developer.rippling.com/documentation/developer-portal/v2-guides/installation
+      - https://developer.rippling.com/llms.txt
+
+    Authenticate with Authorization: Bearer <token> (OAuth access token or
+    customer API token). Pin a dated version with Rippling-Api-Version
+    (YYYY-MM-DD). App Shop token exchange and mark_app_installed live on
+    https://api.rippling.com and are outside this server URL.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://rest.ripplingapis.com
+    description: Rippling Platform API v2
+security:
+  - BearerAuth: []
+tags:
+  - name: Companies
+  - name: Workers
+  - name: Users
+  - name: Departments
+  - name: Work Locations
+  - name: Draft Hires
+paths:
+  /companies/:
+    get:
+      tags: [Companies]
+      operationId: listCompanies
+      summary: List companies
+      description: >-
+        Returns companies for the authenticated token. Used after OAuth to bind
+        the token to the Rippling company. Scope: companies.read.
+      parameters:
+        - $ref: "#/components/parameters/Expand"
+        - $ref: "#/components/parameters/OrderBy"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200": { $ref: "#/components/responses/CompanyListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /workers/:
+    get:
+      tags: [Workers]
+      operationId: listWorkers
+      summary: List workers
+      description: >-
+        Paginated list of worker (employment/engagement) profiles.
+        Scope: workers.read.
+      parameters:
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/Expand"
+        - $ref: "#/components/parameters/OrderBy"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200": { $ref: "#/components/responses/WorkerListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /workers/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Workers]
+      operationId: getWorker
+      summary: Retrieve a worker
+      description: "Scope: workers.read."
+      parameters:
+        - $ref: "#/components/parameters/Expand"
+      responses:
+        "200": { $ref: "#/components/responses/WorkerResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /users/:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List users
+      description: "Paginated list of user (person/login) profiles. Scope: users.read."
+      parameters:
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/Expand"
+        - $ref: "#/components/parameters/OrderBy"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200": { $ref: "#/components/responses/UserListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /users/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Retrieve a user
+      description: "Scope: users.read."
+      parameters:
+        - $ref: "#/components/parameters/Expand"
+      responses:
+        "200": { $ref: "#/components/responses/UserResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /departments/:
+    get:
+      tags: [Departments]
+      operationId: listDepartments
+      summary: List departments
+      description: "Scope: departments.read."
+      parameters:
+        - $ref: "#/components/parameters/Expand"
+        - $ref: "#/components/parameters/OrderBy"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200": { $ref: "#/components/responses/DepartmentListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [Departments]
+      operationId: createDepartment
+      summary: Create a department
+      description: "Scope: departments.read-write."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepartmentRequest"
+      responses:
+        "200": { $ref: "#/components/responses/DepartmentResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /departments/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Departments]
+      operationId: getDepartment
+      summary: Retrieve a department
+      description: "Scope: departments.read."
+      responses:
+        "200": { $ref: "#/components/responses/DepartmentResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Departments]
+      operationId: updateDepartment
+      summary: Update a department
+      description: "Scope: departments.read-write."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepartmentUpdateRequest"
+      responses:
+        "200": { $ref: "#/components/responses/DepartmentResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /work-locations/:
+    get:
+      tags: [Work Locations]
+      operationId: listWorkLocations
+      summary: List work locations
+      description: "Scope: work-locations.read."
+      parameters:
+        - $ref: "#/components/parameters/Expand"
+        - $ref: "#/components/parameters/OrderBy"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200": { $ref: "#/components/responses/WorkLocationListResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [Work Locations]
+      operationId: createWorkLocation
+      summary: Create a work location
+      description: "Scope: work-locations.read-write."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkLocationRequest"
+      responses:
+        "200": { $ref: "#/components/responses/WorkLocationResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /work-locations/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Work Locations]
+      operationId: getWorkLocation
+      summary: Retrieve a work location
+      description: "Scope: work-locations.read."
+      responses:
+        "200": { $ref: "#/components/responses/WorkLocationResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Work Locations]
+      operationId: updateWorkLocation
+      summary: Update a work location
+      description: "Scope: work-locations.read-write."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkLocationUpdateRequest"
+      responses:
+        "200": { $ref: "#/components/responses/WorkLocationResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /draft-hires/:
+    post:
+      tags: [Draft Hires]
+      operationId: createDraftHires
+      summary: Create bulk draft hire
+      description: >-
+        Creates one or more draft hires. An admin finishes hiring in Rippling;
+        the resulting worker then appears on GET /workers/ and GET /users/.
+        Scope: draft-hires.read-write.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkDraftHireRequest"
+      responses:
+        "200": { $ref: "#/components/responses/BulkDraftHireResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        OAuth access token (App Shop) or customer API token. Sent as
+        Authorization: Bearer <token>.
+  parameters:
+    ResourceId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+      description: Resource identifier.
+    Filter:
+      in: query
+      name: filter
+      schema: { type: string }
+      description: Rippling filter expression.
+    Expand:
+      in: query
+      name: expand
+      schema: { type: string }
+      description: Comma-separated expandable fields (e.g. user,manager).
+    OrderBy:
+      in: query
+      name: order_by
+      schema: { type: string }
+      description: Sort fields (e.g. id, created_at, updated_at).
+    Limit:
+      in: query
+      name: limit
+      schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      description: Page size (default 50, max 100).
+    Cursor:
+      in: query
+      name: cursor
+      schema: { type: string }
+      description: Pagination cursor from a previous response.
+  schemas:
+    Company:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+        name: { type: string }
+        legal_name: { type: string }
+        doing_business_as_name: { type: string }
+        primary_email: { type: string }
+        phone: { type: string }
+    Worker:
+      type: object
+      required: [id]
+      properties:
+        id: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+        user_id: { type: string }
+        work_email: { type: string }
+        status: { type: string }
+    User:
+      type: object
+      required: [id]
+      properties:
+        id: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+        active: { type: boolean }
+        username: { type: string }
+        display_name: { type: string }
+    Department:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+        name: { type: string }
+        parent_id: { type: string }
+        reference_code: { type: string }
+    DepartmentRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        parent_id: { type: string }
+        reference_code: { type: string }
+    DepartmentUpdateRequest:
+      type: object
+      properties:
+        name: { type: string }
+        parent_id: { type: string }
+        reference_code: { type: string }
+    WorkLocation:
+      type: object
+      required: [id, name, address]
+      properties:
+        id: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+        name: { type: string }
+        address:
+          type: object
+          properties:
+            type: { type: string, enum: [HOME, WORK, OTHER] }
+            formatted: { type: string }
+            street_address: { type: string }
+            locality: { type: string }
+            region: { type: string }
+            postal_code: { type: string }
+            country: { type: string }
+    WorkLocationRequest:
+      type: object
+      required: [name, address]
+      properties:
+        name: { type: string }
+        address:
+          type: object
+          properties:
+            type: { type: string, enum: [HOME, WORK, OTHER] }
+            street_address: { type: string }
+            locality: { type: string }
+            region: { type: string }
+            postal_code: { type: string }
+            country: { type: string }
+    WorkLocationUpdateRequest:
+      type: object
+      properties:
+        name: { type: string }
+        address:
+          type: object
+          properties:
+            type: { type: string, enum: [HOME, WORK, OTHER] }
+            street_address: { type: string }
+            locality: { type: string }
+            region: { type: string }
+            postal_code: { type: string }
+            country: { type: string }
+    BulkDraftHireRequest:
+      type: object
+      required: [draft_hires]
+      properties:
+        draft_hires:
+          type: array
+          items:
+            type: object
+            required: [personal_info, employment_info, work_location_info]
+            properties:
+              personal_info:
+                type: object
+                required: [name, invite_email]
+                properties:
+                  invite_email: { type: string, format: email }
+                  name:
+                    type: object
+                    properties:
+                      first: { type: string }
+                      last: { type: string }
+              employment_info:
+                type: object
+                required: [employment_type_id, title]
+                properties:
+                  employment_type_id: { type: string }
+                  title: { type: string }
+              work_location_info:
+                type: object
+                properties:
+                  location_id: { type: string }
+                  is_remote: { type: boolean }
+  responses:
+    CompanyListResponse:
+      description: Paginated companies
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              results:
+                type: array
+                items: { $ref: "#/components/schemas/Company" }
+              next_link: { type: string, nullable: true }
+    WorkerListResponse:
+      description: Paginated workers
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              results:
+                type: array
+                items: { $ref: "#/components/schemas/Worker" }
+              next_link: { type: string, nullable: true }
+    WorkerResponse:
+      description: Worker
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Worker" }
+    UserListResponse:
+      description: Paginated users
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              results:
+                type: array
+                items: { $ref: "#/components/schemas/User" }
+              next_link: { type: string, nullable: true }
+    UserResponse:
+      description: User
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/User" }
+    DepartmentListResponse:
+      description: Paginated departments
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              results:
+                type: array
+                items: { $ref: "#/components/schemas/Department" }
+              next_link: { type: string, nullable: true }
+    DepartmentResponse:
+      description: Department
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Department" }
+    WorkLocationListResponse:
+      description: Paginated work locations
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              results:
+                type: array
+                items: { $ref: "#/components/schemas/WorkLocation" }
+              next_link: { type: string, nullable: true }
+    WorkLocationResponse:
+      description: Work location
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/WorkLocation" }
+    BulkDraftHireResponse:
+      description: Bulk draft hire result
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              successful_results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    draft_hire_role_id: { type: string }
+                    status: { type: string }
+                    message: { type: string }
+              invalid_items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    status: { type: string }
+                    message: { type: string }
+                    errors:
+                      type: array
+                      items: { type: string }
+    Unauthorized:
+      description: Missing or invalid bearer token
+    Forbidden:
+      description: Insufficient oauth scopes or permission profile
+    NotFound:
+      description: Resource not found

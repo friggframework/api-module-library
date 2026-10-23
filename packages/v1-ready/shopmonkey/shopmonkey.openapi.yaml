@@ -1,0 +1,630 @@
+openapi: 3.0.3
+info:
+  title: Shopmonkey API v3 (subset)
+  version: "3.0.0"
+  description: >-
+    Shopmonkey is a cloud shop-management platform for auto, tire, and
+    powersports repair shops. This is a curated subset of Shopmonkey's public
+    REST API v3, covering exactly the endpoints the
+    @friggframework/api-module-shopmonkey client in api.js implements.
+    Authored from the official docs at https://shopmonkey.dev/. One method per
+    operationId.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.shopmonkey.cloud/v3
+    description: Shopmonkey production API (v3)
+security:
+  - BearerAuth: []
+tags:
+  - name: Auth
+  - name: Users
+  - name: Company
+  - name: Customers
+  - name: Vehicles
+  - name: Orders
+  - name: Payments
+  - name: Inventory
+  - name: Appointments
+  - name: Webhooks
+paths:
+  /auth/api_key/status:
+    get:
+      tags: [Auth]
+      operationId: getApiKeyStatus
+      summary: Check API key status
+      responses:
+        "200":
+          description: API key is valid
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+  /user/me:
+    get:
+      tags: [Users]
+      operationId: getCurrentUser
+      summary: Logged-in user for the API key
+      responses:
+        "200":
+          description: Current user profile
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+  /user:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List users
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+        - $ref: '#/components/parameters/Where'
+        - $ref: '#/components/parameters/OrderBy'
+      responses:
+        "200":
+          description: Paginated list of users
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+  /user/{userId}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Find one user by id
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        "200":
+          description: User details
+        "404":
+          $ref: '#/components/responses/NotFound'
+  /company/{companyId}:
+    get:
+      tags: [Company]
+      operationId: getCompany
+      summary: Find one company by id
+      parameters:
+        - $ref: '#/components/parameters/CompanyId'
+      responses:
+        "200":
+          description: Company details
+    put:
+      tags: [Company]
+      operationId: updateCompany
+      summary: Update a company
+      parameters:
+        - $ref: '#/components/parameters/CompanyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Updated company
+  /customer/search:
+    post:
+      tags: [Customers]
+      operationId: searchCustomers
+      summary: Search customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Matching customers
+  /customer/{customerId}:
+    get:
+      tags: [Customers]
+      operationId: getCustomer
+      summary: Find one customer by id
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        "200":
+          description: Customer details
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Customers]
+      operationId: updateCustomer
+      summary: Update a customer
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Updated customer
+  /customer:
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: Create a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Created customer
+  /customer/{customerId}/{action}:
+    patch:
+      tags: [Customers]
+      operationId: softDeleteCustomer
+      summary: Soft-delete (or other action) a customer
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/Action'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Action applied
+  /customer/{customerId}/order:
+    get:
+      tags: [Orders]
+      operationId: listCustomerOrders
+      summary: List orders for a customer
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+      responses:
+        "200":
+          description: Customer orders
+  /customer/{customerId}/vehicle:
+    get:
+      tags: [Vehicles]
+      operationId: listCustomerVehicles
+      summary: List vehicles for a customer
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+      responses:
+        "200":
+          description: Customer vehicles
+  /vehicle/{vehicleId}:
+    get:
+      tags: [Vehicles]
+      operationId: getVehicle
+      summary: Find one vehicle by id
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      responses:
+        "200":
+          description: Vehicle details
+    put:
+      tags: [Vehicles]
+      operationId: updateVehicle
+      summary: Update a vehicle
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Updated vehicle
+  /vehicle:
+    post:
+      tags: [Vehicles]
+      operationId: createVehicle
+      summary: Create a vehicle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Created vehicle
+  /vehicle/{vehicleId}/{action}:
+    patch:
+      tags: [Vehicles]
+      operationId: softDeleteVehicle
+      summary: Soft-delete (or other action) a vehicle
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - $ref: '#/components/parameters/Action'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Action applied
+  /vehicle/{vehicleId}/order:
+    get:
+      tags: [Orders]
+      operationId: listVehicleOrders
+      summary: List orders for a vehicle
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+      responses:
+        "200":
+          description: Vehicle orders
+  /order:
+    get:
+      tags: [Orders]
+      operationId: listOrders
+      summary: List orders
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+        - $ref: '#/components/parameters/Where'
+        - $ref: '#/components/parameters/OrderBy'
+      responses:
+        "200":
+          description: Paginated list of orders
+    post:
+      tags: [Orders]
+      operationId: createOrder
+      summary: Create an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Created order
+  /order/{orderId}:
+    get:
+      tags: [Orders]
+      operationId: getOrder
+      summary: Find one order by id
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        "200":
+          description: Order details
+    put:
+      tags: [Orders]
+      operationId: updateOrder
+      summary: Update an order
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Updated order
+  /order/{orderId}/{action}:
+    patch:
+      tags: [Orders]
+      operationId: softDeleteOrder
+      summary: Soft-delete (or other action) an order
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+        - $ref: '#/components/parameters/Action'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Action applied
+  /order/{orderId}/pdf:
+    get:
+      tags: [Orders]
+      operationId: getOrderPdf
+      summary: Download order PDF
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        "200":
+          description: PDF bytes or download metadata
+  /integration/payment/search:
+    post:
+      tags: [Payments]
+      operationId: searchPayments
+      summary: Search payments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Matching payments
+  /integration/payment/manual/charge:
+    post:
+      tags: [Payments]
+      operationId: recordManualPayment
+      summary: Record a manual payment charge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Recorded payment
+  /integration/payment/manual/{paymentId}:
+    delete:
+      tags: [Payments]
+      operationId: deleteManualPayment
+      summary: Delete a manual payment
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        "200":
+          description: Payment deleted
+  /inventory_part/search:
+    post:
+      tags: [Inventory]
+      operationId: searchInventoryParts
+      summary: Search inventory parts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Matching inventory parts
+  /inventory_part/{partId}:
+    get:
+      tags: [Inventory]
+      operationId: getInventoryPart
+      summary: Find one inventory part by id
+      parameters:
+        - $ref: '#/components/parameters/PartId'
+      responses:
+        "200":
+          description: Inventory part details
+    put:
+      tags: [Inventory]
+      operationId: updateInventoryPart
+      summary: Update an inventory part
+      parameters:
+        - $ref: '#/components/parameters/PartId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Updated inventory part
+  /inventory_part:
+    post:
+      tags: [Inventory]
+      operationId: createInventoryPart
+      summary: Create an inventory part
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Created inventory part
+  /appointment:
+    get:
+      tags: [Appointments]
+      operationId: listAppointments
+      summary: List appointments
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+      responses:
+        "200":
+          description: Paginated list of appointments
+    post:
+      tags: [Appointments]
+      operationId: createAppointment
+      summary: Create an appointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Created appointment
+  /appointment/{appointmentId}:
+    get:
+      tags: [Appointments]
+      operationId: getAppointment
+      summary: Find one appointment by id
+      parameters:
+        - $ref: '#/components/parameters/AppointmentId'
+      responses:
+        "200":
+          description: Appointment details
+    put:
+      tags: [Appointments]
+      operationId: updateAppointment
+      summary: Update an appointment
+      parameters:
+        - $ref: '#/components/parameters/AppointmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Updated appointment
+    delete:
+      tags: [Appointments]
+      operationId: deleteAppointment
+      summary: Delete an appointment
+      parameters:
+        - $ref: '#/components/parameters/AppointmentId'
+      responses:
+        "200":
+          description: Appointment deleted
+  /webhook:
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, url]
+              properties:
+                name: { type: string }
+                url: { type: string }
+                triggers:
+                  type: array
+                  items: { type: string }
+                enabled: { type: boolean }
+                secret: { type: string }
+                version: { type: string }
+      responses:
+        "200":
+          description: Created webhook (may include secret)
+  /webhook/{webhookId}:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Find one webhook by id
+      parameters:
+        - $ref: '#/components/parameters/WebhookId'
+      responses:
+        "200":
+          description: Webhook details
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update a webhook
+      parameters:
+        - $ref: '#/components/parameters/WebhookId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Updated webhook
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook
+      parameters:
+        - $ref: '#/components/parameters/WebhookId'
+      responses:
+        "200":
+          description: Webhook deleted
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        API key from Settings → Integration → API Keys, sent as
+        Authorization: Bearer <key>.
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      schema: { type: number }
+    Skip:
+      name: skip
+      in: query
+      schema: { type: number }
+    Where:
+      name: where
+      in: query
+      schema: { type: string }
+    OrderBy:
+      name: orderby
+      in: query
+      schema: { type: string }
+    Action:
+      name: action
+      in: path
+      required: true
+      schema: { type: string }
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema: { type: string }
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      schema: { type: string }
+    CustomerId:
+      name: customerId
+      in: path
+      required: true
+      schema: { type: string }
+    VehicleId:
+      name: vehicleId
+      in: path
+      required: true
+      schema: { type: string }
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema: { type: string }
+    PaymentId:
+      name: paymentId
+      in: path
+      required: true
+      schema: { type: string }
+    PartId:
+      name: partId
+      in: path
+      required: true
+      schema: { type: string }
+    AppointmentId:
+      name: appointmentId
+      in: path
+      required: true
+      schema: { type: string }
+    WebhookId:
+      name: webhookId
+      in: path
+      required: true
+      schema: { type: string }
+  responses:
+    Unauthorized:
+      description: Missing or invalid API key
+    NotFound:
+      description: Resource not found

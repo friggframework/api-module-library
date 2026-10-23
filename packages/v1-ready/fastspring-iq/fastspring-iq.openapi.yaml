@@ -1,0 +1,704 @@
+openapi: 3.0.3
+info:
+  title: FastSpring IQ API
+  version: "1.8.12"
+  description: >-
+    FastSpring IQ (interactive quotes) REST API. This file is Left Hook's curated
+    subset covering exactly the endpoints the @friggframework/api-module-fastspring-iq
+    client in api.js implements. Verified against the official Postman collection
+    "FastSpring IQ API (v1.8.12)" at
+    https://documenter.getpostman.com/view/5578104/T1DjkKg1.
+    One method per operationId — keep in sync with api.js.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api-iq.fastspring.com
+    description: FastSpring IQ production API
+security:
+  - ApiKeyAuth: []
+tags:
+  - name: Auth
+  - name: Quotes
+  - name: Published Quotes
+  - name: Templates
+  - name: Companies
+  - name: Contacts
+  - name: Activities
+  - name: Webhooks
+paths:
+  /my-organization:
+    get:
+      tags: [Auth]
+      operationId: getMyOrganization
+      summary: Get the organization for the current api_key
+      responses:
+        "200":
+          description: Organization details
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Organization" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /auth/rotatekey:
+    post:
+      tags: [Auth]
+      operationId: rotateApiKey
+      summary: Rotate the organization API key
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Rotated key payload
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /quotes/:
+    get:
+      tags: [Quotes]
+      operationId: listQuotes
+      summary: List quotes
+      parameters:
+        - in: query
+          name: includes
+          schema: { type: string }
+          description: Comma-separated includes (e.g. summary,tags,analytics,company)
+      responses:
+        "200":
+          description: Array of quotes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Quote" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Quotes]
+      operationId: createQuote
+      summary: Create a quote (or create from template via templateId)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created quote
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Quote" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /quotes/search:
+    get:
+      tags: [Quotes]
+      operationId: searchQuotes
+      summary: Search quotes by query, contactEmail, or companyId
+      parameters:
+        - in: query
+          name: query
+          schema: { type: string }
+          description: Title or description text to find
+        - in: query
+          name: contactEmail
+          schema: { type: string, format: email }
+        - in: query
+          name: companyId
+          schema: { type: string }
+      responses:
+        "200":
+          description: Matching quotes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Quote" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /quotes/{quoteId}:
+    parameters:
+      - $ref: "#/components/parameters/QuoteId"
+    get:
+      tags: [Quotes]
+      operationId: getQuote
+      summary: Get a quote by id
+      responses:
+        "200":
+          description: Quote
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Quote" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    patch:
+      tags: [Quotes]
+      operationId: updateQuote
+      summary: Update a quote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated quote
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /quotes/{quoteId}/breakdown:
+    parameters:
+      - $ref: "#/components/parameters/QuoteId"
+    get:
+      tags: [Quotes]
+      operationId: getQuoteBreakdown
+      summary: Get quote cost breakdown (JSON or HTML via Content-Type)
+      responses:
+        "200":
+          description: Breakdown (application/json or text/html)
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /quotes/copy/{sourceQuoteId}:
+    post:
+      tags: [Quotes]
+      operationId: copyQuote
+      summary: Copy a quote
+      parameters:
+        - in: path
+          name: sourceQuoteId
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Copied quote
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /quotes/{quoteId}/closed-won:
+    parameters:
+      - $ref: "#/components/parameters/QuoteId"
+    post:
+      tags: [Quotes]
+      operationId: setQuoteClosedWon
+      summary: Mark quote closed-won
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated quote
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /quotes/{quoteId}/closed-lost:
+    parameters:
+      - $ref: "#/components/parameters/QuoteId"
+    post:
+      tags: [Quotes]
+      operationId: setQuoteClosedLost
+      summary: Mark quote closed-lost
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated quote
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /quotes/{quoteId}/publish:
+    parameters:
+      - $ref: "#/components/parameters/QuoteId"
+    post:
+      tags: [Quotes]
+      operationId: publishQuote
+      summary: Publish a quote
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Published quote
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /quotes/{quoteId}/unpublish:
+    parameters:
+      - $ref: "#/components/parameters/QuoteId"
+    post:
+      tags: [Quotes]
+      operationId: unpublishQuote
+      summary: Unpublish a quote
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Unpublished quote
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /published-quotes/:
+    get:
+      tags: [Published Quotes]
+      operationId: listPublishedQuotes
+      summary: List published quotes
+      responses:
+        "200":
+          description: Array of published quotes
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /published-quotes/{quoteId}:
+    parameters:
+      - $ref: "#/components/parameters/QuoteId"
+    get:
+      tags: [Published Quotes]
+      operationId: getPublishedQuote
+      summary: Get a published quote
+      responses:
+        "200":
+          description: Published quote
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /published-quotes/{publishedQuoteId}/analytics:
+    get:
+      tags: [Published Quotes]
+      operationId: getPublishedQuoteAnalytics
+      summary: Get published quote analytics
+      parameters:
+        - in: path
+          name: publishedQuoteId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Analytics payload
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /published-quotes/{quoteId}/breakdown:
+    parameters:
+      - $ref: "#/components/parameters/QuoteId"
+    get:
+      tags: [Published Quotes]
+      operationId: getPublishedQuoteBreakdown
+      summary: Get published quote cost breakdown
+      responses:
+        "200":
+          description: Breakdown (application/json or text/html)
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /templates:
+    get:
+      tags: [Templates]
+      operationId: listTemplates
+      summary: List quote templates
+      responses:
+        "200":
+          description: Templates
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /templates/:
+    post:
+      tags: [Templates]
+      operationId: createTemplate
+      summary: Create a quote template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created template
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /templates/search:
+    get:
+      tags: [Templates]
+      operationId: searchTemplates
+      summary: Search quote templates
+      parameters:
+        - in: query
+          name: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Matching templates
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /templates/{templateId}:
+    parameters:
+      - in: path
+        name: templateId
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Templates]
+      operationId: getTemplate
+      summary: Get a template by id
+      responses:
+        "200":
+          description: Template
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    patch:
+      tags: [Templates]
+      operationId: updateTemplate
+      summary: Update a template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated template
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /companies/:
+    get:
+      tags: [Companies]
+      operationId: listCompanies
+      summary: List companies
+      responses:
+        "200":
+          description: Array of companies
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Company" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Companies]
+      operationId: createCompany
+      summary: Create a company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CompanyWrite" }
+      responses:
+        "201":
+          description: Created company
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Company" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /companies/{companyId}:
+    parameters:
+      - in: path
+        name: companyId
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Companies]
+      operationId: getCompany
+      summary: Get a company
+      responses:
+        "200":
+          description: Company
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Company" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [Companies]
+      operationId: updateCompany
+      summary: Update a company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CompanyWrite" }
+      responses:
+        "200":
+          description: Updated company
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /contacts/:
+    get:
+      tags: [Contacts]
+      operationId: listContacts
+      summary: List contacts (optionally filter by companyId)
+      parameters:
+        - in: query
+          name: companyId
+          schema: { type: string }
+      responses:
+        "200":
+          description: Array of contacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Contact" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Contacts]
+      operationId: createContact
+      summary: Create a contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContactWrite" }
+      responses:
+        "200":
+          description: Created contact
+        "400":
+          description: Validation error
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /contacts/{contactId}:
+    parameters:
+      - in: path
+        name: contactId
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Contacts]
+      operationId: getContact
+      summary: Get a contact
+      responses:
+        "200":
+          description: Contact
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [Contacts]
+      operationId: updateContact
+      summary: Update a contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContactWrite" }
+      responses:
+        "200":
+          description: Updated contact
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Contacts]
+      operationId: deleteContact
+      summary: Delete a contact
+      responses:
+        "204":
+          description: Deleted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /activities/:
+    get:
+      tags: [Activities]
+      operationId: listActivities
+      summary: List activities
+      responses:
+        "200":
+          description: Array of activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Activity" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Activities]
+      operationId: createActivity
+      summary: Create an activity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created activity
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /activities/{activityId}:
+    get:
+      tags: [Activities]
+      operationId: getActivity
+      summary: Get an activity
+      parameters:
+        - in: path
+          name: activityId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Activity
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List webhooks
+      responses:
+        "200":
+          description: Array of webhooks
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Webhook" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a webhook subscription
+      description: >-
+        Required: url, topic. Optional: method (default POST), headers, filters,
+        organizationId. Topics include */*, quotes/*, quotes/create|update|delete,
+        published-quotes/*, activities/*, activities/create.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookWrite" }
+      responses:
+        "201":
+          description: Created webhook
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Webhook" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /webhooks/{webhookId}:
+    parameters:
+      - in: path
+        name: webhookId
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Get a webhook
+      responses:
+        "200":
+          description: Webhook
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Webhook" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update a webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookWrite" }
+      responses:
+        "200":
+          description: Updated webhook
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook
+      responses:
+        "204":
+          description: Deleted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: api_key
+      description: FastSpring IQ API key (issued by account manager).
+  parameters:
+    QuoteId:
+      in: path
+      name: quoteId
+      required: true
+      schema: { type: string }
+  responses:
+    Unauthorized:
+      description: Missing or invalid api_key
+  schemas:
+    Organization:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        pathName: { type: string }
+        city: { type: string }
+        country: { type: string }
+        address: { type: string }
+        postalCode: { type: string }
+        province: { type: string }
+        phoneNumber: { type: string }
+        externalWebsite: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Quote:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        status: { type: string }
+        organizationId: { type: string }
+        clientId: { type: string }
+        clientName: { type: string }
+        currency: { type: string }
+        ownerEmail: { type: string, format: email }
+        ownerName: { type: string }
+        url: { type: string }
+        publishedId: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Company:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        website: { type: string }
+        address: { type: string }
+        sourceType: { type: string }
+        sourceId: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    CompanyWrite:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        website: { type: string }
+        address: { type: string }
+        sourceType: { type: string }
+        sourceId: { type: string }
+    Contact:
+      type: object
+      properties:
+        id: { type: string }
+        companyId: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ContactWrite:
+      type: object
+      required: [companyId, email]
+      properties:
+        companyId: { type: string }
+        email: { type: string, format: email }
+        firstName: { type: string }
+        lastName: { type: string }
+        phone: { type: string }
+        sourceType: { type: string }
+        sourceId: { type: string }
+        sourceLink: { type: string }
+    Activity:
+      type: object
+      properties:
+        id: { type: string }
+        quoteId: { type: string }
+        organizationId: { type: string }
+        type: { type: string }
+        message: { type: string }
+        userName: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Webhook:
+      type: object
+      properties:
+        id: { type: string }
+        url: { type: string }
+        topic: { type: string }
+        method: { type: string }
+        active: { type: boolean }
+        headers: { type: object }
+        filters: { type: object }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    WebhookWrite:
+      type: object
+      required: [url, topic]
+      properties:
+        url: { type: string, format: uri }
+        topic: { type: string }
+        method: { type: string, default: POST }
+        headers: { type: object }
+        filters: { type: object }
+        organizationId: { type: string }
+        active: { type: boolean }

@@ -1,0 +1,10 @@
+{
+    "name": "fastspring-iq",
+    "label": "FastSpring IQ",
+    "authType": "apiKey",
+    "productUrl": "https://iq.fastspring.com",
+    "apiDocs": "https://documenter.getpostman.com/view/5578104/T1DjkKg1",
+    "logoUrl": "https://friggframework.org/assets/img/fastspring-icon.jpeg",
+    "categories": ["Quotes", "CPQ", "Partner"],
+    "description": "FastSpring IQ (interactive quotes) API — manage quotes, companies, contacts, activities, and webhooks."
+}

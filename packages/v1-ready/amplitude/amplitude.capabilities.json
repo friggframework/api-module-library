@@ -1,0 +1,105 @@
+{
+  "$schema": "capability-manifest/v0.1",
+  "module": "amplitude",
+  "package": "@friggframework/api-module-amplitude",
+  "version": "1.0.0",
+  "auth": {
+    "type": "basic",
+    "notes": "HTTP Basic with project API key (username) and secret key (password). Region-aware hosts for Dashboard REST / Export / Cohorts (US: https://amplitude.com, EU: https://analytics.eu.amplitude.com). User Profile API uses https://profile-api.amplitude.com and is not available in EU."
+  },
+  "objects": {
+    "event_segmentation": {
+      "fields": [
+        { "name": "e", "tags": ["read"] },
+        { "name": "start", "tags": ["read"] },
+        { "name": "end", "tags": ["read"] },
+        { "name": "m", "tags": ["read"] },
+        { "name": "series", "tags": ["read"] },
+        { "name": "xValues", "tags": ["read"] }
+      ],
+      "operations": [
+        {
+          "name": "getEventSegmentation",
+          "surface": "data-read",
+          "method": "getEventSegmentation"
+        }
+      ]
+    },
+    "user_activity": {
+      "fields": [
+        { "name": "user", "tags": ["identity", "read"] },
+        { "name": "userData", "tags": ["read"] },
+        { "name": "events", "tags": ["read"] }
+      ],
+      "operations": [
+        {
+          "name": "getUserActivity",
+          "surface": "data-read",
+          "method": "getUserActivity"
+        },
+        {
+          "name": "searchUsers",
+          "surface": "data-read",
+          "method": "searchUsers"
+        }
+      ]
+    },
+    "event": {
+      "fields": [
+        { "name": "name", "tags": ["identity", "read"] }
+      ],
+      "operations": [
+        { "name": "listEvents", "surface": "data-read", "method": "listEvents" },
+        {
+          "name": "exportEvents",
+          "surface": "data-read",
+          "method": "exportEvents"
+        }
+      ]
+    },
+    "cohort": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "name", "tags": ["read"] },
+        { "name": "size", "tags": ["read"] },
+        { "name": "definition", "tags": ["read"] },
+        { "name": "request_id", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listCohorts", "surface": "data-read", "method": "listCohorts" },
+        {
+          "name": "requestCohortExport",
+          "surface": "data-read",
+          "method": "requestCohortExport"
+        },
+        {
+          "name": "getCohortExportStatus",
+          "surface": "data-read",
+          "method": "getCohortExportStatus"
+        },
+        {
+          "name": "downloadCohort",
+          "surface": "data-read",
+          "method": "downloadCohort"
+        }
+      ]
+    },
+    "user_profile": {
+      "fields": [
+        { "name": "user_id", "tags": ["identity", "read"] },
+        { "name": "device_id", "tags": ["identity", "read"] },
+        { "name": "amp_props", "tags": ["read"] },
+        { "name": "cohort_ids", "tags": ["read"] },
+        { "name": "recommendations", "tags": ["read"] },
+        { "name": "propensity", "tags": ["read"] }
+      ],
+      "operations": [
+        {
+          "name": "getUserProfile",
+          "surface": "data-read",
+          "method": "getUserProfile"
+        }
+      ]
+    }
+  }
+}

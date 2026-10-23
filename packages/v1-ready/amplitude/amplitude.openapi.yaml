@@ -1,0 +1,508 @@
+openapi: 3.0.3
+info:
+  title: Amplitude Analytics APIs (Frigg curated subset)
+  version: 1.0.0
+  description: 'Curated subset of Amplitude Dashboard REST, Export, Behavioral Cohorts, and User Profile
+    APIs for the Frigg api-module. Paths and operationIds for Dashboard/Export/Cohorts come from https://amplitude.com/openapi.json.
+    User Profile is documented at https://amplitude.com/docs/apis/analytics/user-profile (not in the public
+    OpenAPI host) and uses a separate server URL.
+
+
+    Auth: HTTP Basic with project API key (username) and secret key (password). Hosts: https://amplitude.com
+    (US) or https://analytics.eu.amplitude.com (EU) for Dashboard/Export/Cohorts; https://profile-api.amplitude.com
+    for User Profile (US only — not available in EU).
+
+
+    Sources: https://amplitude.com/docs/apis/authentication, https://amplitude.com/docs/apis/analytics/dashboard-rest,
+    https://amplitude.com/docs/apis/analytics/export, https://amplitude.com/docs/apis/analytics/behavioral-cohorts,
+    https://amplitude.com/docs/apis/analytics/user-profile, https://amplitude.com/openapi.json'
+servers:
+- url: https://amplitude.com
+  description: Dashboard REST / Export / Cohorts (US / default)
+- url: https://analytics.eu.amplitude.com
+  description: Dashboard REST / Export / Cohorts (EU)
+security:
+- BasicAuth: []
+tags:
+- name: Analytics
+- name: Export
+- name: Cohorts
+- name: UserProfile
+paths:
+  /api/2/events/segmentation:
+    get:
+      operationId: getEventSegmentation
+      summary: Event segmentation
+      description: Return metrics for one or two events over a date range, optionally segmented and grouped.
+        URL-encode special characters in event types and property names.
+      tags:
+      - Analytics
+      parameters:
+      - name: e
+        in: query
+        required: true
+        description: Event definition as a JSON object with `event_type` and optional `filters` and `group_by`.
+          Use `_active` for any active event, `_all` for any event, and prefix custom events with `ce:`.
+        schema:
+          type: string
+      - name: e2
+        in: query
+        required: false
+        description: Second event definition, same shape as `e`.
+        schema:
+          type: string
+      - name: start
+        in: query
+        required: true
+        description: First date included in the data series, formatted YYYYMMDD.
+        schema:
+          type: string
+          pattern: ^\d{8}$
+          example: '20260801'
+      - name: end
+        in: query
+        required: true
+        description: Last date included in the data series, formatted YYYYMMDD.
+        schema:
+          type: string
+          pattern: ^\d{8}$
+          example: '20260831'
+      - name: m
+        in: query
+        required: false
+        description: 'Metric to return. Non-property metrics: `uniques`, `totals`, `pct_dau`, `average`.
+          Property metrics: `histogram`, `sums`, `value_avg`.'
+        schema:
+          type: string
+          enum:
+          - uniques
+          - totals
+          - pct_dau
+          - average
+          - histogram
+          - sums
+          - value_avg
+      - name: i
+        in: query
+        required: false
+        description: 'Interval: 1 for daily, 7 for weekly, 30 for monthly. Use -300000, -3600000 for realtime
+          intervals.'
+        schema:
+          type: integer
+      - name: s
+        in: query
+        required: false
+        description: Segment definitions, as a JSON array of filter condition objects. Repeat the parameter
+          for multiple segments.
+        schema:
+          type: string
+      - name: g
+        in: query
+        required: false
+        description: 'Property to group by, for example `platform`. Available only with a single segment.
+          Limit: two.'
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        description: Number of group-by values returned. Max 1000.
+        schema:
+          type: integer
+          maximum: 1000
+      responses:
+        '200':
+          description: Series data with labels and per-series values.
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /api/2/useractivity:
+    get:
+      operationId: getUserActivity
+      summary: User activity
+      description: Return a single user’s event stream and user properties. Rate limits for this endpoint
+        are lower than other Dashboard REST endpoints.
+      tags:
+      - Analytics
+      parameters:
+      - name: user
+        in: query
+        required: true
+        description: Amplitude ID of the user.
+        schema:
+          type: string
+      - name: offset
+        in: query
+        required: false
+        description: Zero-indexed offset into the event stream.
+        schema:
+          type: integer
+      - name: limit
+        in: query
+        required: false
+        description: Number of events to return. Defaults to 1000.
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: User properties and recent events.
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /api/2/usersearch:
+    get:
+      operationId: searchUsers
+      summary: User search
+      description: Look up users by Amplitude ID, device ID, user ID, or user ID prefix.
+      tags:
+      - Analytics
+      parameters:
+      - name: user
+        in: query
+        required: true
+        description: Amplitude ID, device ID, user ID, or user ID prefix.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Matching users and match type.
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /api/2/export:
+    get:
+      operationId: exportEvents
+      summary: Export raw events
+      description: Export raw event data for a time range as a zipped archive of newline-delimited JSON
+        files. Range is bounded by `server_upload_time`, maximum 365 days and 4 GB per request. Data is
+        available roughly two hours after ingestion.
+      tags:
+      - Export
+      parameters:
+      - name: start
+        in: query
+        required: true
+        description: First hour included, formatted YYYYMMDDTHH.
+        schema:
+          type: string
+          example: 20260101T00
+      - name: end
+        in: query
+        required: true
+        description: Last hour included, formatted YYYYMMDDTHH.
+        schema:
+          type: string
+          example: 20260127T00
+      responses:
+        '200':
+          description: Zipped archive of JSON event files.
+          content:
+            application/zip:
+              schema:
+                type: object
+        '400':
+          description: Request too large. Export exceeds the 4 GB limit — narrow the time range.
+          content:
+            '*/*':
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: No data available for the requested time range.
+          content:
+            '*/*':
+              schema:
+                type: object
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /api/2/events/list:
+    get:
+      operationId: listEvents
+      summary: List events
+      description: Return every active and inactive event type in the project, with display name and deleted
+        state.
+      tags:
+      - Analytics
+      parameters: []
+      responses:
+        '200':
+          description: Event list.
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /api/3/cohorts:
+    get:
+      operationId: listCohorts
+      summary: List all cohorts
+      description: List all cohorts
+      tags:
+      - Cohorts
+      parameters: []
+      responses:
+        '200':
+          description: Cohort metadata for the project.
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /api/5/cohorts/request/{cohortId}:
+    get:
+      operationId: requestCohortExport
+      summary: Request a cohort export
+      description: Start an asynchronous cohort export and return a request ID. Poll `/api/5/cohorts/request-status/{requestId}`,
+        then download from `/api/5/cohorts/request/{requestId}/file`.
+      tags:
+      - Cohorts
+      parameters:
+      - name: cohortId
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      - name: props
+        in: query
+        required: false
+        description: Set to 1 to include user properties in the export.
+        schema:
+          type: integer
+          enum:
+          - 0
+          - 1
+      - name: propKeys
+        in: query
+        required: false
+        description: Specific user property to include. Repeat for multiple properties.
+        schema:
+          type: string
+      responses:
+        '202':
+          description: Export request accepted, with a request ID.
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /api/5/cohorts/request-status/{requestId}:
+    get:
+      operationId: getCohortExportStatus
+      summary: Get cohort export status
+      description: Poll while HTTP 202 reports JOB INPROGRESS. Download only after HTTP 200 reports JOB
+        COMPLETED.
+      tags:
+      - Cohorts
+      parameters:
+      - name: requestId
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Export completed.
+          content:
+            application/json:
+              schema:
+                type: object
+        '202':
+          description: Export is still running; continue polling.
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /api/5/cohorts/request/{requestId}/file:
+    get:
+      operationId: downloadCohort
+      summary: Download a cohort export
+      description: Redirects to a short-lived download link. The request URL is valid for seven days;
+        each generated link is valid for one minute.
+      tags:
+      - Cohorts
+      parameters:
+      - name: requestId
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Cohort membership file.
+          content:
+            '*/*':
+              schema:
+                type: object
+        '302':
+          description: Redirect to a pre-signed S3 download URL valid for one minute. Follow Location
+            immediately; the original request URL remains valid for seven days.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /v1/userprofile:
+    get:
+      operationId: getUserProfile
+      summary: Get a user profile
+      description: Fetch user properties, cohort IDs, computations, recommendations, and/or propensity
+        for a user. Hosted at profile-api.amplitude.com (Enterprise; not available in EU). See https://amplitude.com/docs/apis/analytics/user-profile
+      tags:
+      - UserProfile
+      servers:
+      - url: https://profile-api.amplitude.com
+        description: User Profile API (US only)
+      parameters:
+      - name: user_id
+        in: query
+        required: false
+        description: External user ID. Required unless device_id is set.
+        schema:
+          type: string
+      - name: device_id
+        in: query
+        required: false
+        description: Device / anonymous ID. Required unless user_id is set.
+        schema:
+          type: string
+      - name: get_amp_props
+        in: query
+        required: false
+        description: Return full user properties (not including computations).
+        schema:
+          type: boolean
+      - name: get_cohort_ids
+        in: query
+        required: false
+        description: Return cohort IDs synced to Profile API that this user belongs to.
+        schema:
+          type: boolean
+      - name: get_computations
+        in: query
+        required: false
+        description: Return computations enabled for this user.
+        schema:
+          type: boolean
+      - name: comp_id
+        in: query
+        required: false
+        description: Return a single computation by id.
+        schema:
+          type: string
+      - name: get_recs
+        in: query
+        required: false
+        description: Return recommendation results.
+        schema:
+          type: boolean
+      - name: rec_id
+        in: query
+        required: false
+        description: Recommendation id(s), comma-separated. Required if get_recs is true.
+        schema:
+          type: string
+      - name: rec_type
+        in: query
+        required: false
+        description: 'Override control: model or random.'
+        schema:
+          type: string
+          enum:
+          - model
+          - random
+      - name: get_propensity
+        in: query
+        required: false
+        description: Return propensity score(s).
+        schema:
+          type: boolean
+      - name: prediction_id
+        in: query
+        required: false
+        description: Prediction id for propensity.
+        schema:
+          type: string
+      - name: propensity_type
+        in: query
+        required: false
+        description: score or pct.
+        schema:
+          type: string
+          enum:
+          - score
+          - pct
+      responses:
+        '200':
+          description: User profile payload with userData envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: HTTP Basic authentication. Username is the project API key, password is the project
+        secret key. Both are found in Amplitude under Settings → Projects → General. Credentials must
+        be base64 encoded. See https://amplitude.com/docs/apis/authentication
+  responses:
+    BadRequest:
+      description: Bad request
+    Unauthorized:
+      description: Invalid credentials
+    RateLimited:
+      description: Rate limited
+    NotFound:
+      description: No data for the requested range or resource

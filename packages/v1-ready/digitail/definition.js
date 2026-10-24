@@ -49,7 +49,9 @@ const Definition = {
                     client_secret: process.env.DIGITAIL_CLIENT_SECRET,
                     redirect_uri:
                         process.env.DIGITAIL_REDIRECT_URI ||
-                        `${process.env.REDIRECT_URI || ''}/digitail`,
+                        (process.env.REDIRECT_URI
+                            ? `${process.env.REDIRECT_URI}/digitail`
+                            : undefined),
                 });
             return {
                 url: client.getAuthUri(),
@@ -97,10 +99,12 @@ const Definition = {
     env: {
         client_id: process.env.DIGITAIL_CLIENT_ID,
         client_secret: process.env.DIGITAIL_CLIENT_SECRET,
-        // Dedicated Digitail redirect URI (preferred). Falls back to shared REDIRECT_URI/digitail.
+        // Dedicated Digitail redirect URI (preferred). Falls back to shared REDIRECT_URI/digitail; omitted when neither is set.
         redirect_uri:
             process.env.DIGITAIL_REDIRECT_URI ||
-            `${process.env.REDIRECT_URI || ''}/digitail`,
+            (process.env.REDIRECT_URI
+                ? `${process.env.REDIRECT_URI}/digitail`
+                : undefined),
     },
 };
 

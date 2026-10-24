@@ -1,0 +1,335 @@
+# Fenestra Document: Slack Block Kit
+#
+# Slack represents the JSON-response end of the spectrum. Apps MUST compose
+# Block Kit blocks/elements as JSON — no custom coded components in-product.
+# Sources: https://docs.slack.dev/block-kit/  |  draft example lineage on
+# claude/fenestra-spec-draft-Q367t (revalidated against fenestra.schema.json).
+
+fenestra: "0.1.0"
+
+info:
+  title: Slack Block Kit UI Framework
+  version: "1.0.0"
+  description: |
+    Block Kit is Slack's declarative UI framework for messages, modals, and
+    App Home. Surfaces are JSON documents (blocks + elements), opened or
+    published via the Web API (`views.open`, `views.publish`, `chat.postMessage`).
+
+    Key characteristic: apps MUST use Block Kit blocks and interactive elements —
+    custom HTML/React components are not rendered inside Slack.
+
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+
+platform:
+  name: Slack
+  vendor: Slack Technologies, LLC (Salesforce)
+  documentation: https://docs.slack.dev/block-kit/
+  appMarketplace: https://slack.com/apps
+  builderTool: https://app.slack.com/block-kit-builder
+
+sdks:
+  slack-bolt:
+    name: Slack Bolt Framework
+    packageManager: npm
+    package: "@slack/bolt"
+    version: "^3.17.0"
+    repository: https://github.com/slackapi/bolt-js
+    documentation: https://docs.slack.dev/tools/bolt-js
+    exports:
+      App:
+        type: utility
+        description: Main application class for Slack apps
+  slack-web-api:
+    name: Slack Web API Client
+    packageManager: npm
+    package: "@slack/web-api"
+    version: "^6.11.0"
+    repository: https://github.com/slackapi/node-slack-sdk
+    documentation: https://docs.slack.dev/tools/node-slack-sdk/web-api
+    exports:
+      WebClient:
+        type: utility
+        description: Client for Slack Web API methods including views and chat
+
+componentCatalog:
+  categories:
+    layout:
+      name: Layout blocks
+      description: Structure message and modal content
+      components: [section, divider, header, context, actions]
+    input:
+      name: Input blocks
+      description: Modal and Home Tab input blocks
+      components: [input]
+    display:
+      name: Display
+      description: Rich text and media blocks
+      components: [image, rich_text]
+    action:
+      name: Interactive elements
+      description: Buttons and selects used inside blocks
+      components: [button, static_select]
+
+  components:
+    section:
+      name: section
+      description: Text section with optional accessory element
+      category: layout
+      sdkBinding:
+        sdk: slack-web-api
+        export: WebClient
+      props:
+        type:
+          type: string
+          enum: [section]
+          required: true
+        text:
+          type: object
+          description: mrkdwn or plain_text text object
+        fields:
+          type: array
+        accessory:
+          type: object
+    divider:
+      name: divider
+      description: Visual separator
+      category: layout
+      sdkBinding:
+        sdk: slack-web-api
+        export: WebClient
+      props:
+        type:
+          type: string
+          enum: [divider]
+          required: true
+    header:
+      name: header
+      description: Large plain-text header
+      category: layout
+      sdkBinding:
+        sdk: slack-web-api
+        export: WebClient
+      props:
+        type:
+          type: string
+          enum: [header]
+          required: true
+        text:
+          type: object
+          required: true
+    context:
+      name: context
+      description: Low-emphasis contextual info (images + text)
+      category: layout
+      sdkBinding:
+        sdk: slack-web-api
+        export: WebClient
+      props:
+        type:
+          type: string
+          enum: [context]
+          required: true
+        elements:
+          type: array
+          required: true
+    actions:
+      name: actions
+      description: Row of interactive elements
+      category: layout
+      sdkBinding:
+        sdk: slack-web-api
+        export: WebClient
+      props:
+        type:
+          type: string
+          enum: [actions]
+          required: true
+        elements:
+          type: array
+          required: true
+    input:
+      name: input
+      description: Input block wrapping an interactive element (modals / Home)
+      category: input
+      sdkBinding:
+        sdk: slack-web-api
+        export: WebClient
+      props:
+        type:
+          type: string
+          enum: [input]
+          required: true
+        label:
+          type: object
+          required: true
+        element:
+          type: object
+          required: true
+        optional:
+          type: boolean
+    image:
+      name: image
+      description: Image block
+      category: display
+      sdkBinding:
+        sdk: slack-web-api
+        export: WebClient
+      props:
+        type:
+          type: string
+          enum: [image]
+          required: true
+        image_url:
+          type: string
+          required: true
+        alt_text:
+          type: string
+          required: true
+    rich_text:
+      name: rich_text
+      description: Rich text block
+      category: display
+      sdkBinding:
+        sdk: slack-web-api
+        export: WebClient
+      props:
+        type:
+          type: string
+          enum: [rich_text]
+          required: true
+        elements:
+          type: array
+          required: true
+    button:
+      name: button
+      description: Interactive button element
+      category: action
+      sdkBinding:
+        sdk: slack-web-api
+        export: WebClient
+      props:
+        type:
+          type: string
+          enum: [button]
+          required: true
+        text:
+          type: object
+          required: true
+        action_id:
+          type: string
+        url:
+          type: string
+        value:
+          type: string
+        style:
+          type: string
+          enum: [primary, danger]
+    static_select:
+      name: static_select
+      description: Static select menu element
+      category: action
+      sdkBinding:
+        sdk: slack-web-api
+        export: WebClient
+      props:
+        type:
+          type: string
+          enum: [static_select]
+          required: true
+        action_id:
+          type: string
+        placeholder:
+          type: object
+        options:
+          type: array
+
+policies:
+  componentRequirement:
+    level: required
+    scope: all
+    rationale: |
+      Slack only renders Block Kit JSON. Apps cannot inject custom HTML or
+      coded components into messages, modals, or App Home.
+
+  customComponents:
+    allowed: false
+    documentation: https://docs.slack.dev/block-kit/
+    constraints:
+      - mustFollowDesignSystem
+
+  publishing:
+    privateApps:
+      componentRequirement: required
+      customComponentsAllowed: false
+      reviewRequired: false
+    publicApps:
+      componentRequirement: required
+      customComponentsAllowed: false
+      reviewRequired: true
+      notes: "App Directory listing review applies for public distribution"
+    marketplaceApps:
+      componentRequirement: required
+      customComponentsAllowed: false
+      certificationRequired: true
+
+  designGuidelines:
+    required: true
+    designSystem: "Slack Block Kit"
+    designSystemUrl: https://docs.slack.dev/block-kit/
+    designTokensProvided: false
+
+extensionPoints:
+  - id: message-blocks
+    name: Message blocks
+    type: composer
+    extensionType: jsonResponse
+    description: >
+      Block Kit blocks attached to chat.postMessage / chat.update payloads in
+      channels, DMs, and threads.
+    supportedComponents:
+      - section
+      - divider
+      - header
+      - context
+      - actions
+      - image
+      - rich_text
+      - button
+      - static_select
+
+  - id: modal-view
+    name: Modal view
+    type: modal
+    extensionType: jsonResponse
+    description: >
+      Modal opened via views.open / views.push / views.update. Supports input
+      blocks for forms.
+    supportedComponents:
+      - all
+
+  - id: app-home
+    name: App Home
+    type: fullPage
+    extensionType: jsonResponse
+    description: >
+      Home Tab published via views.publish for a user.
+    supportedComponents:
+      - all
+
+renderingEngines:
+  block-kit-json:
+    type: custom
+    name: Slack Block Kit JSON
+    description: >
+      Slack natively renders Block Kit JSON documents. There is no React/LWC
+      host — surfaces are posted or opened through the Web API.
+
+jsonFormsIntegration:
+  supported: false
+  notes: "Slack uses Block Kit JSON, not JSON Forms."
+
+mcpAppsIntegration:
+  supported: false
+  notes: "Not integrated with MCP Apps in this module cut."

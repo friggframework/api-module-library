@@ -1,0 +1,542 @@
+openapi: 3.0.3
+info:
+  title: Gusto App Integrations API
+  version: "2026-06-15"
+  description: >-
+    Curated subset of Gusto's App Integrations REST API covering the endpoints
+    implemented by @friggframework/api-module-gusto. Paths, parameters, and
+    fields are taken from Gusto's official reference
+    (https://docs.gusto.com/app-integrations/reference/). operationIds are
+    camelCase names that match Api methods 1:1 (spec-sync).
+
+    Production base: https://api.gusto.com
+    Demo/sandbox:    https://api.gusto-demo.com
+
+    Auth: OAuth2 authorization-code for company-scoped resources; system-level
+    Bearer token for webhook subscription management.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  termsOfService: https://gusto.com/about/terms/developer-terms-of-service
+servers:
+  - url: https://api.gusto.com
+    description: Gusto production API
+security:
+  - CompanyAccessAuth: []
+tags:
+  - name: Introspection
+  - name: Companies
+  - name: Employees
+  - name: Payrolls
+  - name: Webhooks
+paths:
+  /v1/token_info:
+    get:
+      tags: [Introspection]
+      operationId: getTokenInfo
+      summary: Get info about the current access token
+      description: >-
+        Returns scope and resource information for the current access token
+        (company UUID, resource owner). Official operationId: get-v1-token-info.
+        Source: https://docs.gusto.com/app-integrations/reference/get-v1-token-info
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenInfo'
+
+  /v1/companies/{company_id}:
+    get:
+      tags: [Companies]
+      operationId: getCompany
+      summary: Get a company
+      description: >-
+        scope: companies:read.
+        Source: https://docs.gusto.com/app-integrations/reference/get-v1-companies
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+        - $ref: '#/components/parameters/CompanyId'
+      responses:
+        '200':
+          description: Company
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '404':
+          description: Not found
+    put:
+      tags: [Companies]
+      operationId: updateCompany
+      summary: Update a company
+      description: >-
+        scope: companies:write.
+        Source: https://docs.gusto.com/app-integrations/reference/put-v1-companies
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+        - $ref: '#/components/parameters/CompanyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Updated company
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+
+  /v1/companies/{company_id}/employees:
+    get:
+      tags: [Employees]
+      operationId: listEmployees
+      summary: Get employees of a company
+      description: >-
+        scope: employees:read.
+        Source: https://docs.gusto.com/app-integrations/reference/get-v1-companies-company_id-employees
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+        - $ref: '#/components/parameters/CompanyId'
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per
+          schema: { type: integer }
+        - in: query
+          name: search_term
+          schema: { type: string }
+        - in: query
+          name: include
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - all_compensations
+                - all_home_addresses
+                - company_name
+                - current_home_address
+                - custom_fields
+                - portal_invitations
+          style: form
+          explode: false
+      responses:
+        '200':
+          description: Employee list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'
+    post:
+      tags: [Employees]
+      operationId: createEmployee
+      summary: Create an employee
+      description: >-
+        scope: employees:manage.
+        Source: https://docs.gusto.com/app-integrations/reference/post-v1-employees
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+        - $ref: '#/components/parameters/CompanyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name: { type: string }
+                last_name: { type: string }
+                email: { type: string, format: email }
+                work_email: { type: string, format: email }
+                date_of_birth: { type: string, format: date }
+                self_onboarding: { type: boolean }
+              additionalProperties: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+
+  /v1/employees/{employee_id}:
+    get:
+      tags: [Employees]
+      operationId: getEmployee
+      summary: Get an employee
+      description: >-
+        scope: employees:read.
+        Source: https://docs.gusto.com/app-integrations/reference/get-v1-employees
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+        - $ref: '#/components/parameters/EmployeeId'
+      responses:
+        '200':
+          description: Employee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+    put:
+      tags: [Employees]
+      operationId: updateEmployee
+      summary: Update an employee
+      description: >-
+        scope: employees:write. Body must include `version`.
+        Source: https://docs.gusto.com/app-integrations/reference/put-v1-employees
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+        - $ref: '#/components/parameters/EmployeeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version: { type: string }
+                first_name: { type: string }
+                last_name: { type: string }
+                email: { type: string, format: email }
+                work_email: { type: string, format: email }
+              additionalProperties: true
+      responses:
+        '200':
+          description: Updated employee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+
+  /v1/companies/{company_id}/payrolls:
+    get:
+      tags: [Payrolls]
+      operationId: listPayrolls
+      summary: Get all payrolls for a company
+      description: >-
+        scope: payrolls:read. Defaults to processed regular payrolls for the
+        past 6 months.
+        Source: https://docs.gusto.com/app-integrations/reference/get-v1-companies-company_id-payrolls
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+        - $ref: '#/components/parameters/CompanyId'
+        - in: query
+          name: processing_statuses
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [processed, unprocessed]
+          style: form
+          explode: false
+        - in: query
+          name: payroll_types
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [regular, off_cycle, external]
+          style: form
+          explode: false
+        - in: query
+          name: start_date
+          schema: { type: string, format: date }
+        - in: query
+          name: end_date
+          schema: { type: string, format: date }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Payroll list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payroll'
+
+  /v1/companies/{company_id}/payrolls/{payroll_id}:
+    get:
+      tags: [Payrolls]
+      operationId: getPayroll
+      summary: Get a single payroll
+      description: >-
+        scope: payrolls:read.
+        Source: https://docs.gusto.com/app-integrations/reference/get-v1-companies-company_id-payrolls-payroll_id
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+        - $ref: '#/components/parameters/CompanyId'
+        - $ref: '#/components/parameters/PayrollId'
+      responses:
+        '200':
+          description: Payroll
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payroll'
+
+  /v1/webhook_subscriptions:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookSubscriptions
+      summary: List webhook subscriptions
+      description: >-
+        System access required. scope: webhook_subscriptions:read.
+        Source: https://docs.gusto.com/app-integrations/reference/get-v1-webhook-subscriptions
+      security:
+        - SystemAccessAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+      responses:
+        '200':
+          description: Subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WebhookSubscription'
+    post:
+      tags: [Webhooks]
+      operationId: createWebhookSubscription
+      summary: Create a webhook subscription
+      description: >-
+        System access required. scope: webhook_subscriptions:write.
+        Source: https://docs.gusto.com/app-integrations/reference/post-v1-webhook-subscription
+      security:
+        - SystemAccessAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, subscription_types]
+              properties:
+                url: { type: string, format: uri }
+                subscription_types:
+                  type: array
+                  items: { type: string }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscription'
+
+  /v1/webhook_subscriptions/{webhook_subscription_uuid}:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhookSubscription
+      summary: Get a webhook subscription
+      description: >-
+        System access required. scope: webhook_subscriptions:read.
+        Source: https://docs.gusto.com/app-integrations/reference/get-v1-webhook-subscription-uuid
+      security:
+        - SystemAccessAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+        - $ref: '#/components/parameters/WebhookSubscriptionUuid'
+      responses:
+        '200':
+          description: Subscription
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscription'
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhookSubscription
+      summary: Update a webhook subscription
+      description: >-
+        System access required. scope: webhook_subscriptions:write.
+        Source: https://docs.gusto.com/app-integrations/reference/put-v1-webhook-subscription-uuid
+      security:
+        - SystemAccessAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+        - $ref: '#/components/parameters/WebhookSubscriptionUuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscription'
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhookSubscription
+      summary: Delete a webhook subscription
+      description: >-
+        System access required. scope: webhook_subscriptions:write.
+        Source: https://docs.gusto.com/app-integrations/reference/delete-v1-webhook-subscription-uuid
+      security:
+        - SystemAccessAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+        - $ref: '#/components/parameters/WebhookSubscriptionUuid'
+      responses:
+        '204':
+          description: No Content
+
+  /v1/webhook_subscriptions/{webhook_subscription_uuid}/verify:
+    put:
+      tags: [Webhooks]
+      operationId: verifyWebhookSubscription
+      summary: Verify a webhook subscription
+      description: >-
+        System access required. scope: webhook_subscriptions:write.
+        Source: https://docs.gusto.com/app-integrations/reference/put-v1-verify-webhook-subscription-uuid
+      security:
+        - SystemAccessAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApiVersionHeader'
+        - $ref: '#/components/parameters/WebhookSubscriptionUuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [verification_token]
+              properties:
+                verification_token: { type: string }
+      responses:
+        '200':
+          description: Verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscription'
+
+components:
+  securitySchemes:
+    CompanyAccessAuth:
+      type: http
+      scheme: bearer
+      description: "Company-level OAuth2 access token sent as Authorization Bearer"
+    SystemAccessAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        System-level / organization access token required for webhook
+        subscription management endpoints.
+  parameters:
+    ApiVersionHeader:
+      name: X-Gusto-API-Version
+      in: header
+      schema:
+        type: string
+        enum: ['2026-06-15']
+        default: '2026-06-15'
+      description: Date-based API version. Defaults to the application's minimum when omitted.
+    CompanyId:
+      name: company_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+      description: The UUID of the company
+    EmployeeId:
+      name: employee_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+      description: The UUID of the employee
+    PayrollId:
+      name: payroll_id
+      in: path
+      required: true
+      schema: { type: string }
+      description: The payroll UUID or id
+    WebhookSubscriptionUuid:
+      name: webhook_subscription_uuid
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    TokenInfo:
+      type: object
+      properties:
+        scope: { type: string }
+        resource:
+          type: object
+          nullable: true
+          properties:
+            type: { type: string }
+            uuid: { type: string, format: uuid }
+        resource_owner:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              enum: [CompanyAdmin, Employee, Contractor]
+            uuid: { type: string, format: uuid }
+    Company:
+      type: object
+      properties:
+        uuid: { type: string, format: uuid }
+        name: { type: string }
+        trade_name: { type: string }
+        ein: { type: string }
+        entity_type: { type: string }
+        is_active: { type: boolean }
+      additionalProperties: true
+    Employee:
+      type: object
+      properties:
+        uuid: { type: string, format: uuid }
+        first_name: { type: string }
+        last_name: { type: string }
+        email: { type: string, format: email }
+        work_email: { type: string, format: email }
+        version: { type: string }
+        company_uuid: { type: string, format: uuid }
+        onboarded: { type: boolean }
+      additionalProperties: true
+    Payroll:
+      type: object
+      properties:
+        uuid: { type: string, format: uuid }
+        company_uuid: { type: string, format: uuid }
+        check_date: { type: string, format: date }
+        processed: { type: boolean }
+        payroll_type: { type: string }
+      additionalProperties: true
+    WebhookSubscription:
+      type: object
+      properties:
+        uuid: { type: string, format: uuid }
+        url: { type: string, format: uri }
+        subscription_types:
+          type: array
+          items: { type: string }
+        status: { type: string }
+      additionalProperties: true

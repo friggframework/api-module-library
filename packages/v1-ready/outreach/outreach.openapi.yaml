@@ -1,0 +1,524 @@
+openapi: 3.0.3
+info:
+  title: Outreach Public API (subset)
+  version: "1.0.0"
+  description: >-
+    Outreach (outreach.io) is a sales engagement platform. This is Left Hook's
+    curated subset of Outreach's public REST API (JSON:API 1.0) covering the
+    endpoints implemented by @friggframework/api-module-outreach. It is the
+    source of truth the hand-written client in api.js mirrors 1:1 (one method
+    per operationId). Derived from
+    https://developers.outreach.io/api/reference.md and
+    https://api.outreach.io/api/v2/schema/openapi.json.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.outreach.io/api/v2
+    description: Outreach public REST API v2
+security:
+  - bearerAuth: []
+tags:
+  - name: Identity
+  - name: Accounts
+  - name: Prospects
+  - name: Tasks
+  - name: Users
+  - name: Webhooks
+paths:
+  /:
+    get:
+      tags: [Identity]
+      operationId: getApiRoot
+      summary: Root API descriptor (token + organization attributes)
+      description: >-
+        Returns information about the current OAuth application and token, plus
+        attributes related to the organization. See
+        https://developers.outreach.io/api/getting-started.
+      responses:
+        "200":
+          description: Root descriptor
+          content:
+            application/vnd.api+json:
+              schema: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /accounts:
+    get:
+      tags: [Accounts]
+      operationId: listAccounts
+      summary: Get a collection of accounts
+      parameters:
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/PageAfter"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Include"
+        - $ref: "#/components/parameters/Count"
+      responses:
+        "200":
+          description: Account collection
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiCollection" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Accounts]
+      operationId: createAccount
+      summary: Create a new account
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+      responses:
+        "201":
+          description: Created account
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+
+  /accounts/{id}:
+    get:
+      tags: [Accounts]
+      operationId: getAccount
+      summary: Get an account by ID
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+        - $ref: "#/components/parameters/Include"
+      responses:
+        "200":
+          description: Account
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Accounts]
+      operationId: updateAccount
+      summary: Update an account
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+    delete:
+      tags: [Accounts]
+      operationId: deleteAccount
+      summary: Delete an account by ID
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /prospects:
+    get:
+      tags: [Prospects]
+      operationId: listProspects
+      summary: Get a collection of prospects
+      parameters:
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/PageAfter"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Include"
+        - $ref: "#/components/parameters/Count"
+      responses:
+        "200":
+          description: Prospect collection
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiCollection" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Prospects]
+      operationId: createProspect
+      summary: Create a new prospect
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+      responses:
+        "201":
+          description: Created prospect
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+
+  /prospects/{id}:
+    get:
+      tags: [Prospects]
+      operationId: getProspect
+      summary: Get a prospect by ID
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+        - $ref: "#/components/parameters/Include"
+      responses:
+        "200":
+          description: Prospect
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Prospects]
+      operationId: updateProspect
+      summary: Update a prospect
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+      responses:
+        "200":
+          description: Updated prospect
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+    delete:
+      tags: [Prospects]
+      operationId: deleteProspect
+      summary: Delete a prospect by ID
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /tasks:
+    get:
+      tags: [Tasks]
+      operationId: listTasks
+      summary: Get a collection of tasks
+      parameters:
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/PageAfter"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Include"
+        - $ref: "#/components/parameters/Count"
+      responses:
+        "200":
+          description: Task collection
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiCollection" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Tasks]
+      operationId: createTask
+      summary: Create a new task
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+      responses:
+        "201":
+          description: Created task
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+
+  /tasks/{id}:
+    get:
+      tags: [Tasks]
+      operationId: getTask
+      summary: Get a task by ID
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+        - $ref: "#/components/parameters/Include"
+      responses:
+        "200":
+          description: Task
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Tasks]
+      operationId: updateTask
+      summary: Update a task
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+    delete:
+      tags: [Tasks]
+      operationId: deleteTask
+      summary: Delete a task by ID
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: Get a collection of users
+      parameters:
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/PageAfter"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Include"
+        - $ref: "#/components/parameters/Count"
+      responses:
+        "200":
+          description: User collection
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiCollection" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Get a user by ID
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+        - $ref: "#/components/parameters/Include"
+      responses:
+        "200":
+          description: User
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: Get a collection of webhooks
+      parameters:
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/PageAfter"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/Count"
+      responses:
+        "200":
+          description: Webhook collection
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiCollection" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a new webhook
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+      responses:
+        "201":
+          description: Created webhook (includes secret + cleanupToken once)
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+
+  /webhooks/{id}:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Get a webhook by ID
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "200":
+          description: Webhook
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update a webhook
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+      responses:
+        "200":
+          description: Updated webhook
+          content:
+            application/vnd.api+json:
+              schema: { $ref: "#/components/schemas/JsonApiResourceDocument" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook by ID
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /webhooks/cleanup:
+    post:
+      tags: [Webhooks]
+      operationId: cleanupWebhook
+      summary: Remove a webhook using its cleanupToken
+      description: >-
+        Authorize with `Authorization: Bearer <cleanupToken>` (not the OAuth
+        access token). Returns 204 on success, 404 if already gone, 401 if the
+        token is invalid.
+      security: []
+      responses:
+        "204": { description: Webhook removed }
+        "401": { description: Invalid cleanup token }
+        "404": { description: Webhook already gone }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "OAuth 2.0 access token (Authorization: Bearer <token>)"
+
+  parameters:
+    ResourceId:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer }
+    PageSize:
+      in: query
+      name: page[size]
+      schema: { type: integer, maximum: 1000, default: 50 }
+    PageAfter:
+      in: query
+      name: page[after]
+      schema: { type: string }
+      description: Opaque cursor from links.next
+    Filter:
+      in: query
+      name: filter
+      style: deepObject
+      schema: { type: object, additionalProperties: true }
+      description: JSON:API-style filter[attribute]=value params
+    Sort:
+      in: query
+      name: sort
+      schema: { type: string }
+    Include:
+      in: query
+      name: include
+      schema: { type: string }
+      description: Comma-separated relationship include list
+    Count:
+      in: query
+      name: count
+      schema: { type: boolean }
+      description: >-
+        When true, response meta includes total count. Apps registered after
+        2024-10-13 default to count=false.
+
+  schemas:
+    JsonApiResource:
+      type: object
+      required: [type]
+      properties:
+        type: { type: string }
+        id: { oneOf: [{ type: integer }, { type: string }] }
+        attributes: { type: object, additionalProperties: true }
+        relationships: { type: object, additionalProperties: true }
+    JsonApiResourceDocument:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: "#/components/schemas/JsonApiResource" }
+    JsonApiCollection:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/JsonApiResource" }
+        meta: { type: object, additionalProperties: true }
+        links: { type: object, additionalProperties: true }
+        included:
+          type: array
+          items: { $ref: "#/components/schemas/JsonApiResource" }
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid bearer token
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            properties:
+              errors: { type: array, items: { type: object } }
+    NotFound:
+      description: Resource not found
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            properties:
+              errors: { type: array, items: { type: object } }
+    Unprocessable:
+      description: Validation error
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            properties:
+              errors: { type: array, items: { type: object } }

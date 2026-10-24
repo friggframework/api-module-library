@@ -105,7 +105,10 @@ const Definition = {
         client_id: process.env.QUICKBOOKS_CLIENT_ID,
         client_secret: process.env.QUICKBOOKS_CLIENT_SECRET,
         scope: process.env.QUICKBOOKS_SCOPE || DEFAULT_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/quickbooks`,
+        // Omit when unset so schema validation does not see the string "undefined/quickbooks".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/quickbooks`
+            : undefined,
         base_url: process.env.QUICKBOOKS_BASE_URL,
     },
 };

@@ -1,0 +1,680 @@
+openapi: 3.0.3
+info:
+  title: DaySmart Vet API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Curated OpenAPI subset of the DaySmart Vet (formerly Vetter) public REST API
+    covering exactly the endpoints implemented by
+    `@friggframework/api-module-daysmartvet` in `api.js`. Source of truth for the
+    hand-written client (one method per operationId).
+
+    Official docs (no vendor-downloadable OpenAPI export was available at
+    authoring time — this file is reconstructed from the published reference):
+      - https://sandbox.vettersoftware.com/docs/
+
+    Auth is OAuth 2.0 client credentials against
+    `{domain}/oauth/access_token` with `grant_type=client_credentials` and
+    `scope=APIService`. REST calls use `Authorization: Bearer <access_token>`
+    and `x-api-key: <client_secret>`. The clinic API key is a path parameter
+    (`/api/1.0.0/{apiKey}/…`). Token exchange is outside this server URL and is
+    therefore not listed under `paths` here.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://ulimfxq67h.execute-api.us-west-2.amazonaws.com/api
+    description: DaySmart Vet API (production stage)
+security:
+  - BearerAuth: []
+    ApiKeyHeader: []
+tags:
+  - name: Clinic
+  - name: Clients
+  - name: Patients
+  - name: Appointments
+  - name: Invoices
+  - name: Payments
+  - name: Reference
+paths:
+  /api/1.0.0/{apiKey}/clinic:
+    parameters:
+      - $ref: "#/components/parameters/ApiKey"
+    get:
+      tags: [Clinic]
+      operationId: getClinic
+      summary: Display the clinic information
+      description: Returns the connected clinic (name, contact, addresses, apiKey).
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClinicEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/1.0.0/{apiKey}/clients:
+    parameters:
+      - $ref: "#/components/parameters/ApiKey"
+    get:
+      tags: [Clients]
+      operationId: listClients
+      summary: Display a listing of the clients
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/ShowAll"
+        - $ref: "#/components/parameters/Where"
+        - $ref: "#/components/parameters/OrderBy"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClientListEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Clients]
+      operationId: createClient
+      summary: Store a newly created client in storage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClientWrite" }
+      responses:
+        "200":
+          description: Success
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/1.0.0/{apiKey}/clients/{clientId}:
+    parameters:
+      - $ref: "#/components/parameters/ApiKey"
+      - $ref: "#/components/parameters/ClientId"
+    get:
+      tags: [Clients]
+      operationId: getClient
+      summary: Display the specified client
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClientEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Clients]
+      operationId: updateClient
+      summary: Update the specified client in storage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClientWrite" }
+      responses:
+        "200":
+          description: Success
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/1.0.0/{apiKey}/patients:
+    parameters:
+      - $ref: "#/components/parameters/ApiKey"
+    get:
+      tags: [Patients]
+      operationId: listPatients
+      summary: Display a listing of the patients
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Where"
+        - $ref: "#/components/parameters/OrderBy"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PatientListEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Patients]
+      operationId: createPatient
+      summary: Store a newly created patient in storage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PatientWrite" }
+      responses:
+        "200":
+          description: Success
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/1.0.0/{apiKey}/patients/{patientId}:
+    parameters:
+      - $ref: "#/components/parameters/ApiKey"
+      - $ref: "#/components/parameters/PatientId"
+    get:
+      tags: [Patients]
+      operationId: getPatient
+      summary: Display the specified patient
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PatientEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Patients]
+      operationId: updatePatient
+      summary: Update the specified patient in storage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PatientWrite" }
+      responses:
+        "200":
+          description: Success
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/1.0.0/{apiKey}/appointments:
+    parameters:
+      - $ref: "#/components/parameters/ApiKey"
+    get:
+      tags: [Appointments]
+      operationId: listAppointments
+      summary: Display a listing of the appointments
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Where"
+        - $ref: "#/components/parameters/OrderBy"
+        - in: query
+          name: category
+          schema: { type: integer, enum: [0, 1, 2], default: 0 }
+          description: >-
+            0 Medical Appointment, 1 Personal Appointment, 2 Both.
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AppointmentListEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Appointments]
+      operationId: createAppointment
+      summary: Store a newly created appointment in storage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AppointmentWrite" }
+      responses:
+        "200":
+          description: Success
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/1.0.0/{apiKey}/appointments/{appointmentId}:
+    parameters:
+      - $ref: "#/components/parameters/ApiKey"
+      - $ref: "#/components/parameters/AppointmentId"
+    get:
+      tags: [Appointments]
+      operationId: getAppointment
+      summary: Display the specified appointment
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AppointmentEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Appointments]
+      operationId: updateAppointment
+      summary: Update the specified appointment in storage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AppointmentWrite" }
+      responses:
+        "200":
+          description: Success
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/1.0.0/{apiKey}/invoices:
+    parameters:
+      - $ref: "#/components/parameters/ApiKey"
+    get:
+      tags: [Invoices]
+      operationId: listInvoices
+      summary: Display a listing of the invoices
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Where"
+        - $ref: "#/components/parameters/OrderBy"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InvoiceListEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/1.0.0/{apiKey}/invoices/{invoiceId}:
+    parameters:
+      - $ref: "#/components/parameters/ApiKey"
+      - $ref: "#/components/parameters/InvoiceId"
+    get:
+      tags: [Invoices]
+      operationId: getInvoice
+      summary: Display the specified invoice
+      parameters:
+        - in: query
+          name: showAllInvoice
+          schema: { type: integer, enum: [0, 1], default: 0 }
+        - in: query
+          name: showAllInvoiceItem
+          schema: { type: integer, enum: [0, 1], default: 0 }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InvoiceEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/1.0.0/{apiKey}/payments:
+    parameters:
+      - $ref: "#/components/parameters/ApiKey"
+    get:
+      tags: [Payments]
+      operationId: listPayments
+      summary: Display a listing of the available payments
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Where"
+        - $ref: "#/components/parameters/OrderBy"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentListEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/1.0.0/{apiKey}/payment-types:
+    parameters:
+      - $ref: "#/components/parameters/ApiKey"
+    get:
+      tags: [Payments]
+      operationId: listPaymentTypes
+      summary: Display a listing of the available payment types
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Success
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/1.0.0/{apiKey}/species:
+    parameters:
+      - $ref: "#/components/parameters/ApiKey"
+    get:
+      tags: [Reference]
+      operationId: listSpecies
+      summary: Display a listing of the available species
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Success
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/1.0.0/{apiKey}/breeds:
+    parameters:
+      - $ref: "#/components/parameters/ApiKey"
+    get:
+      tags: [Reference]
+      operationId: listBreeds
+      summary: Display a listing of the available breeds
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Success
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: OAuth 2.0 access_token from POST {domain}/oauth/access_token
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: OAuth client_secret (required on token and REST calls)
+
+  parameters:
+    ApiKey:
+      name: apiKey
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+      description: Clinic API key (path segment). Distinct from the x-api-key header.
+    ClientId:
+      name: clientId
+      in: path
+      required: true
+      schema: { type: string }
+    PatientId:
+      name: patientId
+      in: path
+      required: true
+      schema: { type: string }
+    AppointmentId:
+      name: appointmentId
+      in: path
+      required: true
+      schema: { type: string }
+    InvoiceId:
+      name: invoiceId
+      in: path
+      required: true
+      schema: { type: string }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, default: 1 }
+    PerPage:
+      name: perPage
+      in: query
+      schema: { type: integer, default: 20, maximum: 200 }
+    ShowAll:
+      name: showAll
+      in: query
+      schema: { type: integer, enum: [0, 1], default: 0 }
+      description: Include deleted clients when 1.
+    Where:
+      name: where
+      in: query
+      schema: { type: string }
+      description: >-
+        Filter expression. Single: `field,op,value`. Multiple: JSON-like array
+        string of expressions. Operators include `<`, `>`, `<>`, `=`, `<=`,
+        `>=`, `like`, `in`.
+    OrderBy:
+      name: orderBy
+      in: query
+      schema: { type: string }
+      description: Sort as `field,asc|desc`.
+
+  schemas:
+    Message:
+      type: object
+      properties:
+        code: { type: integer }
+        description: { type: string }
+    Meta:
+      type: object
+      properties:
+        total: { type: integer }
+        perPage: { type: integer }
+        currentPage: { type: integer }
+        lastPage: { type: integer }
+        from: { type: integer }
+        to: { type: integer }
+        timezone: { type: string }
+    Clinic:
+      type: object
+      properties:
+        name: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        website: { type: string }
+        apiKey: { type: string }
+        addresses:
+          type: array
+          items: { type: object }
+    ClinicEnvelope:
+      type: object
+      properties:
+        response:
+          type: object
+          properties:
+            message: { $ref: "#/components/schemas/Message" }
+            resource: { $ref: "#/components/schemas/Clinic" }
+    Client:
+      type: object
+      properties:
+        id: { type: string }
+        index: { type: integer }
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string }
+        mobile: { type: string }
+        home: { type: string }
+        work: { type: string }
+        address: { type: string }
+        city: { type: string }
+        state: { type: string }
+        country: { type: string }
+        zipcode: { type: string }
+        status: { type: string }
+        createAt: { type: string, format: date-time }
+        updateAt: { type: string, format: date-time }
+    ClientWrite:
+      type: object
+      required: [firstName, lastName]
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string }
+        mobile: { type: string }
+        home: { type: string }
+        work: { type: string }
+        fax: { type: string }
+        address: { type: string }
+        city: { type: string }
+        state: { type: string }
+        country: { type: string }
+        zipcode: { type: string }
+        reminderOptions:
+          type: array
+          items: { type: string }
+    ClientListEnvelope:
+      type: object
+      properties:
+        response:
+          type: object
+          properties:
+            message: { $ref: "#/components/schemas/Message" }
+            meta: { $ref: "#/components/schemas/Meta" }
+            resources:
+              type: array
+              items: { $ref: "#/components/schemas/Client" }
+    ClientEnvelope:
+      type: object
+      properties:
+        response:
+          type: object
+          properties:
+            message: { $ref: "#/components/schemas/Message" }
+            resource: { $ref: "#/components/schemas/Client" }
+    Patient:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        color: { type: string }
+        chip: { type: string }
+        status: { type: string }
+        birthdate: { type: string, format: date-time }
+    PatientWrite:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        color: { type: string }
+        chip: { type: string }
+        tag: { type: string }
+        status: { type: string }
+        birthdate: { type: string, format: date-time }
+        deceasedDate: { type: string }
+        inactiveDate: { type: string }
+        "species.id": { type: integer }
+        "sex.id": { type: integer }
+        breeds:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+    PatientListEnvelope:
+      type: object
+      properties:
+        response:
+          type: object
+          properties:
+            message: { $ref: "#/components/schemas/Message" }
+            meta: { $ref: "#/components/schemas/Meta" }
+            resources:
+              type: array
+              items: { $ref: "#/components/schemas/Patient" }
+    PatientEnvelope:
+      type: object
+      properties:
+        response:
+          type: object
+          properties:
+            message: { $ref: "#/components/schemas/Message" }
+            resource: { $ref: "#/components/schemas/Patient" }
+    Appointment:
+      type: object
+      properties:
+        id: { type: string }
+        reason: { type: string }
+        start: { type: string, format: date-time }
+        end: { type: string, format: date-time }
+        location: { type: string }
+        note: { type: string }
+    AppointmentWrite:
+      type: object
+      required: [reason, start, end, location]
+      properties:
+        reason: { type: string }
+        start: { type: string, format: date-time }
+        end: { type: string, format: date-time }
+        note: { type: string }
+        location:
+          type: string
+          enum: ["In clinic", "At client"]
+        "appointmentType{id}": { type: object }
+        "provider{id}": { type: object }
+        "client{id}": { type: object }
+        "patient{id}": { type: object }
+    AppointmentListEnvelope:
+      type: object
+      properties:
+        response:
+          type: object
+          properties:
+            message: { $ref: "#/components/schemas/Message" }
+            meta: { $ref: "#/components/schemas/Meta" }
+            resources:
+              type: array
+              items: { $ref: "#/components/schemas/Appointment" }
+    AppointmentEnvelope:
+      type: object
+      properties:
+        response:
+          type: object
+          properties:
+            message: { $ref: "#/components/schemas/Message" }
+            resource: { $ref: "#/components/schemas/Appointment" }
+    Invoice:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status: { type: string }
+        date: { type: string, format: date-time }
+        location: { type: string }
+        client: { type: object }
+        paymentTerm: { type: object }
+        items:
+          type: array
+          items: { type: object }
+        createAt: { type: string, format: date-time }
+        updateAt: { type: string, format: date-time }
+    InvoiceListEnvelope:
+      type: object
+      properties:
+        response:
+          type: object
+          properties:
+            message: { $ref: "#/components/schemas/Message" }
+            meta: { $ref: "#/components/schemas/Meta" }
+            resources:
+              type: array
+              items: { $ref: "#/components/schemas/Invoice" }
+    InvoiceEnvelope:
+      type: object
+      properties:
+        response:
+          type: object
+          properties:
+            message: { $ref: "#/components/schemas/Message" }
+            resource: { $ref: "#/components/schemas/Invoice" }
+    Payment:
+      type: object
+      properties:
+        id: { type: string }
+        date: { type: string, format: date-time }
+        isactive: { type: integer }
+        client: { type: object }
+        payment_type: { type: object }
+        create_at: { type: string, format: date-time }
+        update_at: { type: string, format: date-time }
+    PaymentListEnvelope:
+      type: object
+      properties:
+        response:
+          type: object
+          properties:
+            message: { $ref: "#/components/schemas/Message" }
+            meta: { $ref: "#/components/schemas/Meta" }
+            resources:
+              type: array
+              items: { $ref: "#/components/schemas/Payment" }
+
+  responses:
+    Unauthorized:
+      description: Invalid API key or invalid bearer token
+    BadRequest:
+      description: Error saving record / validation failure
+    NotFound:
+      description: Record not found

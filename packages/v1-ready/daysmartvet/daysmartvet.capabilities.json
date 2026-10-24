@@ -1,0 +1,245 @@
+{
+  "schema": "capability-manifest/v0.1",
+  "module": "daysmartvet",
+  "package": "@friggframework/api-module-daysmartvet",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "grant": "client_credentials",
+    "scope": "APIService",
+    "methods": {
+      "getToken": "getTokenFromClientCredentials",
+      "testAuth": "getClinic"
+    },
+    "credentials": ["client_id", "client_secret", "api_key"],
+    "docs": "https://sandbox.vettersoftware.com/docs/"
+  },
+  "objects": {
+    "clinic": {
+      "description": "Connected veterinary clinic / practice identity",
+      "fields": [
+        { "name": "apiKey", "tags": ["identifier", "required"] },
+        { "name": "name", "tags": ["display", "required"] },
+        { "name": "email", "tags": ["pii"] },
+        { "name": "phone", "tags": ["pii"] },
+        { "name": "website", "tags": [] },
+        { "name": "addresses", "tags": [] }
+      ],
+      "capabilities": {
+        "get": {
+          "method": "getClinic",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1clinic/get"
+        }
+      }
+    },
+    "client": {
+      "description": "Pet owner / client records",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "firstName", "tags": ["pii", "required"] },
+        { "name": "lastName", "tags": ["pii", "required"] },
+        { "name": "email", "tags": ["pii"] },
+        { "name": "mobile", "tags": ["pii"] },
+        { "name": "home", "tags": ["pii"] },
+        { "name": "work", "tags": ["pii"] },
+        { "name": "address", "tags": ["pii"] },
+        { "name": "city", "tags": [] },
+        { "name": "state", "tags": [] },
+        { "name": "country", "tags": [] },
+        { "name": "zipcode", "tags": [] },
+        { "name": "status", "tags": ["enum", "lifecycle"] },
+        { "name": "createAt", "tags": ["timestamp"] },
+        { "name": "updateAt", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listClients",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1clients/get"
+        },
+        "get": {
+          "method": "getClient",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1clients~1{clientId}/get"
+        },
+        "create": {
+          "method": "createClient",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1clients/post"
+        },
+        "update": {
+          "method": "updateClient",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1clients~1{clientId}/put"
+        }
+      }
+    },
+    "patient": {
+      "description": "Patient (pet) records",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "name", "tags": ["display", "required"] },
+        { "name": "color", "tags": [] },
+        { "name": "chip", "tags": [] },
+        { "name": "status", "tags": ["enum", "lifecycle"] },
+        { "name": "birthdate", "tags": ["timestamp"] },
+        { "name": "species.id", "tags": [] },
+        { "name": "sex.id", "tags": [] },
+        { "name": "breeds", "tags": [] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listPatients",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1patients/get"
+        },
+        "get": {
+          "method": "getPatient",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1patients~1{patientId}/get"
+        },
+        "create": {
+          "method": "createPatient",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1patients/post"
+        },
+        "update": {
+          "method": "updatePatient",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1patients~1{patientId}/put"
+        }
+      }
+    },
+    "appointment": {
+      "description": "Clinic appointments (medical / personal)",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "reason", "tags": ["required"] },
+        { "name": "start", "tags": ["timestamp", "required"] },
+        { "name": "end", "tags": ["timestamp", "required"] },
+        { "name": "location", "tags": ["enum", "required"] },
+        { "name": "note", "tags": [] },
+        { "name": "client.id", "tags": [] },
+        { "name": "patient.id", "tags": [] },
+        { "name": "provider.id", "tags": [] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listAppointments",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1appointments/get"
+        },
+        "get": {
+          "method": "getAppointment",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1appointments~1{appointmentId}/get"
+        },
+        "create": {
+          "method": "createAppointment",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1appointments/post"
+        },
+        "update": {
+          "method": "updateAppointment",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1appointments~1{appointmentId}/put"
+        }
+      }
+    },
+    "invoice": {
+      "description": "Clinic invoices (read-only in published docs)",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "name", "tags": ["display"] },
+        { "name": "status", "tags": ["enum", "lifecycle"] },
+        { "name": "date", "tags": ["timestamp"] },
+        { "name": "location", "tags": ["enum"] },
+        { "name": "client.id", "tags": [] },
+        { "name": "patient.id", "tags": [] },
+        { "name": "paymentTerm", "tags": [] },
+        { "name": "items", "tags": [] },
+        { "name": "createAt", "tags": ["timestamp"] },
+        { "name": "updateAt", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listInvoices",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1invoices/get"
+        },
+        "get": {
+          "method": "getInvoice",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1invoices~1{invoiceId}/get"
+        }
+      }
+    },
+    "payment": {
+      "description": "Clinic payments (list-only in published docs)",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "date", "tags": ["timestamp"] },
+        { "name": "isactive", "tags": ["enum", "lifecycle"] },
+        { "name": "client.id", "tags": [] },
+        { "name": "payment_type.id", "tags": [] },
+        { "name": "payment_type.name", "tags": ["display"] },
+        { "name": "create_at", "tags": ["timestamp"] },
+        { "name": "update_at", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listPayments",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1payments/get"
+        }
+      }
+    },
+    "paymentType": {
+      "description": "Payment type lookup values",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "name", "tags": ["display"] },
+        { "name": "status", "tags": ["enum"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listPaymentTypes",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1payment-types/get"
+        }
+      }
+    },
+    "species": {
+      "description": "Species reference data for patients",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "label", "tags": ["display"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listSpecies",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1species/get"
+        }
+      }
+    },
+    "breed": {
+      "description": "Breed reference data for patients",
+      "fields": [
+        { "name": "id", "tags": ["identifier", "required"] },
+        { "name": "label", "tags": ["display"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "listBreeds",
+          "spec": "daysmartvet.openapi.yaml#/paths/~1api~1.0.0~1{apiKey}~1breeds/get"
+        }
+      }
+    }
+  },
+  "skipped": {
+    "webhooks": {
+      "reason": "The published DaySmart Vet API reference at https://sandbox.vettersoftware.com/docs/ does not document a webhook subscription REST surface (create/list/delete). No extensions/webhooks/ shipped.",
+      "docs": "https://sandbox.vettersoftware.com/docs/"
+    },
+    "invoiceWrite": {
+      "reason": "Official docs expose GET list/get for invoices only — no POST/PUT invoice endpoints are documented.",
+      "docs": "https://sandbox.vettersoftware.com/docs/"
+    },
+    "paymentWrite": {
+      "reason": "Official docs expose GET list for payments only — no get-by-id or create/update payment endpoints are documented.",
+      "docs": "https://sandbox.vettersoftware.com/docs/"
+    },
+    "legacyV1ApiKeySurface": {
+      "reason": "An earlier Left Hook draft targeted https://api.daysmartvet.com/api/v1 with a standalone X-API-Key + X-Practice-ID header scheme. That host returns 404; the published vendor docs use OAuth2 client_credentials on the execute-api domains with apiKey in the path. The draft surface (ledger, client balance, /species/{id}/breeds, create invoice/payment) was not ported.",
+      "docs": "https://sandbox.vettersoftware.com/docs/"
+    },
+    "inventoryMedicalNotesRemindersStaff": {
+      "reason": "Official docs cover many additional resources (inventories, medical-notes, reminders, staffs, estimates, wellness-plans, census, communications, …). Deferred until an integration needs them; core marketplace objects for this cut are clinic/clients/patients/appointments/invoices/payments.",
+      "docs": "https://sandbox.vettersoftware.com/docs/"
+    }
+  }
+}

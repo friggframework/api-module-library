@@ -1,0 +1,338 @@
+openapi: 3.0.3
+info:
+  title: Shopify Admin GraphQL API (Frigg subset)
+  version: "2026-10"
+  description: >-
+    Subset of Shopify's GraphQL Admin API used by
+    @friggframework/api-module-shopify. Each operationId is a client method on
+    Api; the wire protocol is always POST to the GraphQL endpoint with a
+    query/mutation documented by Shopify. Auth is OAuth2 per shop; requests
+    send X-Shopify-Access-Token. Sources:
+    https://shopify.dev/docs/api/admin-graphql/latest and
+    https://shopify.dev/docs/apps/build/authentication-authorization.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://{shop}.myshopify.com/admin/api/2026-10/graphql.json
+    description: Shopify GraphQL Admin API (per-shop host)
+    variables:
+      shop:
+        default: "{shop}.myshopify.com"
+        description: Merchant myshopify.com domain
+security:
+  - ShopifyAccessToken: []
+tags:
+  - name: Auth
+  - name: Customers
+  - name: Orders
+  - name: Fulfillment
+  - name: Checkouts
+  - name: Inventory
+  - name: Locations
+  - name: Webhooks
+paths:
+  /operations/getShop:
+    post:
+      tags: [Auth]
+      operationId: getShop
+      summary: Shop identity (shop query)
+      description: GraphQL query `shop` — https://shopify.dev/docs/api/admin-graphql/latest/queries/shop
+      responses:
+        "200": { description: Shop object }
+  /operations/getUserDetails:
+    post:
+      tags: [Auth]
+      operationId: getUserDetails
+      summary: Alias for getShop
+      responses:
+        "200": { description: Shop object }
+  /operations/listCustomers:
+    post:
+      tags: [Customers]
+      operationId: listCustomers
+      summary: List customers
+      description: GraphQL query `customers` — https://shopify.dev/docs/api/admin-graphql/latest/queries/customers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                updated_at_min: { type: string }
+                limit: { type: number }
+                page_info: { type: string }
+      responses:
+        "200": { description: "{ customers, nextPageInfo }" }
+  /operations/getCustomer:
+    post:
+      tags: [Customers]
+      operationId: getCustomer
+      summary: Get a customer by id
+      description: GraphQL query `customer` — https://shopify.dev/docs/api/admin-graphql/latest/queries/customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id: { type: string }
+      responses:
+        "200": { description: "{ customer }" }
+  /operations/searchCustomers:
+    post:
+      tags: [Customers]
+      operationId: searchCustomers
+      summary: Search customers
+      description: GraphQL query `customers` with a search `query` string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query: { type: string }
+                limit: { type: number }
+      responses:
+        "200": { description: "customer[]" }
+  /operations/createCustomer:
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: Create a customer
+      description: GraphQL mutation `customerCreate` — https://shopify.dev/docs/api/admin-graphql/latest/mutations/customerCreate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customer]
+              properties:
+                customer: { type: object }
+      responses:
+        "200": { description: "{ customer }" }
+  /operations/updateCustomer:
+    post:
+      tags: [Customers]
+      operationId: updateCustomer
+      summary: Update a customer
+      description: GraphQL mutation `customerUpdate` — https://shopify.dev/docs/api/admin-graphql/latest/mutations/customerUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, customer]
+              properties:
+                id: { type: string }
+                customer: { type: object }
+      responses:
+        "200": { description: "{ customer }" }
+  /operations/listOrders:
+    post:
+      tags: [Orders]
+      operationId: listOrders
+      summary: List orders
+      description: GraphQL query `orders` — https://shopify.dev/docs/api/admin-graphql/latest/queries/orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string }
+                created_at_min: { type: string }
+                updated_at_min: { type: string }
+                limit: { type: number }
+                page_info: { type: string }
+      responses:
+        "200": { description: "{ orders, nextPageInfo }" }
+  /operations/getOrder:
+    post:
+      tags: [Orders]
+      operationId: getOrder
+      summary: Get an order by id
+      description: GraphQL query `order` — https://shopify.dev/docs/api/admin-graphql/latest/queries/order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id: { type: string }
+                fields: { type: string }
+      responses:
+        "200": { description: "{ order }" }
+  /operations/updateOrder:
+    post:
+      tags: [Orders]
+      operationId: updateOrder
+      summary: Update an order
+      description: GraphQL mutation `orderUpdate` — https://shopify.dev/docs/api/admin-graphql/latest/mutations/orderUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, order]
+              properties:
+                id: { type: string }
+                order: { type: object }
+      responses:
+        "200": { description: "{ order }" }
+  /operations/listFulfillmentOrders:
+    post:
+      tags: [Fulfillment]
+      operationId: listFulfillmentOrders
+      summary: List fulfillment orders for an order
+      description: GraphQL `order.fulfillmentOrders`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId]
+              properties:
+                orderId: { type: string }
+      responses:
+        "200": { description: "fulfillmentOrder[]" }
+  /operations/createFulfillment:
+    post:
+      tags: [Fulfillment]
+      operationId: createFulfillment
+      summary: Create a fulfillment
+      description: GraphQL mutation `fulfillmentCreate` — https://shopify.dev/docs/api/admin-graphql/latest/mutations/fulfillmentCreate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fulfillmentOrderId]
+              properties:
+                fulfillmentOrderId: { type: string }
+                trackingInfo: { type: object }
+                notifyCustomer: { type: boolean }
+      responses:
+        "200": { description: fulfillment }
+  /operations/listAbandonedCheckouts:
+    post:
+      tags: [Checkouts]
+      operationId: listAbandonedCheckouts
+      summary: List abandoned checkouts
+      description: GraphQL query `abandonedCheckouts` — https://shopify.dev/docs/api/admin-graphql/latest/queries/abandonedCheckouts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                created_at_min: { type: string }
+                limit: { type: number }
+      responses:
+        "200": { description: "checkout[]" }
+  /operations/getVariantByInventoryItemId:
+    post:
+      tags: [Inventory]
+      operationId: getVariantByInventoryItemId
+      summary: Resolve variant from inventory item id
+      description: GraphQL query `inventoryItem` — https://shopify.dev/docs/api/admin-graphql/latest/queries/inventoryItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [inventoryItemId]
+              properties:
+                inventoryItemId: { type: string }
+      responses:
+        "200": { description: variant }
+  /operations/listLocations:
+    post:
+      tags: [Locations]
+      operationId: listLocations
+      summary: List locations
+      description: GraphQL query `locations` — https://shopify.dev/docs/api/admin-graphql/latest/queries/locations
+      responses:
+        "200": { description: "location[]" }
+  /operations/createWebhook:
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a webhook subscription
+      description: GraphQL mutation `webhookSubscriptionCreate` — https://shopify.dev/docs/api/admin-graphql/latest/mutations/webhookSubscriptionCreate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [topic, address]
+              properties:
+                topic: { type: string }
+                address: { type: string }
+                format: { type: string }
+      responses:
+        "200": { description: "{ webhook }" }
+  /operations/deleteWebhook:
+    post:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook subscription
+      description: GraphQL mutation `webhookSubscriptionDelete` — https://shopify.dev/docs/api/admin-graphql/latest/mutations/webhookSubscriptionDelete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id: { type: string }
+      responses:
+        "200": { description: deleted id }
+  /operations/listWebhookSubscriptions:
+    post:
+      tags: [Webhooks]
+      operationId: listWebhookSubscriptions
+      summary: List webhook subscriptions
+      description: GraphQL query `webhookSubscriptions` — https://shopify.dev/docs/api/admin-graphql/latest/queries/webhookSubscriptions
+      responses:
+        "200": { description: "webhook[]" }
+  /operations/verifyWebhookSignature:
+    post:
+      tags: [Webhooks]
+      operationId: verifyWebhookSignature
+      summary: Verify X-Shopify-Hmac-Sha256
+      description: >-
+        Local HMAC verification (no network). Docs:
+        https://shopify.dev/docs/apps/build/webhooks/subscribe/https
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                headers: { type: object }
+                body: {}
+                query: { type: object }
+      responses:
+        "200": { description: boolean }
+components:
+  securitySchemes:
+    ShopifyAccessToken:
+      type: apiKey
+      in: header
+      name: X-Shopify-Access-Token
+      description: Offline access token from the per-shop OAuth exchange

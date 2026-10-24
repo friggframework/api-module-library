@@ -72,7 +72,10 @@ const Definition = {
     env: {
         client_id: process.env.SALESLOFT_CLIENT_ID,
         client_secret: process.env.SALESLOFT_CLIENT_SECRET,
-        redirect_uri: `${process.env.REDIRECT_URI}/salesloft`,
+        // Omit when unset so schema validation does not see the string "undefined/salesloft".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/salesloft`
+            : undefined,
     },
 };
 

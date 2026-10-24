@@ -1,0 +1,427 @@
+openapi: 3.0.3
+info:
+  title: Attentive Public API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Attentive is an SMS/email marketing platform. This file is Left Hook's curated
+    subset of the official Attentive OpenAPI
+    (https://docs.attentive.com/openapi/attentive-api-bundled.yaml), covering
+    exactly the endpoints `@friggframework/api-module-attentive` implements in
+    `api.js`. It is the source of truth the hand-written client mirrors 1:1
+    (one method per operationId). Auth token exchange
+    (`POST /authorization-codes/tokens`) is handled by Frigg's OAuth2Requester
+    and is intentionally omitted here.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Attentive developer documentation
+    url: https://docs.attentive.com/
+servers:
+  - url: https://api.attentivemobile.com/v1
+    description: Attentive REST API v1
+security:
+  - bearerAuth: []
+tags:
+  - name: Identity
+  - name: Subscribers
+  - name: Custom Attributes
+  - name: Custom Events
+  - name: eCommerce
+  - name: Product Catalog
+  - name: Webhooks
+paths:
+  /me:
+    get:
+      tags: [Identity]
+      operationId: getMe
+      summary: Me
+      description: >-
+        Test the bearer token and return installer company identity
+        (companyId, companyName, attentiveDomainName, …).
+      responses:
+        "200":
+          description: Authenticated company application info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetMeResponse"
+
+  /subscriptions:
+    post:
+      tags: [Subscribers]
+      operationId: addSubscriptions
+      summary: Subscribe user
+      description: Opt a user into a TEXT/EMAIL subscription.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddSubscriptionsRequest"
+      responses:
+        "202":
+          description: Accepted create-subscription request
+    get:
+      tags: [Subscribers]
+      operationId: getSubscriptions
+      summary: Get subscription eligibility for a user
+      description: >-
+        List subscription types and channels a user is subscribed to.
+        Query by phone and/or email (at least one required).
+      parameters:
+        - in: query
+          name: phone
+          schema: { type: string }
+          description: E.164 phone number (URL-encode leading + as %2B).
+        - in: query
+          name: email
+          schema: { type: string, format: email }
+      responses:
+        "200":
+          description: Subscription eligibility
+
+  /subscriptions/unsubscribe:
+    post:
+      tags: [Subscribers]
+      operationId: unsubscribeSubscriptions
+      summary: Unsubscribe user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnsubscribeSubscriptionsRequest"
+      responses:
+        "200":
+          description: Unsubscribe accepted
+
+  /attributes/custom:
+    post:
+      tags: [Custom Attributes]
+      operationId: postCustomAttributes
+      summary: Create or update custom attributes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomAttributesRequest"
+      responses:
+        "200":
+          description: Ok
+    get:
+      tags: [Custom Attributes]
+      operationId: getCustomAttributes
+      summary: Get custom attributes for a user
+      parameters:
+        - in: query
+          name: phone
+          schema: { type: string }
+        - in: query
+          name: email
+          schema: { type: string, format: email }
+      responses:
+        "200":
+          description: Custom attributes for the user
+
+  /events/custom:
+    post:
+      tags: [Custom Events]
+      operationId: postCustomEvents
+      summary: Record a custom event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, user]
+              properties:
+                type: { type: string }
+                properties: { type: object, additionalProperties: true }
+                user: { $ref: "#/components/schemas/EventUser" }
+                occurredAt: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Ok
+
+  /events/ecommerce/product-view:
+    post:
+      tags: [eCommerce]
+      operationId: postProductViewEvents
+      summary: Record a product-view event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EcommerceEventRequest"
+      responses:
+        "200":
+          description: Ok
+
+  /events/ecommerce/add-to-cart:
+    post:
+      tags: [eCommerce]
+      operationId: postAddToCartEvents
+      summary: Record an add-to-cart event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EcommerceEventRequest"
+      responses:
+        "200":
+          description: Ok
+
+  /events/ecommerce/purchase:
+    post:
+      tags: [eCommerce]
+      operationId: postPurchaseEvents
+      summary: Record a purchase event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/EcommerceEventRequest"
+                - type: object
+                  properties:
+                    orderId: { type: string }
+      responses:
+        "200":
+          description: Ok
+
+  /product-catalog/uploads:
+    post:
+      tags: [Product Catalog]
+      operationId: postUpload
+      summary: Start a product-catalog upload
+      description: >-
+        Returns a pre-signed S3 URL. Upload the NDJSON catalog file to that URL
+        with HTTP PUT (not via this client).
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                validateOnly: { type: boolean, default: false }
+      responses:
+        "200":
+          description: Upload initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogUploadResponse"
+    get:
+      tags: [Product Catalog]
+      operationId: getUploads
+      summary: List recent catalog uploads
+      responses:
+        "200":
+          description: Recent uploads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CatalogUploadResponse"
+
+  /product-catalog/uploads/{uploadId}:
+    get:
+      tags: [Product Catalog]
+      operationId: lookupUpload
+      summary: Look up a catalog upload by id
+      parameters:
+        - in: path
+          name: uploadId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Upload status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogUploadResponse"
+
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhooks
+      summary: List webhooks
+      responses:
+        "200":
+          description: Existing webhooks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Webhook"
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create webhook
+      description: >-
+        Subscribe to event notifications. Event types are case-sensitive.
+        Documented API event strings include sms.subscribed, sms.sent,
+        sms.message_link_click, email.subscribed, email.unsubscribed,
+        email.message_link_click, email.opened, custom_attribute.set.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, events]
+              properties:
+                url: { type: string, format: uri }
+                events:
+                  type: array
+                  items: { type: string }
+      responses:
+        "201":
+          description: Webhook created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webhook"
+
+  /webhooks/{webhookId}:
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update webhook
+      parameters:
+        - in: path
+          name: webhookId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url: { type: string, format: uri }
+                events:
+                  type: array
+                  items: { type: string }
+                disabled: { type: boolean }
+      responses:
+        "200":
+          description: Webhook updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webhook"
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete webhook
+      parameters:
+        - in: path
+          name: webhookId
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Webhook deleted
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        OAuth access token (public apps) or API key (private apps), sent as
+        `Authorization: Bearer <token>`.
+  schemas:
+    GetMeResponse:
+      type: object
+      properties:
+        applicationName: { type: string }
+        attentiveDomainName: { type: string }
+        companyName: { type: string }
+        contactEmail: { type: string, format: email }
+        companyId: { type: string }
+    EventUser:
+      type: object
+      description: Visitor identified by phone and/or email (E.164 phone).
+      properties:
+        phone: { type: string }
+        email: { type: string, format: email }
+    AddSubscriptionsRequest:
+      type: object
+      required: [user]
+      properties:
+        user: { $ref: "#/components/schemas/EventUser" }
+        signUpSourceId: { type: string }
+        locale:
+          type: object
+          properties:
+            language: { type: string }
+            country: { type: string }
+        subscriptionType:
+          type: string
+          enum: [MARKETING, TRANSACTIONAL]
+        singleOptIn: { type: boolean }
+        pixelTrackingConsent: { type: boolean }
+    UnsubscribeSubscriptionsRequest:
+      type: object
+      required: [user]
+      properties:
+        user: { $ref: "#/components/schemas/EventUser" }
+        subscriptions:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    CustomAttributesRequest:
+      type: object
+      required: [properties, user]
+      properties:
+        properties:
+          type: object
+          additionalProperties: true
+        user: { $ref: "#/components/schemas/EventUser" }
+    EcommerceEventRequest:
+      type: object
+      required: [items, user]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        occurredAt: { type: string, format: date-time }
+        user: { $ref: "#/components/schemas/EventUser" }
+    CatalogUploadResponse:
+      type: object
+      properties:
+        uploadId: { type: string }
+        status: { type: string }
+        uploadUrl: { type: string, format: uri }
+        expires: { type: string }
+    Webhook:
+      type: object
+      properties:
+        id: { type: string }
+        url: { type: string, format: uri }
+        events:
+          type: array
+          items: { type: string }
+        type: { type: string }
+        companyId: { type: string }
+        disabledAt: { type: string }

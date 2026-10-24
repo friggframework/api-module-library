@@ -70,7 +70,10 @@ const Definition = {
         client_id: process.env.SQUARE_CLIENT_ID,
         client_secret: process.env.SQUARE_CLIENT_SECRET,
         scope: process.env.SQUARE_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/square`,
+        // Omit when unset so schema validation does not see the string "undefined/square".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/square`
+            : undefined,
         base_url: process.env.SQUARE_BASE_URL,
     },
 };

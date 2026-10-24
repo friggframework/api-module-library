@@ -1,0 +1,531 @@
+openapi: 3.0.3
+info:
+  title: Dealertrack DMS API (curated)
+  version: "1.0.0"
+  description: >-
+    Curated OpenAPI for `@friggframework/api-module-dealertrack`. Dealertrack
+    (Cox Automotive) does not publish an open, self-service REST OpenAPI.
+    Partner access is via Opentrack / the Cox Automotive Integration Platform
+    (https://developer.coxautoinc.com/). This document mirrors the hand-written
+    client in api.js 1:1 (one method per operationId). Path inventory comes from
+    Left Hook–cleared source notes aligned with public Opentrack program domains
+    (Customers, Vehicles, Service, Parts). Exact REST path/field shapes are not
+    confirmed against a vendor-published OpenAPI — treat as partner-gated until
+    sandbox credentials and official partner docs confirm them.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.dealertrack.com/v1
+    description: Dealertrack REST API base (from cleared source notes)
+security:
+  - OAuth2: []
+tags:
+  - name: Dealer
+  - name: Locations
+  - name: Customers
+  - name: Vehicles
+  - name: RepairOrders
+  - name: Invoices
+  - name: Payments
+  - name: Appointments
+  - name: ServiceHistory
+  - name: Parts
+  - name: LaborOperations
+  - name: Technicians
+  - name: ServiceAdvisors
+paths:
+  /dealer:
+    get:
+      tags: [Dealer]
+      operationId: getDealer
+      summary: Get authenticated dealer / dealership identity
+      responses:
+        "200":
+          description: Dealer identity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dealer"
+  /locations:
+    get:
+      tags: [Locations]
+      operationId: listLocations
+      summary: List dealership locations
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Location list
+  /locations/{locationId}:
+    get:
+      tags: [Locations]
+      operationId: getLocation
+      summary: Get a location by id
+      parameters:
+        - $ref: "#/components/parameters/LocationId"
+      responses:
+        "200":
+          description: Location
+  /customers:
+    get:
+      tags: [Customers]
+      operationId: listCustomers
+      summary: List customers
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Customer page
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: Create a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerInput"
+      responses:
+        "200":
+          description: Created customer
+        "201":
+          description: Created customer
+  /customers/search:
+    get:
+      tags: [Customers]
+      operationId: searchCustomers
+      summary: Search customers
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+          description: Free-text search query (exact param names partner-gated)
+      responses:
+        "200":
+          description: Search results
+  /customers/{customerId}:
+    get:
+      tags: [Customers]
+      operationId: getCustomer
+      summary: Get a customer by id
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+      responses:
+        "200":
+          description: Customer
+    put:
+      tags: [Customers]
+      operationId: updateCustomer
+      summary: Update a customer
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerInput"
+      responses:
+        "200":
+          description: Updated customer
+  /customers/{customerId}/vehicles:
+    get:
+      tags: [Vehicles]
+      operationId: listCustomerVehicles
+      summary: List vehicles for a customer
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+      responses:
+        "200":
+          description: Customer vehicles
+  /customers/{customerId}/service-history:
+    get:
+      tags: [ServiceHistory]
+      operationId: getCustomerServiceHistory
+      summary: Get service history for a customer
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+      responses:
+        "200":
+          description: Service history
+  /vehicles:
+    get:
+      tags: [Vehicles]
+      operationId: listVehicles
+      summary: List vehicles
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Vehicle page
+  /vehicles/{vehicleId}:
+    get:
+      tags: [Vehicles]
+      operationId: getVehicle
+      summary: Get a vehicle by id
+      parameters:
+        - $ref: "#/components/parameters/VehicleId"
+      responses:
+        "200":
+          description: Vehicle
+  /vehicles/decode/{vin}:
+    get:
+      tags: [Vehicles]
+      operationId: decodeVin
+      summary: Decode a VIN
+      parameters:
+        - in: path
+          name: vin
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Decoded vehicle attributes
+  /vehicles/{vehicleId}/service-history:
+    get:
+      tags: [ServiceHistory]
+      operationId: getVehicleServiceHistory
+      summary: Get service history for a vehicle
+      parameters:
+        - $ref: "#/components/parameters/VehicleId"
+      responses:
+        "200":
+          description: Service history
+  /repair-orders:
+    get:
+      tags: [RepairOrders]
+      operationId: listRepairOrders
+      summary: List repair orders
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Repair order page
+    post:
+      tags: [RepairOrders]
+      operationId: createRepairOrder
+      summary: Create a repair order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created repair order
+        "201":
+          description: Created repair order
+  /repair-orders/{repairOrderId}:
+    get:
+      tags: [RepairOrders]
+      operationId: getRepairOrder
+      summary: Get a repair order by id
+      parameters:
+        - $ref: "#/components/parameters/RepairOrderId"
+      responses:
+        "200":
+          description: Repair order
+    put:
+      tags: [RepairOrders]
+      operationId: updateRepairOrder
+      summary: Update a repair order
+      parameters:
+        - $ref: "#/components/parameters/RepairOrderId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated repair order
+  /invoices:
+    get:
+      tags: [Invoices]
+      operationId: listInvoices
+      summary: List invoices
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Invoice page
+  /invoices/{invoiceId}:
+    get:
+      tags: [Invoices]
+      operationId: getInvoice
+      summary: Get an invoice by id
+      parameters:
+        - $ref: "#/components/parameters/InvoiceId"
+      responses:
+        "200":
+          description: Invoice
+  /payments:
+    get:
+      tags: [Payments]
+      operationId: listPayments
+      summary: List payments
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Payment page
+    post:
+      tags: [Payments]
+      operationId: createPayment
+      summary: Create a payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created payment
+        "201":
+          description: Created payment
+  /payments/{paymentId}:
+    get:
+      tags: [Payments]
+      operationId: getPayment
+      summary: Get a payment by id
+      parameters:
+        - $ref: "#/components/parameters/PaymentId"
+      responses:
+        "200":
+          description: Payment
+  /appointments:
+    get:
+      tags: [Appointments]
+      operationId: listAppointments
+      summary: List service appointments
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Appointment page
+    post:
+      tags: [Appointments]
+      operationId: createAppointment
+      summary: Create a service appointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created appointment
+        "201":
+          description: Created appointment
+  /appointments/{appointmentId}:
+    get:
+      tags: [Appointments]
+      operationId: getAppointment
+      summary: Get an appointment by id
+      parameters:
+        - $ref: "#/components/parameters/AppointmentId"
+      responses:
+        "200":
+          description: Appointment
+  /parts:
+    get:
+      tags: [Parts]
+      operationId: listParts
+      summary: List parts
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Parts page
+  /parts/search:
+    get:
+      tags: [Parts]
+      operationId: searchParts
+      summary: Search parts
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+      responses:
+        "200":
+          description: Parts search results
+  /parts/{partId}:
+    get:
+      tags: [Parts]
+      operationId: getPart
+      summary: Get a part by id
+      parameters:
+        - $ref: "#/components/parameters/PartId"
+      responses:
+        "200":
+          description: Part
+  /labor-operations:
+    get:
+      tags: [LaborOperations]
+      operationId: listLaborOperations
+      summary: List labor operations / opcodes
+      responses:
+        "200":
+          description: Labor operations
+  /labor-operations/{operationId}:
+    get:
+      tags: [LaborOperations]
+      operationId: getLaborOperation
+      summary: Get a labor operation by id
+      parameters:
+        - $ref: "#/components/parameters/OperationId"
+      responses:
+        "200":
+          description: Labor operation
+  /technicians:
+    get:
+      tags: [Technicians]
+      operationId: listTechnicians
+      summary: List technicians
+      responses:
+        "200":
+          description: Technicians
+  /technicians/{technicianId}:
+    get:
+      tags: [Technicians]
+      operationId: getTechnician
+      summary: Get a technician by id
+      parameters:
+        - $ref: "#/components/parameters/TechnicianId"
+      responses:
+        "200":
+          description: Technician
+  /service-advisors:
+    get:
+      tags: [ServiceAdvisors]
+      operationId: listServiceAdvisors
+      summary: List service advisors / writers
+      responses:
+        "200":
+          description: Service advisors
+  /service-advisors/{advisorId}:
+    get:
+      tags: [ServiceAdvisors]
+      operationId: getServiceAdvisor
+      summary: Get a service advisor by id
+      parameters:
+        - $ref: "#/components/parameters/AdvisorId"
+      responses:
+        "200":
+          description: Service advisor
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Authorization-code + refresh_token. Token endpoint
+        https://auth.dealertrack.com/oauth/token. Default scope
+        `service customers repairs payments` (from cleared source notes;
+        confirm against partner docs).
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.dealertrack.com/oauth/authorize
+          tokenUrl: https://auth.dealertrack.com/oauth/token
+          scopes:
+            service: Service module access
+            customers: Customers module access
+            repairs: Repair orders / service access
+            payments: Payments access
+  parameters:
+    Limit:
+      in: query
+      name: limit
+      schema: { type: integer, default: 50 }
+    Offset:
+      in: query
+      name: offset
+      schema: { type: integer, default: 0 }
+    LocationId:
+      in: path
+      name: locationId
+      required: true
+      schema: { type: string }
+    CustomerId:
+      in: path
+      name: customerId
+      required: true
+      schema: { type: string }
+    VehicleId:
+      in: path
+      name: vehicleId
+      required: true
+      schema: { type: string }
+    RepairOrderId:
+      in: path
+      name: repairOrderId
+      required: true
+      schema: { type: string }
+    InvoiceId:
+      in: path
+      name: invoiceId
+      required: true
+      schema: { type: string }
+    PaymentId:
+      in: path
+      name: paymentId
+      required: true
+      schema: { type: string }
+    AppointmentId:
+      in: path
+      name: appointmentId
+      required: true
+      schema: { type: string }
+    PartId:
+      in: path
+      name: partId
+      required: true
+      schema: { type: string }
+    OperationId:
+      in: path
+      name: operationId
+      required: true
+      schema: { type: string }
+    TechnicianId:
+      in: path
+      name: technicianId
+      required: true
+      schema: { type: string }
+    AdvisorId:
+      in: path
+      name: advisorId
+      required: true
+      schema: { type: string }
+  schemas:
+    Dealer:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+      additionalProperties: true
+    CustomerInput:
+      type: object
+      properties:
+        name: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+      additionalProperties: true

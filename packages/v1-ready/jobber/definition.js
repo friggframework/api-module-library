@@ -58,7 +58,10 @@ const Definition = {
     env: {
         client_id: process.env.JOBBER_CLIENT_ID,
         client_secret: process.env.JOBBER_CLIENT_SECRET,
-        redirect_uri: `${process.env.REDIRECT_URI}/jobber`,
+        // Omit when unset so schema validation does not see the string "undefined/jobber".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/jobber`
+            : undefined,
         scope: process.env.JOBBER_SCOPE || '',
     },
 };

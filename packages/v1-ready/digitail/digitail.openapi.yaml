@@ -1,0 +1,416 @@
+openapi: 3.0.3
+info:
+  title: Digitail Public API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Digitail (digitail.io) is a veterinary practice management platform (PIMS).
+    This OpenAPI document is Left Hook's curated subset covering exactly the
+    endpoints the @friggframework/api-module-digitail client in api.js
+    implements. It is the source of truth the hand-written client mirrors 1:1
+    (one method per operationId).
+
+    Digitail publishes interactive docs at https://documentation.digitail.io/
+    (no vendor-downloadable OpenAPI export was available at module authoring
+    time). Paths and verbs below are taken from those official documentation
+    pages. Auth is OAuth 2.0 Authorization Code + PKCE; requests send
+    Authorization: Bearer <access_token>. Optional X-ClinicId selects clinic
+    context for multi-clinic users.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://vet.digitail.io/api/v1
+    description: Digitail production API
+  - url: https://developer.digitail.io/api/v1
+    description: Digitail sandbox API
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Clinics
+  - name: PetParents
+  - name: Pets
+  - name: Appointments
+  - name: Invoices
+  - name: Sales
+  - name: Records
+paths:
+  /auth/me:
+    get:
+      tags: [Auth]
+      operationId: getAuthMe
+      summary: Get the logged-in user (vet)
+      description: >-
+        Docs: https://documentation.digitail.io/get-the-logged-in-user-vet
+      parameters:
+        - in: query
+          name: include[]
+          schema:
+            type: array
+            items: { type: string }
+          description: >-
+            Additional info (clinic, clinic.chatUser, multipleClinic, employee,
+            employee.chatUser)
+      responses:
+        "200":
+          description: Logged-in user profile
+  /clinics:
+    get:
+      tags: [Clinics]
+      operationId: listClinics
+      summary: Get clinics list by ids
+      description: >-
+        Docs: https://documentation.digitail.io/get-clinics-list-by-ids
+      parameters:
+        - in: query
+          name: filter[clinic_id]
+          schema: { type: string }
+        - in: query
+          name: filter[is_admin]
+          schema: { type: integer }
+        - in: query
+          name: filter[group_id]
+          schema: { type: integer }
+        - in: query
+          name: include
+          schema: { type: string }
+      responses:
+        "200":
+          description: Clinics collection
+  /pet-parents:
+    get:
+      tags: [PetParents]
+      operationId: listPetParents
+      summary: List all pet parents
+      description: >-
+        Docs: https://documentation.digitail.io/list-all-petparents
+      parameters:
+        - in: query
+          name: filter[email]
+          schema: { type: string }
+        - in: query
+          name: filter[phone]
+          schema: { type: string }
+        - in: query
+          name: filter[query]
+          schema: { type: string }
+        - in: query
+          name: filter[belongs_to_clinic]
+          schema:
+            type: array
+            items: { type: integer }
+        - in: query
+          name: filter[updated_from]
+          schema: { type: string, format: date-time }
+        - in: query
+          name: filter[updated_to]
+          schema: { type: string, format: date-time }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Pet parents collection
+    post:
+      tags: [PetParents]
+      operationId: createPetParent
+      summary: Create a pet parent
+      description: >-
+        Docs: https://documentation.digitail.io/create-a-petparent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Pet parent created
+  /pet-parents/{id}:
+    get:
+      tags: [PetParents]
+      operationId: getPetParent
+      summary: Retrieve a pet parent
+      description: >-
+        Docs: https://documentation.digitail.io/retrieve-a-petparent
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: include
+          schema: { type: string }
+      responses:
+        "200":
+          description: Pet parent
+    patch:
+      tags: [PetParents]
+      operationId: updatePetParent
+      summary: Update a pet parent
+      description: >-
+        Docs: https://documentation.digitail.io/update-a-petparent
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Pet parent updated
+  /pets:
+    get:
+      tags: [Pets]
+      operationId: listPets
+      summary: List all pets
+      description: >-
+        Docs: https://documentation.digitail.io/list-all-pets.
+        filter[clinic_id] is required by the vendor.
+      parameters:
+        - in: query
+          name: filter[clinic_id]
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: filter[owner_id]
+          schema: { type: integer }
+        - in: query
+          name: filter[vet_id]
+          schema: { type: integer }
+        - in: query
+          name: filter[nickname]
+          schema: { type: string }
+        - in: query
+          name: filter[updated_from]
+          schema: { type: string, format: date-time }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Pets collection
+    post:
+      tags: [Pets]
+      operationId: createPet
+      summary: Create a pet
+      description: >-
+        Docs: https://documentation.digitail.io/create-a-pet.
+        Content-Type is multipart/form-data (avatar binary supported).
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Pet created
+  /pets/{id}:
+    get:
+      tags: [Pets]
+      operationId: getPet
+      summary: Retrieve a pet
+      description: >-
+        Docs: https://documentation.digitail.io/retrieve-a-pet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: include
+          schema: { type: string }
+      responses:
+        "200":
+          description: Pet
+  /appointments:
+    get:
+      tags: [Appointments]
+      operationId: listAppointments
+      summary: Get all appointments
+      description: >-
+        Docs: https://documentation.digitail.io/get-all-appointments
+      parameters:
+        - in: query
+          name: filter[patient_id]
+          schema:
+            type: array
+            items: { type: integer }
+        - in: query
+          name: filter[date_after]
+          schema: { type: string }
+        - in: query
+          name: filter[date_before]
+          schema: { type: string }
+        - in: query
+          name: filter[statuses]
+          schema:
+            type: array
+            items: { type: integer }
+        - in: query
+          name: filter[last_fetched]
+          schema: { type: string, format: date-time }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Appointments collection
+    post:
+      tags: [Appointments]
+      operationId: createAppointment
+      summary: Create an appointment
+      description: >-
+        Docs: https://documentation.digitail.io/create-an-appointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Appointment created
+  /appointments/{id}:
+    get:
+      tags: [Appointments]
+      operationId: getAppointment
+      summary: Retrieve an appointment
+      description: >-
+        Docs: https://documentation.digitail.io/retrieve-an-appointment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: include
+          schema: { type: string }
+      responses:
+        "200":
+          description: Appointment
+  /invoices:
+    get:
+      tags: [Invoices]
+      operationId: listInvoices
+      summary: List all invoices
+      description: >-
+        Docs: https://documentation.digitail.io/list-all-invoices
+      parameters:
+        - in: query
+          name: filter[sale_id]
+          schema: { type: integer }
+        - in: query
+          name: filter[series]
+          schema: { type: string }
+        - in: query
+          name: filter[number]
+          schema: { type: integer }
+        - in: query
+          name: filter[updated_from]
+          schema: { type: string, format: date-time }
+        - in: query
+          name: filter[updated_to]
+          schema: { type: string, format: date-time }
+        - in: query
+          name: include
+          schema: { type: string }
+        - in: query
+          name: detailed
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Invoices collection
+  /invoices/{id}:
+    get:
+      tags: [Invoices]
+      operationId: getInvoice
+      summary: Retrieve an invoice
+      description: >-
+        Docs: https://documentation.digitail.io/retrieve-an-invoice
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: include
+          schema: { type: string }
+      responses:
+        "200":
+          description: Invoice
+  /sales/{id}:
+    get:
+      tags: [Sales]
+      operationId: getSale
+      summary: Retrieve a sale
+      description: >-
+        Docs: https://documentation.digitail.io/retrieve-a-sale.
+        Include payments via include=payments (no standalone payments list).
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: include
+          schema: { type: string }
+      responses:
+        "200":
+          description: Sale
+  /records:
+    get:
+      tags: [Records]
+      operationId: listRecords
+      summary: List all medical records
+      description: >-
+        Docs: https://documentation.digitail.io/list-all-records
+      parameters:
+        - in: query
+          name: filter[id]
+          schema: { type: integer }
+        - in: query
+          name: filter[sale_id]
+          schema: { type: integer }
+        - in: query
+          name: filter[has_diagnoses]
+          schema: { type: integer }
+        - in: query
+          name: filter[has_labs]
+          schema: { type: integer }
+        - in: query
+          name: include
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Records collection
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        OAuth 2.0 access token from POST /oauth/token (Authorization Code + PKCE).
+        Docs: https://documentation.digitail.io/6-ex-authentication

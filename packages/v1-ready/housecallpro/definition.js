@@ -58,7 +58,10 @@ const Definition = {
     env: {
         client_id: process.env.HOUSECALLPRO_CLIENT_ID,
         client_secret: process.env.HOUSECALLPRO_CLIENT_SECRET,
-        redirect_uri: `${process.env.REDIRECT_URI}/housecallpro`,
+        // Omit when unset so schema validation does not see the string "undefined/housecallpro".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/housecallpro`
+            : undefined,
         scope: process.env.HOUSECALLPRO_SCOPE || 'public',
     },
 };

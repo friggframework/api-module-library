@@ -101,7 +101,10 @@ const Definition = {
         client_id: process.env.MONDAY_CLIENT_ID,
         client_secret: process.env.MONDAY_CLIENT_SECRET,
         scope: process.env.MONDAY_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/monday`,
+        // Omit when unset so schema validation does not see the string "undefined/monday".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/monday`
+            : undefined,
     },
 };
 

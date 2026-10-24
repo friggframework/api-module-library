@@ -65,7 +65,10 @@ const Definition = {
         client_id: process.env.CALENDLY_CLIENT_ID,
         client_secret: process.env.CALENDLY_CLIENT_SECRET,
         scope: process.env.CALENDLY_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/calendly`,
+        // Omit when unset so schema validation does not see the string "undefined/calendly".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/calendly`
+            : undefined,
     },
 };
 

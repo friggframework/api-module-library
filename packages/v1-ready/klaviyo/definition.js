@@ -107,7 +107,10 @@ const Definition = {
         client_id: process.env.KLAVIYO_CLIENT_ID,
         client_secret: process.env.KLAVIYO_CLIENT_SECRET,
         scope: process.env.KLAVIYO_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/klaviyo`,
+        // Omit when unset so schema validation does not see the string "undefined/klaviyo".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/klaviyo`
+            : undefined,
         api_key: process.env.KLAVIYO_API_KEY,
     },
 };

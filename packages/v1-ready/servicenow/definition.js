@@ -47,10 +47,6 @@ const Definition = {
     moduleName: config.name,
     modelName: 'ServiceNow',
     // ADR-057: point at extensions.mapping (support@1 + business@1 are UNVALIDATED).
-    mappings: {
-        support: 'extensions.mapping',
-        business: 'extensions.mapping',
-    },
     requiredAuthMethods: {
         getAuthorizationRequirements: (api) =>
             api.getAuthorizationRequirements(),

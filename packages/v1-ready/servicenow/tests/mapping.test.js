@@ -28,9 +28,8 @@ describe('ServiceNow Ticket canonical mapping (ADR-057)', () => {
         expect(mapping.fields.short_description).toBe('name');
     });
 
-    it('is exposed via extensions.mapping and Definition.mappings', () => {
+    it('is exposed via extensions.mapping', () => {
         expect(extensions.mapping.schemas.support).toBe(ticketMapping);
-        expect(Definition.mappings.support).toBe('extensions.mapping');
         expect(
             extensions.mapping.transforms.servicenowIncidentStateToMerge(2)
         ).toBe('IN_PROGRESS');
@@ -67,6 +66,5 @@ describe('ServiceNow Company canonical mapping (ADR-057)', () => {
 
     it('is exposed via extensions.mapping', () => {
         expect(extensions.mapping.schemas.business).toBe(companyMapping);
-        expect(Definition.mappings.business).toBe('extensions.mapping');
     });
 });

@@ -126,13 +126,6 @@ describe('ServiceNow Definition', () => {
         expect(calledWith).toEqual({ sysparm_limit: 1 });
     });
 
-    it('points mappings at extensions.mapping for support and business', () => {
-        expect(Definition.mappings).toEqual({
-            support: 'extensions.mapping',
-            business: 'extensions.mapping',
-        });
-    });
-
     it('does not invent a webhook subscribe helper in source', () => {
         const src = fs.readFileSync(
             path.join(__dirname, '..', 'api.js'),

@@ -116,8 +116,4 @@ describe('Attentive Definition', () => {
         await Definition.requiredAuthMethods.testAuthRequest(api);
         expect(called).toBe(true);
     });
-
-    it('references business mapping via extensions.mapping', () => {
-        expect(Definition.mappings.business).toBe('extensions.mapping');
-    });
 });

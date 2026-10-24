@@ -1,0 +1,183 @@
+{
+  "$schema": "capability-manifest/v0.1",
+  "module": "churnzero",
+  "package": "@friggframework/api-module-churnzero",
+  "version": "1.0.0",
+  "auth": {
+    "type": "basic",
+    "notes": "HTTP Basic: ChurnZero username + user API Key (API Key as password). Tenant REST base URL required (base_url)."
+  },
+  "objects": {
+    "account": {
+      "fields": [
+        { "name": "Id", "tags": ["identity", "read"] },
+        { "name": "ExternalId", "tags": ["identity", "read"] },
+        { "name": "Name", "tags": ["read"] },
+        { "name": "IsActive", "tags": ["read"] },
+        { "name": "PrimaryChurnScoreId", "tags": ["read", "relation"] },
+        { "name": "PrimaryChurnScoreValue", "tags": ["read"] },
+        { "name": "NextRenewalDate", "tags": ["read"] },
+        { "name": "TotalContractAmount", "tags": ["read"] },
+        { "name": "ObjectCreatedDate", "tags": ["read"] },
+        { "name": "ObjectLastModifiedDate", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listAccounts", "surface": "data-read", "method": "listAccounts" },
+        { "name": "getAccount", "surface": "data-read", "method": "getAccount" },
+        { "name": "getAccountByExternalId", "surface": "data-read", "method": "getAccountByExternalId" },
+        { "name": "getAccountPrimaryChurnScore", "surface": "data-read", "method": "getAccountPrimaryChurnScore" }
+      ]
+    },
+    "contact": {
+      "fields": [
+        { "name": "Id", "tags": ["identity", "read"] },
+        { "name": "ExternalId", "tags": ["identity", "read"] },
+        { "name": "AccountId", "tags": ["relation", "read"] },
+        { "name": "Email", "tags": ["identity", "read"] },
+        { "name": "FirstName", "tags": ["read"] },
+        { "name": "LastName", "tags": ["read"] },
+        { "name": "FullName", "tags": ["read"] },
+        { "name": "ObjectCreatedDate", "tags": ["read"] },
+        { "name": "ObjectLastModifiedDate", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listContacts", "surface": "data-read", "method": "listContacts" },
+        { "name": "getContact", "surface": "data-read", "method": "getContact" },
+        { "name": "getContactByExternalId", "surface": "data-read", "method": "getContactByExternalId" }
+      ]
+    },
+    "userAccount": {
+      "fields": [
+        { "name": "Id", "tags": ["identity", "read"] },
+        { "name": "Email", "tags": ["identity", "read"] },
+        { "name": "Name", "tags": ["read"] },
+        { "name": "UserName", "tags": ["read"] },
+        { "name": "IsActive", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listUserAccounts", "surface": "data-read", "method": "listUserAccounts" },
+        { "name": "getUserAccount", "surface": "data-read", "method": "getUserAccount" }
+      ]
+    },
+    "churnScore": {
+      "fields": [
+        { "name": "Id", "tags": ["identity", "read"] },
+        { "name": "Name", "tags": ["read"] },
+        { "name": "ChurnScoreType", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listChurnScores", "surface": "data-read", "method": "listChurnScores" },
+        { "name": "getChurnScore", "surface": "data-read", "method": "getChurnScore" }
+      ]
+    },
+    "churnScoreCalculation": {
+      "fields": [
+        { "name": "Id", "tags": ["identity", "read"] },
+        { "name": "AccountId", "tags": ["relation", "read"] },
+        { "name": "ChurnScoreId", "tags": ["relation", "read"] },
+        { "name": "Score", "tags": ["read"] },
+        { "name": "IsPrimary", "tags": ["read"] },
+        { "name": "IsActive", "tags": ["read"] },
+        { "name": "CalculationDay", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listChurnScoreCalculations", "surface": "data-read", "method": "listChurnScoreCalculations" },
+        { "name": "getChurnScoreCalculation", "surface": "data-read", "method": "getChurnScoreCalculation" }
+      ]
+    },
+    "task": {
+      "fields": [
+        { "name": "Id", "tags": ["identity", "read"] },
+        { "name": "Subject", "tags": ["read"] },
+        { "name": "AccountId", "tags": ["relation", "read"] },
+        { "name": "ContactId", "tags": ["relation", "read"] },
+        { "name": "DueDate", "tags": ["read"] },
+        { "name": "IsClosed", "tags": ["read"] },
+        { "name": "TaskStatusId", "tags": ["relation", "read"] },
+        { "name": "TaskPriorityId", "tags": ["relation", "read"] }
+      ],
+      "operations": [
+        { "name": "listTasks", "surface": "data-read", "method": "listTasks" },
+        { "name": "getTask", "surface": "data-read", "method": "getTask" }
+      ]
+    },
+    "event": {
+      "fields": [
+        { "name": "Id", "tags": ["identity", "read"] },
+        { "name": "AccountId", "tags": ["relation", "read"] },
+        { "name": "ContactId", "tags": ["relation", "read"] },
+        { "name": "EventTypeId", "tags": ["relation", "read"] },
+        { "name": "EventDate", "tags": ["read"] },
+        { "name": "Description", "tags": ["read"] },
+        { "name": "Quantity", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listEvents", "surface": "data-read", "method": "listEvents" },
+        { "name": "getEvent", "surface": "data-read", "method": "getEvent" }
+      ]
+    },
+    "note": {
+      "fields": [
+        { "name": "Id", "tags": ["identity", "read"] },
+        { "name": "AccountId", "tags": ["relation", "read"] },
+        { "name": "Name", "tags": ["read"] },
+        { "name": "Content", "tags": ["read"] },
+        { "name": "NoteDate", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listNotes", "surface": "data-read", "method": "listNotes" },
+        { "name": "getNote", "surface": "data-read", "method": "getNote" }
+      ]
+    },
+    "meeting": {
+      "fields": [
+        { "name": "Id", "tags": ["identity", "read"] },
+        { "name": "AccountId", "tags": ["relation", "read"] }
+      ],
+      "operations": [
+        { "name": "listMeetings", "surface": "data-read", "method": "listMeetings" },
+        { "name": "getMeeting", "surface": "data-read", "method": "getMeeting" }
+      ]
+    },
+    "message": {
+      "fields": [
+        { "name": "Id", "tags": ["identity", "read"] }
+      ],
+      "operations": [
+        { "name": "listMessages", "surface": "data-read", "method": "listMessages" },
+        { "name": "getMessage", "surface": "data-read", "method": "getMessage" }
+      ]
+    }
+  },
+  "capabilities": {
+    "account.list": { "kind": "read", "method": "listAccounts" },
+    "account.get": { "kind": "read", "method": "getAccount" },
+    "account.getByExternalId": { "kind": "read", "method": "getAccountByExternalId" },
+    "account.primaryChurnScore.get": { "kind": "read", "method": "getAccountPrimaryChurnScore" },
+    "contact.list": { "kind": "read", "method": "listContacts" },
+    "contact.get": { "kind": "read", "method": "getContact" },
+    "contact.getByExternalId": { "kind": "read", "method": "getContactByExternalId" },
+    "userAccount.list": { "kind": "read", "method": "listUserAccounts" },
+    "userAccount.get": { "kind": "read", "method": "getUserAccount" },
+    "churnScore.list": { "kind": "read", "method": "listChurnScores" },
+    "churnScore.get": { "kind": "read", "method": "getChurnScore" },
+    "churnScoreCalculation.list": { "kind": "read", "method": "listChurnScoreCalculations" },
+    "churnScoreCalculation.get": { "kind": "read", "method": "getChurnScoreCalculation" },
+    "task.list": { "kind": "read", "method": "listTasks" },
+    "task.get": { "kind": "read", "method": "getTask" },
+    "event.list": { "kind": "read", "method": "listEvents" },
+    "event.get": { "kind": "read", "method": "getEvent" },
+    "note.list": { "kind": "read", "method": "listNotes" },
+    "note.get": { "kind": "read", "method": "getNote" },
+    "meeting.list": { "kind": "read", "method": "listMeetings" },
+    "meeting.get": { "kind": "read", "method": "getMeeting" },
+    "message.list": { "kind": "read", "method": "listMessages" },
+    "message.get": { "kind": "read", "method": "getMessage" }
+  },
+  "notes": {
+    "webhooks": "No REST webhook subscription CRUD in the official OpenAPI. Outbound HTTP callbacks are configured in-product via Play 'Call Webhook' steps.",
+    "customFields": "No CustomField collection. Query/select custom attributes as Cf/{FieldName} on entity queries (tenant-specific names).",
+    "cta": "No CTA entity; Task is the documented actionable work item (completed Tasks are called Activities in product prose).",
+    "timeline": "No Timeline collection; use Event, Task, Note, Meeting, Message."
+  }
+}

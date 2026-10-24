@@ -58,7 +58,10 @@ const Definition = {
         client_id: process.env.BOX_CLIENT_ID,
         client_secret: process.env.BOX_CLIENT_SECRET,
         scope: process.env.BOX_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/box`,
+        // Omit when unset so schema validation does not see the string "undefined/box".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/box`
+            : undefined,
     },
 };
 

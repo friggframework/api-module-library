@@ -1,0 +1,308 @@
+openapi: 3.0.3
+info:
+  title: QuickBooks Online Accounting API (Frigg subset)
+  version: "1.0.0"
+  description: >-
+    Curated OpenAPI subset of the QuickBooks Online Accounting API covering
+    exactly the endpoints implemented by @friggframework/api-module-quickbooks.
+    Intuit does not publish an official OpenAPI document; paths and parameters
+    are taken from https://developer.intuit.com/app/developer/qbo/docs/api/accounting/all-entities/customer
+    and sibling entity docs. Every request requires a company `realmId` (from the
+    OAuth callback) in the path and should pass `minorversion` (this module pins ≥ 75).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Intuit QuickBooks Online API docs
+    url: https://developer.intuit.com/app/developer/qbo/docs/develop
+servers:
+  - url: https://quickbooks.api.intuit.com
+    description: Production Accounting API
+  - url: https://sandbox-quickbooks.api.intuit.com
+    description: Sandbox Accounting API
+security:
+  - OAuth2: []
+tags:
+  - name: Company
+  - name: Query
+  - name: Customer
+  - name: Invoice
+  - name: Payment
+  - name: SalesReceipt
+  - name: RefundReceipt
+  - name: Deposit
+  - name: Item
+  - name: Account
+paths:
+  /v3/company/{realmId}/companyinfo/{companyId}:
+    get:
+      tags: [Company]
+      operationId: getCompanyInfo
+      summary: Get company info for the connected realm
+      parameters:
+        - $ref: '#/components/parameters/realmId'
+        - name: companyId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Same value as realmId for the CompanyInfo read.
+        - $ref: '#/components/parameters/minorversion'
+      responses:
+        '200':
+          description: CompanyInfo entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  CompanyInfo: { type: object }
+
+  /v3/company/{realmId}/query:
+    get:
+      tags: [Query]
+      operationId: query
+      summary: Run a QuickBooks SQL-like query
+      parameters:
+        - $ref: '#/components/parameters/realmId'
+        - name: query
+          in: query
+          required: true
+          schema: { type: string }
+          description: e.g. SELECT * FROM Customer MAXRESULTS 100
+        - $ref: '#/components/parameters/minorversion'
+      responses:
+        '200':
+          description: QueryResponse envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  QueryResponse: { type: object }
+
+  /v3/company/{realmId}/customer/{id}:
+    get:
+      tags: [Customer]
+      operationId: getCustomer
+      summary: Read a customer by id
+      parameters:
+        - $ref: '#/components/parameters/realmId'
+        - $ref: '#/components/parameters/entityId'
+        - $ref: '#/components/parameters/minorversion'
+      responses:
+        '200':
+          description: Customer entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Customer: { type: object }
+
+  /v3/company/{realmId}/customer:
+    post:
+      tags: [Customer]
+      operationId: createCustomer
+      summary: Create a customer (also used for sparse update with sparse=true)
+      parameters:
+        - $ref: '#/components/parameters/realmId'
+        - name: sparse
+          in: query
+          schema: { type: boolean }
+          description: When true, perform a sparse update (requires Id + SyncToken).
+        - $ref: '#/components/parameters/minorversion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: Customer entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Customer: { type: object }
+
+  /v3/company/{realmId}/invoice:
+    post:
+      tags: [Invoice]
+      operationId: createInvoice
+      summary: Create an invoice
+      parameters:
+        - $ref: '#/components/parameters/realmId'
+        - $ref: '#/components/parameters/minorversion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: Invoice entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Invoice: { type: object }
+
+  /v3/company/{realmId}/invoice/{id}:
+    get:
+      tags: [Invoice]
+      operationId: getInvoice
+      summary: Read an invoice by id
+      parameters:
+        - $ref: '#/components/parameters/realmId'
+        - $ref: '#/components/parameters/entityId'
+        - $ref: '#/components/parameters/minorversion'
+      responses:
+        '200':
+          description: Invoice entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Invoice: { type: object }
+
+  /v3/company/{realmId}/invoice/{id}/send:
+    post:
+      tags: [Invoice]
+      operationId: sendInvoice
+      summary: Email an invoice to the customer (optional sendTo override)
+      parameters:
+        - $ref: '#/components/parameters/realmId'
+        - $ref: '#/components/parameters/entityId'
+        - name: sendTo
+          in: query
+          schema: { type: string, format: email }
+        - $ref: '#/components/parameters/minorversion'
+      responses:
+        '200':
+          description: Invoice entity after send
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Invoice: { type: object }
+
+  /v3/company/{realmId}/payment/{id}:
+    get:
+      tags: [Payment]
+      operationId: getPayment
+      summary: Read a payment by id
+      parameters:
+        - $ref: '#/components/parameters/realmId'
+        - $ref: '#/components/parameters/entityId'
+        - $ref: '#/components/parameters/minorversion'
+      responses:
+        '200':
+          description: Payment entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Payment: { type: object }
+
+  /v3/company/{realmId}/salesreceipt:
+    post:
+      tags: [SalesReceipt]
+      operationId: createSalesReceipt
+      summary: Create a sales receipt
+      parameters:
+        - $ref: '#/components/parameters/realmId'
+        - $ref: '#/components/parameters/minorversion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: SalesReceipt entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  SalesReceipt: { type: object }
+
+  /v3/company/{realmId}/refundreceipt:
+    post:
+      tags: [RefundReceipt]
+      operationId: createRefundReceipt
+      summary: Create a refund receipt
+      parameters:
+        - $ref: '#/components/parameters/realmId'
+        - $ref: '#/components/parameters/minorversion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: RefundReceipt entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  RefundReceipt: { type: object }
+
+  /v3/company/{realmId}/deposit:
+    post:
+      tags: [Deposit]
+      operationId: createDeposit
+      summary: Create a deposit
+      parameters:
+        - $ref: '#/components/parameters/realmId'
+        - $ref: '#/components/parameters/minorversion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: Deposit entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Deposit: { type: object }
+
+components:
+  parameters:
+    realmId:
+      name: realmId
+      in: path
+      required: true
+      schema: { type: string }
+      description: QuickBooks company id from the OAuth callback.
+    entityId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    minorversion:
+      name: minorversion
+      in: query
+      schema: { type: integer, minimum: 75, default: 75 }
+      description: Accounting API minor version. This module defaults to 75.
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://appcenter.intuit.com/connect/oauth2
+          tokenUrl: https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer
+          scopes:
+            com.intuit.quickbooks.accounting: QuickBooks Online Accounting API
+            com.intuit.quickbooks.payment: QuickBooks Payments API (optional)

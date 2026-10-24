@@ -35,7 +35,7 @@ describe('ChurnZero canonical mappings (ADR-057)', () => {
         expect(contactMapping.objects.contact[0].fields.Email).toBe('email');
     });
 
-    it('is exposed via extensions.mapping and Definition.mappings', () => {
+    it('is exposed via extensions.mapping', () => {
         expect(extensions.mapping.schemas.business.schema).toBe('business@1');
         expect(extensions.mapping.schemas.business.validation).toBe(
             'UNVALIDATED'
@@ -43,10 +43,6 @@ describe('ChurnZero canonical mappings (ADR-057)', () => {
         expect(extensions.mapping.schemas.accountHealth.schema).toBe(
             'accountHealth@1'
         );
-        expect(Definition.mappings).toEqual({
-            business: 'extensions.mapping',
-            accountHealth: 'extensions.mapping',
-        });
     });
 });
 

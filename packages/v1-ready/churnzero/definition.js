@@ -61,10 +61,6 @@ const Definition = {
     getName: () => config.name,
     moduleName: config.name,
     modelName: 'ChurnZero',
-    mappings: {
-        business: 'extensions.mapping',
-        accountHealth: 'extensions.mapping',
-    },
     requiredAuthMethods: {
         getAuthorizationRequirements: async (api) =>
             api.getAuthorizationRequirements(),

@@ -24,11 +24,8 @@ describe('Zendesk Ticket canonical mapping (ADR-057)', () => {
         expect(mapping.fields.type).toBe('ticket_type');
     });
 
-    it('is exposed via extensions.mapping and Definition.mappings', () => {
+    it('is exposed via extensions.mapping', () => {
         expect(extensions.mapping.schemas.support).toBe(ticketMapping);
-        expect(Definition.mappings).toEqual({
-            support: 'extensions.mapping',
-        });
         expect(typeof extensions.mapping.transforms.zendeskStatusToMerge).toBe(
             'function'
         );

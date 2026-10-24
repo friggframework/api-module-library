@@ -50,7 +50,6 @@ const Definition = {
     moduleName: config.name,
     modelName: 'Zendesk',
     // ADR-057: point at extensions.mapping (support@1 Ticket mapping is UNVALIDATED).
-    mappings: { support: 'extensions.mapping' },
     requiredAuthMethods: {
         getAuthorizationRequirements: (api) =>
             api.getAuthorizationRequirements(),

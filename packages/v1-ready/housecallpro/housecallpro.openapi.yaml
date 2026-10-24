@@ -1,0 +1,350 @@
+openapi: 3.0.3
+info:
+  title: Housecall Pro Public API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Housecall Pro (housecallpro.com) is a home-services field management
+    platform. This OpenAPI document is Left Hook's curated subset covering
+    exactly the endpoints the @friggframework/api-module-housecallpro client
+    in api.js implements. It is the source of truth the hand-written client
+    mirrors 1:1 (one method per operationId).
+
+    Housecall Pro publishes its reference on Stoplight at
+    https://docs.housecallpro.com/ (no vendor-downloadable OpenAPI export was
+    available at module authoring time). Paths and verbs below are taken from
+    that official documentation and related Public API pages.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.housecallpro.com
+    description: Housecall Pro production API
+security:
+  - bearerAuth: []
+tags:
+  - name: Company
+  - name: Customers
+  - name: Jobs
+  - name: Employees
+  - name: Estimates
+  - name: Invoices
+  - name: Leads
+paths:
+  /company:
+    get:
+      tags: [Company]
+      operationId: getCompany
+      summary: Get the authenticated company
+      description: >-
+        Returns company details including multi-location `locations` ids.
+        Docs: https://docs.housecallpro.com/docs/housecall-public-api/24a5d891a80a8-get-company
+      responses:
+        "200":
+          description: Company profile
+  /customers:
+    get:
+      tags: [Customers]
+      operationId: listCustomers
+      summary: List customers
+      description: >-
+        Docs: https://docs.housecallpro.com/docs/housecall-public-api/042bd3bf861ae-get-customers
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+        - in: query
+          name: q
+          schema: { type: string }
+          description: Search name, email, mobile number, address
+      responses:
+        "200":
+          description: Customer collection
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: Create a customer
+      description: >-
+        Docs: https://docs.housecallpro.com/docs/housecall-public-api/4e0bf8c4d65d7-create-customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Customer created
+  /customers/{customer_id}:
+    get:
+      tags: [Customers]
+      operationId: getCustomer
+      summary: Get a customer
+      description: >-
+        Docs: https://docs.housecallpro.com/docs/housecall-public-api/7599b1ec89338-get-customer
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Customer
+    put:
+      tags: [Customers]
+      operationId: updateCustomer
+      summary: Update a customer
+      description: >-
+        Docs: https://docs.housecallpro.com/docs/housecall-public-api/b1c3acd657849-update-customer
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Customer updated
+  /jobs:
+    get:
+      tags: [Jobs]
+      operationId: listJobs
+      summary: List jobs
+      description: >-
+        Docs: https://docs.housecallpro.com/docs/housecall-public-api/6c97704da8bf3-get-jobs
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+        - in: query
+          name: scheduled_start_min
+          schema: { type: string, format: date-time }
+        - in: query
+          name: scheduled_start_max
+          schema: { type: string, format: date-time }
+        - in: query
+          name: customer_id
+          schema: { type: string }
+        - in: query
+          name: employee_ids
+          schema:
+            type: array
+            items: { type: string }
+      responses:
+        "200":
+          description: Job collection
+    post:
+      tags: [Jobs]
+      operationId: createJob
+      summary: Create a job
+      description: >-
+        Docs: https://docs.housecallpro.com/docs/housecall-public-api/2dcf481ed7d69-create-a-job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Job created
+  /jobs/{job_id}:
+    get:
+      tags: [Jobs]
+      operationId: getJob
+      summary: Get a job
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Job
+  /jobs/{job_id}/schedule:
+    put:
+      tags: [Jobs]
+      operationId: updateJobSchedule
+      summary: Update a job schedule
+      description: >-
+        Dedicated schedule update path (not a general PUT /jobs/{id}).
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Schedule updated
+  /employees:
+    get:
+      tags: [Employees]
+      operationId: listEmployees
+      summary: List employees
+      description: >-
+        Docs: https://docs.housecallpro.com/docs/housecall-public-api/303ee235f23fa-get-employees
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Employee collection
+  /employees/{employee_id}:
+    get:
+      tags: [Employees]
+      operationId: getEmployee
+      summary: Get an employee
+      parameters:
+        - in: path
+          name: employee_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Employee
+  /estimates:
+    get:
+      tags: [Estimates]
+      operationId: listEstimates
+      summary: List estimates
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Estimate collection
+    post:
+      tags: [Estimates]
+      operationId: createEstimate
+      summary: Create an estimate
+      description: >-
+        Docs: https://docs.housecallpro.com/docs/housecall-public-api/4004d373be14c-create-an-estimate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Estimate created
+  /estimates/{estimate_id}:
+    get:
+      tags: [Estimates]
+      operationId: getEstimate
+      summary: Get an estimate
+      parameters:
+        - in: path
+          name: estimate_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Estimate
+  /invoices:
+    get:
+      tags: [Invoices]
+      operationId: listInvoices
+      summary: List invoices
+      description: >-
+        Docs: https://docs.housecallpro.com/docs/housecall-public-api/65ce9f430d605-get-invoices
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Invoice collection
+  /invoices/{invoice_id}:
+    get:
+      tags: [Invoices]
+      operationId: getInvoice
+      summary: Get an invoice by UUID
+      description: >-
+        Docs: https://docs.housecallpro.com/docs/housecall-public-api/0ae16219c3e58-get-invoice-by-uuid
+      parameters:
+        - in: path
+          name: invoice_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Invoice
+  /leads:
+    get:
+      tags: [Leads]
+      operationId: listLeads
+      summary: List leads
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Lead collection
+    post:
+      tags: [Leads]
+      operationId: createLead
+      summary: Create a lead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Lead created
+  /leads/{lead_id}:
+    get:
+      tags: [Leads]
+      operationId: getLead
+      summary: Get a lead
+      parameters:
+        - in: path
+          name: lead_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lead
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: OAuth2 access token
+      description: >-
+        OAuth 2.0 access token. Sent as `Authorization: Bearer <token>`.
+        Token endpoint: POST https://api.housecallpro.com/oauth/token (JSON body).
+        Authorize: https://pro.housecallpro.com/oauth/authorize

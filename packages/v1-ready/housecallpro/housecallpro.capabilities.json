@@ -1,0 +1,390 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "housecallpro",
+  "label": "Housecall Pro",
+  "package": "@friggframework/api-module-housecallpro",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "objects": {
+    "company": {
+      "label": "Company",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "org.name" },
+        { "name": "phone_number", "type": "string", "tag": "org.phone" },
+        { "name": "website", "type": "string", "tag": "org.url" },
+        { "name": "locations", "type": "object", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "company.get" }
+      }
+    },
+    "customer": {
+      "label": "Customer",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "first_name", "type": "string", "tag": "person.firstName" },
+        { "name": "last_name", "type": "string", "tag": "person.lastName" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "mobile_number", "type": "string", "tag": "person.phone" },
+        { "name": "home_number", "type": "string" },
+        { "name": "work_number", "type": "string" },
+        { "name": "company", "type": "string", "tag": "org.name" },
+        { "name": "notifications_enabled", "type": "boolean" },
+        { "name": "lead_source", "type": "string" },
+        { "name": "tags", "type": "array" },
+        { "name": "addresses", "type": "array" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "customer.get", "id": "customerId" },
+        "create": { "capability": "customer.create" },
+        "update": { "capability": "customer.update", "id": "customerId", "body": "data" }
+      }
+    },
+    "job": {
+      "label": "Job",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "invoice_number", "type": "string", "tag": "record.displayId", "readOnly": true },
+        { "name": "description", "type": "text", "tag": "job.description" },
+        { "name": "work_status", "type": "string", "tag": "job.status" },
+        { "name": "customer.id", "type": "string", "tag": "record.parentId" },
+        { "name": "schedule.scheduled_start", "type": "datetime", "tag": "job.start" },
+        { "name": "schedule.scheduled_end", "type": "datetime", "tag": "job.end" },
+        { "name": "total_amount", "type": "number", "tag": "job.total" },
+        { "name": "outstanding_balance", "type": "number" },
+        { "name": "lead_source", "type": "string" },
+        { "name": "tags", "type": "array" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "job.get", "id": "jobId" },
+        "create": { "capability": "job.create" },
+        "update": { "capability": "job.schedule.update", "id": "jobId", "body": "data" }
+      }
+    },
+    "employee": {
+      "label": "Employee",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "first_name", "type": "string", "tag": "person.firstName" },
+        { "name": "last_name", "type": "string", "tag": "person.lastName" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "mobile_number", "type": "string", "tag": "person.phone" },
+        { "name": "role", "type": "string" },
+        { "name": "color_hex", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "employee.get", "id": "employeeId" }
+      }
+    },
+    "estimate": {
+      "label": "Estimate",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "estimate_number", "type": "string", "tag": "record.displayId", "readOnly": true },
+        { "name": "work_status", "type": "string", "tag": "estimate.status" },
+        { "name": "customer.id", "type": "string", "tag": "record.parentId" },
+        { "name": "total_amount", "type": "number", "tag": "estimate.total" },
+        { "name": "approval_status", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "estimate.get", "id": "estimateId" },
+        "create": { "capability": "estimate.create" }
+      }
+    },
+    "invoice": {
+      "label": "Invoice",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "invoice_number", "type": "string", "tag": "record.displayId", "readOnly": true },
+        { "name": "status", "type": "string", "tag": "invoice.status" },
+        { "name": "amount", "type": "number", "tag": "invoice.total" },
+        { "name": "due_amount", "type": "number" },
+        { "name": "due_at", "type": "datetime", "tag": "invoice.dueAt" },
+        { "name": "job_id", "type": "string", "tag": "record.parentId" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "invoice.get", "id": "invoiceId" }
+      }
+    },
+    "lead": {
+      "label": "Lead",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "number", "type": "number", "tag": "record.displayId", "readOnly": true },
+        { "name": "status", "type": "string", "tag": "lead.status" },
+        { "name": "pipeline_status", "type": "string" },
+        { "name": "lead_source", "type": "string" },
+        { "name": "total_amount", "type": "number" },
+        { "name": "customer.id", "type": "string", "tag": "record.parentId" },
+        { "name": "tags", "type": "array" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "lead.get", "id": "leadId" },
+        "create": { "capability": "lead.create" }
+      }
+    }
+  },
+  "events": {
+    "customer.created": {
+      "delivery": "webhook",
+      "object": "customer",
+      "description": "Public API event customer.created.",
+      "payload": {
+        "company_id": "string",
+        "event": "customer.created",
+        "event_occurred_at": "string",
+        "customer": { "id": "string" }
+      },
+      "idPath": "customer.id",
+      "match": "customer.created"
+    },
+    "customer.updated": {
+      "delivery": "webhook",
+      "object": "customer",
+      "description": "Public API event customer.updated.",
+      "payload": {
+        "company_id": "string",
+        "event": "customer.updated",
+        "event_occurred_at": "string",
+        "customer": { "id": "string" }
+      },
+      "idPath": "customer.id",
+      "match": "customer.updated"
+    },
+    "job.created": {
+      "delivery": "webhook",
+      "object": "job",
+      "description": "Public API event job.created.",
+      "payload": {
+        "company_id": "string",
+        "event": "job.created",
+        "event_occurred_at": "string",
+        "job": { "id": "string" }
+      },
+      "idPath": "job.id",
+      "match": "job.created"
+    },
+    "job.completed": {
+      "delivery": "webhook",
+      "object": "job",
+      "description": "Public API event job.completed.",
+      "payload": {
+        "company_id": "string",
+        "event": "job.completed",
+        "event_occurred_at": "string",
+        "job": { "id": "string" }
+      },
+      "idPath": "job.id",
+      "match": "job.completed"
+    },
+    "invoice.created": {
+      "delivery": "webhook",
+      "object": "invoice",
+      "description": "Public API event invoice.created.",
+      "payload": {
+        "company_id": "string",
+        "event": "invoice.created",
+        "event_occurred_at": "string",
+        "invoice": { "id": "string" }
+      },
+      "idPath": "invoice.id",
+      "match": "invoice.created"
+    },
+    "estimate.created": {
+      "delivery": "webhook",
+      "object": "estimate",
+      "description": "Public API event estimate.created.",
+      "payload": {
+        "company_id": "string",
+        "event": "estimate.created",
+        "event_occurred_at": "string",
+        "estimate": { "id": "string" }
+      },
+      "idPath": "estimate.id",
+      "match": "estimate.created"
+    },
+    "lead.created": {
+      "delivery": "webhook",
+      "object": "lead",
+      "description": "Public API event lead.created.",
+      "payload": {
+        "company_id": "string",
+        "event": "lead.created",
+        "event_occurred_at": "string",
+        "lead": { "id": "string" }
+      },
+      "idPath": "lead.id",
+      "match": "lead.created"
+    }
+  },
+  "webhook": {
+    "scope": "company",
+    "topic": "{{body.event}}",
+    "eventId": "{{body.event}}:{{body.company_id}}:{{body.event_occurred_at}}",
+    "account": "{{body.company_id}}",
+    "verify": "verifyWebhookSignature",
+    "note": "Subscriptions are configured in the Housecall Pro Webhooks app (My Apps > Webhooks) or via partner arrangements — no verified public subscribe REST surface on Stoplight. HMAC-SHA256 of `Api-Timestamp + '.' + json_payload` with the Webhooks signing secret; hex digest in Api-Signature."
+  },
+  "capabilities": {
+    "company.get": {
+      "kind": "read",
+      "method": "getCompany",
+      "input": {},
+      "output": "company"
+    },
+    "customer.list": {
+      "kind": "read",
+      "method": "listCustomers",
+      "input": {
+        "page": { "type": "number" },
+        "page_size": { "type": "number" },
+        "q": { "type": "string" }
+      },
+      "output": "page<customer>"
+    },
+    "customer.get": {
+      "kind": "read",
+      "method": "getCustomer",
+      "input": { "customerId": { "type": "string", "required": true } },
+      "output": "customer",
+      "args": ["customerId"]
+    },
+    "customer.create": {
+      "kind": "write",
+      "method": "createCustomer",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "customer",
+      "args": ["data"]
+    },
+    "customer.update": {
+      "kind": "write",
+      "method": "updateCustomer",
+      "input": {
+        "customerId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "customer",
+      "args": ["customerId", "data"]
+    },
+    "job.list": {
+      "kind": "read",
+      "method": "listJobs",
+      "input": {
+        "page": { "type": "number" },
+        "page_size": { "type": "number" },
+        "customer_id": { "type": "string" }
+      },
+      "output": "page<job>"
+    },
+    "job.get": {
+      "kind": "read",
+      "method": "getJob",
+      "input": { "jobId": { "type": "string", "required": true } },
+      "output": "job",
+      "args": ["jobId"]
+    },
+    "job.create": {
+      "kind": "write",
+      "method": "createJob",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "job",
+      "args": ["data"]
+    },
+    "job.schedule.update": {
+      "kind": "write",
+      "method": "updateJobSchedule",
+      "input": {
+        "jobId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "job",
+      "args": ["jobId", "data"]
+    },
+    "employee.list": {
+      "kind": "read",
+      "method": "listEmployees",
+      "input": {
+        "page": { "type": "number" },
+        "page_size": { "type": "number" }
+      },
+      "output": "page<employee>"
+    },
+    "employee.get": {
+      "kind": "read",
+      "method": "getEmployee",
+      "input": { "employeeId": { "type": "string", "required": true } },
+      "output": "employee",
+      "args": ["employeeId"]
+    },
+    "estimate.list": {
+      "kind": "read",
+      "method": "listEstimates",
+      "input": {
+        "page": { "type": "number" },
+        "page_size": { "type": "number" }
+      },
+      "output": "page<estimate>"
+    },
+    "estimate.get": {
+      "kind": "read",
+      "method": "getEstimate",
+      "input": { "estimateId": { "type": "string", "required": true } },
+      "output": "estimate",
+      "args": ["estimateId"]
+    },
+    "estimate.create": {
+      "kind": "write",
+      "method": "createEstimate",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "estimate",
+      "args": ["data"]
+    },
+    "invoice.list": {
+      "kind": "read",
+      "method": "listInvoices",
+      "input": {
+        "page": { "type": "number" },
+        "page_size": { "type": "number" }
+      },
+      "output": "page<invoice>"
+    },
+    "invoice.get": {
+      "kind": "read",
+      "method": "getInvoice",
+      "input": { "invoiceId": { "type": "string", "required": true } },
+      "output": "invoice",
+      "args": ["invoiceId"]
+    },
+    "lead.list": {
+      "kind": "read",
+      "method": "listLeads",
+      "input": {
+        "page": { "type": "number" },
+        "page_size": { "type": "number" }
+      },
+      "output": "page<lead>"
+    },
+    "lead.get": {
+      "kind": "read",
+      "method": "getLead",
+      "input": { "leadId": { "type": "string", "required": true } },
+      "output": "lead",
+      "args": ["leadId"]
+    },
+    "lead.create": {
+      "kind": "write",
+      "method": "createLead",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "lead",
+      "args": ["data"]
+    }
+  }
+}

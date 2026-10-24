@@ -1,11 +1,11 @@
 {
   "name": "rollworks",
   "label": "RollWorks",
-  "productUrl": "https://rollworks.com",
+  "productUrl": "https://www.adroll.com/account-based-marketing-platform",
   "apiDocs": "https://apidocs.nextroll.com/guides/get-started-rollworks.html",
   "logoUrl": "https://friggframework.org/assets/img/rollworks-icon.jpeg",
   "categories": [
     "ABM"
   ],
-  "description": "The account-based platform for B2B marketing & sales"
+  "description": "The account-based platform for B2B marketing & sales (AdRoll ABM, formerly RollWorks)"
 }

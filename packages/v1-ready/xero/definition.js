@@ -109,7 +109,10 @@ const Definition = {
         scope:
             process.env.XERO_SCOPE ||
             'openid profile email offline_access accounting.transactions accounting.contacts accounting.settings',
-        redirect_uri: `${process.env.REDIRECT_URI}/xero`,
+        // Omit when unset so schema validation does not see the string "undefined/xero".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/xero`
+            : undefined,
     },
 };
 

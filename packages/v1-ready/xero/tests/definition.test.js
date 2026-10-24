@@ -24,7 +24,14 @@ describe('Xero Definition', () => {
         expect(Definition.env).toHaveProperty('client_secret');
         expect(Definition.env).toHaveProperty('scope');
         expect(Definition.env).toHaveProperty('redirect_uri');
-        expect(Definition.env.redirect_uri).toMatch(/\/xero$/);
+        const prevRedirect = process.env.REDIRECT_URI;
+        process.env.REDIRECT_URI = 'https://app.example/redirect';
+        jest.isolateModules(() => {
+            const { Definition: WithRedirect } = require('../definition');
+            expect(WithRedirect.env.redirect_uri).toBe('https://app.example/redirect/xero');
+        });
+        if (prevRedirect === undefined) delete process.env.REDIRECT_URI;
+        else process.env.REDIRECT_URI = prevRedirect;
     });
 
     it('getToken exchanges the authorization code', async () => {

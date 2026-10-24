@@ -50,10 +50,6 @@ const Definition = {
     getName: () => config.name,
     moduleName: config.name,
     modelName: 'DaySmartVet',
-    mappings: {
-        business: 'extensions.mapping',
-        billing: 'extensions.mapping',
-    },
     requiredAuthMethods: {
         getAuthorizationRequirements: (api) =>
             api.getAuthorizationRequirements(),

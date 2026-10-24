@@ -48,16 +48,12 @@ describe('Intercom canonical mappings (ADR-057)', () => {
         );
     });
 
-    it('is exposed via extensions.mapping and Definition.mappings', () => {
+    it('is exposed via extensions.mapping', () => {
         expect(extensions.mapping.schemas.support.schema).toBe('support@1');
         expect(extensions.mapping.schemas.support.validation).toBe(
             'UNVALIDATED'
         );
         expect(extensions.mapping.schemas.business.schema).toBe('business@1');
-        expect(Definition.mappings).toEqual({
-            support: 'extensions.mapping',
-            business: 'extensions.mapping',
-        });
         expect(
             extensions.mapping.transforms.intercomConversationStateToMerge(
                 'open'

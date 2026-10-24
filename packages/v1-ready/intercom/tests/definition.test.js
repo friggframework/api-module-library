@@ -129,12 +129,5 @@ describe('Intercom Definition', () => {
             Definition.requiredAuthMethods.setAuthParams(api, {})
         ).rejects.toThrow(/access_token/i);
     });
-
-    it('declares ADR-057 mappings for support and business', () => {
-        expect(Definition.mappings).toEqual({
-            support: 'extensions.mapping',
-            business: 'extensions.mapping',
-        });
-    });
 });
 

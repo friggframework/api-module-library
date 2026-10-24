@@ -1,0 +1,103 @@
+# Fenestra Document: Salesloft Frontend Integrations
+#
+# Salesloft exposes iframe connection points (Frontend Integrations), not a
+# coded React component SDK. Apps run in sandboxed iframes and authenticate via
+# the documented frontend auth flow (tenant_id, integration_id, signed payload).
+#
+# Official docs:
+#   https://developers.salesloft.com/docs/platform/frontend-integrations/
+#   https://developers.salesloft.com/docs/platform/frontend-integrations/introduction/
+#   https://developers.salesloft.com/docs/platform/frontend-integrations/authentication-and-flow/
+# Demo: https://github.com/SalesLoft/public-demo-frontend-integration
+
+fenestra: "0.1.0"
+
+info:
+  title: Salesloft Frontend Integrations
+  version: "1.0.0"
+  description: |
+    Salesloft Frontend Integrations let partners embed their application
+    experience inside Salesloft through iframe connection points. Each
+    connection point is a distinct iframe URL. There is no published npm
+    component library; UIs are partner-owned HTML/JS inside the iframe.
+
+    Connection points (official):
+      - Full Page
+      - Person Smart Panel
+      - Account Smart Panel
+      - Email & Template Editor
+      - Custom Steps
+
+platform:
+  name: Salesloft
+  vendor: Salesloft
+  documentation: https://developers.salesloft.com/docs/platform/frontend-integrations/
+  developerPortal: https://developers.salesloft.com/
+
+sdks:
+  salesloft-frontend-demo:
+    name: Salesloft public demo frontend integration
+    packageManager: npm
+    package: "n/a-salesloft-frontend-demo"
+    repository: https://github.com/SalesLoft/public-demo-frontend-integration
+    documentation: https://developers.salesloft.com/docs/platform/frontend-integrations/introduction/
+    description: |
+      Official Ruby demo covering each connection point, the authentication
+      flow, and API requests. Salesloft does not publish a first-party npm UI
+      component package for Frontend Integrations; this entry documents the
+      official demo repository (no installable npm package).
+
+policies:
+  componentRequirement:
+    level: optional
+    scope: all
+  customComponents:
+    allowed: true
+    description: |
+      Partner-owned UI rendered inside Salesloft-hosted iframes. No platform
+      component catalog is enforced.
+
+extensionPoints:
+  - id: full-page
+    name: Full Page
+    type: fullPage
+    extensionType: iframe
+    description: |
+      The integration receives a full page of content. Users access it via an
+      integration navigation component.
+    documentation: https://developers.salesloft.com/docs/platform/frontend-integrations/introduction/
+
+  - id: person-smart-panel
+    name: Person Smart Panel
+    type: sidebar
+    extensionType: iframe
+    description: |
+      Appears on the person detail page once installed. Users can reorganize or
+      hide it like other smart panels.
+    documentation: https://developers.salesloft.com/docs/platform/frontend-integrations/introduction/
+
+  - id: account-smart-panel
+    name: Account Smart Panel
+    type: sidebar
+    extensionType: iframe
+    description: |
+      Appears on the account detail page once installed.
+    documentation: https://developers.salesloft.com/docs/platform/frontend-integrations/introduction/
+
+  - id: email-template-editor
+    name: Email & Template Editor
+    type: toolbar
+    extensionType: iframe
+    description: |
+      Toolbar list entry on the email and template editor. Can insert HTML into
+      the editor when sending email, authoring signatures, snippets, or templates.
+    documentation: https://developers.salesloft.com/docs/platform/frontend-integrations/introduction/
+
+  - id: custom-steps
+    name: Custom Steps
+    type: embedded
+    extensionType: iframe
+    description: |
+      A step that can be added into any cadence. Custom steps must use the REST
+      API to complete the provided actions.
+    documentation: https://developers.salesloft.com/docs/platform/frontend-integrations/introduction/

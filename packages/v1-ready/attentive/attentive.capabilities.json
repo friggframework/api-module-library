@@ -1,0 +1,272 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "attentive",
+  "label": "Attentive",
+  "package": "@friggframework/api-module-attentive",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "authAlternates": ["apiKey"],
+  "account": {
+    "description": "Company identity from GET /me. Persisted as entity/credential externalId. Bearer may be an OAuth access token or a private-app API key.",
+    "fields": [
+      {
+        "name": "companyId",
+        "type": "string",
+        "description": "Attentive company id from /me.companyId"
+      },
+      {
+        "name": "companyName",
+        "type": "string",
+        "description": "Company display name from /me.companyName"
+      },
+      {
+        "name": "attentiveDomainName",
+        "type": "string",
+        "description": "Attentive domain (e.g. hudsonivy.attn.tv) from /me"
+      }
+    ]
+  },
+  "objects": {
+    "subscriber": {
+      "label": "Subscriber",
+      "fields": [
+        { "name": "user.email", "type": "email", "tag": "person.email" },
+        { "name": "user.phone", "type": "string", "tag": "person.phone" },
+        { "name": "externalIdentifiers.clientUserId", "type": "string", "tag": "record.externalId" },
+        { "name": "subscriptionEligibilities", "type": "object[]" },
+        { "name": "subscriptionEligibilities[].subscription.type", "type": "string" },
+        { "name": "subscriptionEligibilities[].subscription.channel", "type": "string" },
+        { "name": "subscriptionEligibilities[].eligibility.isEligible", "type": "boolean" }
+      ],
+      "sync": {
+        "get": { "capability": "subscriber.getSubscriptions", "note": "Lookup by phone or email — no list-all endpoint" },
+        "create": { "capability": "subscriber.subscribe", "body": "body" },
+        "update": { "capability": "subscriber.unsubscribe", "body": "body" }
+      }
+    },
+    "customAttribute": {
+      "label": "Custom Attribute",
+      "fields": [
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "value", "type": "string" }
+      ],
+      "sync": {
+        "get": { "capability": "customAttribute.get", "note": "Query by phone or email" },
+        "create": { "capability": "customAttribute.upsert", "body": "body" }
+      }
+    },
+    "customEvent": {
+      "label": "Custom Event",
+      "fields": [
+        { "name": "type", "type": "string" },
+        { "name": "user.email", "type": "email", "tag": "person.email" },
+        { "name": "user.phone", "type": "string", "tag": "person.phone" }
+      ]
+    },
+    "catalogUpload": {
+      "label": "Product Catalog Upload",
+      "fields": [
+        { "name": "uploadId", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "status", "type": "string" },
+        { "name": "uploadUrl", "type": "string", "readOnly": true },
+        { "name": "errors", "type": "object[]" }
+      ],
+      "sync": {
+        "id": "uploadId",
+        "list": { "capability": "catalogUpload.list" },
+        "get": { "capability": "catalogUpload.get", "id": "uploadId" },
+        "create": { "capability": "catalogUpload.create", "body": "body" }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "url", "type": "string" },
+        { "name": "type", "type": "string" },
+        { "name": "events", "type": "string[]" },
+        { "name": "companyId", "type": "string" },
+        { "name": "disabledAt", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "webhook.list", "items": "webhooks" },
+        "create": { "capability": "webhook.create", "body": "body" },
+        "update": { "capability": "webhook.update", "id": "webhookId", "body": "body" },
+        "delete": { "capability": "webhook.delete", "id": "webhookId" }
+      }
+    }
+  },
+  "events": {
+    "sms.subscribed": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "description": "User opted in to SMS.",
+      "match": "sms.subscribed"
+    },
+    "sms.unsubscribed": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "match": "sms.unsubscribed"
+    },
+    "sms.sent": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "match": "sms.sent"
+    },
+    "sms.message_link_click": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "match": "sms.message_link_click"
+    },
+    "sms.inbound_message": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "match": "sms.inbound_message"
+    },
+    "email.subscribed": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "match": "email.subscribed"
+    },
+    "email.unsubscribed": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "match": "email.unsubscribed"
+    },
+    "email.sent": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "match": "email.sent"
+    },
+    "email.opened": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "match": "email.opened"
+    },
+    "email.message_link_click": {
+      "delivery": "webhook",
+      "object": "subscriber",
+      "match": "email.message_link_click"
+    },
+    "custom_attribute.set": {
+      "delivery": "webhook",
+      "object": "customAttribute",
+      "match": "custom_attribute.set"
+    }
+  },
+  "webhook": {
+    "scope": "subscription",
+    "topic": "{{body.type}}",
+    "eventId": "{{body.company.company_id}}:{{body.type}}:{{body.timestamp}}",
+    "account": "{{body.company.company_id}}",
+    "verify": "verifyWebhookSignature",
+    "note": "Subscription webhooks via REST CRUD (getWebhooks/createWebhook/updateWebhook/deleteWebhook). Universal webhooks can also be configured in the Attentive UI. Signing header x-attentive-hmac-sha256 over raw body."
+  },
+  "capabilities": {
+    "identity.get": {
+      "kind": "read",
+      "method": "getMe",
+      "output": "account",
+      "args": []
+    },
+    "subscriber.getSubscriptions": {
+      "kind": "read",
+      "method": "getSubscriptions",
+      "input": {
+        "phone": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "output": "subscriber",
+      "args": ["$rest"],
+      "note": "One of phone or email is required."
+    },
+    "subscriber.subscribe": {
+      "kind": "write",
+      "method": "addSubscriptions",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "subscriber",
+      "args": ["body"]
+    },
+    "subscriber.unsubscribe": {
+      "kind": "write",
+      "method": "unsubscribeSubscriptions",
+      "input": { "body": { "type": "object", "required": true } },
+      "args": ["body"]
+    },
+    "customAttribute.get": {
+      "kind": "read",
+      "method": "getCustomAttributes",
+      "input": {
+        "phone": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "output": "customAttribute[]",
+      "args": ["$rest"]
+    },
+    "customAttribute.upsert": {
+      "kind": "write",
+      "method": "postCustomAttributes",
+      "input": { "body": { "type": "object", "required": true } },
+      "args": ["body"]
+    },
+    "customEvent.create": {
+      "kind": "write",
+      "method": "postCustomEvents",
+      "input": { "body": { "type": "object", "required": true } },
+      "args": ["body"]
+    },
+    "catalogUpload.list": {
+      "kind": "read",
+      "method": "getUploads",
+      "output": "page<catalogUpload>",
+      "args": ["$rest"]
+    },
+    "catalogUpload.get": {
+      "kind": "read",
+      "method": "lookupUpload",
+      "input": { "uploadId": { "type": "string", "required": true } },
+      "output": "catalogUpload",
+      "args": ["uploadId"]
+    },
+    "catalogUpload.create": {
+      "kind": "write",
+      "method": "postUpload",
+      "input": { "body": { "type": "object" } },
+      "output": "catalogUpload",
+      "args": ["body"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "getWebhooks",
+      "output": "page<webhook>",
+      "args": []
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhook",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "webhook",
+      "args": ["body"]
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhook",
+      "input": {
+        "webhookId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["webhookId", "body"]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhook",
+      "input": { "webhookId": { "type": "string", "required": true } },
+      "args": ["webhookId"]
+    }
+  },
+  "options": {
+    "note": "Prefer OAuth for public marketplace apps; private apps use a Bearer API key via setAuthParams / ATTENTIVE_API_KEY. Ecommerce product-view / add-to-cart / purchase event endpoints exist in Attentive's docs but are omitted from this curated client (custom events cover the general write path). Segments (Open Beta) and GraphQL are out of scope. Canonical contact mapping is extensions.mapping → business@1 (UNVALIDATED)."
+  }
+}

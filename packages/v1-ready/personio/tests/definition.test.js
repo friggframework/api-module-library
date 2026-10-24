@@ -114,4 +114,18 @@ describe('Personio Definition', () => {
         await Definition.requiredAuthMethods.testAuthRequest(api);
         expect(called).toBe(true);
     });
+
+    it('getToken applies credentials and mints a client-credentials token', async () => {
+        const api = new Api({});
+        const tokenResponse = { access_token: 'tok', expires_in: 86400 };
+        api.getTokenFromClientCredentials = jest.fn(async () => tokenResponse);
+        const result = await Definition.requiredAuthMethods.getToken(api, {
+            data: { client_id: 'cid', client_secret: 'csec', company_id: '27277' },
+        });
+        expect(api.client_id).toBe('cid');
+        expect(api.client_secret).toBe('csec');
+        expect(api.company_id).toBe('27277');
+        expect(api.getTokenFromClientCredentials).toHaveBeenCalledTimes(1);
+        expect(result).toBe(tokenResponse);
+    });
 });

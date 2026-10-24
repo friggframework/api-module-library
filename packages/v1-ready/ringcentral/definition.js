@@ -106,7 +106,10 @@ const Definition = {
         client_id: process.env.RINGCENTRAL_CLIENT_ID,
         client_secret: process.env.RINGCENTRAL_CLIENT_SECRET,
         scope: process.env.RINGCENTRAL_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/ringcentral`,
+        // Omit when unset so schema validation does not see the string "undefined/ringcentral".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/ringcentral`
+            : undefined,
         base_url: process.env.RINGCENTRAL_BASE_URL,
     },
 };

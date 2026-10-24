@@ -50,9 +50,6 @@ describe('Front Definition', () => {
     });
 
     it('declares support@1 mapping via extensions.mapping (UNVALIDATED)', () => {
-        expect(Definition.mappings).toEqual({
-            support: 'extensions.mapping',
-        });
         const { extensions } = require('../index');
         expect(extensions.mapping.schemas.support.schema).toBe('support@1');
         expect(extensions.mapping.schemas.support.validation).toBe(

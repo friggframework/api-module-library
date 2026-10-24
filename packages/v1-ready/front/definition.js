@@ -22,9 +22,6 @@ const Definition = {
     getName: () => config.name,
     moduleName: config.name,
     modelName: 'Front',
-    mappings: {
-        support: 'extensions.mapping',
-    },
     requiredAuthMethods: {
         getAuthorizationRequirements: (api) =>
             api.getAuthorizationRequirements(),

@@ -78,7 +78,10 @@ const Definition = {
         client_id: process.env.SHAREPOINT_CLIENT_ID,
         client_secret: process.env.SHAREPOINT_CLIENT_SECRET,
         scope: process.env.SHAREPOINT_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/microsoft-sharepoint`,
+        // Omit when unset so schema validation does not see the string "undefined/microsoft-sharepoint".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/microsoft-sharepoint`
+            : undefined,
     },
 };
 

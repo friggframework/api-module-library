@@ -1,0 +1,11 @@
+{
+    "name": "klaviyo",
+    "config": {
+        "oauth2": true,
+        "apiKey": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

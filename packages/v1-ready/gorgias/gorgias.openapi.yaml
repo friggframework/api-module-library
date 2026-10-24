@@ -1,0 +1,663 @@
+openapi: 3.0.3
+info:
+  title: Gorgias REST API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Gorgias helpdesk REST API. Official reference:
+    https://developers.gorgias.com/reference/introduction. Gorgias publishes
+    per-operation OpenAPI fragments on that site (servers:
+    https://{domain}.gorgias.com). This file is Left Hook's curated subset
+    covering exactly the endpoints @friggframework/api-module-gorgias
+    implements in api.js — one method per operationId. Auth may be OAuth2
+    Bearer (public apps) or HTTP Basic email+API-key (private apps); this
+    module uses OAuth2.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://{domain}.gorgias.com
+    description: Per-account Gorgias helpdesk host
+    variables:
+      domain:
+        default: your-domain
+        description: Helpdesk subdomain (acme from acme.gorgias.com)
+security:
+  - OAuth2: []
+tags:
+  - name: Account
+  - name: Tickets
+  - name: Customers
+  - name: Integrations
+  - name: Widgets
+paths:
+  /api/account:
+    get:
+      tags: [Account]
+      operationId: getAccount
+      summary: Retrieve your account
+      description: >-
+        Returns account metadata and account-wide settings.
+        Official operationId: get-account.
+        https://developers.gorgias.com/reference/get-account
+      responses:
+        "200":
+          description: Your account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+
+  /api/tickets:
+    get:
+      tags: [Tickets]
+      operationId: listTickets
+      summary: List tickets
+      description: >-
+        Official: list-tickets.
+        https://developers.gorgias.com/reference/list-tickets
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: order_by
+          schema:
+            type: string
+            enum:
+              - created_datetime:asc
+              - created_datetime:desc
+              - updated_datetime:asc
+              - updated_datetime:desc
+        - in: query
+          name: customer_id
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: external_id
+          schema: { type: string }
+        - in: query
+          name: view_id
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: rule_id
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: A list of tickets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketList"
+    post:
+      tags: [Tickets]
+      operationId: createTicket
+      summary: Create a ticket
+      description: >-
+        Official: create-ticket. Body requires `messages`.
+        https://developers.gorgias.com/reference/create-ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messages]
+              properties:
+                messages:
+                  type: array
+                  items: { type: object }
+                customer: { type: object }
+                channel: { type: string }
+                subject: { type: string }
+                status:
+                  type: string
+                  enum: [open, closed]
+                priority:
+                  type: string
+                  enum: [low, normal, high, urgent]
+                tags:
+                  type: array
+                  items: { type: object }
+      responses:
+        "201":
+          description: Created ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+
+  /api/tickets/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Tickets]
+      operationId: getTicket
+      summary: Retrieve a ticket
+      description: >-
+        Official: get-ticket.
+        https://developers.gorgias.com/reference/get-ticket
+      responses:
+        "200":
+          description: Ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+    put:
+      tags: [Tickets]
+      operationId: updateTicket
+      summary: Update a ticket
+      description: >-
+        Official: update-ticket.
+        https://developers.gorgias.com/reference/update-ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+    delete:
+      tags: [Tickets]
+      operationId: deleteTicket
+      summary: Delete a ticket
+      description: >-
+        Official: delete-ticket.
+        https://developers.gorgias.com/reference/delete-ticket
+      responses:
+        "204":
+          description: No content
+
+  /api/customers:
+    get:
+      tags: [Customers]
+      operationId: listCustomers
+      summary: List customers
+      description: >-
+        Official: list-customers.
+        https://developers.gorgias.com/reference/list-customers
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: email
+          schema: { type: string, format: email }
+        - in: query
+          name: external_id
+          schema: { type: string }
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: language
+          schema: { type: string }
+        - in: query
+          name: order_by
+          schema:
+            type: string
+            enum:
+              - created_datetime:asc
+              - created_datetime:desc
+              - updated_datetime:asc
+              - updated_datetime:desc
+        - in: query
+          name: view_id
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: channel_type
+          schema: { type: string }
+        - in: query
+          name: channel_address
+          schema: { type: string, maxLength: 320 }
+      responses:
+        "200":
+          description: A list of customers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerList"
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: Create a customer
+      description: >-
+        Official: create-customer.
+        https://developers.gorgias.com/reference/create-customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+
+  /api/customers/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Customers]
+      operationId: getCustomer
+      summary: Retrieve a customer
+      description: >-
+        Official: get-customer.
+        https://developers.gorgias.com/reference/get-customer
+      responses:
+        "200":
+          description: Customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+    put:
+      tags: [Customers]
+      operationId: updateCustomer
+      summary: Update a customer
+      description: >-
+        Official: update-customer.
+        https://developers.gorgias.com/reference/update-customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+    delete:
+      tags: [Customers]
+      operationId: deleteCustomer
+      summary: Delete a customer
+      description: >-
+        Official: delete-customer.
+        https://developers.gorgias.com/reference/delete-customer
+      responses:
+        "204":
+          description: No content
+
+  /api/integrations:
+    get:
+      tags: [Integrations]
+      operationId: listIntegrations
+      summary: List integrations
+      description: >-
+        Official: list-integrations. Use type=http for outbound
+        ticket-event webhooks.
+        https://developers.gorgias.com/reference/list-integrations
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: order_by
+          schema:
+            type: string
+            enum: [created_datetime:asc, created_datetime:desc]
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: purpose
+          schema:
+            type: string
+            enum: [support, marketing]
+      responses:
+        "200":
+          description: List of integrations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntegrationList"
+    post:
+      tags: [Integrations]
+      operationId: createIntegration
+      summary: Create an integration
+      description: >-
+        Official: create-integration. HTTP integrations fire on ticket
+        events (ticket-created, ticket-updated, ticket-message-created, …).
+        https://developers.gorgias.com/reference/create-integration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, type]
+              properties:
+                name: { type: string }
+                description: { type: string, nullable: true }
+                type:
+                  type: string
+                  enum: [http]
+                http:
+                  type: object
+                  required: [url]
+                  properties:
+                    url: { type: string }
+                    method:
+                      type: string
+                      enum: [GET, POST, PUT, DELETE, HEAD, PATCH]
+                    headers: { type: object }
+                    triggers: { type: object }
+                    request_content_type: { type: string }
+                    response_content_type: { type: string }
+                    form: { type: object, nullable: true }
+      responses:
+        "201":
+          description: Created integration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Integration"
+
+  /api/integrations/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Integrations]
+      operationId: getIntegration
+      summary: Retrieve an integration
+      description: >-
+        Official: get-integration.
+        https://developers.gorgias.com/reference/get-integration
+      responses:
+        "200":
+          description: Integration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Integration"
+    put:
+      tags: [Integrations]
+      operationId: updateIntegration
+      summary: Update an integration
+      description: >-
+        Official: update-integration.
+        https://developers.gorgias.com/reference/update-integration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated integration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Integration"
+    delete:
+      tags: [Integrations]
+      operationId: deleteIntegration
+      summary: Delete an integration
+      description: >-
+        Official: delete-integration.
+        https://developers.gorgias.com/reference/delete-integration
+      responses:
+        "204":
+          description: No content
+
+  /api/widgets:
+    get:
+      tags: [Widgets]
+      operationId: listWidgets
+      summary: List widgets
+      description: >-
+        Official: list-widgets.
+        https://developers.gorgias.com/reference/list-widgets
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: order_by
+          schema:
+            type: string
+            enum:
+              - created_datetime:asc
+              - created_datetime:desc
+              - order:asc
+              - order:desc
+        - in: query
+          name: integration_id
+          schema: { type: integer, nullable: true }
+        - in: query
+          name: app_id
+          schema: { type: string, nullable: true }
+      responses:
+        "200":
+          description: List of widgets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Widget"
+    post:
+      tags: [Widgets]
+      operationId: createWidget
+      summary: Create a widget
+      description: >-
+        Official: create-widget. Sidebar JSON template attached to an
+        HTTP integration or app.
+        https://developers.gorgias.com/reference/create-widget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [template, type]
+              properties:
+                context:
+                  type: string
+                  enum: [ticket, customer, user]
+                integration_id: { type: integer, nullable: true }
+                app_id: { type: string, nullable: true }
+                order: { type: integer, minimum: 0 }
+                template: { type: object }
+                type: { type: string }
+      responses:
+        "201":
+          description: Created widget
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Widget"
+
+  /api/widgets/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Widgets]
+      operationId: getWidget
+      summary: Retrieve a widget
+      description: >-
+        Official: get-widget.
+        https://developers.gorgias.com/reference/get-widget
+      responses:
+        "200":
+          description: Widget
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Widget"
+    put:
+      tags: [Widgets]
+      operationId: updateWidget
+      summary: Update a widget
+      description: >-
+        Official: update-widget.
+        https://developers.gorgias.com/reference/update-widget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated widget
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Widget"
+    delete:
+      tags: [Widgets]
+      operationId: deleteWidget
+      summary: Delete a widget
+      description: >-
+        Official: delete-widget.
+        https://developers.gorgias.com/reference/delete-widget
+      responses:
+        "204":
+          description: No content
+
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 30 }
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        OAuth2 authorization-code for public apps. Token endpoint requires
+        HTTP Basic (client_id:client_secret). Private apps may instead use
+        HTTP Basic with agent email + API key (not used by this module).
+      flows:
+        authorizationCode:
+          authorizationUrl: https://{domain}.gorgias.com/oauth/authorize
+          tokenUrl: https://{domain}.gorgias.com/oauth/token
+          scopes:
+            openid: Login with Gorgias (OpenID provider)
+            email: User email address
+            profile: Basic user profile (name)
+            offline: Receive a refresh_token for expiring access tokens
+            account:read: Read account metadata and settings
+            account:write: Update account owner / settings
+            tickets:read: Read tickets and views
+            tickets:write: Create and update tickets
+            customers:read: Read customers
+            customers:write: Create and update customers
+            integrations:read: Read HTTP / native integrations and widgets
+            integrations:write: Create and update integrations and widgets
+            write:all: Deprecated full read/write (prefer granular scopes)
+  schemas:
+    Account:
+      type: object
+      properties:
+        domain: { type: string }
+        created_datetime: { type: string, format: date-time }
+        deactivated_datetime: { type: string, format: date-time, nullable: true }
+        settings: { type: array, items: { type: object } }
+        status: { type: object }
+    Ticket:
+      type: object
+      properties:
+        id: { type: integer }
+        external_id: { type: string, nullable: true }
+        status: { type: string, enum: [open, closed] }
+        priority: { type: string, enum: [low, normal, high, urgent] }
+        channel: { type: string }
+        via: { type: string }
+        subject: { type: string }
+        snippet: { type: string }
+        customer: { $ref: "#/components/schemas/Customer" }
+        tags: { type: array, items: { type: object } }
+        messages_count: { type: integer }
+        created_datetime: { type: string, format: date-time }
+        updated_datetime: { type: string, format: date-time }
+    Customer:
+      type: object
+      properties:
+        id: { type: integer }
+        external_id: { type: string, nullable: true }
+        firstname: { type: string }
+        lastname: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        language: { type: string }
+        timezone: { type: string }
+        channels: { type: array, items: { type: object } }
+        created_datetime: { type: string, format: date-time }
+        updated_datetime: { type: string, format: date-time }
+    Integration:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        type: { type: string }
+        http: { type: object }
+        managed: { type: boolean }
+        created_datetime: { type: string, format: date-time }
+        updated_datetime: { type: string, format: date-time }
+        deactivated_datetime: { type: string, format: date-time, nullable: true }
+        uri: { type: string }
+    Widget:
+      type: object
+      properties:
+        id: { type: integer }
+        context: { type: string, enum: [ticket, customer, user] }
+        integration_id: { type: integer, nullable: true }
+        app_id: { type: string, nullable: true }
+        order: { type: integer }
+        template: { type: object }
+        type: { type: string }
+        created_datetime: { type: string, format: date-time }
+        updated_datetime: { type: string, format: date-time }
+        uri: { type: string }
+    Meta:
+      type: object
+      properties:
+        next_cursor: { type: string, nullable: true }
+        prev_cursor: { type: string, nullable: true }
+    TicketList:
+      type: object
+      required: [data, meta, object, uri]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Ticket" }
+        meta: { $ref: "#/components/schemas/Meta" }
+        object: { type: string, default: list }
+        uri: { type: string }
+    CustomerList:
+      type: object
+      required: [data, meta, object, uri]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Customer" }
+        meta: { $ref: "#/components/schemas/Meta" }
+        object: { type: string, default: list }
+        uri: { type: string }
+    IntegrationList:
+      type: object
+      required: [data, meta, object, uri]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Integration" }
+        meta: { $ref: "#/components/schemas/Meta" }
+        object: { type: string, default: list }
+        uri: { type: string }

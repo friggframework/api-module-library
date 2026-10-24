@@ -1,0 +1,549 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "gorgias",
+  "label": "Gorgias",
+  "package": "@friggframework/api-module-gorgias",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected helpdesk, persisted by the module (apiPropertiesToPersist). Definitions read them as $.install.accounts.gorgias.<name>.",
+    "fields": [
+      {
+        "name": "subdomain",
+        "type": "string",
+        "description": "Gorgias helpdesk subdomain (domain from GET /api/account)"
+      }
+    ]
+  },
+  "objects": {
+    "account": {
+      "label": "Account",
+      "fields": [
+        {
+          "name": "domain",
+          "type": "string",
+          "tag": "record.displayId",
+          "readOnly": true
+        },
+        {
+          "name": "created_datetime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "deactivated_datetime",
+          "type": "datetime",
+          "readOnly": true
+        },
+        {
+          "name": "status.status",
+          "type": "string",
+          "readOnly": true
+        }
+      ]
+    },
+    "ticket": {
+      "label": "Ticket",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "external_id",
+          "type": "string"
+        },
+        {
+          "name": "subject",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "values": ["open", "closed"]
+        },
+        {
+          "name": "priority",
+          "type": "enum",
+          "values": ["low", "normal", "high", "urgent"]
+        },
+        {
+          "name": "channel",
+          "type": "string"
+        },
+        {
+          "name": "via",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "snippet",
+          "type": "text",
+          "readOnly": true
+        },
+        {
+          "name": "customer.id",
+          "type": "string"
+        },
+        {
+          "name": "customer.email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "tags",
+          "type": "json"
+        },
+        {
+          "name": "messages_count",
+          "type": "number",
+          "readOnly": true
+        },
+        {
+          "name": "created_datetime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_datetime",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_datetime",
+        "list": {
+          "capability": "ticket.list",
+          "items": "data"
+        }
+      }
+    },
+    "customer": {
+      "label": "Customer",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "external_id",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "firstname",
+          "type": "string",
+          "tag": "person.givenName"
+        },
+        {
+          "name": "lastname",
+          "type": "string",
+          "tag": "person.familyName"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "language",
+          "type": "string"
+        },
+        {
+          "name": "timezone",
+          "type": "string"
+        },
+        {
+          "name": "channels",
+          "type": "json"
+        },
+        {
+          "name": "created_datetime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_datetime",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_datetime",
+        "list": {
+          "capability": "customer.list",
+          "items": "data"
+        }
+      }
+    },
+    "integration": {
+      "label": "Integration",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "values": ["http"]
+        },
+        {
+          "name": "http.url",
+          "type": "string"
+        },
+        {
+          "name": "http.method",
+          "type": "string"
+        },
+        {
+          "name": "http.triggers",
+          "type": "json"
+        },
+        {
+          "name": "managed",
+          "type": "boolean",
+          "readOnly": true
+        },
+        {
+          "name": "created_datetime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_datetime",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ]
+    },
+    "widget": {
+      "label": "Widget",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "context",
+          "type": "enum",
+          "values": ["ticket", "customer", "user"]
+        },
+        {
+          "name": "integration_id",
+          "type": "number"
+        },
+        {
+          "name": "app_id",
+          "type": "string"
+        },
+        {
+          "name": "order",
+          "type": "number"
+        },
+        {
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "name": "template",
+          "type": "json",
+          "required": true
+        },
+        {
+          "name": "created_datetime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_datetime",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ]
+    }
+  },
+  "events": {
+    "ticket.created": {
+      "delivery": "http-integration",
+      "object": "ticket",
+      "description": "HTTP integrations fire outbound requests when configured triggers are true. Trigger key: ticket-created.",
+      "match": "ticket-created"
+    },
+    "ticket.updated": {
+      "delivery": "http-integration",
+      "object": "ticket",
+      "description": "Trigger key: ticket-updated.",
+      "match": "ticket-updated"
+    },
+    "ticket.message.created": {
+      "delivery": "http-integration",
+      "object": "ticket",
+      "description": "Trigger key: ticket-message-created.",
+      "match": "ticket-message-created"
+    }
+  },
+  "webhook": {
+    "scope": "account",
+    "note": "Gorgias has no dedicated /webhooks resource. Outbound ticket-event delivery is configured via HTTP integrations (POST /api/integrations, type=http) with http.triggers. Manage subscriptions with the integration.* capabilities. Signature verification for inbound HTTP integration callbacks is not documented in the public REST reference — open question.",
+    "subscribe": "createIntegration",
+    "unsubscribe": "deleteIntegration",
+    "list": "listIntegrations"
+  },
+  "capabilities": {
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "output": "account",
+      "args": []
+    },
+    "ticket.list": {
+      "kind": "read",
+      "method": "listTickets",
+      "input": {
+        "cursor": { "type": "string" },
+        "limit": { "type": "number" },
+        "customer_id": { "type": "number" },
+        "external_id": { "type": "string" },
+        "order_by": { "type": "string" },
+        "view_id": { "type": "number" },
+        "rule_id": { "type": "number" }
+      },
+      "output": "page<ticket>",
+      "args": ["$rest"]
+    },
+    "ticket.get": {
+      "kind": "read",
+      "method": "getTicket",
+      "input": {
+        "id": { "type": "number", "required": true }
+      },
+      "output": "ticket",
+      "args": ["id"]
+    },
+    "ticket.create": {
+      "kind": "write",
+      "method": "createTicket",
+      "input": {
+        "ticket": { "type": "object", "required": true }
+      },
+      "output": "ticket",
+      "args": ["ticket"]
+    },
+    "ticket.update": {
+      "kind": "write",
+      "method": "updateTicket",
+      "input": {
+        "id": { "type": "number", "required": true },
+        "ticket": { "type": "object", "required": true }
+      },
+      "output": "ticket",
+      "args": ["id", "ticket"]
+    },
+    "ticket.delete": {
+      "kind": "write",
+      "method": "deleteTicket",
+      "input": {
+        "id": { "type": "number", "required": true }
+      },
+      "args": ["id"]
+    },
+    "customer.list": {
+      "kind": "read",
+      "method": "listCustomers",
+      "input": {
+        "cursor": { "type": "string" },
+        "limit": { "type": "number" },
+        "email": { "type": "string" },
+        "external_id": { "type": "string" },
+        "name": { "type": "string" },
+        "order_by": { "type": "string" }
+      },
+      "output": "page<customer>",
+      "args": ["$rest"]
+    },
+    "customer.get": {
+      "kind": "read",
+      "method": "getCustomer",
+      "input": {
+        "id": { "type": "number", "required": true }
+      },
+      "output": "customer",
+      "args": ["id"]
+    },
+    "customer.create": {
+      "kind": "write",
+      "method": "createCustomer",
+      "input": {
+        "customer": { "type": "object", "required": true }
+      },
+      "output": "customer",
+      "args": ["customer"]
+    },
+    "customer.update": {
+      "kind": "write",
+      "method": "updateCustomer",
+      "input": {
+        "id": { "type": "number", "required": true },
+        "customer": { "type": "object", "required": true }
+      },
+      "output": "customer",
+      "args": ["id", "customer"]
+    },
+    "customer.delete": {
+      "kind": "write",
+      "method": "deleteCustomer",
+      "input": {
+        "id": { "type": "number", "required": true }
+      },
+      "args": ["id"]
+    },
+    "integration.list": {
+      "kind": "read",
+      "method": "listIntegrations",
+      "input": {
+        "cursor": { "type": "string" },
+        "limit": { "type": "number" },
+        "type": { "type": "string" },
+        "order_by": { "type": "string" }
+      },
+      "output": "page<integration>",
+      "args": ["$rest"]
+    },
+    "integration.get": {
+      "kind": "read",
+      "method": "getIntegration",
+      "input": {
+        "id": { "type": "number", "required": true }
+      },
+      "output": "integration",
+      "args": ["id"]
+    },
+    "integration.create": {
+      "kind": "write",
+      "method": "createIntegration",
+      "label": "Create HTTP integration (webhook-style outbound on ticket events)",
+      "input": {
+        "integration": { "type": "object", "required": true }
+      },
+      "output": "integration",
+      "args": ["integration"]
+    },
+    "integration.update": {
+      "kind": "write",
+      "method": "updateIntegration",
+      "input": {
+        "id": { "type": "number", "required": true },
+        "integration": { "type": "object", "required": true }
+      },
+      "output": "integration",
+      "args": ["id", "integration"]
+    },
+    "integration.delete": {
+      "kind": "write",
+      "method": "deleteIntegration",
+      "input": {
+        "id": { "type": "number", "required": true }
+      },
+      "args": ["id"]
+    },
+    "widget.list": {
+      "kind": "read",
+      "method": "listWidgets",
+      "input": {
+        "cursor": { "type": "string" },
+        "limit": { "type": "number" },
+        "integration_id": { "type": "number" },
+        "app_id": { "type": "string" }
+      },
+      "output": "widget[]",
+      "args": ["$rest"]
+    },
+    "widget.get": {
+      "kind": "read",
+      "method": "getWidget",
+      "input": {
+        "id": { "type": "number", "required": true }
+      },
+      "output": "widget",
+      "args": ["id"]
+    },
+    "widget.create": {
+      "kind": "write",
+      "method": "createWidget",
+      "input": {
+        "widget": { "type": "object", "required": true }
+      },
+      "output": "widget",
+      "args": ["widget"]
+    },
+    "widget.update": {
+      "kind": "write",
+      "method": "updateWidget",
+      "input": {
+        "id": { "type": "number", "required": true },
+        "widget": { "type": "object", "required": true }
+      },
+      "output": "widget",
+      "args": ["id", "widget"]
+    },
+    "widget.delete": {
+      "kind": "write",
+      "method": "deleteWidget",
+      "input": {
+        "id": { "type": "number", "required": true }
+      },
+      "args": ["id"]
+    }
+  },
+  "options": {
+    "customer": {
+      "capability": "customer.list",
+      "label": "{{item.name}} ({{item.email}})",
+      "value": "$.item.id",
+      "items": "data"
+    },
+    "ticket": {
+      "capability": "ticket.list",
+      "label": "{{item.subject}} (#{{item.id}})",
+      "value": "$.item.id",
+      "items": "data"
+    },
+    "integration": {
+      "capability": "integration.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id",
+      "items": "data"
+    }
+  }
+}

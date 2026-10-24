@@ -1,0 +1,714 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "xero",
+  "label": "Xero",
+  "package": "@friggframework/api-module-xero",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected Xero organisation, persisted by the module (apiPropertiesToPersist). Definitions read them as $.install.accounts.xero.<name>.",
+    "fields": [
+      {
+        "name": "tenantId",
+        "type": "string",
+        "description": "Xero organisation tenant id sent as the xero-tenant-id header on Accounting API calls"
+      }
+    ]
+  },
+  "objects": {
+    "organisation": {
+      "label": "Organisation",
+      "fields": [
+        {
+          "name": "OrganisationID",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "tag": "organization.name",
+          "required": true
+        },
+        {
+          "name": "LegalName",
+          "type": "string",
+          "tag": "organization.legalName"
+        },
+        {
+          "name": "BaseCurrency",
+          "type": "string",
+          "tag": "organization.currency"
+        },
+        {
+          "name": "CountryCode",
+          "type": "string",
+          "tag": "address.country"
+        },
+        {
+          "name": "OrganisationType",
+          "type": "string"
+        },
+        {
+          "name": "ShortCode",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "IsDemoCompany",
+          "type": "boolean",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "OrganisationID",
+        "get": {
+          "capability": "organisation.get"
+        }
+      }
+    },
+    "contact": {
+      "label": "Contact",
+      "fields": [
+        {
+          "name": "ContactID",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "ContactNumber",
+          "type": "string"
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "tag": "record.displayName",
+          "required": true
+        },
+        {
+          "name": "FirstName",
+          "type": "string",
+          "tag": "person.givenName"
+        },
+        {
+          "name": "LastName",
+          "type": "string",
+          "tag": "person.familyName"
+        },
+        {
+          "name": "EmailAddress",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "ContactStatus",
+          "type": "string",
+          "values": ["ACTIVE", "ARCHIVED", "GDPRREQUEST"]
+        },
+        {
+          "name": "IsCustomer",
+          "type": "boolean"
+        },
+        {
+          "name": "IsSupplier",
+          "type": "boolean"
+        },
+        {
+          "name": "Phones",
+          "type": "json",
+          "tag": "contact.phones"
+        },
+        {
+          "name": "Addresses",
+          "type": "json",
+          "tag": "contact.addresses"
+        },
+        {
+          "name": "UpdatedDateUTC",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "ContactID",
+        "updatedAt": "UpdatedDateUTC",
+        "list": {
+          "capability": "contact.list",
+          "cursor": "page",
+          "paging": "page",
+          "since": "ifModifiedSince",
+          "items": "Contacts"
+        },
+        "get": {
+          "capability": "contact.get",
+          "id": "contactId"
+        },
+        "create": {
+          "capability": "contact.create"
+        },
+        "update": {
+          "capability": "contact.update",
+          "id": "contactId"
+        }
+      }
+    },
+    "invoice": {
+      "label": "Invoice",
+      "fields": [
+        {
+          "name": "InvoiceID",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "InvoiceNumber",
+          "type": "string",
+          "tag": "invoice.number"
+        },
+        {
+          "name": "Type",
+          "type": "string",
+          "values": ["ACCREC", "ACCPAY"]
+        },
+        {
+          "name": "Status",
+          "type": "string"
+        },
+        {
+          "name": "Reference",
+          "type": "string"
+        },
+        {
+          "name": "Date",
+          "type": "date",
+          "tag": "invoice.date"
+        },
+        {
+          "name": "DueDate",
+          "type": "date",
+          "tag": "invoice.dueDate"
+        },
+        {
+          "name": "Total",
+          "type": "number",
+          "tag": "invoice.total",
+          "readOnly": true
+        },
+        {
+          "name": "AmountDue",
+          "type": "number",
+          "tag": "invoice.amountDue",
+          "readOnly": true
+        },
+        {
+          "name": "CurrencyCode",
+          "type": "string",
+          "tag": "invoice.currency"
+        },
+        {
+          "name": "Contact.ContactID",
+          "type": "id",
+          "tag": "invoice.contactId"
+        },
+        {
+          "name": "LineItems",
+          "type": "json"
+        },
+        {
+          "name": "UpdatedDateUTC",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "InvoiceID",
+        "updatedAt": "UpdatedDateUTC",
+        "list": {
+          "capability": "invoice.list",
+          "cursor": "page",
+          "paging": "page",
+          "since": "ifModifiedSince",
+          "items": "Invoices"
+        },
+        "get": {
+          "capability": "invoice.get",
+          "id": "invoiceId"
+        },
+        "create": {
+          "capability": "invoice.create"
+        },
+        "update": {
+          "capability": "invoice.update",
+          "id": "invoiceId"
+        }
+      }
+    },
+    "account": {
+      "label": "Account",
+      "fields": [
+        {
+          "name": "AccountID",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "Code",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "tag": "record.displayName",
+          "required": true
+        },
+        {
+          "name": "Type",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Status",
+          "type": "string"
+        },
+        {
+          "name": "Description",
+          "type": "text"
+        },
+        {
+          "name": "TaxType",
+          "type": "string"
+        },
+        {
+          "name": "Class",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "UpdatedDateUTC",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "AccountID",
+        "updatedAt": "UpdatedDateUTC",
+        "list": {
+          "capability": "account.list",
+          "since": "ifModifiedSince",
+          "items": "Accounts"
+        },
+        "get": {
+          "capability": "account.get",
+          "id": "accountId"
+        },
+        "create": {
+          "capability": "account.create"
+        },
+        "update": {
+          "capability": "account.update",
+          "id": "accountId"
+        }
+      }
+    },
+    "payment": {
+      "label": "Payment",
+      "fields": [
+        {
+          "name": "PaymentID",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "Date",
+          "type": "date",
+          "tag": "payment.date"
+        },
+        {
+          "name": "Amount",
+          "type": "number",
+          "tag": "payment.amount"
+        },
+        {
+          "name": "Reference",
+          "type": "string"
+        },
+        {
+          "name": "Status",
+          "type": "string"
+        },
+        {
+          "name": "PaymentType",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "UpdatedDateUTC",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "PaymentID",
+        "updatedAt": "UpdatedDateUTC",
+        "list": {
+          "capability": "payment.list",
+          "cursor": "page",
+          "paging": "page",
+          "since": "ifModifiedSince",
+          "items": "Payments"
+        },
+        "get": {
+          "capability": "payment.get",
+          "id": "paymentId"
+        },
+        "create": {
+          "capability": "payment.create"
+        }
+      }
+    },
+    "item": {
+      "label": "Item",
+      "fields": [
+        {
+          "name": "ItemID",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "Code",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "Description",
+          "type": "text"
+        },
+        {
+          "name": "IsSold",
+          "type": "boolean"
+        },
+        {
+          "name": "IsPurchased",
+          "type": "boolean"
+        },
+        {
+          "name": "IsTrackedAsInventory",
+          "type": "boolean"
+        },
+        {
+          "name": "UpdatedDateUTC",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "ItemID",
+        "updatedAt": "UpdatedDateUTC",
+        "list": {
+          "capability": "item.list",
+          "since": "ifModifiedSince",
+          "items": "Items"
+        },
+        "get": {
+          "capability": "item.get",
+          "id": "itemId"
+        },
+        "create": {
+          "capability": "item.create"
+        },
+        "update": {
+          "capability": "item.update",
+          "id": "itemId"
+        },
+        "delete": {
+          "capability": "item.delete",
+          "id": "itemId"
+        }
+      }
+    },
+    "connection": {
+      "label": "Tenant connection",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true,
+          "description": "Connection id (used to disconnect)"
+        },
+        {
+          "name": "tenantId",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "tenantType",
+          "type": "string"
+        },
+        {
+          "name": "tenantName",
+          "type": "string",
+          "tag": "organization.name"
+        }
+      ]
+    }
+  },
+  "events": {
+    "contact.changed": {
+      "delivery": "webhook",
+      "object": "contact",
+      "description": "Xero webhooks are configured in the Developer Portal (not via Accounting API). Payload events carry resourceId + eventCategory CONTACT. Verify with x-xero-signature (HMAC-SHA256 of raw body, base64).",
+      "payload": {
+        "events": [
+          {
+            "resourceUrl": "https://api.xero.com/api.xro/2.0/Contacts/...",
+            "resourceId": "12345678-abcd-efgh-ijkl-1234567890ab",
+            "eventDateUtc": "2026-10-20T12:00:00.000Z",
+            "eventType": "UPDATE",
+            "eventCategory": "CONTACT",
+            "tenantId": "12345678-abcd-efgh-ijkl-1234567890ab",
+            "tenantType": "ORGANISATION"
+          }
+        ],
+        "lastEventSequence": 1,
+        "entropy": "S0m3r4Nd0mt3xt"
+      }
+    },
+    "invoice.changed": {
+      "delivery": "webhook",
+      "object": "invoice",
+      "description": "Xero Developer Portal webhook for INVOICE category. Same signature scheme as contact.changed.",
+      "payload": {
+        "events": [
+          {
+            "resourceUrl": "https://api.xero.com/api.xro/2.0/Invoices/...",
+            "resourceId": "12345678-abcd-efgh-ijkl-1234567890ab",
+            "eventDateUtc": "2026-10-20T12:00:00.000Z",
+            "eventType": "CREATE",
+            "eventCategory": "INVOICE",
+            "tenantId": "12345678-abcd-efgh-ijkl-1234567890ab",
+            "tenantType": "ORGANISATION"
+          }
+        ],
+        "lastEventSequence": 1,
+        "entropy": "S0m3r4Nd0mt3xt"
+      }
+    }
+  },
+  "capabilities": {
+    "connection.list": {
+      "kind": "read",
+      "method": "getConnections",
+      "input": {
+        "authEventId": { "type": "string" }
+      },
+      "output": "connection[]"
+    },
+    "connection.delete": {
+      "kind": "write",
+      "method": "deleteConnection",
+      "input": {
+        "connectionId": { "type": "string", "required": true }
+      },
+      "output": "void"
+    },
+    "organisation.get": {
+      "kind": "read",
+      "method": "getOrganisations",
+      "input": {},
+      "output": "organisation"
+    },
+    "contact.list": {
+      "kind": "read",
+      "method": "getContacts",
+      "input": {
+        "where": { "type": "string" },
+        "order": { "type": "string" },
+        "page": { "type": "number" },
+        "ifModifiedSince": { "type": "string" },
+        "includeArchived": { "type": "boolean" },
+        "summaryOnly": { "type": "boolean" },
+        "searchTerm": { "type": "string" }
+      },
+      "output": "page<contact>"
+    },
+    "contact.get": {
+      "kind": "read",
+      "method": "getContact",
+      "input": {
+        "contactId": { "type": "string", "required": true }
+      },
+      "output": "contact"
+    },
+    "contact.create": {
+      "kind": "write",
+      "method": "createContacts",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "contact[]"
+    },
+    "contact.update": {
+      "kind": "write",
+      "method": "updateContact",
+      "input": {
+        "contactId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "contact"
+    },
+    "invoice.list": {
+      "kind": "read",
+      "method": "getInvoices",
+      "input": {
+        "where": { "type": "string" },
+        "order": { "type": "string" },
+        "page": { "type": "number" },
+        "statuses": { "type": "string" },
+        "ifModifiedSince": { "type": "string" },
+        "summaryOnly": { "type": "boolean" }
+      },
+      "output": "page<invoice>"
+    },
+    "invoice.get": {
+      "kind": "read",
+      "method": "getInvoice",
+      "input": {
+        "invoiceId": { "type": "string", "required": true }
+      },
+      "output": "invoice"
+    },
+    "invoice.create": {
+      "kind": "write",
+      "method": "createInvoices",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "invoice[]"
+    },
+    "invoice.update": {
+      "kind": "write",
+      "method": "updateInvoice",
+      "input": {
+        "invoiceId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "invoice"
+    },
+    "account.list": {
+      "kind": "read",
+      "method": "getAccounts",
+      "input": {
+        "where": { "type": "string" },
+        "order": { "type": "string" },
+        "ifModifiedSince": { "type": "string" }
+      },
+      "output": "account[]"
+    },
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "input": {
+        "accountId": { "type": "string", "required": true }
+      },
+      "output": "account"
+    },
+    "account.create": {
+      "kind": "write",
+      "method": "createAccount",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "account"
+    },
+    "account.update": {
+      "kind": "write",
+      "method": "updateAccount",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "account"
+    },
+    "payment.list": {
+      "kind": "read",
+      "method": "getPayments",
+      "input": {
+        "where": { "type": "string" },
+        "order": { "type": "string" },
+        "page": { "type": "number" },
+        "ifModifiedSince": { "type": "string" }
+      },
+      "output": "page<payment>"
+    },
+    "payment.get": {
+      "kind": "read",
+      "method": "getPayment",
+      "input": {
+        "paymentId": { "type": "string", "required": true }
+      },
+      "output": "payment"
+    },
+    "payment.create": {
+      "kind": "write",
+      "method": "createPayment",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "payment"
+    },
+    "item.list": {
+      "kind": "read",
+      "method": "getItems",
+      "input": {
+        "where": { "type": "string" },
+        "order": { "type": "string" },
+        "ifModifiedSince": { "type": "string" }
+      },
+      "output": "item[]"
+    },
+    "item.get": {
+      "kind": "read",
+      "method": "getItem",
+      "input": {
+        "itemId": { "type": "string", "required": true }
+      },
+      "output": "item"
+    },
+    "item.create": {
+      "kind": "write",
+      "method": "createItems",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "item[]"
+    },
+    "item.update": {
+      "kind": "write",
+      "method": "updateItem",
+      "input": {
+        "itemId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "item"
+    },
+    "item.delete": {
+      "kind": "write",
+      "method": "deleteItem",
+      "input": {
+        "itemId": { "type": "string", "required": true }
+      },
+      "output": "item"
+    }
+  }
+}

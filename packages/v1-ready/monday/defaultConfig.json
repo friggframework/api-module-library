@@ -1,0 +1,15 @@
+{
+    "name": "monday",
+    "label": "monday.com",
+    "productUrl": "https://monday.com",
+    "apiDocs": "https://developer.monday.com/api-reference/docs",
+    "logoUrl": "https://friggframework.org/assets/img/mondaycom-icon.jpeg",
+    "categories": ["Project Management", "Work OS"],
+    "description": "monday.com Work OS — boards, items, columns, and webhooks via the Platform GraphQL API",
+    "config": {
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

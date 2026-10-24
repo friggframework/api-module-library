@@ -1,0 +1,215 @@
+# Fenestra Document: monday.com Apps Framework UI
+#
+# monday.com is listed in specs/fenestra/PLATFORMS.md (Tier 2) with coded
+# React components via the Apps Framework + Vibe design system.
+# Draft only — validated against fenestra-core when tools are available.
+
+fenestra: "0.1.0"
+
+info:
+  title: monday.com Apps Framework UI Ecosystem
+  version: "1.0.0"
+  description: |
+    monday.com's Apps Framework lets developers build board views, item views,
+    dashboard widgets, menu actions, custom objects, and more inside the Work OS.
+    UI is typically React; Vibe is monday's open-source component library for a
+    native look. The monday-sdk-js client bridges the iframe to the host for
+    context, API calls, storage, and execute/listen.
+
+    Sources:
+      https://developer.monday.com/apps/docs/intro
+      https://developer.monday.com/apps/docs/vibe-design-system
+      https://developer.monday.com/apps/docs/introduction-to-the-sdk
+
+platform:
+  name: monday.com
+  vendor: monday.com Ltd.
+  documentation: https://developer.monday.com/apps/docs/intro
+  appMarketplace: https://monday.com/marketplace
+
+sdks:
+  monday-sdk-js:
+    name: monday SDK
+    packageManager: npm
+    package: "monday-sdk-js"
+    documentation: https://developer.monday.com/apps/docs/introduction-to-the-sdk
+    exports:
+      mondaySdk:
+        type: utility
+        description: Factory for the monday client (api, listen, get, execute, storage, set)
+      api:
+        type: utility
+        description: GraphQL client scoped to the signed-in user
+      listen:
+        type: utility
+        description: Subscribe to client-side host events
+      get:
+        type: utility
+        description: Read context / sessionToken / settings from the host
+      execute:
+        type: utility
+        description: Invoke host actions (open item card, notice, etc.)
+      storage:
+        type: utility
+        description: App key-value storage API
+
+  vibe:
+    name: Vibe Design System
+    packageManager: npm
+    package: "monday-ui-react-core"
+    documentation: https://developer.monday.com/apps/docs/vibe-design-system
+    repository: https://github.com/mondaycom/vibe
+    description: |
+      monday.com's React UI library (50+ components) for theming, inputs,
+      feedback, layout, and data display so apps look native.
+    exports:
+      Button:
+        type: component
+        description: Primary action button
+      TextField:
+        type: component
+        description: Text input
+      Dropdown:
+        type: component
+        description: Select / dropdown
+      Dialog:
+        type: component
+        description: Modal dialog
+      Modal:
+        type: component
+        description: Modal overlay
+      AttentionBox:
+        type: component
+        description: Alert / attention callout
+      Toast:
+        type: component
+        description: Toast notification
+      Loader:
+        type: component
+        description: Loading indicator
+      Table:
+        type: component
+        description: Data table
+      Tabs:
+        type: component
+        description: Tab navigation
+      Checkbox:
+        type: component
+        description: Checkbox input
+      Toggle:
+        type: component
+        description: Toggle switch
+      IconButton:
+        type: component
+        description: Icon-only button
+      Heading:
+        type: component
+        description: Section heading
+      Text:
+        type: component
+        description: Text display
+
+componentCatalog:
+  categories:
+    action:
+      name: Actions
+      description: Interactive elements
+      components: [Button, IconButton]
+    input:
+      name: Inputs
+      description: Form controls
+      components: [TextField, Dropdown, Checkbox, Toggle]
+    display:
+      name: Display
+      description: Content and data display
+      components: [Heading, Text, Table, AttentionBox]
+    feedback:
+      name: Feedback
+      description: Loading and notifications
+      components: [Loader, Toast]
+    overlay:
+      name: Overlays
+      description: Dialogs and modals
+      components: [Dialog, Modal]
+    navigation:
+      name: Navigation
+      description: Navigation components
+      components: [Tabs]
+
+  components:
+    Button:
+      name: Button
+      description: Vibe primary action button
+      category: action
+      sdkBinding:
+        sdk: vibe
+        export: Button
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+    TextField:
+      name: TextField
+      description: Vibe text input
+      category: input
+      sdkBinding:
+        sdk: vibe
+        export: TextField
+      webStandardMapping:
+        htmlElement: input
+        semanticType: input
+    Modal:
+      name: Modal
+      description: Vibe modal overlay
+      category: overlay
+      sdkBinding:
+        sdk: vibe
+        export: Modal
+      webStandardMapping:
+        htmlElement: dialog
+        ariaRole: dialog
+        semanticType: container
+
+policies:
+  componentRequirement:
+    level: recommended
+    scope: all
+    description: >
+      Vibe is recommended for a native monday look; custom React components are
+      allowed inside Apps Framework iframes.
+  customComponents:
+    allowed: true
+
+extensionPoints:
+  - id: board-view
+    name: Board view
+    type: fullPage
+    extensionType: codedComponents
+    description: >
+      Tabs under a board title for visualizing/managing one board's data.
+      https://developer.monday.com/apps/docs/intro
+  - id: item-view
+    name: Item view
+    type: panel
+    extensionType: codedComponents
+    description: Tabs in an item's updates section for a single item.
+  - id: dashboard-widget
+    name: Dashboard widget
+    type: card
+    extensionType: codedComponents
+    description: Widgets on dashboards aggregating data across boards.
+  - id: board-menu
+    name: Board menu feature
+    type: contextMenu
+    extensionType: codedComponents
+    description: Actions on groups, items, or multi-item selections.
+  - id: custom-object
+    name: Custom object
+    type: fullPage
+    extensionType: codedComponents
+    description: Independent left-pane views outside a board/dashboard context.
+  - id: account-settings
+    name: Account settings view
+    type: fullPage
+    extensionType: codedComponents
+    description: App settings UI at the account level.

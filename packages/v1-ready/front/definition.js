@@ -64,7 +64,10 @@ const Definition = {
     env: {
         client_id: process.env.FRONT_CLIENT_ID,
         client_secret: process.env.FRONT_CLIENT_SECRET,
-        redirect_uri: `${process.env.REDIRECT_URI}/front`,
+        // Omit when unset so schema validation does not see the string "undefined/front".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/front`
+            : undefined,
     },
 };
 

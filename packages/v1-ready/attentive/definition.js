@@ -76,7 +76,10 @@ const Definition = {
         client_id: process.env.ATTENTIVE_CLIENT_ID,
         client_secret: process.env.ATTENTIVE_CLIENT_SECRET,
         scope: process.env.ATTENTIVE_SCOPE || DEFAULT_SCOPES,
-        redirect_uri: `${process.env.REDIRECT_URI}/attentive`,
+        // Omit when unset so schema validation does not see the string "undefined/attentive".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/attentive`
+            : undefined,
         base_url: process.env.ATTENTIVE_BASE_URL,
     },
 };

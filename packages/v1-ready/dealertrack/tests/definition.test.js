@@ -121,8 +121,4 @@ describe('Dealertrack Definition', () => {
         expect(Definition.env).toHaveProperty('scope');
         expect(Definition.env).toHaveProperty('redirect_uri');
     });
-
-    it('wires business@1 mapping via Definition.mappings', () => {
-        expect(Definition.mappings.business).toBe('extensions.mapping');
-    });
 });

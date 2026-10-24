@@ -20,9 +20,6 @@ const Definition = {
     getName: () => config.name,
     moduleName: config.name,
     modelName: 'Dealertrack',
-    mappings: {
-        business: 'extensions.mapping',
-    },
     requiredAuthMethods: {
         getAuthorizationRequirements: (api) =>
             api.getAuthorizationRequirements(),

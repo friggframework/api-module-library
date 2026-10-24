@@ -73,7 +73,10 @@ const Definition = {
         client_id: process.env.ROLLWORKS_CLIENT_ID,
         client_secret: process.env.ROLLWORKS_CLIENT_SECRET,
         scope: process.env.ROLLWORKS_SCOPE || process.env.ROLLWORKS_SCOPES || 'all',
-        redirect_uri: `${process.env.REDIRECT_URI}/rollworks`,
+        // Omit when unset so schema validation does not see the string "undefined/rollworks".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/rollworks`
+            : undefined,
     },
 };
 

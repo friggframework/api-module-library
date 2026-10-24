@@ -1,0 +1,421 @@
+openapi: 3.0.3
+info:
+  title: Microsoft SharePoint via Microsoft Graph
+  version: "1.0.0"
+  description: >-
+    Curated subset of Microsoft Graph v1.0 covering SharePoint sites, drives,
+    driveItems, lists, listItems, and change-notification subscriptions.
+    Paths and semantics are taken from Microsoft Learn Graph docs; operationIds
+    are camelCase aliases that match Api methods 1:1 (spec-sync enforced).
+    Official overview: https://learn.microsoft.com/en-us/graph/api/resources/sharepoint
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://graph.microsoft.com/v1.0
+    description: Microsoft Graph v1.0
+security:
+  - OAuth2: []
+tags:
+  - name: Identity
+  - name: Sites
+  - name: Drives
+  - name: DriveItems
+  - name: Lists
+  - name: ListItems
+  - name: Subscriptions
+paths:
+  /me:
+    get:
+      tags: [Identity]
+      operationId: getUser
+      summary: Get signed-in user
+      description: https://learn.microsoft.com/en-us/graph/api/user-get
+      responses:
+        "200":
+          description: user
+  /organization:
+    get:
+      tags: [Identity]
+      operationId: getOrganization
+      summary: Get organization (first org in collection)
+      description: https://learn.microsoft.com/en-us/graph/api/organization-get
+      responses:
+        "200":
+          description: organization
+  /sites:
+    get:
+      tags: [Sites]
+      operationId: listSites
+      summary: Search/list SharePoint sites
+      description: https://learn.microsoft.com/en-us/graph/api/site-search
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string, default: "*" }
+          description: Free-text site search. Use * to enumerate accessible sites.
+        - in: query
+          name: $select
+          schema: { type: string }
+        - in: query
+          name: $top
+          schema: { type: integer }
+      responses:
+        "200":
+          description: site collection
+  /sites/{siteId}:
+    get:
+      tags: [Sites]
+      operationId: getSite
+      summary: Get a site by id
+      description: https://learn.microsoft.com/en-us/graph/api/site-get
+      parameters:
+        - $ref: "#/components/parameters/siteId"
+      responses:
+        "200":
+          description: site
+  /sites/{siteId}/drives:
+    get:
+      tags: [Drives]
+      operationId: listDrives
+      summary: List document libraries for a site
+      description: https://learn.microsoft.com/en-us/graph/api/drive-list
+      parameters:
+        - $ref: "#/components/parameters/siteId"
+      responses:
+        "200":
+          description: drive collection
+  /drives/{driveId}:
+    get:
+      tags: [Drives]
+      operationId: getDrive
+      summary: Get a drive by id
+      description: https://learn.microsoft.com/en-us/graph/api/drive-get
+      parameters:
+        - $ref: "#/components/parameters/driveId"
+      responses:
+        "200":
+          description: drive
+  /drives/{driveId}/items/{itemId}/children:
+    get:
+      tags: [DriveItems]
+      operationId: listDriveItemChildren
+      summary: List children of a drive item
+      description: https://learn.microsoft.com/en-us/graph/api/driveitem-list-children
+      parameters:
+        - $ref: "#/components/parameters/driveId"
+        - $ref: "#/components/parameters/itemId"
+        - in: query
+          name: $top
+          schema: { type: integer }
+        - in: query
+          name: $select
+          schema: { type: string }
+        - in: query
+          name: $expand
+          schema: { type: string }
+      responses:
+        "200":
+          description: driveItem collection
+  /drives/{driveId}/items/{itemId}:
+    get:
+      tags: [DriveItems]
+      operationId: getDriveItem
+      summary: Get a drive item
+      description: https://learn.microsoft.com/en-us/graph/api/driveitem-get
+      parameters:
+        - $ref: "#/components/parameters/driveId"
+        - $ref: "#/components/parameters/itemId"
+        - in: query
+          name: $expand
+          schema: { type: string }
+        - in: query
+          name: $select
+          schema: { type: string }
+      responses:
+        "200":
+          description: driveItem
+    patch:
+      tags: [DriveItems]
+      operationId: updateDriveItem
+      summary: Update drive item metadata
+      description: https://learn.microsoft.com/en-us/graph/api/driveitem-update
+      parameters:
+        - $ref: "#/components/parameters/driveId"
+        - $ref: "#/components/parameters/itemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: updated driveItem
+  /drives/{driveId}/items/{parentId}:/{filename}:/content:
+    put:
+      tags: [DriveItems]
+      operationId: uploadDriveItemContent
+      summary: Upload small file content (create or replace)
+      description: https://learn.microsoft.com/en-us/graph/api/driveitem-put-content
+      parameters:
+        - $ref: "#/components/parameters/driveId"
+        - name: parentId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: filename
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        "201":
+          description: created or replaced driveItem
+  /drives/{driveId}/items/{parentId}:/{filename}:/createUploadSession:
+    post:
+      tags: [DriveItems]
+      operationId: createUploadSession
+      summary: Create an upload session for large files
+      description: https://learn.microsoft.com/en-us/graph/api/driveitem-createuploadsession
+      parameters:
+        - $ref: "#/components/parameters/driveId"
+        - name: parentId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: filename
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: uploadSession
+  /sites/{siteId}/lists:
+    get:
+      tags: [Lists]
+      operationId: listLists
+      summary: List lists under a site
+      description: https://learn.microsoft.com/en-us/graph/api/list-list
+      parameters:
+        - $ref: "#/components/parameters/siteId"
+        - in: query
+          name: $expand
+          schema: { type: string }
+        - in: query
+          name: $select
+          schema: { type: string }
+      responses:
+        "200":
+          description: list collection
+  /sites/{siteId}/lists/{listId}:
+    get:
+      tags: [Lists]
+      operationId: getList
+      summary: Get a list by id
+      description: https://learn.microsoft.com/en-us/graph/api/list-get
+      parameters:
+        - $ref: "#/components/parameters/siteId"
+        - $ref: "#/components/parameters/listId"
+        - in: query
+          name: $expand
+          schema: { type: string }
+        - in: query
+          name: $select
+          schema: { type: string }
+      responses:
+        "200":
+          description: list
+  /sites/{siteId}/lists/{listId}/items:
+    get:
+      tags: [ListItems]
+      operationId: listListItems
+      summary: List items in a list
+      description: https://learn.microsoft.com/en-us/graph/api/listitem-list
+      parameters:
+        - $ref: "#/components/parameters/siteId"
+        - $ref: "#/components/parameters/listId"
+        - in: query
+          name: $expand
+          schema: { type: string }
+        - in: query
+          name: $filter
+          schema: { type: string }
+        - in: query
+          name: $top
+          schema: { type: integer }
+      responses:
+        "200":
+          description: listItem collection
+    post:
+      tags: [ListItems]
+      operationId: createListItem
+      summary: Create a list item
+      description: https://learn.microsoft.com/en-us/graph/api/listitem-create
+      parameters:
+        - $ref: "#/components/parameters/siteId"
+        - $ref: "#/components/parameters/listId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fields: { type: object }
+      responses:
+        "201":
+          description: created listItem
+  /sites/{siteId}/lists/{listId}/items/{itemId}:
+    get:
+      tags: [ListItems]
+      operationId: getListItem
+      summary: Get a list item
+      description: https://learn.microsoft.com/en-us/graph/api/listitem-get
+      parameters:
+        - $ref: "#/components/parameters/siteId"
+        - $ref: "#/components/parameters/listId"
+        - $ref: "#/components/parameters/itemId"
+        - in: query
+          name: $expand
+          schema: { type: string }
+      responses:
+        "200":
+          description: listItem
+  /sites/{siteId}/lists/{listId}/items/{itemId}/fields:
+    patch:
+      tags: [ListItems]
+      operationId: updateListItemFields
+      summary: Update list item field values
+      description: https://learn.microsoft.com/en-us/graph/api/listitem-update
+      parameters:
+        - $ref: "#/components/parameters/siteId"
+        - $ref: "#/components/parameters/listId"
+        - $ref: "#/components/parameters/itemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: updated fields
+  /subscriptions:
+    get:
+      tags: [Subscriptions]
+      operationId: listSubscriptions
+      summary: List change-notification subscriptions
+      description: https://learn.microsoft.com/en-us/graph/api/subscription-list
+      responses:
+        "200":
+          description: subscription collection
+    post:
+      tags: [Subscriptions]
+      operationId: createSubscription
+      summary: Create a change-notification subscription
+      description: >-
+        https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions
+        SharePoint list resource: /sites/{site-id}/lists/{list-id}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [changeType, notificationUrl, resource, expirationDateTime]
+              properties:
+                changeType: { type: string }
+                notificationUrl: { type: string, format: uri }
+                resource: { type: string }
+                expirationDateTime: { type: string, format: date-time }
+                clientState: { type: string }
+                lifecycleNotificationUrl: { type: string, format: uri }
+      responses:
+        "201":
+          description: created subscription
+  /subscriptions/{subscriptionId}:
+    get:
+      tags: [Subscriptions]
+      operationId: getSubscription
+      summary: Get a subscription
+      description: https://learn.microsoft.com/en-us/graph/api/subscription-get
+      parameters:
+        - $ref: "#/components/parameters/subscriptionId"
+      responses:
+        "200":
+          description: subscription
+    patch:
+      tags: [Subscriptions]
+      operationId: updateSubscription
+      summary: Update a subscription
+      description: https://learn.microsoft.com/en-us/graph/api/subscription-update
+      parameters:
+        - $ref: "#/components/parameters/subscriptionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: updated subscription
+    delete:
+      tags: [Subscriptions]
+      operationId: deleteSubscription
+      summary: Delete a subscription
+      description: https://learn.microsoft.com/en-us/graph/api/subscription-delete
+      parameters:
+        - $ref: "#/components/parameters/subscriptionId"
+      responses:
+        "204":
+          description: deleted
+components:
+  parameters:
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      schema: { type: string }
+    driveId:
+      name: driveId
+      in: path
+      required: true
+      schema: { type: string }
+    listId:
+      name: listId
+      in: path
+      required: true
+      schema: { type: string }
+    itemId:
+      name: itemId
+      in: path
+      required: true
+      schema: { type: string }
+    subscriptionId:
+      name: subscriptionId
+      in: path
+      required: true
+      schema: { type: string }
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Microsoft identity platform authorization code flow.
+        https://learn.microsoft.com/en-us/graph/auth-v2-user
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.microsoftonline.com/common/oauth2/v2.0/authorize
+          tokenUrl: https://login.microsoftonline.com/common/oauth2/v2.0/token
+          scopes:
+            offline_access: Obtain a refresh token
+            User.Read: Sign in and read user profile
+            Sites.Read.All: Read items in all site collections
+            Sites.ReadWrite.All: Read and write items in all site collections
+            Files.ReadWrite.All: Read and write files in all site collections

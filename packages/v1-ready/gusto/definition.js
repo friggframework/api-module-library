@@ -76,7 +76,10 @@ const Definition = {
         client_secret: process.env.GUSTO_CLIENT_SECRET,
         // Documented for operators; Gusto does not accept scope on authorize.
         scope: process.env.GUSTO_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/gusto`,
+        // Omit when unset so schema validation does not see the string "undefined/gusto".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/gusto`
+            : undefined,
         base_url: process.env.GUSTO_BASE_URL,
     },
 };

@@ -102,7 +102,10 @@ const Definition = {
         client_id: process.env.TEAMS_CLIENT_ID,
         client_secret: process.env.TEAMS_CLIENT_SECRET,
         scope: process.env.TEAMS_SCOPE || DEFAULT_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/microsoft-teams`,
+        // Omit when unset so schema validation does not see the string "undefined/microsoft-teams".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/microsoft-teams`
+            : undefined,
     },
 };
 

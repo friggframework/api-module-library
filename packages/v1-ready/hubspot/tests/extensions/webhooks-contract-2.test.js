@@ -69,7 +69,7 @@ describe('normalize (in the worker, with the installation api)', () => {
 
     it('turns a dealstage change into deal.changed { deal, changes }, hydrated with the listed properties', async () => {
         const scope = nock('https://api.hubapi.com', { reqheaders: { authorization: 'Bearer token' } })
-            .post('/crm/v3/objects/deals/batch/read', { inputs: [{ id: '9' }], properties: ['dealname', 'amount'] })
+            .post('/crm/objects/2026-09/deals/batch/read', { inputs: [{ id: '9' }], properties: ['dealname', 'amount'] })
             .reply(200, { results: [{ id: '9', properties: { dealname: 'Big', amount: '10' } }] });
         const a = api();
         const event = { portalId: 77, objectId: 9, subscriptionType: 'deal.propertyChange', propertyName: 'dealstage', propertyValue: 'closedwon' };
@@ -107,7 +107,7 @@ describe('subscriptions (app scope)', () => {
         const calls = [];
         global.fetch = jest.fn(async (url, init) => {
             calls.push({ url, method: init.method, body: init.body && JSON.parse(init.body), auth: init.headers.Authorization });
-            const results = init.method === 'GET' ? { results: [{ id: '5', eventType: 'deal.creation' }] } : { id: '6' };
+            const results = init.method === 'GET' ? [{ id: '5', eventType: 'deal.creation' }] : { id: '6' }; // the dated API returns a bare array
             return { ok: true, status: init.method === 'POST' ? 201 : 200, json: async () => results, text: async () => '' };
         });
         const a = new Api({});
@@ -115,23 +115,23 @@ describe('subscriptions (app scope)', () => {
         await webhooks.subscriptions.create(a, env, 'deal.propertyChange:dealstage');
         await webhooks.subscriptions.remove(a, env, { id: '5' });
         expect(calls).toEqual([
-            { url: 'https://api.hubapi.com/webhooks/v3/app-1/subscriptions', method: 'GET', body: undefined, auth: 'Bearer dev-key' },
-            { url: 'https://api.hubapi.com/webhooks/v3/app-1/subscriptions', method: 'POST', body: { eventType: 'deal.propertyChange', propertyName: 'dealstage', active: true }, auth: 'Bearer dev-key' },
-            { url: 'https://api.hubapi.com/webhooks/v3/app-1/subscriptions/5', method: 'DELETE', body: undefined, auth: 'Bearer dev-key' },
+            { url: 'https://api.hubapi.com/app-webhooks/2026-09/app-1/subscriptions', method: 'GET', body: undefined, auth: 'Bearer dev-key' },
+            { url: 'https://api.hubapi.com/app-webhooks/2026-09/app-1/subscriptions', method: 'POST', body: { eventType: 'deal.propertyChange', propertyName: 'dealstage', active: true }, auth: 'Bearer dev-key' },
+            { url: 'https://api.hubapi.com/app-webhooks/2026-09/app-1/subscriptions/5', method: 'DELETE', body: undefined, auth: 'Bearer dev-key' },
         ]);
     });
 });
 
 describe('fields', () => {
     it('dealStages loads "Pipeline: Stage" choices with the installation credential', async () => {
-        nock('https://api.hubapi.com').get('/crm/v3/pipelines/deals').reply(200, { results: [{ id: 'p1', label: 'Sales', stages: [{ id: 'closedwon', label: 'Won' }] }] });
+        nock('https://api.hubapi.com').get('/crm/pipelines/2026-09/deals').reply(200, { results: [{ id: 'p1', label: 'Sales', stages: [{ id: 'closedwon', label: 'Won' }] }] });
         const f = hubspot.fields.dealStages({ title: 'Alert when a deal enters', multiple: true, default: ['closedwon'] });
         expect(f).toMatchObject({ module: 'hubspot', required: false, schema: { type: 'array', title: 'Alert when a deal enters', items: { type: 'string' }, default: ['closedwon'] } });
         expect(await f.options(new Api({ access_token: 't' }))).toEqual([{ const: 'closedwon', title: 'Sales: Won' }]);
     });
 
     it('dealPipelines is a single choice', async () => {
-        nock('https://api.hubapi.com').get('/crm/v3/pipelines/deals').reply(200, { results: [{ id: 'p1', label: 'Sales', stages: [] }] });
+        nock('https://api.hubapi.com').get('/crm/pipelines/2026-09/deals').reply(200, { results: [{ id: 'p1', label: 'Sales', stages: [] }] });
         const f = hubspot.fields.dealPipelines({ required: true });
         expect(f.schema).toEqual({ type: 'string', title: 'Pipeline' });
         expect(await f.options(new Api({ access_token: 't' }))).toEqual([{ const: 'p1', title: 'Sales' }]);

@@ -1098,10 +1098,13 @@ class Api extends OAuth2Requester {
 
     // **************************   Webhook Subscriptions   **********************************
     //
-    // App-level Webhooks v3 Subscriptions API. Auth is the developer-account
-    // API key (Bearer), distinct from the per-portal OAuth flow the rest of
-    // this Api class uses. Endpoints accept { appId, developerApiKey } so
-    // callers control identity per-call without mutating Api instance state.
+    // App-level webhook subscriptions on the dated Webhooks API
+    // (/app-webhooks/{version}/{appId}/subscriptions[/{subscriptionId}]):
+    // https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide
+    // Auth is the developer-account API key (Bearer), distinct from the
+    // per-portal OAuth flow the rest of this Api class uses. Endpoints accept
+    // { appId, developerApiKey } so callers control identity per-call without
+    // mutating Api instance state.
 
     async listWebhookSubscriptions({ appId, developerApiKey }) {
         const response = await this._developerFetch(
@@ -1111,7 +1114,9 @@ class Api extends OAuth2Requester {
         );
         await this._requireOk(response, 'listWebhookSubscriptions');
         const body = await response.json();
-        return body.results ?? [];
+        // The dated API documents a bare array; v3 wrapped it in { results }.
+        if (Array.isArray(body)) return body;
+        return body?.results ?? [];
     }
 
     async createWebhookSubscription({ appId, developerApiKey, eventType, propertyName }) {

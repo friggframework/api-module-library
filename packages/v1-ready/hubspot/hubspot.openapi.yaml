@@ -630,6 +630,53 @@ paths:
         https://developers.hubspot.com/docs/apps/developer-platform/add-features/app-events/send-event-occurrences
       responses:
         "200": { description: Event accepted }
+  # App-level webhook subscriptions. Called with the developer API key of the
+  # app, not the portal OAuth token (see api.js listWebhookSubscriptions).
+  /app-webhooks/2026-09/{appId}/subscriptions:
+    parameters:
+      - { name: appId, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookSubscriptions
+      summary: List the app's webhook subscriptions
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide#get-subscriptions
+      security: [{ DeveloperApiKey: [] }]
+      responses:
+        "200": { description: Array of subscriptions }
+    post:
+      tags: [Webhooks]
+      operationId: createWebhookSubscription
+      summary: Create a webhook subscription
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide#create-a-new-subscription
+      security: [{ DeveloperApiKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [eventType]
+              properties:
+                eventType: { type: string }
+                propertyName: { type: string }
+                active: { type: boolean }
+      responses:
+        "201": { description: Created subscription }
+  /app-webhooks/2026-09/{appId}/subscriptions/{subscriptionId}:
+    parameters:
+      - { name: appId, in: path, required: true, schema: { type: string } }
+      - { name: subscriptionId, in: path, required: true, schema: { type: string } }
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhookSubscription
+      summary: Delete a webhook subscription
+      description: >-
+        https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide#delete-a-subscription
+      security: [{ DeveloperApiKey: [] }]
+      responses:
+        "204": { description: Deleted }
 components:
   parameters:
     ContactId:
@@ -663,6 +710,10 @@ components:
       required: true
       schema: { type: string }
   securitySchemes:
+    DeveloperApiKey:
+      type: http
+      scheme: bearer
+      description: The app's developer API key (HubSpot's docs show it as the hapikey query parameter).
     OAuth2:
       type: oauth2
       flows:

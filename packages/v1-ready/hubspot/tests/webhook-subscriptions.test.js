@@ -34,7 +34,7 @@ describe('HubSpot Webhook Subscriptions', () => {
         client_secret: 'unused-for-developer-endpoints',
     });
 
-    test('listWebhookSubscriptions GETs /webhooks/v3/{appId}/subscriptions with Bearer auth', async () => {
+    test('listWebhookSubscriptions GETs /app-webhooks/{version}/{appId}/subscriptions with Bearer auth', async () => {
         fetchMock.mockResolvedValue(
             makeResponse({ ok: true, body: { results: [] } })
         );
@@ -45,7 +45,7 @@ describe('HubSpot Webhook Subscriptions', () => {
         });
 
         const [url, opts] = fetchMock.mock.calls[0];
-        expect(url).toBe(`${BASE}/webhooks/v3/${APP_ID}/subscriptions`);
+        expect(url).toBe(`${BASE}/app-webhooks/${Api.API_VERSION}/${APP_ID}/subscriptions`);
         expect(opts.method).toBe('GET');
         expect(opts.headers.Authorization).toBe(`Bearer ${DEVELOPER_API_KEY}`);
         expect(url).not.toContain('hapikey');
@@ -65,6 +65,36 @@ describe('HubSpot Webhook Subscriptions', () => {
         });
 
         expect(result).toEqual([{ id: 1 }, { id: 2 }]);
+    });
+
+    test('listWebhookSubscriptions accepts the bare array the dated API documents', async () => {
+        fetchMock.mockResolvedValue(
+            makeResponse({ ok: true, body: [{ id: 25, eventType: 'deal.creation', active: true }] })
+        );
+
+        const result = await api.listWebhookSubscriptions({
+            appId: APP_ID,
+            developerApiKey: DEVELOPER_API_KEY,
+        });
+
+        expect(result).toEqual([{ id: 25, eventType: 'deal.creation', active: true }]);
+    });
+
+    test('list, create and delete use the 2026-09 app-webhooks paths', async () => {
+        fetchMock
+            .mockResolvedValueOnce(makeResponse({ ok: true, body: [] }))
+            .mockResolvedValueOnce(makeResponse({ ok: true, status: 201, body: { id: 7 } }))
+            .mockResolvedValueOnce(makeResponse({ ok: true, status: 204 }));
+
+        await api.listWebhookSubscriptions({ appId: APP_ID, developerApiKey: DEVELOPER_API_KEY });
+        await api.createWebhookSubscription({ appId: APP_ID, developerApiKey: DEVELOPER_API_KEY, eventType: 'deal.creation' });
+        await api.deleteWebhookSubscription({ appId: APP_ID, developerApiKey: DEVELOPER_API_KEY, subscriptionId: 7 });
+
+        expect(fetchMock.mock.calls.map(([url, opts]) => `${opts.method} ${url}`)).toEqual([
+            `GET ${BASE}/app-webhooks/2026-09/${APP_ID}/subscriptions`,
+            `POST ${BASE}/app-webhooks/2026-09/${APP_ID}/subscriptions`,
+            `DELETE ${BASE}/app-webhooks/2026-09/${APP_ID}/subscriptions/7`,
+        ]);
     });
 
     test('listWebhookSubscriptions throws on non-2xx', async () => {
@@ -100,7 +130,7 @@ describe('HubSpot Webhook Subscriptions', () => {
         });
 
         const [url, opts] = fetchMock.mock.calls[0];
-        expect(url).toBe(`${BASE}/webhooks/v3/${APP_ID}/subscriptions`);
+        expect(url).toBe(`${BASE}/app-webhooks/${Api.API_VERSION}/${APP_ID}/subscriptions`);
         expect(opts.method).toBe('POST');
         expect(opts.headers.Authorization).toBe(`Bearer ${DEVELOPER_API_KEY}`);
         expect(opts.headers['Content-Type']).toBe('application/json');
@@ -175,7 +205,7 @@ describe('HubSpot Webhook Subscriptions', () => {
         });
 
         const [url, opts] = fetchMock.mock.calls[0];
-        expect(url).toBe(`${BASE}/webhooks/v3/${APP_ID}/subscriptions/99`);
+        expect(url).toBe(`${BASE}/app-webhooks/${Api.API_VERSION}/${APP_ID}/subscriptions/99`);
         expect(opts.method).toBe('DELETE');
         expect(opts.headers.Authorization).toBe(`Bearer ${DEVELOPER_API_KEY}`);
     });

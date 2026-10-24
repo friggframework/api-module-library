@@ -11,6 +11,48 @@ and [2026-09 overview](https://developers.hubspot.com/docs/api-reference/latest/
 
 Read more on the [Frigg documentation site](https://docs.friggframework.org/api-modules/list/hubspot).
 
+## One-file integrations (extension contract 2)
+
+With `defineIntegration` (ADR-054, `@friggframework/core` with contract-2 support), enable the webhooks extension on
+the module binding and handle the events it emits. Core receives the route, checks the v3 signature, resolves
+`portalId` to the installations, and dispatches; nothing else is written in the integration:
+
+```js
+const { defineIntegration, use } = require('@friggframework/core');
+const hubspot = require('@friggframework/api-module-hubspot');
+
+defineIntegration({
+    name: 'deal-alerts',
+    modules: {
+        crm: use(hubspot, {
+            webhooks: {
+                subscribe: ['deal.creation', 'deal.propertyChange:dealstage'],  // eventType[:propertyName]
+                hydrate: ['dealname', 'amount', 'dealstage'],                     // batch-read before dispatch
+            },
+        }),
+    },
+    config: { stages: hubspot.fields.dealStages({ multiple: true, default: ['closedwon'] }) },
+    on: {
+        'crm.deal.changed': async ({ deal, changes }, { modules: { crm }, config }) => { /* … */ },
+    },
+});
+```
+
+| Piece | What it is |
+|---|---|
+| Route | `POST /api/<integration>-integration/<moduleKey>-webhooks/webhooks`, no database |
+| Emits | `deal.created`, `deal.changed` (`{ deal, changes, event }`), `deal.deleted`, and the same for `contact.*`, `company.*` |
+| Subscriptions | App scope (HubSpot v3 subscriptions belong to the developer app). Core creates the union of every binding's `subscribe`, add-only: after `frigg deploy`, on installation create and config update when `subscribe` is a function of config, and from the admin script. Nothing is removed unless pruning is asked for (`frigg deploy --prune-subscriptions`, or the script's `prune`). Needs `HUBSPOT_APP_ID` and `HUBSPOT_DEVELOPER_API_KEY`. |
+| Admin script | `hubspot.reconcile-subscriptions`: `{ prune, dryRun }` or `{ args: ['--prune', '--dry-run'] }`. `defineApp` registers it. |
+| Fields | `hubspot.fields.dealStages(opts)`, `hubspot.fields.dealPipelines(opts)`: choices loaded with the installation's credential |
+| Api | `batchReadObjects(type, body)`, `urls.record(type, id)`, `listWebhookSubscriptions` / `createWebhookSubscription` / `deleteWebhookSubscription` |
+
+**Use one HubSpot developer app per stage.** Subscriptions are shared by everything that uses the developer app, so
+two stages (or two apps) on one developer app would see, and when pruning remove, each other's subscriptions.
+
+The contract-1 binding below still works unchanged: the bundle keeps its `routes[].event` and `events`, which
+`defineIntegration` ignores.
+
 ## Webhooks (Integration Extension)
 
 HubSpot webhooks are **app-level**, not account-level: one HubSpot app has a single

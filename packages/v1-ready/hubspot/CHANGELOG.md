@@ -1,3 +1,13 @@
+# v1.3.0
+
+#### 🚀 Enhancement
+
+- Webhooks extension on extension contract 2 (ADR-054), with its contract-1 face kept; `fields.js` and record URLs (`api.urls.record`)
+- App webhook subscriptions on the dated API: `listWebhookSubscriptions`, `createWebhookSubscription`, `deleteWebhookSubscription` over `/app-webhooks/2026-09/{appId}/subscriptions[/{subscriptionId}]`
+- `reconcile-subscriptions` admin script
+
+---
+
 # v1.2.0
 
 #### 🚀 Enhancement

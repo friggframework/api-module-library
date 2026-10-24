@@ -122,7 +122,10 @@ const Definition = {
         client_id: process.env.OUTREACH_CLIENT_ID,
         client_secret: process.env.OUTREACH_CLIENT_SECRET,
         scope: process.env.OUTREACH_SCOPE || process.env.OUTREACH_SCOPES,
-        redirect_uri: `${process.env.REDIRECT_URI}/outreach`,
+        // Omit when unset so schema validation does not see the string "undefined/outreach".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/outreach`
+            : undefined,
     },
 };
 

@@ -100,7 +100,10 @@ const Definition = {
         client_id: process.env.GORGIAS_CLIENT_ID,
         client_secret: process.env.GORGIAS_CLIENT_SECRET,
         scope: process.env.GORGIAS_SCOPE || DEFAULT_SCOPE,
-        redirect_uri: `${process.env.REDIRECT_URI}/gorgias`,
+        // Omit when unset so schema validation does not see the string "undefined/gorgias".
+        redirect_uri: process.env.REDIRECT_URI
+            ? `${process.env.REDIRECT_URI}/gorgias`
+            : undefined,
     },
 };
 

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Frigg module catalog descriptor v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "name", "description", "provider", "category", "maintainers", "status", "capabilities", "extensions", "testedCompatibility", "links"],
+  "properties": {
+    "schemaVersion": {"type": "integer", "enum": [1]},
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "name": {"type": "string", "minLength": 1},
+    "description": {"type": "string", "minLength": 1},
+    "provider": {"type": "string", "minLength": 1},
+    "category": {"type": "string", "minLength": 1},
+    "maintainers": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "status": {"type": "string", "enum": ["experimental", "maintained", "deprecated"]},
+    "capabilities": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "extensions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "testedCompatibility": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "links": {
+      "type": "object", "additionalProperties": false,
+      "required": ["provider", "support"],
+      "properties": {"provider": {"type": "string"}, "support": {"type": "string"}}
+    }
+  }
+}

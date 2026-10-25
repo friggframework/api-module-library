@@ -1,0 +1,26 @@
+name: Module docs contract
+on:
+  pull_request:
+    paths:
+      - tools/module-docs/**
+      - packages/v1-ready/hubspot/**
+      - .github/workflows/module-docs*.yml
+      - .github/workflows/release.yml
+      - package.json
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test tools/module-docs/*.test.cjs
+      - name: Pack the pilot with its real lifecycle hook
+        run: npm pack --workspace @friggframework/api-module-hubspot --pack-destination /tmp
+      - run: node tools/module-docs/check-pack.cjs /tmp

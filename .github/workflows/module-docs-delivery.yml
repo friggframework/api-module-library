@@ -1,0 +1,44 @@
+name: Retry module documentation delivery
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Allowlisted published npm package
+        type: string
+        required: true
+      version:
+        description: Exact published version (no package publication)
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  deliver:
+    if: vars.MODULE_DOCS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: next
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/create-github-app-token@v2
+        id: app
+        with:
+          app-id: ${{ vars.MODULE_DOCS_APP_ID }}
+          private-key: ${{ secrets.MODULE_DOCS_APP_PRIVATE_KEY }}
+          owner: friggframework
+          repositories: frigg
+      - name: Verify package and retry dispatch
+        env:
+          MODULE_DOCS_TOKEN: ${{ steps.app.outputs.token }}
+        run: node tools/module-docs/deliver.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: module-docs-delivery
+          path: .module-docs/delivery.json
+          include-hidden-files: true
+          if-no-files-found: ignore

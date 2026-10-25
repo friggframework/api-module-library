@@ -1,0 +1,6 @@
+.env*
+*.tgz
+tests/
+jest-*.js
+jest.config.js
+coverage/

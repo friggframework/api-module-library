@@ -1,0 +1,447 @@
+{
+  "getAuthUri": {
+    "description": "Returns the authorization URI constructed from the instance OAuth parameters. Does not validate state or handle the callback.",
+    "parameters": "No parameters are accepted.",
+    "returns": "A synchronous authorization URL string."
+  },
+  "addJsonHeaders": {
+    "description": "Adds JSON Content-Type and Accept defaults, preserving explicitly provided headers. Used internally by write helpers.",
+    "parameters": "options: request options object to mutate.",
+    "returns": "Undefined; mutates options.headers in place."
+  },
+  "createCompany": {
+    "description": "Create company. Delegates to `_post`.",
+    "parameters": "body: a property-name to value map; the wrapper sends {properties: body}.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "listCompanies": {
+    "description": "List companies. Delegates to `_get`.",
+    "parameters": "No parameters are accepted.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "updateCompany": {
+    "description": "Update company. Delegates to `_patch`.",
+    "parameters": "id: company ID. body: full provider update object, including properties; unlike createCompany, no properties wrapper is added.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "searchCompanies": {
+    "description": "Search companies. Delegates to `_post`.",
+    "parameters": "Arguments in order: body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "archiveCompany": {
+    "description": "Archive company. Delegates to `_delete`.",
+    "parameters": "Arguments in order: compId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getCompanyById": {
+    "description": "Get company by id. Delegates to `_get`.",
+    "parameters": "Arguments in order: compId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "batchGetCompaniesById": {
+    "description": "Batch get companies by id. Delegates to `_post`.",
+    "parameters": "params: inputs (required provider batch inputs) and properties (default []); archived=false is included in the query.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "createContact": {
+    "description": "Create contact. Delegates to `_post`.",
+    "parameters": "body: a property-name to value map; the wrapper sends {properties: body}.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "listContacts": {
+    "description": "Lists one contacts page. Discovers contact properties unless properties is supplied; omits after on the first page.",
+    "parameters": "params: object with limit (default 100), after (optional cursor) and properties (optional array or provider-compatible property selection).",
+    "returns": "A promise resolving to the contacts response, normally results and optional paging.next.after."
+  },
+  "archiveContact": {
+    "description": "Archive contact. Delegates to `_delete`.",
+    "parameters": "Arguments in order: id. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getContactById": {
+    "description": "Get contact by id. Delegates to `_get`.",
+    "parameters": "Arguments in order: contactId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "updateContact": {
+    "description": "Update contact. Delegates to `_patch`.",
+    "parameters": "contactId: contact ID. properties: property-name to value map, wrapped in {properties}.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "batchGetContactsById": {
+    "description": "Batch get contacts by id. Delegates to `_post`.",
+    "parameters": "Arguments in order: body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "createDeal": {
+    "description": "Create deal. Delegates to `_post`.",
+    "parameters": "body: a property-name to value map; the wrapper sends {properties: body}.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "archiveDeal": {
+    "description": "Archive deal. Delegates to `_delete`.",
+    "parameters": "Arguments in order: dealId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getDealById": {
+    "description": "Get deal by id. Delegates to `_get`.",
+    "parameters": "Arguments in order: dealId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getDealStageHistory": {
+    "description": "Get deal stage history. Delegates to `_get`.",
+    "parameters": "Arguments in order: dealId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise resolving to response.properties.dealstage.versions from the legacy deals endpoint."
+  },
+  "listDeals": {
+    "description": "List deals. Delegates to `_get`.",
+    "parameters": "pageObj: optional provider page/query object, merged into a query that requests all deal properties and contacts/companies associations.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "searchDeals": {
+    "description": "Search deals. Delegates to `_post`.",
+    "parameters": "params: allProps (default true), props (default []), limit (10), after (0), filterGroups ([]) and sorts ([]). An empty props array is filled via property discovery when allProps is true.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "updateDeal": {
+    "description": "Attempts to update deal properties. Known limitation: this source uses the undefined URLs.getDealById key and fails before dispatch.",
+    "parameters": "params: object requiring dealId and properties. Use only after verifying a release that fixes the URL key.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "createContactList": {
+    "description": "Create contact list. Delegates to `_post`.",
+    "parameters": "Arguments in order: body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "deleteContactList": {
+    "description": "Delete contact list. Delegates to `_delete`.",
+    "parameters": "Arguments in order: listId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getContactListById": {
+    "description": "Get contact list by id. Delegates to `_get`.",
+    "parameters": "Arguments in order: listId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "listContactLists": {
+    "description": "List contact lists. Delegates to `_get`.",
+    "parameters": "No parameters are accepted.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "updateContactList": {
+    "description": "Update contact list. Delegates to `_post`.",
+    "parameters": "Arguments in order: listId, body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "createCustomObjectSchema": {
+    "description": "Create custom object schema. Delegates to `_post`.",
+    "parameters": "Arguments in order: body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "deleteCustomObjectSchema": {
+    "description": "Delete custom object schema. Delegates to `_delete`.",
+    "parameters": "Arguments in order: objectType, hardDelete. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getCustomObjectSchema": {
+    "description": "Fetches a custom object schema. Known limitation: the query argument is accepted but ignored.",
+    "parameters": "Arguments in order: objectType, query. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "listCustomObjectSchemas": {
+    "description": "List custom object schemas. Delegates to `_get`.",
+    "parameters": "No parameters are accepted.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "updateCustomObjectSchema": {
+    "description": "Update custom object schema. Delegates to `_patch`.",
+    "parameters": "Arguments in order: objectType, body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "createCustomObject": {
+    "description": "Create custom object. Delegates to `_post`.",
+    "parameters": "Arguments in order: objectType, body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "bulkCreateCustomObjects": {
+    "description": "Bulk create custom objects. Delegates to `_post`.",
+    "parameters": "Arguments in order: objectType, body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "deleteCustomObject": {
+    "description": "Delete custom object. Delegates to `_delete`.",
+    "parameters": "Arguments in order: objectType, objId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "bulkArchiveCustomObjects": {
+    "description": "Bulk archive custom objects. Delegates to `_request`.",
+    "parameters": "Arguments in order: objectType, body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getCustomObject": {
+    "description": "Get custom object. Delegates to `_get`.",
+    "parameters": "Arguments in order: objectType, objId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "bulkReadCustomObjects": {
+    "description": "Bulk read custom objects. Delegates to `_post`.",
+    "parameters": "Arguments in order: objectType, body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "listCustomObjects": {
+    "description": "List custom objects. Delegates to `_get`.",
+    "parameters": "Arguments in order: objectType, query = {}. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "searchCustomObjects": {
+    "description": "Search custom objects. Delegates to `_post`.",
+    "parameters": "Arguments in order: objectType, body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "updateCustomObject": {
+    "description": "Update custom object. Delegates to `_patch`.",
+    "parameters": "Arguments in order: objectType, objId, body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "bulkUpdateCustomObjects": {
+    "description": "Bulk update custom objects. Delegates to `_post`.",
+    "parameters": "Arguments in order: objectType, body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getProperties": {
+    "description": "Legacy alias for listProperties(objType).",
+    "parameters": "Arguments in order: objType. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise resolving to the same provider properties response as listProperties."
+  },
+  "listProperties": {
+    "description": "List properties. Delegates to `_get`.",
+    "parameters": "Arguments in order: objType. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "createProperty": {
+    "description": "Create property. Delegates to `_post`.",
+    "parameters": "Arguments in order: objType, body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "deleteProperty": {
+    "description": "Delete property. Delegates to `_delete`.",
+    "parameters": "Arguments in order: objType, propName. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getPropertyByName": {
+    "description": "Get property by name. Delegates to `_get`.",
+    "parameters": "Arguments in order: objType, propName. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "updateProperty": {
+    "description": "Update property. Delegates to `_patch`.",
+    "parameters": "Arguments in order: objType, propName, body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getOwnerById": {
+    "description": "Get owner by id. Delegates to `_get`.",
+    "parameters": "Arguments in order: ownerId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "createTimelineEvent": {
+    "description": "Builds an event template payload. Known limitation: passes positional arguments to an options-object _post helper; do not rely on this release for timeline event creation.",
+    "parameters": "Arguments in order: objId, data, eventTemplateId = process.env.HUBSPOT_TIMELINE_EVENT_TEMPLATE_ID. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getLandingPages": {
+    "description": "Get landing pages. Delegates to `_get`.",
+    "parameters": "Arguments in order: query = ''. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getLandingPage": {
+    "description": "Get landing page. Delegates to `_get`.",
+    "parameters": "Arguments in order: id. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "updateLandingPage": {
+    "description": "Update landing page. Delegates to `_patch`.",
+    "parameters": "Arguments in order: objId, body, isDraft = false. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "pushLandingPageDraftToLive": {
+    "description": "Push landing page draft to live. Delegates to `_post`.",
+    "parameters": "Arguments in order: objId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "publishLandingPage": {
+    "description": "Publish landing page. Delegates to `_post`.",
+    "parameters": "Arguments in order: objId, publishDate. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getSitePages": {
+    "description": "Get site pages. Delegates to `_get`.",
+    "parameters": "Arguments in order: query = ''. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getSitePage": {
+    "description": "Get site page. Delegates to `_get`.",
+    "parameters": "Arguments in order: id. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "updateSitePage": {
+    "description": "Update site page. Delegates to `_patch`.",
+    "parameters": "Arguments in order: objId, body, isDraft = false. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "pushSitePageDraftToLive": {
+    "description": "Push site page draft to live. Delegates to `_post`.",
+    "parameters": "Arguments in order: objId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "publishSitePage": {
+    "description": "Publish site page. Delegates to `_post`.",
+    "parameters": "Arguments in order: objId, publishDate. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getBlogPosts": {
+    "description": "Get blog posts. Delegates to `_get`.",
+    "parameters": "Arguments in order: query = ''. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getBlogPost": {
+    "description": "Get blog post. Delegates to `_get`.",
+    "parameters": "Arguments in order: id. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "updateBlogPost": {
+    "description": "Update blog post. Delegates to `_patch`.",
+    "parameters": "Arguments in order: objId, body, isDraft = false. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "pushBlogPostDraftToLive": {
+    "description": "Push blog post draft to live. Delegates to `_post`.",
+    "parameters": "Arguments in order: objId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "publishBlogPost": {
+    "description": "Publish blog post. Delegates to `_post`.",
+    "parameters": "Arguments in order: objId, publishDate. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getEmailTemplates": {
+    "description": "Get email templates. Delegates to `_get`.",
+    "parameters": "Arguments in order: query = ''. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getEmailTemplate": {
+    "description": "Get email template. Delegates to `_get`.",
+    "parameters": "Arguments in order: id. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "updateEmailTemplate": {
+    "description": "Update email template. Delegates to `_put`.",
+    "parameters": "Arguments in order: objId, body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "createEmailTemplate": {
+    "description": "Create email template. Delegates to `_post`.",
+    "parameters": "Arguments in order: body. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "deleteEmailTemplate": {
+    "description": "Delete email template. Delegates to `_delete`.",
+    "parameters": "Arguments in order: id. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getUserDetails": {
+    "description": "Fetches integration account details, introspects the access token, and merges the two responses. Requires OAuth client credentials.",
+    "parameters": "No parameters are accepted.",
+    "returns": "A promise resolving to the merged account/introspection object. Rejects if the introspected token is inactive."
+  },
+  "introspectToken": {
+    "description": "Posts client_id, client_secret, access_token and the access_token hint as form data to the date-versioned introspection endpoint.",
+    "parameters": "No parameters are accepted.",
+    "returns": "A promise resolving to an active introspection response; throws when active is falsy."
+  },
+  "getPipelineDetails": {
+    "description": "Get pipeline details. Delegates to `_get`.",
+    "parameters": "Arguments in order: objType. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getBatchAssociations": {
+    "description": "Get batch associations. Delegates to `_post`.",
+    "parameters": "Arguments in order: fromObjectType, toObjectType, inputs. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise resolving to the response results array, rather than the entire provider response."
+  },
+  "createBatchAssociations": {
+    "description": "Create batch associations. Delegates to `_post`.",
+    "parameters": "Arguments in order: fromObjectType, toObjectType, inputs. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise resolving to the response results array, rather than the entire provider response."
+  },
+  "createBatchAssociationsDefault": {
+    "description": "Create batch associations default. Delegates to `_post`.",
+    "parameters": "Arguments in order: fromObjectType, toObjectType, inputs. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise resolving to the response results array, rather than the entire provider response."
+  },
+  "deleteBatchAssociations": {
+    "description": "Delete batch associations. Delegates to `_post`.",
+    "parameters": "Arguments in order: fromObjectType, toObjectType, inputs. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise resolving to the full HTTP response because this method sets returnFullRes."
+  },
+  "deleteBatchAssociationLabels": {
+    "description": "Delete batch association labels. Delegates to `_post`.",
+    "parameters": "Arguments in order: fromObjectType, toObjectType, inputs. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise resolving to the full HTTP response because this method sets returnFullRes."
+  },
+  "getAssociationLabels": {
+    "description": "Get association labels. Delegates to `_get`.",
+    "parameters": "Arguments in order: fromObjType, toObjType. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "createAssociationLabel": {
+    "description": "Create association label. Delegates to `_post`.",
+    "parameters": "Arguments in order: fromObjType, toObjType, label. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "deleteAssociationLabel": {
+    "description": "Delete association label. Delegates to `_delete`.",
+    "parameters": "Arguments in order: fromObjType, toObjType, associationTypeId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "searchLists": {
+    "description": "Search lists. Delegates to `_post`.",
+    "parameters": "Arguments in order: query = \"\", offset = 0, count = 500, additionalProperties = []. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "getListById": {
+    "description": "Get list by id. Delegates to `_get`.",
+    "parameters": "Arguments in order: listId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "createList": {
+    "description": "Create list. Delegates to `_post`.",
+    "parameters": "Arguments in order: name, objectTypeId, processingType = 'MANUAL', listFolderId = null. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "deleteList": {
+    "description": "Delete list. Delegates to `_delete`.",
+    "parameters": "Arguments in order: listId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "removeAllListMembers": {
+    "description": "Remove all list members. Delegates to `_delete`.",
+    "parameters": "Arguments in order: listId. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "addAndRemoveFromList": {
+    "description": "Add and remove from list. Delegates to `_put`.",
+    "parameters": "Arguments in order: listId, idsToAdd, idsToRemove. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "addToList": {
+    "description": "Add to list.",
+    "parameters": "Arguments in order: listId, recordIds. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  },
+  "removeFromList": {
+    "description": "Remove from list.",
+    "parameters": "Arguments in order: listId, recordIds. IDs identify HubSpot records; body/query objects follow the selected provider endpoint.",
+    "returns": "A promise from the Frigg Requester. Provider response fields are not normalized unless explicitly noted; consult the linked source and HubSpot API reference."
+  }
+}

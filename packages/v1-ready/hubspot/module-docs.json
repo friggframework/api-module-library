@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "hubspot",
+  "name": "HubSpot",
+  "description": "Connect HubSpot OAuth accounts to Frigg, call CRM and CMS methods, and route signed app webhooks to per-account integrations.",
+  "provider": "HubSpot",
+  "category": "CRM",
+  "maintainers": ["Frigg Framework maintainers"],
+  "status": "maintained",
+  "capabilities": ["CRM contacts, companies and deals", "Custom objects and properties", "Lists and associations", "CMS pages and templates", "OAuth token introspection", "Signed webhook routing"],
+  "extensions": ["webhooks"],
+  "testedCompatibility": [],
+  "links": {
+    "provider": "https://developers.hubspot.com/docs",
+    "support": "https://github.com/friggframework/api-module-library/issues"
+  }
+}

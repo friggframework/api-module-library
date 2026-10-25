@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
+const {execFileSync} = require('node:child_process');
 const {build} = require('./build.cjs');
 const {digest} = require('./contract.cjs');
 const {deliver} = require('./deliver.cjs');
@@ -80,6 +81,25 @@ test('schema, coverage, required content and extension mismatch block generation
 test('source verification cannot accept a fabricated commit', t => {
     const {directory, root} = workspace(t);
     assert.throws(() => build(directory, {root, commit: 'b'.repeat(40)}));
+});
+
+test('prepack accepts Lerna version/gitHead annotations but rejects runtime metadata changes', t => {
+    const {root, directory} = workspace(t);
+    const git = args => execFileSync('git', args, {cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']}).trim();
+    git(['init']); git(['add', '.']);
+    git(['-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', '-c', 'commit.gpgsign=false', 'commit', '-m', 'fixture']);
+    const commit = git(['rev-parse', 'HEAD']);
+    const filename = path.join(directory, 'package.json');
+    const pkg = JSON.parse(fs.readFileSync(filename));
+    pkg.version = '2.0.0-next.1'; pkg.gitHead = commit;
+    fs.writeFileSync(filename, JSON.stringify(pkg));
+    const result = build(directory, {root, commit});
+    assert.equal(result.manifest.version, pkg.version);
+    assert.equal(result.manifest.packageMetadata.gitHead, commit);
+    assert.equal(result.manifest.source.commit, commit);
+    pkg.dependencies['@friggframework/core'] = '*';
+    fs.writeFileSync(filename, JSON.stringify(pkg));
+    assert.throws(() => build(directory, {root, commit}), /beyond version/);
 });
 
 test('auto plugin emits only candidate identities from a successful non-canary publication', async t => {

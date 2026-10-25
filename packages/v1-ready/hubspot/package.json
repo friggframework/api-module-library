@@ -25,7 +25,9 @@
     "@friggframework/core": "^2.0.0-next.89"
   },
   "files": [
-    "*.js",
+    "api.js",
+    "definition.js",
+    "index.js",
     "defaultConfig.json",
     "README.md",
     "CHANGELOG.md",

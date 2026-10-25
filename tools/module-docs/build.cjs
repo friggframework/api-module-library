@@ -31,10 +31,14 @@ function build(packageDir, options = {}) {
         const tracked = execFileSync('git', ['ls-tree', '-r', '--name-only', commit, allowed.packagePath], {cwd: root, encoding: 'utf8'}).trim().split('\n');
         for (const filename of tracked.map(x => x.slice(allowed.packagePath.length + 1)).filter(x => !['package.json', 'CHANGELOG.md'].includes(x))) check(filename);
         const sourcePkg = JSON.parse(execFileSync('git', ['show', `${commit}:${allowed.packagePath}/package.json`], {cwd: root, encoding: 'utf8'}));
-        assert.deepEqual({...sourcePkg, version: pkg.version}, pkg, 'Release changed package metadata beyond its version');
+        // Lerna 8 annotates gitHead on disk before prepack. This is release
+        // metadata, not a change to the module's declared runtime contract.
+        const resolvedPkg = {...pkg}; delete resolvedPkg.gitHead; delete sourcePkg.gitHead;
+        if (pkg.gitHead !== undefined) assert(/^[a-f0-9]{40}$/.test(pkg.gitHead), 'Invalid Lerna gitHead');
+        assert.deepEqual({...sourcePkg, version: pkg.version}, resolvedPkg, 'Release changed package metadata beyond version/gitHead');
     }
     const metadata = {};
-    for (const key of ['name', 'version', 'license', 'engines', 'dependencies', 'peerDependencies']) if (pkg[key] !== undefined) metadata[key] = pkg[key];
+    for (const key of ['name', 'version', 'license', 'engines', 'dependencies', 'peerDependencies', 'gitHead']) if (pkg[key] !== undefined) metadata[key] = pkg[key];
     const source = {repository: 'friggframework/api-module-library', commit, packagePath: allowed.packagePath};
     const sourceUrl = `https://github.com/${source.repository}/tree/${commit}/${source.packagePath}`;
     const index = fs.readFileSync(path.join(packageDir, 'index.js'), 'utf8');

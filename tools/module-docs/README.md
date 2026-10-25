@@ -25,10 +25,10 @@ cursor and explicit properties. It does not test live HubSpot or OAuth refresh.
 ## Exact release bundles
 
 The package's `prepack` hook builds `module-docs.bundle.json` after versioning and
-before the package is packed. `.npmignore` deliberately includes the generated
-bundle even though Git ignores it. Committed package source is checked against
-`GITHUB_SHA` (or HEAD locally); auto may change only the package version and
-changelog. The bundle records the source input SHA and exact resolved package
+before the package is packed. The explicit package `files` list includes the generated bundle even though Git
+ignores it; `.npmignore` keeps local secrets and test scaffolding out. Committed package source is checked against
+`GITHUB_SHA` (or HEAD locally); auto/lerna may change the package version,
+changelog and temporary `gitHead`. The bundle records the source input SHA and exact resolved package
 metadata so temporary prerelease commits/reset do not lose version provenance.
 
 `contract.cjs` and `registry.cjs` are byte-identical to the receiver copies. The
@@ -55,6 +55,7 @@ eligible for this pilot's import path.
 ```bash
 node --test tools/module-docs/*.test.cjs
 npm pack --workspace @friggframework/api-module-hubspot --pack-destination /tmp
+node tools/module-docs/check-pack.cjs /tmp
 ```
 
 Packing performs source checks; commit authored sources first. No dependency

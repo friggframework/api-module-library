@@ -4,7 +4,7 @@ Create or configure a HubSpot OAuth app, register its redirect URI, and enable t
 scopes required for the methods you will call. The first-call example requires
 `crm.objects.contacts.read`; property discovery, other CRM objects, CMS features,
 and webhooks can require different scopes or account subscriptions. Consult the
-[HubSpot OAuth guide](https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/overview)
+[HubSpot OAuth guide](https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/overview)
 for the app generation you use.
 
 Configure these values before importing the module:

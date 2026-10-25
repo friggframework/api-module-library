@@ -23,5 +23,16 @@
   },
   "dependencies": {
     "@friggframework/core": "^2.0.0-next.89"
-  }
+  },
+  "files": [
+    "*.js",
+    "defaultConfig.json",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "extensions/",
+    "docs/",
+    "module-docs.json",
+    "module-docs.bundle.json"
+  ]
 }

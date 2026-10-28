@@ -1,0 +1,9 @@
+{
+    "name": "freshbooks",
+    "label": "FreshBooks",
+    "productUrl": "https://www.freshbooks.com",
+    "apiDocs": "https://www.freshbooks.com/api/start",
+    "logoUrl": "https://friggframework.org/assets/img/freshbooks-icon.png",
+    "categories": ["Accounting"],
+    "description": "FreshBooks cloud accounting"
+}

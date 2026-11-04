@@ -1,0 +1,491 @@
+openapi: 3.0.3
+info:
+  title: Aspire External API (curated subset)
+  version: "1.0.0"
+  description: >-
+    Aspire Cloud External API (Aspire.ExternalApi 1.0). Official Swagger is at
+    https://cloud-api.youraspire.com/swagger/v1/swagger.json and the API Guide
+    at https://guide.youraspire.com/apidocs. This file is Left Hook's curated
+    subset covering exactly the endpoints the
+    @friggframework/api-module-aspire client in api.js implements. It is the
+    source of truth the hand-written client mirrors 1:1 (one method per
+    operationId).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://cloud-api.youraspire.com
+    description: Aspire Cloud production External API
+security:
+  - BearerAuth: []
+tags:
+  - name: Authorization
+  - name: Companies
+  - name: Contacts
+  - name: Invoices
+  - name: Opportunities
+  - name: PaymentTerms
+paths:
+  /Authorization:
+    post:
+      tags: [Authorization]
+      operationId: getTokenFromClientCredentials
+      summary: Authenticate with ClientId + Secret
+      description: >-
+        Returns a Bearer Token (JWT, valid 24h) and RefreshToken.
+        See https://guide.youraspire.com/apidocs/authentication-authorization-2.md
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ClientId, Secret]
+              properties:
+                ClientId:
+                  type: string
+                  minLength: 1
+                Secret:
+                  type: string
+                  minLength: 1
+      responses:
+        "200":
+          description: Authentication result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiAuthenticationResult"
+
+  /Authorization/RefreshToken:
+    post:
+      tags: [Authorization]
+      operationId: refreshToken
+      summary: Refresh a Bearer token
+      description: >-
+        Exchange a RefreshToken for a new Token + RefreshToken pair.
+        Tokens expire after 24 hours.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [RefreshToken]
+              properties:
+                RefreshToken:
+                  type: string
+      responses:
+        "200":
+          description: Authentication result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiAuthenticationResult"
+
+  /Companies:
+    get:
+      tags: [Companies]
+      operationId: getCompanies
+      summary: List companies (OData)
+      parameters:
+        - $ref: "#/components/parameters/odataSelect"
+        - $ref: "#/components/parameters/odataFilter"
+        - $ref: "#/components/parameters/odataExpand"
+        - $ref: "#/components/parameters/odataOrderby"
+        - $ref: "#/components/parameters/odataSkip"
+        - $ref: "#/components/parameters/odataTop"
+      responses:
+        "200":
+          description: Array of companies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Company"
+    post:
+      tags: [Companies]
+      operationId: createCompany
+      summary: Create a company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyInsertRequest"
+      responses:
+        "200":
+          description: Created company id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanyResponse"
+    put:
+      tags: [Companies]
+      operationId: updateCompany
+      summary: Update a company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyUpdateRequest"
+      responses:
+        "200":
+          description: Updated company id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanyResponse"
+
+  /Contacts:
+    get:
+      tags: [Contacts]
+      operationId: getContacts
+      summary: List contacts (OData)
+      parameters:
+        - $ref: "#/components/parameters/odataSelect"
+        - $ref: "#/components/parameters/odataFilter"
+        - $ref: "#/components/parameters/odataExpand"
+        - $ref: "#/components/parameters/odataOrderby"
+        - $ref: "#/components/parameters/odataSkip"
+        - $ref: "#/components/parameters/odataTop"
+      responses:
+        "200":
+          description: Array of contacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contact"
+    post:
+      tags: [Contacts]
+      operationId: createContact
+      summary: Create a contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactInsertRequest"
+      responses:
+        "200":
+          description: Created contact response
+          content:
+            application/json:
+              schema:
+                type: string
+    put:
+      tags: [Contacts]
+      operationId: updateContact
+      summary: Update a contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactUpdateRequest"
+      responses:
+        "200":
+          description: Updated contact response
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /Invoices:
+    get:
+      tags: [Invoices]
+      operationId: getInvoices
+      summary: List invoices (OData)
+      description: Read-only on the External API (no POST/PUT in official Swagger).
+      parameters:
+        - $ref: "#/components/parameters/odataSelect"
+        - $ref: "#/components/parameters/odataFilter"
+        - $ref: "#/components/parameters/odataExpand"
+        - $ref: "#/components/parameters/odataOrderby"
+        - $ref: "#/components/parameters/odataSkip"
+        - $ref: "#/components/parameters/odataTop"
+      responses:
+        "200":
+          description: Array of invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+
+  /Opportunities:
+    get:
+      tags: [Opportunities]
+      operationId: getOpportunities
+      summary: List opportunities (OData)
+      parameters:
+        - $ref: "#/components/parameters/odataSelect"
+        - $ref: "#/components/parameters/odataFilter"
+        - $ref: "#/components/parameters/odataExpand"
+        - $ref: "#/components/parameters/odataOrderby"
+        - $ref: "#/components/parameters/odataSkip"
+        - $ref: "#/components/parameters/odataTop"
+      responses:
+        "200":
+          description: Array of opportunities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Opportunity"
+    post:
+      tags: [Opportunities]
+      operationId: createOpportunity
+      summary: Create an opportunity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpportunityInsertRequest"
+      responses:
+        "200":
+          description: Created opportunity response
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /PaymentTerms:
+    get:
+      tags: [PaymentTerms]
+      operationId: getPaymentTerms
+      summary: List payment terms (OData)
+      parameters:
+        - $ref: "#/components/parameters/odataSelect"
+        - $ref: "#/components/parameters/odataFilter"
+        - $ref: "#/components/parameters/odataExpand"
+        - $ref: "#/components/parameters/odataOrderby"
+        - $ref: "#/components/parameters/odataSkip"
+        - $ref: "#/components/parameters/odataTop"
+      responses:
+        "200":
+          description: Array of payment terms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentTerms"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        Bearer token from POST /Authorization (Token field). Place in the
+        Authorization header as `Bearer <Token>`.
+
+  parameters:
+    odataSelect:
+      in: query
+      name: $select
+      schema: { type: string }
+      description: OData $select
+    odataFilter:
+      in: query
+      name: $filter
+      schema: { type: string }
+      description: OData $filter (e.g. Active eq true)
+    odataExpand:
+      in: query
+      name: $expand
+      schema: { type: string }
+      description: OData $expand
+    odataOrderby:
+      in: query
+      name: $orderby
+      schema: { type: string }
+      description: OData $orderby
+    odataSkip:
+      in: query
+      name: $skip
+      schema: { type: integer }
+      description: OData $skip (offset)
+    odataTop:
+      in: query
+      name: $top
+      schema: { type: integer }
+      description: OData $top (page size)
+
+  schemas:
+    ApiAuthenticationResult:
+      type: object
+      properties:
+        Token:
+          type: string
+          nullable: true
+        RefreshToken:
+          type: string
+          nullable: true
+
+    Company:
+      type: object
+      properties:
+        CompanyID: { type: integer, format: int32 }
+        CompanyName: { type: string }
+        Active: { type: boolean }
+        DeniedTimeEmail: { type: string, format: email, nullable: true }
+        CreatedDateTime: { type: string, format: date-time, nullable: true }
+        ModifiedDateTime: { type: string, format: date-time, nullable: true }
+
+    CompanyInsertRequest:
+      type: object
+      required: [CompanyName]
+      properties:
+        CompanyName: { type: string, minLength: 1 }
+        DeniedTimeEmail: { type: string, format: email, nullable: true }
+        Active: { type: boolean }
+
+    CompanyUpdateRequest:
+      type: object
+      required: [CompanyName, CompanyID]
+      properties:
+        CompanyName: { type: string, minLength: 1 }
+        DeniedTimeEmail: { type: string, format: email, nullable: true }
+        Active: { type: boolean }
+        CompanyID: { type: integer, format: int32, minimum: 1 }
+
+    CompanyResponse:
+      type: object
+      properties:
+        CompanyID: { type: integer, format: int32 }
+
+    Contact:
+      type: object
+      properties:
+        ContactID: { type: integer, format: int32 }
+        CompanyID: { type: integer, format: int32, nullable: true }
+        CompanyName: { type: string, nullable: true }
+        FirstName: { type: string, nullable: true }
+        LastName: { type: string, nullable: true }
+        Title: { type: string, nullable: true }
+        Email: { type: string, nullable: true }
+        MobilePhone: { type: string, nullable: true }
+        OfficePhone: { type: string, nullable: true }
+        Active: { type: boolean, nullable: true }
+        CreatedDateTime: { type: string, format: date-time, nullable: true }
+
+    ContactInsertRequest:
+      type: object
+      properties:
+        Contact:
+          type: object
+          description: ContactRequest fields (FirstName, LastName, CompanyID, …)
+        HomeAddress:
+          type: object
+          nullable: true
+        OfficeAddress:
+          type: object
+          nullable: true
+        ContactTags:
+          type: array
+          items: { type: object }
+          nullable: true
+        PayScheduleID:
+          type: integer
+          nullable: true
+
+    ContactUpdateRequest:
+      type: object
+      properties:
+        Contact:
+          type: object
+        HomeAddress:
+          type: object
+          nullable: true
+        OfficeAddress:
+          type: object
+          nullable: true
+        UpdateOpportunities: { type: boolean, nullable: true }
+        ResendEmails: { type: boolean, nullable: true }
+        UpdateInvoicesCompany: { type: boolean, nullable: true }
+        ContactTags:
+          type: array
+          items: { type: object }
+          nullable: true
+        PayScheduleID: { type: integer, nullable: true }
+
+    Invoice:
+      type: object
+      properties:
+        InvoiceID: { type: integer, format: int32 }
+        CompanyID: { type: integer, format: int32, nullable: true }
+        CompanyName: { type: string, nullable: true }
+        Amount: { type: number, nullable: true }
+        AmountRemaining: { type: number, nullable: true }
+        OrigAmount: { type: number, nullable: true }
+        InvoiceDate: { type: string, format: date-time, nullable: true }
+        DueDate: { type: string, format: date-time, nullable: true }
+        PaymentTermsID: { type: integer, format: int32, nullable: true }
+        PaymentTermsName: { type: string, nullable: true }
+        InvoiceNumberPrefix: { type: string, nullable: true }
+        LastModifiedDateTime: { type: string, format: date-time, nullable: true }
+        CompletedDateTime: { type: string, format: date-time, nullable: true }
+
+    Opportunity:
+      type: object
+      properties:
+        OpportunityID: { type: integer, format: int32 }
+        OpportunityName: { type: string, nullable: true }
+        OpportunityStatusID: { type: integer, format: int32, nullable: true }
+        OpportunityStatusName: { type: string, nullable: true }
+        Probability: { type: number, nullable: true }
+        AnticipatedCloseDate: { type: string, format: date-time, nullable: true }
+        WonDate: { type: string, format: date-time, nullable: true }
+        LostDate: { type: string, format: date-time, nullable: true }
+        SalesRepContactID: { type: integer, format: int32, nullable: true }
+        SalesRepContactName: { type: string, nullable: true }
+        CreatedDateTime: { type: string, format: date-time, nullable: true }
+        PropertyID: { type: integer, format: int32, nullable: true }
+
+    OpportunityInsertRequest:
+      type: object
+      properties:
+        OpportunityName: { type: string, nullable: true }
+        BidDueDate: { type: string, format: date-time, nullable: true }
+        RenewalDate: { type: string, format: date-time, nullable: true }
+        LeadSourceID: { type: integer, nullable: true }
+        SalesRepID: { type: integer, nullable: true }
+        AnticipatedCloseDate: { type: string, format: date-time, nullable: true }
+        Probability: { type: number, nullable: true }
+        DivisionID: { type: integer, nullable: true }
+        StartDate: { type: string, format: date-time, nullable: true }
+        SalesTypeID: { type: integer, nullable: true }
+        OperationsMgrID: { type: integer, nullable: true }
+        EndDate: { type: string, format: date-time, nullable: true }
+        InvoiceType: { type: string, nullable: true }
+        MasterOpportunityID: { type: integer, nullable: true }
+        BranchID: { type: integer, nullable: true }
+        TemplateOpportunityID: { type: integer, nullable: true }
+        PropertyID: { type: integer, nullable: true }
+        BudgetedDollars: { type: number, nullable: true }
+        EstimatedDollars: { type: number, nullable: true }
+        OpportunityStatusID: { type: integer, nullable: true }
+        OpportunityType: { type: string, nullable: true }
+        CustomerContractNum: { type: string, nullable: true }
+        CustomerPONum: { type: string, nullable: true }
+        ProposalDescription1: { type: string, nullable: true }
+        ProposalDescription2: { type: string, nullable: true }
+
+    PaymentTerms:
+      type: object
+      properties:
+        PaymentTermsID: { type: integer, format: int32 }
+        Terms: { type: string, nullable: true }
+        NumberOfDays: { type: integer, nullable: true }
+        Active: { type: boolean, nullable: true }

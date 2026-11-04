@@ -1,0 +1,151 @@
+{
+  "schema": "capability-manifest/v0.1",
+  "module": "aspire",
+  "package": "@friggframework/api-module-aspire",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "grant": "client_credentials",
+    "methods": {
+      "getToken": "getTokenFromClientCredentials",
+      "refresh": "refreshToken",
+      "testAuth": "getCompanies"
+    },
+    "credentials": ["client_id", "client_secret"],
+    "docs": "https://guide.youraspire.com/apidocs/authentication-authorization-2.md",
+    "notes": "Aspire uses a custom JSON token endpoint POST /Authorization { ClientId, Secret } → { Token, RefreshToken }, not a standard OAuth tokenUri. Bearer token is valid 24h. Framework grant_type is forced to client_credentials so refreshAuth re-mints via /Authorization."
+  },
+  "objects": {
+    "company": {
+      "description": "Aspire company / customer organization records",
+      "fields": [
+        { "name": "CompanyID", "tags": ["identifier", "required"] },
+        { "name": "CompanyName", "tags": ["display", "required"] },
+        { "name": "Active", "tags": ["enum", "lifecycle"] },
+        { "name": "DeniedTimeEmail", "tags": ["pii"] },
+        { "name": "CreatedDateTime", "tags": ["timestamp"] },
+        { "name": "ModifiedDateTime", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "getCompanies",
+          "spec": "aspire.openapi.yaml#/paths/~1Companies/get"
+        },
+        "create": {
+          "method": "createCompany",
+          "spec": "aspire.openapi.yaml#/paths/~1Companies/post"
+        },
+        "update": {
+          "method": "updateCompany",
+          "spec": "aspire.openapi.yaml#/paths/~1Companies/put"
+        }
+      }
+    },
+    "contact": {
+      "description": "Aspire people (employees, customers, sales reps) linked to companies",
+      "fields": [
+        { "name": "ContactID", "tags": ["identifier", "required"] },
+        { "name": "CompanyID", "tags": ["identifier", "required"] },
+        { "name": "FirstName", "tags": ["pii", "required"] },
+        { "name": "LastName", "tags": ["pii", "required"] },
+        { "name": "Email", "tags": ["pii"] },
+        { "name": "MobilePhone", "tags": ["pii"] },
+        { "name": "OfficePhone", "tags": ["pii"] },
+        { "name": "Title", "tags": ["display"] },
+        { "name": "Active", "tags": ["enum", "lifecycle"] },
+        { "name": "CreatedDateTime", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "getContacts",
+          "spec": "aspire.openapi.yaml#/paths/~1Contacts/get"
+        },
+        "create": {
+          "method": "createContact",
+          "spec": "aspire.openapi.yaml#/paths/~1Contacts/post"
+        },
+        "update": {
+          "method": "updateContact",
+          "spec": "aspire.openapi.yaml#/paths/~1Contacts/put"
+        }
+      }
+    },
+    "invoice": {
+      "description": "Aspire customer invoices (read-only on External API)",
+      "fields": [
+        { "name": "InvoiceID", "tags": ["identifier", "required"] },
+        { "name": "CompanyID", "tags": ["identifier"] },
+        { "name": "Amount", "tags": ["currency"] },
+        { "name": "AmountRemaining", "tags": ["currency"] },
+        { "name": "InvoiceDate", "tags": ["timestamp"] },
+        { "name": "DueDate", "tags": ["timestamp"] },
+        { "name": "PaymentTermsID", "tags": ["identifier"] },
+        { "name": "LastModifiedDateTime", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "getInvoices",
+          "spec": "aspire.openapi.yaml#/paths/~1Invoices/get"
+        }
+      }
+    },
+    "opportunity": {
+      "description": "Aspire sales/estimate opportunities (pipeline deals)",
+      "fields": [
+        { "name": "OpportunityID", "tags": ["identifier", "required"] },
+        { "name": "OpportunityName", "tags": ["display", "required"] },
+        { "name": "OpportunityStatusID", "tags": ["identifier"] },
+        { "name": "OpportunityStatusName", "tags": ["enum", "lifecycle"] },
+        { "name": "Probability", "tags": [] },
+        { "name": "AnticipatedCloseDate", "tags": ["timestamp"] },
+        { "name": "WonDate", "tags": ["timestamp"] },
+        { "name": "LostDate", "tags": ["timestamp"] },
+        { "name": "SalesRepContactID", "tags": ["identifier"] },
+        { "name": "CreatedDateTime", "tags": ["timestamp"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "getOpportunities",
+          "spec": "aspire.openapi.yaml#/paths/~1Opportunities/get"
+        },
+        "create": {
+          "method": "createOpportunity",
+          "spec": "aspire.openapi.yaml#/paths/~1Opportunities/post"
+        }
+      }
+    },
+    "paymentTerms": {
+      "description": "Aspire payment terms catalog (Net 30, etc.)",
+      "fields": [
+        { "name": "PaymentTermsID", "tags": ["identifier", "required"] },
+        { "name": "Terms", "tags": ["display", "required"] },
+        { "name": "NumberOfDays", "tags": [] },
+        { "name": "Active", "tags": ["enum", "lifecycle"] }
+      ],
+      "capabilities": {
+        "list": {
+          "method": "getPaymentTerms",
+          "spec": "aspire.openapi.yaml#/paths/~1PaymentTerms/get"
+        }
+      }
+    }
+  },
+  "skipped": {
+    "webhooks": {
+      "reason": "Aspire External API Swagger (Aspire.ExternalApi 1.0) has no webhook subscription create/list/delete paths. Event delivery is not offered as a public REST surface.",
+      "docs": "https://cloud-api.youraspire.com/swagger/v1/swagger.json"
+    },
+    "opportunityUpdate": {
+      "reason": "Vendor Swagger exposes GET + POST on /Opportunities but no PUT/PATCH update.",
+      "docs": "https://cloud-api.youraspire.com/swagger/v1/swagger.json"
+    },
+    "invoiceWrite": {
+      "reason": "Vendor Swagger exposes GET /Invoices only — no POST/PUT for invoice create/update on the External API.",
+      "docs": "https://guide.youraspire.com/apidocs/invoices-2.md"
+    },
+    "propertiesAndWorkTickets": {
+      "reason": "Properties, WorkTickets, Equipment, CatalogItems, and other FSM controllers are out of scope for this first cut; core CRM/billing objects (Companies, Contacts, Opportunities, Invoices, PaymentTerms) are covered.",
+      "docs": "https://guide.youraspire.com/apidocs/clone-api-reference"
+    }
+  }
+}

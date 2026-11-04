@@ -1,0 +1,10 @@
+{
+    "name": "aspire",
+    "config": {
+        "clientCredentials": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

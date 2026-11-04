@@ -1,0 +1,1530 @@
+openapi: 3.0.3
+info:
+  title: Attentive API (curated)
+  description: 'Curated subset of the official Attentive REST API used by @friggframework/api-module-attentive.
+    One operationId per Api method. Source fragments: https://docs.attentive.com/reference/'
+  version: 1.0.0
+  contact:
+    email: api@attentivemobile.com
+servers:
+- url: https://api.attentivemobile.com/v1
+  description: Attentive API
+security:
+- bearerAuth: []
+tags:
+- name: Test Authentication
+  description: 'Use the Test Authentication endpoint to test your unique token that you received from
+    Attentive. Make sure to save your token because all API requests are authenticated using bearer tokens.
+    The response should include information specific to your company.
+
+    '
+- name: Subscribers
+  description: 'Use the Subscribers API to manage subscriptions. With this API, you can programmatically
+    subscribe and unsubscribe users from subscriptions.
+
+    '
+- name: Custom Attributes
+  description: 'Use the Custom Attributes API to apply customizable data or characteristics to each of
+    your subscribers. This API will either create a new custom attribute if it doesn''t already exist
+    or update an existing one with the new value provided. You can then build segments based on that information
+    to send targeted campaigns and journeys. This data cannot contain any sensitive or special categories
+    of information as defined in applicable data protection and privacy laws, including the California
+    Consumer Privacy Act (CCPA) and California Privacy Rights Act (CPRA). See a list of specific categories
+    of data you cannot share with Attentive [here](https://docs.attentivemobile.com/pages/legal-docs/pi-disclaimer/).
+
+    '
+- name: Custom Events
+  description: Use the Custom Events API to send user actions to use in the Attentive Segment Builder
+    and Journey Builder for both email and text messages. This data cannot contain any sensitive or special
+    categories of information as defined in applicable data protection and privacy laws, including the
+    California Consumer Privacy Act (CCPA) and California Privacy Rights Act (CPRA). See a list of specific
+    categories of data you cannot share with Attentive [here](https://docs.attentivemobile.com/pages/legal-docs/pi-disclaimer/).
+- name: Product Catalog
+  description: "Our product catalog API unlocks the ability to send high-performing journeys such as back\
+    \ in stock, low inventory, and price drop. It also lets you segment your customers and branch journeys\
+    \ using product data.\n- **Create high performing journeys**, such as back in stock, low inventory,\
+    \ and price drop.\n- **Segment customers** based on their past browsing, add to cart, and purchasing\
+    \ activity using product data such as name, category, tag, price, and other attributes.\n- **Branch\
+    \ journeys** based on product attributes or inventory, such as only sending a message if the product\
+    \ is in stock.\n\nAttentive also has several integrations with popular e-commerce platforms that sync\
+    \ product data to Attentive.  These are available in the Integrations tab.\n\n## Important note for\
+    \ testing/QA\n\nWhen you're testing journeys that use product catalog data (like price drop, back\
+    \ in stock, or low inventory), *we strongly recommend adding a **[Wait step](https://help.attentivemobile.com/hc/en-us/articles/360056415972-Add-steps-to-a-journey#h_01EY4TST8MRRG9GDZP2AT0EV9E)**\
+    \ of at least one hour as the very first step in the journey.* This initial wait step allows sufficient\
+    \ time for our system to process changes to your product catalog. \n\nAn initial wait step is generally\
+    \ *not* necessary for your actual live journeys. In most non-testing scenarios, subscribers will enter\
+    \ the journey after catalog updates have already been processed.\n\nWhen testing back in stock journeys\
+    \ specifically, keep in mind that back in stock journeys are triggered when `availableForPurchase`\
+    \ is `false`, not when `inventoryQuantity` is `0` (or less than the threshold amount if you're using\
+    \ [inventory thresholds](https://help.attentivemobile.com/hc/en-us/articles/4404286271380-Create-a-back-in-stock-journey)).\n\
+    \n## How to Get Started\n1. [Create an Attentive app to get an api key](https://docs.attentivemobile.com/pages/create-and-manage-custom-apps/)\n\
+    2. [Review the authentication workflow](https://docs.attentivemobile.com/pages/authentication/)\n\
+    3. Read through the product catalog file format you'll need to generate to send us your product catalog.\n\
+    4. Either use the sample script below to send us the file(s) you've generated, or implement something\
+    \ similar.\n5. By default, `validateOnly` will be set to `true` when initiating the upload, in order\
+    \ for you to develop without \nsaving the catalog Attentive side. Once you're ready for production,\
+    \ go ahead and set `validateOnly` to `false`.\n6. Once the file has been uploaded, contact your CSM\
+    \ to confirm that the data quality is high enough for the Attentive product data features to be enabled.\n\
+    \n### Sample CLI Utility Script\nFeel free to reuse and adapt this Python3 script to send Attentive\
+    \ the catalog files you've generated.\n```python\nimport argparse\nimport requests  # you may need\
+    \ to install this https://docs.python-requests.org/en/latest/user/install/\nimport json\nimport time\n\
+    \nfrom distutils.util import strtobool\n\n\nAPI_KEY = ''  # Set this\nAPI_BASE_URL = 'https://api.attentivemobile.com'\n\
+    STATUS_INTERVAL = 10\n\n\ndef initiate_catalog_upload(validate_only, api_key):\n    post_url = API_BASE_URL\
+    \ + '/v1/product-catalog/uploads'\n    r = requests.post(\n        post_url,\n        json={'validateOnly':\
+    \ validate_only},\n        headers={'Authorization': 'Bearer ' + api_key},\n    )\n    assert r.status_code\
+    \ == 200, \"Are you sure your api key is correct?\"\n    resp = r.json()\n    return resp['uploadId'],\
+    \ resp['uploadUrl']\n\n\ndef print_errors(errors):\n    print(\"Validation Errors:\")\n    for error\
+    \ in errors:\n        print(json.dumps(error))\n\n\ndef wait_for_validation(upload_id, validate_only,\
+    \ api_key, counter):\n    \"\"\"\n    The file at this point should now be queued up and we are awaiting\
+    \ validation. If there are any\n    validation errors, we'll print them out from here. You may want\
+    \ to integrate your own more\n    advanced monitoring.\n    \"\"\"\n    time.sleep(STATUS_INTERVAL)\n\
+    \    get_url = API_BASE_URL + '/v1/product-catalog/uploads/' + upload_id\n    r = requests.get(get_url,\
+    \ headers={'Authorization': 'Bearer ' + api_key}).json()\n    if r['errors']:\n        # Consider\
+    \ implementing alerting over here\n        print_errors(r['errors'])\n    if r['status'] == 'validated':\n\
+    \        return\n    # waiting approximately an hour before giving up. Totally up to you how long,\
+    \ but Attentive should\n    # rarely be behind an hour behind in processing\n    if counter == 360:\n\
+    \        print(\"Giving up on waiting for validation for \" + upload_id)\n        return\n\n    wait_for_validation(upload_id,\
+    \ validate_only, api_key, counter + 1)\n\n\ndef upload_catalog(filepath, validate_only, api_key):\n\
+    \    upload_id, upload_url = initiate_catalog_upload(validate_only, api_key)\n    with open(filepath,\
+    \ 'rb') as f:\n        r = requests.put(upload_url, data=f)\n        assert r.status_code == 200,\
+    \ 'Unexpected issue uploading'\n    wait_for_validation(upload_id, validate_only, api_key, 0)\n  \
+    \  return upload_id\n\n\nif __name__ == '__main__':\n    parser = argparse.ArgumentParser(\n     \
+    \   description='CLI utility script to demonstrate and assist in sending your generated product catalog\
+    \ to Attentive via its API'\n    )\n    parser.add_argument('filepath', help='Path to your catalog\
+    \ file')\n    parser.add_argument(\n        '--validateOnly',\n        default=True,\n        dest='validate_only',\n\
+    \        type=lambda x: bool(strtobool(x)),\n        help='Boolean flag to choose whether or not Attentive\
+    \ should only validate the file for correctness only or not. '\n        'Defaults to True to prevent\
+    \ saving invalid data during development. Set to False when everything passes without errors.',\n\
+    \    )\n    parser.add_argument(\n        '--apiKey',\n        dest='api_key',\n        help='You\
+    \ can pass the API Key in here as an argument or set it in the API_KEY variable at the top of this\
+    \ file',\n    )\n    args = parser.parse_args()\n\n    key = args.api_key or API_KEY\n    assert key,\
+    \ (\n        'Please either pass in the apiKey argument to this script, or '\n        'update the\
+    \ API_KEY variable at the top of this file to authenticate to Attentive'\n    )\n    id = upload_catalog(args.filepath,\
+    \ args.validate_only, key)\n```\n## Product catalog file format\nYou can use the Product Catalog API\
+    \ to provide Attentive with your entire product catalog\nprogrammatically in order to segment or branch\
+    \ on different product attributes to send more\ntargeted SMS messages. It also unlocks other unique\
+    \ product features (e.g. Back In-Stock Journeys).\n\nIn order to use the Product Catalog API, you\
+    \ must first provide Attentive with your full or\npartial product catalog as a **ndjson format file**\
+    \ to be HTTP file uploaded to a specified URL. *Each\nline in the file represents a full product,\
+    \ as described in the sample below*. This article\noutlines the structure of each product/row, as\
+    \ well as the definitions of each object and field.\n\n```\nTop-level product\n{\n   \"name\": string,\
+    \ *\n   \"id\": string, *\n   \"description\": string,\n   \"brand\": string,\n   \"link\": string,\
+    \ *\n   \"lastUpdated\": timestamp, *\n   \"categories\": Array<string>,\n   \"tags\": Array<string>,\n\
+    \   \"productOptions\": Array<ProductOption>,\n   \"images\": Array<Image>,\n   \"attributes\": Array<Attribute>\n\
+    \   \"variants\": Array<Variant> *,\n   \"collections\": Array<String>\n}\n\nProduct Option\n{\n \
+    \  \"name\": string, *\n   \"position\": int, *\n   \"values\": Array<string> *\n}\n\nImage\n{\n \
+    \  \"position\": int,\n   \"alt\": string,\n   \"src\": string, *\n   \"width\": int,\n   \"height\"\
+    : int,\n   \"variantIds\": Array<string>\n}\n\nAttribute\n{\n   \"name\": string, *\n   \"value\"\
+    : string *\n}\n\nVariant\n{\n   \"name\": string, * full name\n   \"id\": string, *\n   \"position\"\
+    : int,\n   \"prices\": Array<Price>,\n   \"availableForPurchase\": boolean, *\n   \"inventoryQuantity\"\
+    : int, *\n   \"productOptionValues\": Array<ProductOptionValue>,\n   \"link\": string, *\n   \"lastUpdated\"\
+    : timestamp, *\n   \"attributes\": Array<Attribute>\n}\n\nProduct Option Value\n{\n   \"productOptionName\"\
+    : string, *\n   \"value\": string *\n}\n\nPrice\n{\n   \"currencyCode\": string, *\n   \"amount\"\
+    : string, *\n   \"compareAtPrice\": string,\n}\n```\n\n### Definition of terms\n\n#### Product\nProducts\
+    \ are the goods that you are selling on your website. For example, it can be a t-shirt\nor a pair\
+    \ of shoes. This is the root JSON object on each line and is inherently required.\n\n| Field | Description\
+    \ | Type | Required |\n| ----- | ----- | -------- | ---- |\n| id | This is your product ID and the\
+    \ field we key off of. It must be unique across your catalog. You need this unique ID to make any\
+    \ updates to the product by uploading your product with the same id. The maximum length of the ID\
+    \ is 256 characters. | string | Required |\n| name | The name of your product. Note that this is how\
+    \ it appears in messages. The maximum length of the name is 256 characters. | string | Required |\n\
+    | description | A short description of your product. The maximum length of the description is 1024\
+    \ characters. | string | Optional |\n| brand | Brand for your product. Maximum length of brand is\
+    \ 256 characters. | string | Optional |\n| link | The link to your product's detail page online. Maximum\
+    \ length of link is 2048 characters. (http(s) required) | string | Required |\n| lastUpdated | The\
+    \ date and time (in UTC) of when your product was last updated. | [timestamp](https://en.wikipedia.org/wiki/ISO_8601#Time_offsets_from_UTC)\
+    \ | Required |\n| categories | One or more categories in your taxonomy associated with this product.\
+    \ You can specify up to 100 categories per product and each category can be up to 750 characters long.\
+    \ | Array&lt;string&gt; | Optional |\n| tags | One or more tags that are associated with and used\
+    \ to categorize this product. You can specify up to 250 tags per product and each tag can be up to\
+    \ 64 characters long. | Array&lt;string&gt; | Optional |\n| productOptions | See [Product Option](#product-option).\
+    \ Up to 25 ProductOptions are allowed per product and up to 200 values are allowed per option. | Array&lt;ProductOption&gt;\
+    \ | Optional |\n| images | See [Image](#image). Up to 250 images are allowed per product. | Array&lt;Image&gt;\
+    \ | Optional |\n| attributes | See [Attribute](#attribute). Up to 100 attributes are allowed per product.\
+    \ | Array&lt;Attribute&gt; | Optional |\n| variants | See [Variant](#variant). Up to 200 variants\
+    \ are allowed per product. | Array&lt;Variant&gt; | Required |\n| collections | The grouping of products\
+    \ that this product belongs to. Up to 50 collections per product are allowed. | Array&lt;string&gt;\
+    \ | Optional |\n\n\n#### Variant\nA variant can be added to a Product to represent one version of\
+    \ a product with several options.\nThe Product has a variant for every possible combination of its\
+    \ options. Following the example\nin [Product](#product), a variant is a size small and color black.\
+    \ An order can begin fulfillment once a\nvariant is selected. Each product must have at least one\
+    \ variant\n\n| Field | Description | Type | Required |\n| ----- | ----- | -------- | ---- |\n| id\
+    \ | This is your variant ID and the field we key off of. It must be unique across your catalog. You\
+    \ need this unique ID to make any updates to the product by uploading your variant with the same id.\
+    \ The maximum length of the ID is 256 characters. | string | Required |\n| name | The name of this\
+    \ variant. Note that this is how it appears in messages to your subscribers. The maximum length of\
+    \ the name is 256 characters. | string | Required |\n| position | The order in which this variant\
+    \ appears among all the other variants that belong to this product. The variant with the lowest number\
+    \ is the default variant. This value must be greater than or equal to 0.  | int | Optional |\n| link\
+    \ | The link to your variant's detail page online. If there is no link for your variant, you can use\
+    \ your product link. The maximum length of the link is 2048 characters. (http(s) required) | string\
+    \ | Required |\n| prices | See [Price](#price) | Array&lt;Price&gt; | Required\n| availableForPurchase\
+    \ | Is this variant still being sold? | boolean | Required |\n| inventoryQuantity | The current inventory\
+    \ count for this variant. Required for Low Inventory and Back in Stock journeys to function correctly.\
+    \ | int | Required |\n| productOptionValues | The combination of options that this variant represents\
+    \ for the product. See [Product Options](#product-option) section for details. | Array&lt;ProductOption&gt;\
+    \ | Optional |\n| attributes | See [Attribute](#attribute). Up to 100 Variants allowed. | Array&lt;Attribute&gt;\
+    \ | Optional |\n| lastUpdated | The date and time (in UTC) of when your product or variant was last\
+    \ updated. | [timestamp](https://en.wikipedia.org/wiki/ISO_8601#Time_offsets_from_UTC) | Required\
+    \ |\n\n\n#### Product Option\nProduct options are the dimensions or choices that a customer has to\
+    \ select to add a variant\nto their cart. Following our previous [Product](#product) example above\
+    \ with the t-shirt, the\ncustomer needs to select the size and color they want. In this example, size\
+    \ and color are the\nproduct options.\n\n| Field | Description | Type | Required |\n| ----- | -----\
+    \ | -------- | ---- |\n| name | The name/title of this product option. Up to 256 characters long |\
+    \ string | Required |\n| position | The order in which this option appears among all the other options.\
+    \ The option with the lowest number is first in the order. This value must be greater than or equal\
+    \ to 0. | int | Required |\n| values | The different possible values for this product option. Up to\
+    \ 256 characters long for each value. | Array&lt;string&gt; | Required |\n\n\n#### Product Option\
+    \ Value\nProduct option values are the unique product option selections associated with a given variant.\n\
+    These are contextualized within the Variant object.\n\n| Field | Description | Type | Required |\n\
+    | ----- | ----- | -------- | ---- |\n| productOptionName | The product option name | string | Required\
+    \ |\n| value | The selection or value for this variant | string | Required |\n\n\n#### Attribute\n\
+    Generic key/value data for products/variants that can be used for categorizing.\n\n| Field | Description\
+    \ | Type | Required |\n| ----- | ----- | -------- | ---- |\n| name | The attribute name. Up to 64\
+    \ characters long. | string | Required |\n| value | The attribute value.  Up to 256 characters long.\
+    \ | string | Required |\n\n\n#### Image\nData for the images associated with your products and variants\
+    \ that can be used for Attentive product\nmessaging and experiences.\n\n| Field | Description | Type\
+    \ | Required |\n| ----- | ----- | -------- | ---- |\n| src | The URL to the image (http(s) required).\
+    \ | string | Required |\n| alt | The alt text for the image. This is used as a back up in case an\
+    \ image can't be displayed and standard on the web. Up to 512 characters allowed. | string | Optional\
+    \ |\n| width | The width of the image in pixels | int | Optional |\n| height | The height of the image\
+    \ in pixels | int | Optional |\n| variantIds | The list of variant IDs this image applies to. Each\
+    \ id must match the ID of the field of one of the variants. | Array&lt;string&gt; | Optional |\n|\
+    \ position | The order in which images are considered for a product or variant. The image with the\
+    \ lowest position will be the default image. In other words, ascending order. Defaults to 0. | int\
+    \ | Optional |\n\n\n#### Price\nA price associated with the variant. You may have more than one price\
+    \ and currency associated\nwith a variant. In those cases, Attentive will likely choose the lowest\
+    \ available price in\nmessaging experiences.\n\n| Field | Description | Type | Required |\n| -----\
+    \ | ----- | -------- | ---- |\n| currencyCode | This follows the three letter currency codes (e.g.\
+    \ USD). For more info, see [ISO-4217](https://www.iso.org/iso-4217-currency-codes.html). | string\
+    \ | Required |\n| amount | The price amount | string | Required |\n| compareAtPrice | This is another\
+    \ price field, and use of this field implies the variant is on sale. This is the price buyers compare\
+    \ against to evaluate how good a sale is. Example: \"The price was <compareAtPrice> but now is <amount>!\
+    \ Get it while it lasts\" | string | Optional |\n\n\n### Formatted example of one product\nThe below\
+    \ example is formatted in json to clearly show the object schema.  The file you pass to the API should\
+    \ be in **ndjson format**.\n```\n{\n  \"name\": \"Nasa T-Shirt\",\n  \"id\": \"PD-123\",\n  \"description\"\
+    : \"A very popular T-Shirt\",\n  \"brand\": \"NASA\",\n  \"link\": \"https://www.google.com\",\n \
+    \ \"lastUpdated\": \"2021-10-05T18:08:28+00:00\",\n  \"categories\": [\"Shirts\"],\n  \"tags\": [\"\
+    Summer Sale\", \"Space\"],\n  \"productOptions\": [\n    {\"name\": \"Color\", \"position\": 0, \"\
+    values\": [\"Blue\", \"Black\"]},\n    {\"name\": \"Size\", \"position\": 1, \"values\": [\"Small\"\
+    , \"Medium\", \"Large\"]}\n  ],\n  \"images\": [\n    {\"src\": \"https://www.google.com\", \"alt\"\
+    : \"Picture of Nasa T-Shirt in Blue\", \"position\": 0, \"height\": 250, \"width\": 400, \"variantIds\"\
+    : [\"VD-234\"]},\n    {\"src\": \"https://www.google.com\", \"alt\": \"Another Picture of Nasa T-Shirt\
+    \ in Black\", \"position\": 0, \"height\": 250, \"width\": 400, \"variantIds\": [\"VD-235\", \"VD-236\"\
+    ]}\n  ],\n  \"attributes\": [{\"name\": \"Fabric\", \"value\": \"Cotton\"}],\n  \"variants\": [\n\
+    \    {\n      \"name\": \"Nasa T-Shirt - Blue - Small\",\n      \"id\": \"VD-234\",\n      \"position\"\
+    : 0,\n      \"prices\": [\n        {\"currencyCode\": \"USD\", \"amount\": \"10.00\"}\n      ],\n\
+    \      \"availableForPurchase\": true,\n      \"inventoryQuantity\": 10,\n      \"productOptionValues\"\
+    : [\n        {\"productOptionName\": \"Color\", \"value\": \"Blue\"},\n        {\"productOptionName\"\
+    : \"Size\", \"value\": \"Small\"}\n      ],\n      \"link\": \"https://www.google.com\",\n      \"\
+    lastUpdated\": \"2021-10-05T18:08:28+00:00\"\n    },\n    {\n      \"name\": \"Nasa T-Shirt - Black\
+    \ - Medium\",\n      \"id\": \"VD-235\",\n      \"position\": 1,\n      \"prices\": [\n        {\"\
+    currencyCode\": \"USD\", \"amount\": \"10.00\"}\n      ],\n      \"availableForPurchase\": true,\n\
+    \      \"inventoryQuantity\": 5,\n      \"productOptionValues\": [\n        {\"productOptionName\"\
+    : \"Color\", \"value\": \"Black\"},\n        {\"productOptionName\": \"Size\", \"value\": \"Medium\"\
+    }\n      ],\n      \"link\": \"https://www.google.com\",\n      \"lastUpdated\": \"2021-10-05T18:08:28+00:00\"\
+    \n    },\n    {\n      \"name\": \"Nasa T-Shirt - Black - Large\",\n      \"id\": \"VD-236\",\n  \
+    \    \"position\": 2,\n      \"prices\": [\n        {\"currencyCode\": \"USD\", \"amount\": \"10.00\"\
+    }\n      ],\n      \"availableForPurchase\": true,\n      \"inventoryQuantity\": 0,\n      \"productOptionValues\"\
+    : [\n        {\"productOptionName\": \"Color\", \"value\": \"Black\"},\n        {\"productOptionName\"\
+    : \"Size\", \"value\": \"Large\"}\n      ],\n      \"link\": \"https://www.google.com\",\n      \"\
+    lastUpdated\": \"2021-10-05T18:08:28+00:00\"\n    }\n  ]\n}\n  ```\n### Development Workflow Tips\n\
+    - As you're developing your code to generate this catalog file for Attentive, it's helpful to\nvalidate\
+    \ your generated files without any side effects on Attentive. To do that, please set\nthe `validateOnly`\
+    \ boolean to `true` when calling `/product-catalog/uploads`. Please note\nyour file is not immediately\
+    \ processed once the upload compeletes, but you can check the\nstatus of your upload with the same\
+    \ endpoint.\n- The cadence of uploading your catalog to Attentive is up to you. A daily job works\
+    \ great for most\nof our users, but we'd prefer we limit it to no more than every few hours if you're\
+    \ sending us\nyour entire catalog on every upload. However, if you would like to send us \"delta uploads\"\
+    \n(only products/variants which have changed since your last upload), please feel free to be more\n\
+    liberal with your cadence. If we find there are upload frequency issues, we'll be sure to reach\n\
+    out.\n-  If you have any questions as to how to map your catalog to the Attentive format above,\n\
+    please reach out to your client strategy partner at Attentive.\n\n### File Upload Limits\n- All files\
+    \ need to be UTF-8 encoded.\n- 2GB maximum file size\n- 4mb maximum line/product size\n- 500k line/product\
+    \ limit per file"
+- name: Webhooks
+  description: Create and manage webhooks
+paths:
+  /me:
+    get:
+      summary: Me
+      description: Make a call to this endpoint to test your unique token that you generate in the Attentive
+        product.
+      operationId: getMe
+      tags:
+      - Test Authentication
+      responses:
+        '200':
+          description: Get information about the authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMeResponseDto'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /subscriptions:
+    get:
+      security:
+      - OAuthFlow:
+        - subscriptions:read
+      summary: Get subscription eligibility for a user
+      description: 'Make a call to this endpoint to list all subscription types and channels a user is
+        subscribed to. You can query for a subscriber using either their phone number or email. One of
+        the query parameters is required in order to look up a subscriber. As an example, you can use
+        this endpoint to check if a subscriber is eligible to receive SMS or email campaigns, and then
+        send them a message based on that eligibility.
+
+        '
+      operationId: getSubscriptions
+      tags:
+      - Subscribers
+      parameters:
+      - in: query
+        name: phone
+        schema:
+          type: string
+          example: '%2B13115552368'
+        description: A user's phone number we use to fetch subscription eligibility.
+      - in: query
+        name: email
+        schema:
+          type: string
+          example: test@gmail.com
+        description: A user's email we use to fetch subscription eligibility.
+      responses:
+        '200':
+          description: Successfully accepted get subscriptions request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSubscriptionsResponseDto'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      security:
+      - OAuthFlow:
+        - subscriptions:write
+      summary: Subscribe user
+      description: "Make a call to this endpoint to opt-in a user to a subscription. \n\nNotes:\n- A legal\
+        \ disclosure is required when a user is opted-in programmatically.\n    - For marketing messages,\
+        \ required [legal language](https://docs.attentivemobile.com/pages/legal-docs/legal-disclosure-language/)\
+        \ must be included.\n\n    - For transactional messages, you must include a [transactional opt-in\
+        \ unit](https://docs.attentivemobile.com/pages/legal-docs/legal-transactional/).\n  \n- By default,\
+        \ if a subscription already exists, it will try and record the attempt to create the subscription\
+        \ again. For TEXT subscriptions, this will result in a message being sent to the person indicating\
+        \ that they are already subscribed.\n- Requests to opt-in subscribers must either contain a) a\
+        \ sign-up source id or b) both a locale and a subscription type.\n    - The unique identifier\
+        \ of a sign-up source can be found in the Sign-up Units tab of the Attentive platform in the ID\
+        \ column. \n    If this value is provided in the request, then this sign-up unit will be used\
+        \ for opting in the user in the request.\n\n    - Callers of this endpoint have the option to\
+        \ omit `signUpSourceId` and, instead, provide both a `locale` and a `subscriptionType` (see below\
+        \ for field details). \n    Given the locale and subscription type, Attentive will resolve any\
+        \ matching API opt-in units. To opt-in a user to a subscription without a `signUpSourceId` and\
+        \ exclusively based on locale and subscription type,\n    there must be exactly one API sign-up\
+        \ unit that matches the provided locale and subscription type. Conversely, requests that contain\
+        \ a locale and a subscription type\n    that do not have a corresponding sign-up unit or that\
+        \ have multiple matching sign-up units will receive a `400` response and will not opt a user into\
+        \ a subscription.\n\n- For users in either France or Italy, in accordance with compliance updates\
+        \ documented [here](https://help.attentive.com/hc/en-us/articles/51464632390804-France-Email-Privacy-Compliance-Update),\
+        \ we set an email pixel tracking\n  consent attribute as part of opting in an email subscriber.\
+        \ This is set by default when the locale of a subscriber is in France or Italy.\n  We expose the\
+        \ capability in this endpoint to set this consent on behalf of the user via the `pixelTrackingConsent`\
+        \ parameter. This is a boolean parameter which when provided indicates whether or not a subscriber\
+        \ has consented\n  to email pixel tracking. When this endpoint is called with `pixelTrackingConsent\
+        \ = true` and an email on the `UserDto`, the email subscription will be created with that tracking\
+        \ consent, visible in subscriber attributes. If \n  it is not passed in at all the consent defaults\
+        \ to false.\n  NOTE: This parameter will only be honored if it is passed in with a `signUpSourceId`,\
+        \ otherwise we will not save the attribute.\n\n- Phone numbers must be submitted in [e164 format](https://en.wikipedia.org/wiki/E.164).\n\
+        \    - valid examples: `+19148440001`, `+442071838750`, `+551155256325`\n    - invalid examples:\
+        \ `19148440001`, `+1---914---844---0001`, `1 () 914 844 0001`\n"
+      operationId: addSubscriptions
+      tags:
+      - Subscribers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddSubscriptionsRequestDto'
+      responses:
+        '202':
+          description: Accepted a create subscription(s) request. The response body will contain info
+            about which subscription(s) already exist, and which subscription(s) will be created (asynchronously).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddSubscriptionsResponseDto'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /subscriptions/unsubscribe:
+    post:
+      security:
+      - OAuthFlow:
+        - subscriptions:write
+      summary: Unsubscribe subscriptions for a user
+      description: "Make a call to this endpoint to unsubscribe a user from a subscription type or channel.\
+        \ If no subscriptions\nare present in the request, the user is unsubscribed from all subscriptions.\
+        \ If subscriptions are present\nin the request, the user is unsubscribed from the requested type\
+        \ or channel combination. By default, if a\nsubscription exists, but the user is already unsubscribed,\
+        \ it records the attempt to unsubscribe the\nsubscription again. For TEXT subscriptions, a message\
+        \ is sent to the person indicating that they are\nunsubscribed.\n\nFor the user object, the email\
+        \ data point determines which email subscriptions a user has and the phone data point \ndetermines\
+        \ which text (or sms) subscriptions a user has. Passing in an email does not locate, nor unsubscribe,\
+        \ \na user from any sms subscriptions. Similarly, passing in a phone does not locate, nor unsubscribe,\
+        \ a user from any email subscriptions.\n"
+      operationId: unsubscribeSubscriptions
+      tags:
+      - Subscribers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnsubscribeSubscriptionsRequestDto'
+      responses:
+        '202':
+          description: Accepted an unsubscribe subscription(s) request. The response body will contain
+            info about which subscription(s) are already unsubscribed, and which subscription(s) will
+            be unsubscribed (asynchronously).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnsubscribeSubscriptionsResponseDto'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /attributes/custom:
+    get:
+      summary: Get Custom Attributes for a User
+      description: 'Make a call to this endpoint to retrieve all custom attribute data associated with
+        a user. You can query this endpoint by either phone or email.
+
+
+        **Note: You must include a single query parameter, phone or email. Including both will result
+        in a 400 error.**
+
+        '
+      operationId: getCustomAttributes
+      security:
+      - OAuthFlow:
+        - attributes:write
+      tags:
+      - Custom Attributes
+      parameters:
+      - in: query
+        name: phone
+        schema:
+          type: string
+          example: '+13115552368'
+        description: 'A user’s phone number in E.164 format. The ''+'' sign in the phone number must be
+          encoded in the URL query parameter as ''%2B''
+
+          '
+      - in: query
+        name: email
+        schema:
+          type: string
+          example: test@gmail.com
+        description: 'A user''s email
+
+          '
+      responses:
+        '200':
+          description: Successfully accepted get custom attributes request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCustomAttributesResponse'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      security:
+      - OAuthFlow:
+        - attributes:write
+      summary: Custom Attributes
+      description: 'Make a call to this endpoint for any attribute-based data. There are no limits to
+        the amount of custom attributes that can be created. Note that you can create net-new properties
+        with this API, however, it cannot be used to create new values for an existing UI-created property
+        name. If a property name is created through the Attentive platform, all possible property values
+        must also be defined in the platform. For example, if a property has possible values of "Adult,
+        Teen, Children''s", those are the only values that will be accepted through the API. This does
+        not apply for properties with the type "Custom input", for example: Full Name. Also, please note
+        that the API does not support arrays. For example, attempting to pass an array such as ''["chicago",
+        "new york"]'' for an attribute like ''favorite_city'' will result in a 400 error.
+
+
+        **Note : The maximum length for an attribute name is 200 characters.**
+
+        '
+      operationId: postCustomAttributes
+      tags:
+      - Custom Attributes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomAttributesRequest'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /events/custom:
+    post:
+      security:
+      - OAuthFlow:
+        - events:write
+      summary: Custom Events
+      description: Make a call to this endpoint for any event-based data representing user actions.
+      operationId: postCustomEvents
+      tags:
+      - Custom Events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomEventsRequest'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /product-catalog/uploads:
+    get:
+      security:
+      - OAuthFlow:
+        - product_catalogs:read
+      tags:
+      - Product Catalog
+      summary: View Recent Catalog Uploads
+      description: 'Make a call to this endpoint to list recent catalog uploads with their statuses to
+        gain visibility into the ingestion workflow in order of creation. See the POST of this endpoint
+        for details.
+
+        `Expires` indicates how long you can wait before uploading the product catalog file. If the catalog
+        upload expires, then we will no longer process the file that you upload and you will need to initiate  a
+        new catalog upload.
+
+        '
+      operationId: getUploads
+      responses:
+        '200':
+          description: returns the list of uploads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogUploadResponse'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      security:
+      - OAuthFlow:
+        - product_catalogs:write
+      summary: Upload Product Catalog
+      description: "Make a call to this endpoint to start sending Attentive your full or partial product\
+        \ catalog.\nThe process starts with a POST to this endpoint, where you will receive a pre-signed\
+        \ AWS S3 URL. You can\nuse any language's http request libraries for uploading a file via HTTP.\
+        \ Here's how to do it with `curl` as an example\n\n\n```\ncurl --upload-file ${fileNameLocally}\
+        \ ${presignedURL}\n```\n\n\nand here's an example in Python\n```python\nimport requests\nwith\
+        \ open(filepath, 'rb') as f:\n    r = requests.put(upload_url, data=f)\n```\n\n[Here are examples\
+        \ from AWS](https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html)\
+        \ on how to send the file over in popular programming languages. Note that you aren't interested\
+        \ in\nthe portion of these examples where they are generating the pre-signed URL, but simply the\
+        \ http call to upload the file to the URL.\n\nOnce your full or partial product catalog begins\
+        \ to upload, the status is updated to\n`validating` while it's processing and the file is checked\
+        \ for errors. After the upload is\nvalidated, the status is updated to `validated`. Once the catalog\
+        \ is saved, \nthe status is updated to `completed`. In cases where there are errors saving\nthe\
+        \ data, Attentive Engineering is notified and will contact you.\n\n\nTo ensure there are no validation\
+        \ errors in the file, you can set `validateOnly` parameter\nto `true` to avoid saving any data.\
+        \ We highly recommend this during your development to get a\nfaster feedback loop on any validation\
+        \ errors as you generate files.\n\n\nIf there are no errors returned in the upload response, your\
+        \ product catalog uploaded\nsuccessfully.\n"
+      operationId: postUpload
+      tags:
+      - Product Catalog
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogUploadRequest'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogUploadResponse'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /product-catalog/uploads/{uploadId}:
+    get:
+      security:
+      - OAuthFlow:
+        - product_catalogs:read
+      summary: Lookup Product Catalog Ingestion
+      tags:
+      - Product Catalog
+      operationId: lookupUpload
+      parameters:
+      - name: uploadId
+        in: path
+        description: The upload ID returned from a previous call
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Returns the provided upload status update
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogUploadResponse'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /webhooks:
+    get:
+      security:
+      - OAuthFlow:
+        - webhooks:write
+      summary: List webhooks
+      description: Make an API call to this endpoint to list existing webhooks.
+      operationId: getWebhooks
+      tags:
+      - Webhooks
+      responses:
+        '200':
+          description: existing webhooks.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetWebhooksResponseDto'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      security:
+      - OAuthFlow:
+        - webhooks:write
+      summary: Create webhook
+      description: 'Make an API call to this endpoint to subscribe to a webhook.
+
+
+        Events are a collection of strings of the following types:
+
+        * `sms.subscribed`
+
+        * `sms.sent`
+
+        * `sms.message_link_click`
+
+        * `email.subscribed`
+
+        * `email.unsubscribed`
+
+        * `email.message_link_click`
+
+        * `email.opened`
+
+        * `custom_attribute.set`
+
+
+        Event types are case sensitive.
+
+
+        All events included will be sent to the URL.
+
+        '
+      operationId: createWebhook
+      tags:
+      - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWebhookRequestDto'
+      responses:
+        '201':
+          description: Webhook has been created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateWebhookResponseDto'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /webhooks/{webhookId}:
+    put:
+      security:
+      - OAuthFlow:
+        - webhooks:write
+      summary: Update webhook
+      description: Make an API call to this endpoint to update a webhook
+      operationId: updateWebhook
+      parameters:
+      - name: webhookId
+        in: path
+        description: The id of the webhook to update
+        required: true
+        schema:
+          type: string
+      tags:
+      - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWebhookRequestDto'
+      responses:
+        '200':
+          description: Webhook has been updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateWebhookResponseDto'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      security:
+      - OAuthFlow:
+        - webhooks:write
+      summary: Delete webhook
+      description: Make an API call to this endpoint to remove a webhook.
+      operationId: deleteWebhook
+      parameters:
+      - name: webhookId
+        in: path
+        description: id of the webhook to delete
+        required: true
+        schema:
+          type: string
+      tags:
+      - Webhooks
+      responses:
+        '204':
+          description: Webhook has been deleted
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: OAuth access token or private-app API key as Bearer token.
+    OAuthFlow:
+      type: oauth2
+      description: OAuth 2 authorization-code. See https://docs.attentive.com/docs/authentication
+      flows:
+        authorizationCode:
+          authorizationUrl: https://ui.attentivemobile.com/integrations/oauth-install
+          tokenUrl: https://api.attentivemobile.com/v1/authorization-codes/tokens
+          scopes:
+            subscriptions:write: read and write subscriptions
+            subscriptions:read: read subscriptions
+            attributes:write: read and write custom attributes
+            events:write: read and write custom events
+            ecommerce:write: read and write ecommerce events
+            product_catalogs:read: read product catalog uploads
+            product_catalogs:write: write product catalog uploads
+            webhooks:write: manage webhooks
+            privacy_requests:write: privacy deletion requests
+  schemas:
+    GetMeResponseDto:
+      type: object
+      properties:
+        applicationName:
+          type: string
+          description: The application name.
+          example: Pillow Api
+        attentiveDomainName:
+          type: string
+          description: The Attentive domain name.
+          example: hudsonivy.attn.tv
+        companyName:
+          type: string
+          description: The company name in the Attentive platform.
+          example: Hudson & Ivy
+        contactEmail:
+          type: string
+          description: The contact email associated with the application.
+          example: name@company.com
+        companyId:
+          type: string
+          description: The installer company ID
+          example: MDc6Q29tcGFueTI
+    SubscriptionDto:
+      type: object
+      description: A type and channel combination.
+      properties:
+        type:
+          type: string
+          enum:
+          - MARKETING
+          - TRANSACTIONAL
+          - CHECKOUT_ABANDONED
+          - CONTACT
+        channel:
+          type: string
+          enum:
+          - TEXT
+          - EMAIL
+    EligibilityDto:
+      type: object
+      description: A user's eligibility to receive messages for a subscription.
+      properties:
+        isEligible:
+          type: boolean
+          description: A boolean representing a user's eligibility to receive messages for a subscription.
+    GetSubscriptionsResponseDto:
+      type: object
+      description: A list of the subscriptions that a subscriber is eligible to receive messages for.
+      properties:
+        subscriptionEligibilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionEligibilityDto'
+    SubscriptionEligibilityDto:
+      type: object
+      description: A subscription and a boolean indicating whether the user is eligible to receive messages
+        for that subscription.
+      properties:
+        subscription:
+          $ref: '#/components/schemas/SubscriptionDto'
+        eligibility:
+          $ref: '#/components/schemas/EligibilityDto'
+    AddSubscriptionsRequestDto:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserDto1'
+        signUpSourceId:
+          type: string
+          description: "The unique identifier of the sign-up source. This can be found in the Sign-up\
+            \ Units tab of the Attentive platform in the ID column for any API sign-up method.\nThis field\
+            \ is required if locale is not present. \n\nOr, you can contact our White Glove team (whiteglove@attentivemobile.com)\n\
+            or your Client Strategy Manager at Attentive to request a sign-up source for either marketing\
+            \ or\ntransactional opt-ins. Our team will review API opt-in units with\n[compliance in mind](https://docs.attentivemobile.com/pages/legal-docs/legal-disclosure-language/).\n"
+        externalIdentifiers:
+          $ref: '#/components/schemas/NewExternalIdentifierDto'
+        locale:
+          $ref: '#/components/schemas/LocaleDto'
+        subscriptionType:
+          type: string
+          enum:
+          - MARKETING
+          - TRANSACTIONAL
+        singleOptIn:
+          type: boolean
+          description: "Opt in subscriber silently (do not send a Reply Y to subscribe text).\n\nNOTE:\
+            \ This property is disabled (set to false) by default. We strongly recommend maintaining the\
+            \ standard \ndouble opt-in flow, as it serves important legal and compliance purposes. If\
+            \ you want to enable single opt-in, \nwe encourage you to speak with your dedicated Client\
+            \ Strategy Manager (CSM) or our White Glove team \n(whiteglove@attentivemobile.com) before\
+            \ you enable it. If this property is set to true, subscribers will be \nadded without receiving\
+            \ the initial “Reply Y” confirmation text message. This setting bypasses only the \n“Reply\
+            \ Y” message. The mandatory legal message will still be sent.\n"
+        pixelTrackingConsent:
+          type: boolean
+          description: "Explicitly set subscriber pixel tracking consent. This is implemented in accordance\
+            \ with compliance requirements\nin France and Italy. French and Italian subscribers have to\
+            \ explicitly opt in to email pixel tracking, so this\nparameter allows third party developers\
+            \ to create a subscription with the tracking consent set.\n\nNOTE: This property is false\
+            \ by default. Will only be set to true if explicitly passed in. It will also only \nbe honored\
+            \ if it is passed in alongside a signupSourceId.\n"
+      required:
+      - user
+    AddSubscriptionsResponseDto:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserDto1'
+        externalIdentifiers:
+          $ref: '#/components/schemas/NewExternalIdentifierDto'
+        subscriptionResponses:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddSubscriptionResponseDto'
+    UserDto1:
+      type: object
+      description: User associated with the action. Note that this is a visitor to the site and does not
+        need to be actively subscribed to Attentive.
+      properties:
+        phone:
+          type: string
+          description: Phone number of the user associated with the action. [E.164 format](https://en.wikipedia.org/wiki/E.164)
+            is required. This field is required if email is not provided.
+          example: '+13115552368'
+        email:
+          type: string
+          description: Email of the user associated with the action. This field is required if phone is
+            not provided.
+          example: test@gmail.com
+    LocaleDto:
+      type: object
+      properties:
+        language:
+          type: string
+          description: Two-letter language code of the locale. [ISO 639-1 alpha 2](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
+            is required. Values are case sensitive and must match exactly.
+          example: en
+        country:
+          type: string
+          description: Two-letter country code of the locale. [ISO-3166-1 alpha 2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
+            is required. Values are case sensitive and must match exactly.
+          example: US
+    CustomIdentifierDto:
+      type: object
+      description: Namespaced custom identifier and value
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+    SubscriptionCreationStatus:
+      type: string
+      enum:
+      - NEWLY_CREATED
+      - PREVIOUSLY_CREATED
+    AddSubscriptionResponseDto:
+      type: object
+      description: A subscription and a status indicating whether the subscription for this particular
+        user was newly created or was previously created (i.e. already existed)
+      properties:
+        subscription:
+          $ref: '#/components/schemas/SubscriptionDto'
+        subscriptionCreationStatus:
+          $ref: '#/components/schemas/SubscriptionCreationStatus'
+    NewExternalIdentifierDto:
+      type: object
+      description: External Identifiers for a user
+      properties:
+        clientUserId:
+          type: string
+          description: 'Notes:
+
+            Sending duplicate values could lead to unintentionally bridging users together.
+
+            Don''t use customIdentifiers to send attributes (e.g., first name, last name). To send those
+            types of attributes, use our Custom Attributes API.
+
+            Avoid sending null values or empty strings. If you don''t have a valid identifier, you should
+            omit the field from the payload.
+
+            '
+        shopifyId:
+          type: string
+          description: 'Notes:
+
+            Sending duplicate values could lead to unintentionally bridging users together.
+
+            Don''t use customIdentifiers to send attributes (e.g., first name, last name). To send those
+            types of attributes, use our Custom Attributes API.
+
+            Avoid sending null values or empty strings. If you don''t have a valid identifier, you should
+            omit the field from the payload.
+
+            '
+        klaviyoId:
+          type: string
+          description: 'Notes:
+
+            Sending duplicate values could lead to unintentionally bridging users together.
+
+            Don''t use customIdentifiers to send attributes (e.g., first name, last name). To send those
+            types of attributes, use our Custom Attributes API.
+
+            Avoid sending null values or empty strings. If you don''t have a valid identifier, you should
+            omit the field from the payload.
+
+            '
+        customIdentifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomIdentifierDto'
+    UnsubscribeSubscriptionsRequestDto:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserDto1'
+        subscriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionDto'
+        notification:
+          $ref: '#/components/schemas/NotificationConfigDto'
+      required:
+      - user
+    UnsubscribeSubscriptionsResponseDto:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserDto1'
+        subscriptionResponses:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnsubscribeSubscriptionResponseDto'
+    NotificationConfigDto:
+      type: object
+      description: Optional notification properties to override
+      properties:
+        language:
+          type: string
+          description: Standard language tags as defined by the ISO. Currently only supports en-US and
+            fr-CA. Case sensitive, must match exactly.
+        disabled:
+          type: boolean
+          description: A boolean representing if a user should not receive a confirmation message upon
+            unsubscribing. Assumed false by default.
+    SubscriptionUnsubscribeStatus:
+      type: string
+      enum:
+      - NEWLY_UNSUBSCRIBED
+      - PREVIOUSLY_UNSUBSCRIBED
+    UnsubscribeSubscriptionResponseDto:
+      type: object
+      description: A subscription and a status indicating whether the subscription for this particular
+        user was newly unsubscribed or was previously unsubscribed (i.e. already opted-out)
+      properties:
+        subscription:
+          $ref: '#/components/schemas/SubscriptionDto'
+        subscriptionUnsubscribeStatus:
+          $ref: '#/components/schemas/SubscriptionUnsubscribeStatus'
+    GetCustomAttributesResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Name of the custom attribute
+            example: favoriteColor
+          value:
+            anyOf:
+            - type: string
+            description: Value of the custom attribute
+            example: blue
+        required:
+        - attribute
+        - value
+    CustomAttributesRequest:
+      type: object
+      properties:
+        properties:
+          type: object
+          description: 'Any metadata associated with the attribute. Object keys are expected to be strings.
+            Object values can be any type. The key will be assigned a type corresponding to the type seen
+            of the first value. For example, if ''Age'' is passed with the first value of ''24'', ''Age''
+            will be typed as a ''Number''. There is no need to pass strings in double quotes. Both object
+            keys and object values are case sensitive. "Favorite color" and "Favorite Color" would be
+            considered different custom attributes.
+
+            '
+          example:
+            age: '24'
+            birthday: '1986-11-16'
+            sign up: '2021-04-23T16:04:33Z'
+            favorite team: Minnesota Vikings
+            Gift card balance: '50.89'
+            VIP: 'TRUE'
+        user:
+          $ref: '#/components/schemas/EventUser'
+      required:
+      - properties
+      - user
+    ExternalIdentifiers:
+      type: object
+      description: 'clientUserId or another custom identifier.  This field is required if either phone
+        or email is not provided.
+
+
+        If using an external identifier instead of phone or email, the external identifier must first
+        be associated with a phone or email using the Identity API.
+
+        '
+      properties:
+        clientUserId:
+          type: string
+          description: (optional) Your primary ID for a user
+        customIdentifiers:
+          type: array
+          description: (optional) Namespaced custom identifiers and their values.
+          items:
+            type: object
+            title: ExternalIdentifiersCustomIdentifiers
+            properties:
+              name:
+                type: string
+              value:
+                type: string
+    EventUser:
+      type: object
+      description: 'User associated with the action. Note that this is a visitor to the site and does
+        not need to be actively subscribed to Attentive.
+
+        Phone, email, or an external identifier (clientUserId or another custom identifier) are required
+
+        '
+      properties:
+        phone:
+          type: string
+          description: Phone number of the user associated with the action. [E.164 format](https://en.wikipedia.org/wiki/E.164)
+            is required. This field is required if either email or an externalIdentifier is not provided.
+          example: '+13115552368'
+        email:
+          type: string
+          description: Email of the user associated with the action. This field is required if either
+            phone or an externalIdentifier is not provided.
+          example: test@gmail.com
+        externalIdentifiers:
+          $ref: '#/components/schemas/ExternalIdentifiers'
+      additionalProperties: false
+      minProperties: 1
+    CustomEventsRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'The type of event. This name is case sensitive.
+
+            "Order shipped" and "Order Shipped" would be considered different event types.
+
+
+            The Custom Event type cannot any of the following special characters:
+
+            * double quote "
+
+            * single quote ''
+
+            * parentheses ( )
+
+            * curly braces { }
+
+            * square brackets [ ]
+
+            * backslash \
+
+            * vertical bar |
+
+            * commas ,
+
+            '
+          example: Order Shipped
+        properties:
+          type: object
+          description: 'Any metadata associated with the event.
+
+
+            Object keys are expected to be strings, and cannot contain any of the following special characters:
+
+            * double quote "
+
+            * curly braces { }
+
+            * square brackets [ ]
+
+            * backslash \
+
+            * vertical bar |
+
+
+            Object values can be any type. Note that both object keys and object values are case sensitive.
+            For example, "deliverydate" and
+
+            "DeliveryDate" would be considered different event properties.
+
+
+            Notes:
+
+            * Lists and nested objects can only be used with email messages. Lists and nested objects
+            are not currently supported for SMS.
+
+            * When attempting to access double or deeper nested lists in a Custom Events journey message,
+            nested lists are not available for easy selection in the "Insert Variable" dropdown modal.
+            You can manually write out the path to access the nested list as a variable, which can then
+            be resolved in a message using Liquid loops. If the Liquid is written correctly, the nested
+            Liquid list will validate correctly in both the Real Subscriber Preview and in sent messages.
+            Note: nested objects are accessible via the "Insert Variable" modal today, but nested lists
+            are not.
+
+            * For URLs that are provided as a value, Attentive will automatically shorten the link with
+            your brand''s link shortener. For example, https://mysite.com/. Note that Attentive can only
+            shorten URLs that are 1,024 characters or fewer.
+
+            * Custom events must be triggered using the same custom app that originally created them.
+
+            * There is a maximum of 200 object keys per custom event type. While payloads larger than
+            this will be saved, not all keys will be available for use in Journeys and macros.
+
+            '
+          example:
+            mediaUrl: https://cdn.example.com/images/sample-image.jpg
+            orderStatusURL: https://example.com/orderstatus/54321
+            delivery_date: May 10
+            Order Id: '54321'
+            products:
+            - productId1
+            - productId2
+            shipment:
+              carrier: fedex
+              trackingNumber: '12345'
+          properties:
+            mediaUrl:
+              type: string
+              description: URL of the image that accompanies MMS. Be sure to add a dynamic product image
+                in the message composer in the Attentive UI when adding a text message step to a journey
+                triggered by the custom event.
+          additionalProperties: true
+        externalEventId:
+          type: string
+          description: A unique identifier representing this specific event. A UUID is recommended.
+          example: 37fb97a9-6cfd-4983-bd65-68d104d53b70
+        occurredAt:
+          type: string
+          format: date-time
+          description: 'Timestamp of when the action occurred in [RFC 3339 format](https://datatracker.ietf.org/doc/html/rfc3339#section-5.8)
+            with required UTC offset. If the timestamp is older than 12 hours, it will not trigger any
+            relevant Journeys. If no timestamp is provided, it is assumed the event occurred when the
+            endpoint is called.
+
+            '
+          example: '2021-03-30T14:38:29.000Z'
+        user:
+          $ref: '#/components/schemas/EventUser'
+      required:
+      - type
+      - user
+    CatalogUploadResponse:
+      type: object
+      properties:
+        uploadId:
+          type: string
+          description: The identifier for this product catalog upload
+        status:
+          type: string
+          description: 'The workflow state the product catalog upload is in. Workflow is `initialized`
+            -> `validating` -> `validated` -> `completed`. The ideal end state is to reach `completed`
+            without any validation errors. This indicates Attentive ingested everything in your upload.
+
+            '
+        errors:
+          type: array
+          description: 'The format validation errors that were thrown. We show up to 10 errors for every
+            validation type to reduce noise.
+
+            '
+          items:
+            $ref: '#/components/schemas/CatalogUploadErrorResponse'
+        productsReceived:
+          type: integer
+          format: int64
+          description: The number of products we've so far seen for validation in your upload
+        productsProcessed:
+          type: integer
+          format: int64
+          description: The number of products we've successfully validated in your upload
+        lastUpdated:
+          type: string
+          description: When Attentive has last updated the status and stats
+        expires:
+          type: string
+          description: When this catalog upload will no longer be available
+        uploadUrl:
+          type: string
+          description: The pre-signed URL to upload your product catalog to
+        validateOnly:
+          type: boolean
+          description: 'Flag for avoiding saving the data. If set to `true`, the data will not be saved
+            by Attentive. Useful for testing the validation
+
+            '
+    CatalogUploadErrorResponse:
+      type: object
+      properties:
+        errorType:
+          type: string
+          description: The class of validation error
+        errorMessage:
+          type: string
+          description: Detailed validation error message
+        lineNum:
+          type: integer
+          format: int64
+          description: The line number for the given validation error in your file/catalog upload
+    CatalogUploadRequest:
+      type: object
+      properties:
+        validateOnly:
+          type: boolean
+          description: If set to true, then data will not ingest and only validate the file.
+          default: false
+    GetWebhooksResponseDto:
+      type: object
+      properties:
+        webhooks:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetWebhookResponseDto'
+    GetWebhookResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The id of the installed webhook
+          example: MjU6Q29tcGFueUFwcGxpY2F0aW9uV2ViaG9vazIy
+        url:
+          type: string
+          description: The destination url of the webhook
+          example: https://example.com/webhooks
+        type:
+          type: string
+          description: The type of webhook; can be either `SUBSCRIPTION` or `STATIC`
+        events:
+          type: array
+          items:
+            type: string
+          description: The list of events this webhook is subscribed to
+          example:
+          - sms.sent
+          - phone.subscribed
+        companyId:
+          type: string
+          description: The installer company ID
+          example: MDc6Q29tcGFueTI
+        disabledAt:
+          type: string
+          description: (optional) Date (YYYY-MM-DD hh:mm:ss) of when the webhook was deleted if it was
+            deleted
+    CreateWebhookRequestDto:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The destination url of the webhook
+          example: https://example.com/webhooks
+        events:
+          type: array
+          items:
+            type: string
+          description: The list of events this webhook is subscribed to
+          example:
+          - sms.sent
+          - phone.subscribed
+    CreateWebhookResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The id of the installed webhook
+          example: MjU6Q29tcGFueUFwcGxpY2F0aW9uV2ViaG9vazIy
+        url:
+          type: string
+          description: The destination url of the webhook
+          example: https://example.com/webhooks
+        events:
+          type: array
+          items:
+            type: string
+          description: The list of events this webhook is subscribed to
+          example:
+          - sms.sent
+          - phone.subscribed
+        type:
+          type: string
+          description: The type of webhook; can be either `INSTALLED` or `CREATOR`
+        disabledAt:
+          type: string
+          description: (optional) Date (YYYY-MM-DD hh:mm:ss) of when the webhook was deleted if it was
+            deleted
+    UpdateWebhookRequestDto:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The destination url of the webhook
+          example: https://example.com/webhooks
+        events:
+          type: array
+          items:
+            type: string
+          description: The list of events this webhook is subscribed to
+          example:
+          - sms.sent
+          - phone.subscribed
+        disabled:
+          type: boolean
+          description: (optional) Disable the webhook endpoint if set to true.
+    UpdateWebhookResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The id of the installed webhook
+          example: MjU6Q29tcGFueUFwcGxpY2F0aW9uV2ViaG9vazIy
+        url:
+          type: string
+          description: The destination url of the webhook
+          example: https://example.com/webhooks
+        events:
+          type: array
+          items:
+            type: string
+          description: The list of events this webhook is subscribed to
+          example:
+          - sms.sent
+          - phone.subscribed
+        type:
+          type: string
+          description: The type of webhook; can be either `INSTALLED` or `CREATOR`
+        disabledAt:
+          type: string
+          description: (optional) Date (YYYY-MM-DD hh:mm:ss) of when the webhook was deleted if it was
+            deleted
+  responses:
+    NotFound:
+      description: The specified resource was not found
+    AccessDenied:
+      description: Access Denied
+    InvalidParameter:
+      description: Invalid parameter in request query or body
+    InternalError:
+      description: Internal Server Error
+    Unauthorized:
+      description: Unauthorized
+    TooManyRequests:
+      description: The user has sent too many requests in a given amount of time

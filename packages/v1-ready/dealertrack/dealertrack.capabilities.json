@@ -1,0 +1,157 @@
+{
+  "$schema": "capability-manifest/v0.1",
+  "module": "dealertrack",
+  "package": "@friggframework/api-module-dealertrack",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "notes": "OAuth 2.0 authorization-code with refresh_token. Authorize/token hosts from Left Hook cleared source notes (auth.dealertrack.com). Partner-gated via Cox Automotive Integration Platform / Opentrack."
+  },
+  "objects": {
+    "dealer": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "name", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "getDealer", "surface": "data-read", "method": "getDealer" }
+      ]
+    },
+    "location": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "name", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listLocations", "surface": "data-read", "method": "listLocations" },
+        { "name": "getLocation", "surface": "data-read", "method": "getLocation" }
+      ]
+    },
+    "customer": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "name", "tags": ["read", "write"] },
+        { "name": "firstName", "tags": ["read", "write"] },
+        { "name": "lastName", "tags": ["read", "write"] },
+        { "name": "email", "tags": ["identity", "read", "write"] },
+        { "name": "phone", "tags": ["identity", "read", "write"] }
+      ],
+      "operations": [
+        { "name": "listCustomers", "surface": "data-read", "method": "listCustomers" },
+        { "name": "getCustomer", "surface": "data-read", "method": "getCustomer" },
+        { "name": "searchCustomers", "surface": "data-read", "method": "searchCustomers" },
+        { "name": "createCustomer", "surface": "data-write", "method": "createCustomer" },
+        { "name": "updateCustomer", "surface": "data-write", "method": "updateCustomer" },
+        { "name": "listCustomerVehicles", "surface": "data-read", "method": "listCustomerVehicles" },
+        { "name": "getCustomerServiceHistory", "surface": "data-read", "method": "getCustomerServiceHistory" }
+      ]
+    },
+    "vehicle": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "vin", "tags": ["identity", "read"] },
+        { "name": "year", "tags": ["read"] },
+        { "name": "make", "tags": ["read"] },
+        { "name": "model", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listVehicles", "surface": "data-read", "method": "listVehicles" },
+        { "name": "getVehicle", "surface": "data-read", "method": "getVehicle" },
+        { "name": "decodeVin", "surface": "data-read", "method": "decodeVin" },
+        { "name": "getVehicleServiceHistory", "surface": "data-read", "method": "getVehicleServiceHistory" }
+      ]
+    },
+    "repairOrder": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "status", "tags": ["read", "write"] },
+        { "name": "customerId", "tags": ["relation", "read", "write"] },
+        { "name": "vehicleId", "tags": ["relation", "read", "write"] }
+      ],
+      "operations": [
+        { "name": "listRepairOrders", "surface": "data-read", "method": "listRepairOrders" },
+        { "name": "getRepairOrder", "surface": "data-read", "method": "getRepairOrder" },
+        { "name": "createRepairOrder", "surface": "data-write", "method": "createRepairOrder" },
+        { "name": "updateRepairOrder", "surface": "data-write", "method": "updateRepairOrder" }
+      ]
+    },
+    "invoice": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "amount", "tags": ["read"] },
+        { "name": "status", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listInvoices", "surface": "data-read", "method": "listInvoices" },
+        { "name": "getInvoice", "surface": "data-read", "method": "getInvoice" }
+      ]
+    },
+    "payment": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "amount", "tags": ["read", "write"] },
+        { "name": "status", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listPayments", "surface": "data-read", "method": "listPayments" },
+        { "name": "getPayment", "surface": "data-read", "method": "getPayment" },
+        { "name": "createPayment", "surface": "data-write", "method": "createPayment" }
+      ]
+    },
+    "appointment": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "scheduledAt", "tags": ["read", "write"] },
+        { "name": "customerId", "tags": ["relation", "read", "write"] }
+      ],
+      "operations": [
+        { "name": "listAppointments", "surface": "data-read", "method": "listAppointments" },
+        { "name": "getAppointment", "surface": "data-read", "method": "getAppointment" },
+        { "name": "createAppointment", "surface": "data-write", "method": "createAppointment" }
+      ]
+    },
+    "part": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "partNumber", "tags": ["identity", "read"] },
+        { "name": "description", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listParts", "surface": "data-read", "method": "listParts" },
+        { "name": "getPart", "surface": "data-read", "method": "getPart" },
+        { "name": "searchParts", "surface": "data-read", "method": "searchParts" }
+      ]
+    },
+    "laborOperation": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "code", "tags": ["identity", "read"] },
+        { "name": "description", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listLaborOperations", "surface": "data-read", "method": "listLaborOperations" },
+        { "name": "getLaborOperation", "surface": "data-read", "method": "getLaborOperation" }
+      ]
+    },
+    "technician": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "name", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listTechnicians", "surface": "data-read", "method": "listTechnicians" },
+        { "name": "getTechnician", "surface": "data-read", "method": "getTechnician" }
+      ]
+    },
+    "serviceAdvisor": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "name", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listServiceAdvisors", "surface": "data-read", "method": "listServiceAdvisors" },
+        { "name": "getServiceAdvisor", "surface": "data-read", "method": "getServiceAdvisor" }
+      ]
+    }
+  }
+}

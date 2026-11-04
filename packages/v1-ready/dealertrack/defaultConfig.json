@@ -1,0 +1,8 @@
+{
+  "name": "dealertrack",
+  "label": "Dealertrack",
+  "productUrl": "https://us.dealertrack.com/",
+  "apiDocs": "https://developer.coxautoinc.com/",
+  "categories": ["Automotive", "DMS", "CRM", "Service"],
+  "description": "Dealertrack is Cox Automotive's dealer management system (DMS). Partner-gated Opentrack / Cox Automotive Integration Platform access."
+}

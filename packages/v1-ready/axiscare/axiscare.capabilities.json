@@ -1,0 +1,158 @@
+{
+  "$schema": "capability-manifest/v0.1",
+  "module": "axiscare",
+  "package": "@friggframework/api-module-axiscare",
+  "version": "1.0.0",
+  "auth": {
+    "type": "apiKey",
+    "scheme": "bearer",
+    "header": "Authorization",
+    "credentialFields": ["api_key", "siteNumber"],
+    "notes": "Per-tenant base URL https://{siteNumber}.axiscare.com; required header X-AxisCare-Api-Version: 2023-10-01"
+  },
+  "objects": {
+    "client": {
+      "methods": {
+        "list": "listClients",
+        "get": "getClient",
+        "create": "createClient",
+        "update": "updateClient"
+      },
+      "fields": [
+        { "name": "id", "tags": ["identity"] },
+        { "name": "firstName", "tags": ["pii"] },
+        { "name": "lastName", "tags": ["pii"] },
+        { "name": "status", "tags": [] },
+        { "name": "dateOfBirth", "tags": ["pii", "sensitive"] },
+        { "name": "personalEmail", "tags": ["pii"] },
+        { "name": "homePhone", "tags": ["pii"] },
+        { "name": "mobilePhone", "tags": ["pii"] },
+        { "name": "ssn", "tags": ["pii", "sensitive"] },
+        { "name": "residentialAddress", "tags": ["pii"] }
+      ]
+    },
+    "clientResponsibleParty": {
+      "methods": {
+        "list": "listClientResponsibleParties",
+        "get": "getClientResponsibleParty",
+        "update": "updateClientResponsibleParty"
+      },
+      "fields": [
+        { "name": "listNumber", "tags": ["identity"] },
+        { "name": "name", "tags": ["pii"] },
+        { "name": "relationship", "tags": [] },
+        { "name": "email", "tags": ["pii"] },
+        { "name": "dateOfBirth", "tags": ["pii", "sensitive"] },
+        { "name": "phones", "tags": ["pii"] },
+        { "name": "address", "tags": ["pii"] }
+      ]
+    },
+    "lead": {
+      "methods": {
+        "list": "listLeads",
+        "get": "getLead",
+        "create": "createLead",
+        "update": "updateLead"
+      },
+      "fields": [
+        { "name": "id", "tags": ["identity"] },
+        { "name": "firstName", "tags": ["pii"] },
+        { "name": "lastName", "tags": ["pii"] },
+        { "name": "status", "tags": [] },
+        { "name": "dateOfBirth", "tags": ["pii", "sensitive"] },
+        { "name": "personalEmail", "tags": ["pii"] },
+        { "name": "assessmentDate", "tags": [] }
+      ]
+    },
+    "leadResponsibleParty": {
+      "methods": {
+        "list": "listLeadResponsibleParties",
+        "get": "getLeadResponsibleParty",
+        "update": "updateLeadResponsibleParty"
+      },
+      "fields": [
+        { "name": "listNumber", "tags": ["identity"] },
+        { "name": "name", "tags": ["pii"] },
+        { "name": "email", "tags": ["pii"] }
+      ]
+    },
+    "caregiver": {
+      "methods": {
+        "list": "listCaregivers",
+        "get": "getCaregiver",
+        "create": "createCaregiver",
+        "update": "updateCaregiver"
+      },
+      "fields": [
+        { "name": "id", "tags": ["identity"] },
+        { "name": "firstName", "tags": ["pii"] },
+        { "name": "lastName", "tags": ["pii"] },
+        { "name": "status", "tags": [] },
+        { "name": "dateOfBirth", "tags": ["pii", "sensitive"] },
+        { "name": "ssn", "tags": ["pii", "sensitive"] },
+        { "name": "personalEmail", "tags": ["pii"] },
+        { "name": "mobilePhone", "tags": ["pii"] },
+        { "name": "mailingAddress", "tags": ["pii"] }
+      ]
+    },
+    "applicant": {
+      "methods": {
+        "list": "listApplicants",
+        "get": "getApplicant",
+        "create": "createApplicant"
+      },
+      "fields": [
+        { "name": "id", "tags": ["identity"] },
+        { "name": "firstName", "tags": ["pii"] },
+        { "name": "lastName", "tags": ["pii"] },
+        { "name": "status", "tags": [] },
+        { "name": "ssn", "tags": ["pii", "sensitive"] },
+        { "name": "personalEmail", "tags": ["pii"] }
+      ]
+    },
+    "visit": {
+      "methods": {
+        "list": "listVisits",
+        "get": "getVisit",
+        "create": "createVisit",
+        "update": "updateVisit",
+        "delete": "deleteVisit"
+      },
+      "fields": [
+        { "name": "id", "tags": ["identity"] },
+        { "name": "clientId", "tags": ["relation"] },
+        { "name": "caregiverId", "tags": ["relation"] },
+        { "name": "visitDate", "tags": [] },
+        { "name": "startTime", "tags": [] },
+        { "name": "endTime", "tags": [] },
+        { "name": "serviceCode", "tags": [] },
+        { "name": "verified", "tags": [] }
+      ]
+    },
+    "callLog": {
+      "methods": {
+        "list": "listCallLogs",
+        "get": "getCallLog",
+        "create": "createCallLog",
+        "update": "updateCallLog"
+      },
+      "fields": [
+        { "name": "id", "tags": ["identity"] },
+        { "name": "callerName", "tags": ["pii"] },
+        { "name": "callerPhone", "tags": ["pii"] },
+        { "name": "subject", "tags": [] },
+        { "name": "notes", "tags": [] },
+        { "name": "followUp", "tags": [] },
+        { "name": "dateTime", "tags": [] },
+        { "name": "tags", "tags": ["relation"] }
+      ]
+    }
+  },
+  "helpers": {
+    "getFromUrl": {
+      "method": "getFromUrl",
+      "surface": "data-read",
+      "notes": "Follows absolute nextPage URLs returned by list endpoints"
+    }
+  }
+}

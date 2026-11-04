@@ -1,0 +1,10 @@
+{
+    "name": "freshdesk",
+    "label": "Freshdesk",
+    "authType": "basic",
+    "productUrl": "https://www.freshworks.com/freshdesk/",
+    "apiDocs": "https://developers.freshdesk.com/api/",
+    "logoUrl": "https://www.freshworks.com/favicon.ico",
+    "categories": ["Customer Support", "Helpdesk", "Ticketing"],
+    "description": "Freshdesk REST API v2 module — tickets, contacts, agents, companies, and account identity via API-key Basic auth."
+}

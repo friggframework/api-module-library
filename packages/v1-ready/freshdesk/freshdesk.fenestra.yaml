@@ -1,0 +1,181 @@
+# Fenestra Document: Freshdesk Marketplace Apps (Freshworks Developer Platform)
+#
+# Freshdesk apps are iframe-hosted web apps rendered at configured UI
+# placeholders (ticket_sidebar, contact_sidebar, full_page_app, etc.). Host
+# communication uses the Freshworks frontend app SDK (`client` / data.get /
+# events / interface.trigger). Optional Crayons design-system components.
+#
+# Draft against fenestra 0.1.0 (api-module-library branch
+# claude/fenestra-spec-draft-Q367t). Freshdesk is listed as Tier-2 iframe in
+# specs/fenestra/PLATFORMS.md.
+#
+# Docs:
+#   https://developers.freshworks.com/docs/app-sdk/v2.3/freshdesk/
+#   https://developers.freshworks.com/docs/app-sdk/v2.3/freshdesk/front-end-apps/placeholders/
+
+fenestra: "0.1.0"
+
+info:
+  title: Freshdesk Marketplace App UI Ecosystem
+  version: "1.0.0"
+  description: |
+    Freshdesk Marketplace apps are small web applications loaded in secure
+    iframes inside the Freshdesk agent product. They are declared in
+    `manifest.json` under `product.freshdesk.location` and can read ticket /
+    contact / company context, react to product events, and trigger host UI
+    actions (modals, notifications, navigation) through the Freshworks
+    frontend app client.
+
+    Key characteristic: Apps run in iframes. The Freshworks frontend SDK
+    (`fresh_client.js` / `client`) is REQUIRED for host communication.
+    Crayons (`@freshworks/crayons`) is RECOMMENDED for consistent UI but not
+    enforced.
+  contact:
+    name: Freshworks Developer Relations
+    url: https://developers.freshworks.com/
+
+platform:
+  name: Freshdesk
+  vendor: Freshworks Inc.
+  documentation: https://developers.freshworks.com/docs/app-sdk/v2.3/freshdesk/
+  appMarketplace: https://www.freshworks.com/apps/
+  developerPortal: https://developers.freshworks.com/
+
+sdks:
+  freshworks-frontend-sdk:
+    name: Freshworks Frontend App Client
+    packageManager: npm
+    package: "fresh_client"
+    version: "2.0"
+    documentation: https://developers.freshworks.com/docs/app-sdk/v2.3/freshdesk/front-end-apps/data-methods/
+    cdn: https://static.freshdev.io/fdk/2.0/assets/fresh_client.js
+    description: |
+      Official host client for iframe apps on Freshdesk. Loaded via CDN
+      (`fresh_client.js`); there is no separate published npm package for the
+      client itself — Marketplace apps include the script tag and use the
+      global `client`. Use client.data.get for context, client.events.on for
+      product events, and client.interface.trigger for host UI actions.
+    exports:
+      client:
+        type: utility
+        description: Global Freshworks app client injected by fresh_client.js.
+      data.get:
+        type: utility
+        description: >
+          Retrieve product context (ticket, contact, company, agent, etc.)
+          for the current placeholder.
+      events.on:
+        type: hook
+        description: Subscribe to product events (e.g. ticket.propertiesChanged).
+      interface.trigger:
+        type: utility
+        description: >
+          Invoke host UI actions (showModal, showNotify, openTicket,
+          resize, etc.).
+
+  crayons:
+    name: Freshworks Crayons
+    packageManager: npm
+    package: "@freshworks/crayons"
+    version: "^3.0.0"
+    documentation: https://crayons.freshworks.com/
+    description: |
+      Optional Web Component design system for Freshworks Marketplace apps.
+      Recommended for UI consistent with Freshdesk; not required by the
+      platform (Bootstrap product stylesheet is also supported).
+    exports:
+      fw-button:
+        type: component
+        description: Primary action button
+      fw-input:
+        type: component
+        description: Text input field
+      fw-textarea:
+        type: component
+        description: Multi-line text input
+      fw-select:
+        type: component
+        description: Select dropdown
+      fw-modal:
+        type: component
+        description: Modal dialog
+
+extensionPoints:
+  - id: ticket-sidebar
+    name: Ticket sidebar
+    type: sidebar
+    extensionType: iframe
+    description: |
+      Renders in the ticket details sidebar. Declared in manifest.json as
+      product.freshdesk.location.ticket_sidebar. Receives ticket / requester
+      context via client.data.get('ticket').
+    supportedComponents:
+      - all
+    constraints:
+      responsive: true
+    context:
+      provides:
+        - ticket
+        - contact
+        - company
+        - agent
+      actions:
+        - showNotify
+        - showModal
+        - openTicket
+        - resize
+
+  - id: contact-sidebar
+    name: Contact sidebar
+    type: sidebar
+    extensionType: iframe
+    description: |
+      Renders in the contact details sidebar
+      (product.freshdesk.location.contact_sidebar). Receives contact / company
+      context via client.data.get.
+    supportedComponents:
+      - all
+    context:
+      provides:
+        - contact
+        - company
+        - agent
+      actions:
+        - showNotify
+        - showModal
+        - resize
+
+  - id: full-page-app
+    name: Full page app
+    type: fullPage
+    extensionType: iframe
+    description: |
+      App icon on the left navigation; clicking opens a full-viewport page
+      (product.freshdesk.location.full_page_app). Only one active full-page
+      app at a time.
+    supportedComponents:
+      - all
+    context:
+      provides:
+        - agent
+      actions:
+        - showNotify
+        - showModal
+        - openTicket
+
+  - id: ticket-background
+    name: Ticket background (headless)
+    type: embedded
+    extensionType: iframe
+    description: |
+      Headless location with no visible UI, used for event listeners and
+      background logic (product.freshdesk.location.ticket_background). Mapped
+      to fenestra type `embedded` because the 0.1.0 enum has no `background`
+      value; behavior is still the Freshdesk background placeholder.
+    supportedComponents: []
+    context:
+      provides:
+        - ticket
+        - agent
+      actions:
+        - showNotify

@@ -1,0 +1,61 @@
+# Fenestra Document: ModMed SMART App Launch surfaces (draft)
+#
+# ModMed Certified FHIR apps launch inside EMA / Patient Portal via SMART
+# App Launch (standalone + EHR launch). There is no React/component SDK
+# comparable to HubSpot UI Extensions; the host embeds or redirects to the
+# vendor app URL and passes launch context (patient / encounter / fhirUser)
+# through the OAuth token.
+#
+# Status: UNVALIDATED against a live ModMed vendor registration.
+#
+# Sources:
+#   https://portal.api.modmed.com/reference/authentication-2
+#   https://www.modmed.com/wp-content/uploads/2024/07/MMI-Certified-FHIR-API-Documentation-July-2024.pdf
+#   https://portal.api.modmed.com/docs/register-to-become-a-modmed-certified-fhir-api-vendor
+
+fenestra: "0.1.0"
+
+info:
+  title: ModMed SMART App Launch
+  version: "0.1.0"
+  description: |
+    ModMed Certified FHIR applications integrate with EMA and the Patient
+    Portal through SMART App Launch 2.0. After the first standalone
+    authentication, ModMed places an in-context launch link inside the EHR
+    (provider) or Patient Portal (patient). Launch context (patient,
+    encounter, fhirUser) is delivered via the OAuth token, not a component SDK.
+
+platform:
+  name: ModMed EMA
+  vendor: Modernizing Medicine
+  documentation: https://portal.api.modmed.com/reference/authentication-2
+  appMarketplace: https://portal.api.modmed.com/docs/register-to-become-a-modmed-certified-fhir-api-vendor
+
+extensionPoints:
+  - id: smart.standalone_launch
+    name: SMART Standalone Launch
+    type: fullPage
+    extensionType: iframe
+    description: |
+      Vendor-hosted app URL opened outside the EHR. User authenticates with
+      Patient Portal or provider credentials. Request scopes such as
+      launch/patient (patient picker) plus openid/fhirUser. After first
+      auth, ModMed places a return launch link in the host UI.
+
+  - id: smart.ehr_launch.provider
+    name: SMART EHR Launch (Provider)
+    type: sidebar
+    extensionType: iframe
+    description: |
+      In-EHR launch from a provider's EMA chart / pop-health surface. Requires
+      the `launch` scope; optional launch/encounter. Token carries launch
+      context and fhirUser (Practitioner/...).
+
+  - id: smart.ehr_launch.patient
+    name: SMART EHR Launch (Patient Portal)
+    type: fullPage
+    extensionType: iframe
+    description: |
+      Launch from inside the Patient Portal after standalone linking. Uses
+      launch + launch/patient context scopes. Token patient claim scopes
+      subsequent FHIR reads.

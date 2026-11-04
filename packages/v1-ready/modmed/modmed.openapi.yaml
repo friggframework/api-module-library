@@ -1,0 +1,351 @@
+openapi: 3.0.3
+info:
+  title: ModMed Certified FHIR R4 API (curated subset)
+  version: "1.0.0"
+  description: >-
+    ModMed (Modernizing Medicine) Certified FHIR R4 API using SMART App Launch.
+    This file is Left Hook's curated OpenAPI subset covering exactly the
+    endpoints the @friggframework/api-module-modmed client in api.js implements.
+    It is the source of truth the hand-written client mirrors 1:1 (one method
+    per operationId).
+
+    Official vendor documentation:
+      - Authentication: https://portal.api.modmed.com/reference/authentication-2
+      - API index: https://portal.api.modmed.com/llms.txt (Certified API section)
+      - Certified FHIR PDF (July 2024):
+        https://www.modmed.com/wp-content/uploads/2024/07/MMI-Certified-FHIR-API-Documentation-July-2024.pdf
+
+    Practice FHIR bases are customer-specific; the demonstration base below is
+    the default `aud` / server URL from the Certified authentication docs.
+    ModMed does not publish a full public OpenAPI for this surface — paths below
+    are taken from the portal reference and the Certified PDF.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://fhirmp.mmi.prod.fhir.ema-api.com/fhir/r4
+    description: ModMed Certified FHIR R4 demonstration base (aud)
+security:
+  - BearerAuth: []
+tags:
+  - name: Metadata
+  - name: Identity
+  - name: Practitioner
+  - name: PractitionerRole
+  - name: Location
+  - name: Patient
+  - name: Encounter
+  - name: Coverage
+  - name: Organization
+paths:
+  /metadata:
+    get:
+      tags: [Metadata]
+      operationId: getMetadata
+      summary: CapabilityStatement
+      description: >-
+        Fetch the server FHIR CapabilityStatement.
+        Docs: https://portal.api.modmed.com/reference/get_metadata
+      responses:
+        "200":
+          description: CapabilityStatement
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /Practitioner:
+    get:
+      tags: [Practitioner]
+      operationId: listPractitioners
+      summary: Search Practitioners
+      description: >-
+        Docs: https://portal.api.modmed.com/reference/get_practitioner
+      parameters:
+        - in: query
+          name: _count
+          schema: { type: integer }
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: identifier
+          schema: { type: string }
+      responses:
+        "200":
+          description: Bundle of Practitioner resources
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /Practitioner/{practitionerId}:
+    get:
+      tags: [Practitioner]
+      operationId: getPractitioner
+      summary: Read Practitioner
+      description: >-
+        Docs: https://portal.api.modmed.com/reference/get_practitioner-id
+      parameters:
+        - in: path
+          name: practitionerId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Practitioner
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /PractitionerRole:
+    get:
+      tags: [PractitionerRole]
+      operationId: listPractitionerRoles
+      summary: Search PractitionerRoles
+      description: >-
+        Docs: https://portal.api.modmed.com/reference/get_practitionerrole
+      parameters:
+        - in: query
+          name: _count
+          schema: { type: integer }
+        - in: query
+          name: practitioner
+          schema: { type: string }
+      responses:
+        "200":
+          description: Bundle of PractitionerRole resources
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /PractitionerRole/{practitionerRoleId}:
+    get:
+      tags: [PractitionerRole]
+      operationId: getPractitionerRole
+      summary: Read PractitionerRole
+      parameters:
+        - in: path
+          name: practitionerRoleId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: PractitionerRole
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /Location:
+    get:
+      tags: [Location]
+      operationId: listLocations
+      summary: Search Locations
+      description: >-
+        Docs: https://portal.api.modmed.com/reference/get_location
+      parameters:
+        - in: query
+          name: _count
+          schema: { type: integer }
+        - in: query
+          name: name
+          schema: { type: string }
+      responses:
+        "200":
+          description: Bundle of Location resources
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /Location/{locationId}:
+    get:
+      tags: [Location]
+      operationId: getLocation
+      summary: Read Location
+      parameters:
+        - in: path
+          name: locationId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Location
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /Patient:
+    get:
+      tags: [Patient]
+      operationId: listPatients
+      summary: Search Patients
+      description: >-
+        Docs: https://portal.api.modmed.com/reference/get_patient
+      parameters:
+        - in: query
+          name: _count
+          schema: { type: integer, default: 50 }
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: identifier
+          schema: { type: string }
+        - in: query
+          name: birthdate
+          schema: { type: string }
+      responses:
+        "200":
+          description: Bundle of Patient resources
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /Patient/{patientId}:
+    get:
+      tags: [Patient]
+      operationId: getPatient
+      summary: Read Patient
+      parameters:
+        - in: path
+          name: patientId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Patient
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /Encounter:
+    get:
+      tags: [Encounter]
+      operationId: listEncounters
+      summary: Search Encounters
+      description: >-
+        Docs: https://portal.api.modmed.com/reference/get_encounter
+      parameters:
+        - in: query
+          name: _count
+          schema: { type: integer, default: 50 }
+        - in: query
+          name: patient
+          schema: { type: string }
+        - in: query
+          name: date
+          schema: { type: string }
+      responses:
+        "200":
+          description: Bundle of Encounter resources
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /Encounter/{encounterId}:
+    get:
+      tags: [Encounter]
+      operationId: getEncounter
+      summary: Read Encounter
+      parameters:
+        - in: path
+          name: encounterId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Encounter
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /Coverage:
+    get:
+      tags: [Coverage]
+      operationId: listCoverages
+      summary: Search Coverages
+      description: >-
+        Docs: https://portal.api.modmed.com/reference/get_coverage
+      parameters:
+        - in: query
+          name: _count
+          schema: { type: integer, default: 50 }
+        - in: query
+          name: patient
+          schema: { type: string }
+        - in: query
+          name: beneficiary
+          schema: { type: string }
+      responses:
+        "200":
+          description: Bundle of Coverage resources
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /Coverage/{coverageId}:
+    get:
+      tags: [Coverage]
+      operationId: getCoverage
+      summary: Read Coverage
+      parameters:
+        - in: path
+          name: coverageId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Coverage
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /Organization:
+    get:
+      tags: [Organization]
+      operationId: listOrganizations
+      summary: Search Organizations
+      description: >-
+        Docs: https://portal.api.modmed.com/reference/get_organization
+      parameters:
+        - in: query
+          name: _count
+          schema: { type: integer }
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: type
+          schema: { type: string }
+      responses:
+        "200":
+          description: Bundle of Organization resources
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+  /Organization/{organizationId}:
+    get:
+      tags: [Organization]
+      operationId: getOrganization
+      summary: Read Organization
+      parameters:
+        - in: path
+          name: organizationId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Organization
+          content:
+            application/fhir+json:
+              schema: { type: object, additionalProperties: true }
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        OAuth 2.0 access token from the Certified SMART token endpoint
+        (https://sso.ema.md/auth/realms/fhir/protocol/openid-connect/token).
+        Sent as `Authorization: Bearer <token>`.

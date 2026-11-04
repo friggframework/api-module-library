@@ -1,0 +1,291 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "modmed",
+  "label": "ModMed",
+  "package": "@friggframework/api-module-modmed",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected ModMed Certified FHIR practice. Identity prefers the token fhirUser claim (Practitioner/Patient), then Practitioner search, then the practice fhir_base URL.",
+    "fields": [
+      {
+        "name": "fhir_base",
+        "type": "string",
+        "description": "Practice FHIR R4 base URL (OAuth aud)"
+      },
+      {
+        "name": "externalId",
+        "type": "string",
+        "description": "Stable entity external id used by Frigg credentials"
+      },
+      {
+        "name": "fhirUser",
+        "type": "string",
+        "description": "SMART fhirUser claim when present"
+      }
+    ]
+  },
+  "objects": {
+    "patient": {
+      "label": "Patient",
+      "description": "FHIR R4 Patient (USCDI demographics)",
+      "fields": [
+        { "name": "id", "type": "id", "tag": "record.id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "birthDate", "type": "date", "tag": "person.birthDate" },
+        { "name": "gender", "type": "string" },
+        { "name": "telecom", "type": "string", "tag": "person.email" },
+        { "name": "address", "type": "string" },
+        {
+          "name": "meta.lastUpdated",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "patient.list",
+          "limit": "_count",
+          "items": "entry[].resource"
+        },
+        "get": { "capability": "patient.get", "id": "patientId" }
+      }
+    },
+    "practitioner": {
+      "label": "Practitioner",
+      "description": "FHIR R4 Practitioner (provider)",
+      "fields": [
+        { "name": "id", "type": "id", "tag": "person.id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "identifier", "type": "string" },
+        {
+          "name": "meta.lastUpdated",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "practitioner.list",
+          "items": "entry[].resource"
+        },
+        "get": { "capability": "practitioner.get", "id": "practitionerId" }
+      }
+    },
+    "practitionerRole": {
+      "label": "PractitionerRole",
+      "description": "FHIR R4 PractitionerRole",
+      "fields": [
+        { "name": "id", "type": "id", "tag": "record.id", "readOnly": true },
+        { "name": "practitioner", "type": "string", "tag": "person.id" },
+        { "name": "organization", "type": "string", "tag": "organization.id" },
+        { "name": "location", "type": "string" },
+        { "name": "code", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "practitionerRole.list",
+          "items": "entry[].resource"
+        },
+        "get": {
+          "capability": "practitionerRole.get",
+          "id": "practitionerRoleId"
+        }
+      }
+    },
+    "location": {
+      "label": "Location",
+      "description": "FHIR R4 Location (facility)",
+      "fields": [
+        { "name": "id", "type": "id", "tag": "record.id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" },
+        { "name": "address", "type": "string" },
+        { "name": "status", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "location.list",
+          "items": "entry[].resource"
+        },
+        "get": { "capability": "location.get", "id": "locationId" }
+      }
+    },
+    "encounter": {
+      "label": "Encounter",
+      "description": "FHIR R4 Encounter (visit)",
+      "fields": [
+        { "name": "id", "type": "id", "tag": "record.id", "readOnly": true },
+        { "name": "status", "type": "string" },
+        { "name": "class", "type": "string" },
+        { "name": "subject", "type": "string", "tag": "person.id" },
+        { "name": "period.start", "type": "datetime" },
+        { "name": "period.end", "type": "datetime" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "encounter.list",
+          "limit": "_count",
+          "items": "entry[].resource"
+        },
+        "get": { "capability": "encounter.get", "id": "encounterId" }
+      }
+    },
+    "coverage": {
+      "label": "Coverage",
+      "description": "FHIR R4 Coverage (insurance)",
+      "fields": [
+        { "name": "id", "type": "id", "tag": "record.id", "readOnly": true },
+        { "name": "status", "type": "string" },
+        { "name": "beneficiary", "type": "string", "tag": "person.id" },
+        { "name": "payor", "type": "string", "tag": "organization.id" },
+        { "name": "period", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "coverage.list",
+          "limit": "_count",
+          "items": "entry[].resource"
+        },
+        "get": { "capability": "coverage.get", "id": "coverageId" }
+      }
+    },
+    "organization": {
+      "label": "Organization",
+      "description": "FHIR R4 Organization",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "tag": "organization.id",
+          "readOnly": true
+        },
+        { "name": "name", "type": "string", "tag": "organization.name" },
+        { "name": "type", "type": "string" },
+        { "name": "active", "type": "boolean" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "organization.list",
+          "items": "entry[].resource"
+        },
+        "get": { "capability": "organization.get", "id": "organizationId" }
+      }
+    }
+  },
+  "capabilities": {
+    "metadata.get": {
+      "kind": "read",
+      "method": "getMetadata",
+      "input": {},
+      "output": "CapabilityStatement"
+    },
+    "account.getCurrentUser": {
+      "kind": "read",
+      "method": "getCurrentUser",
+      "input": {},
+      "output": "practitioner"
+    },
+    "patient.list": {
+      "kind": "list",
+      "method": "listPatients",
+      "output": "patient[]",
+      "args": ["params"]
+    },
+    "patient.get": {
+      "kind": "read",
+      "method": "getPatient",
+      "input": { "patientId": { "type": "string", "required": true } },
+      "output": "patient",
+      "args": ["patientId"]
+    },
+    "practitioner.list": {
+      "kind": "list",
+      "method": "listPractitioners",
+      "output": "practitioner[]",
+      "args": ["params"]
+    },
+    "practitioner.get": {
+      "kind": "read",
+      "method": "getPractitioner",
+      "input": { "practitionerId": { "type": "string", "required": true } },
+      "output": "practitioner",
+      "args": ["practitionerId"]
+    },
+    "practitionerRole.list": {
+      "kind": "list",
+      "method": "listPractitionerRoles",
+      "output": "practitionerRole[]",
+      "args": ["params"]
+    },
+    "practitionerRole.get": {
+      "kind": "read",
+      "method": "getPractitionerRole",
+      "input": {
+        "practitionerRoleId": { "type": "string", "required": true }
+      },
+      "output": "practitionerRole",
+      "args": ["practitionerRoleId"]
+    },
+    "location.list": {
+      "kind": "list",
+      "method": "listLocations",
+      "output": "location[]",
+      "args": ["params"]
+    },
+    "location.get": {
+      "kind": "read",
+      "method": "getLocation",
+      "input": { "locationId": { "type": "string", "required": true } },
+      "output": "location",
+      "args": ["locationId"]
+    },
+    "encounter.list": {
+      "kind": "list",
+      "method": "listEncounters",
+      "output": "encounter[]",
+      "args": ["params"]
+    },
+    "encounter.get": {
+      "kind": "read",
+      "method": "getEncounter",
+      "input": { "encounterId": { "type": "string", "required": true } },
+      "output": "encounter",
+      "args": ["encounterId"]
+    },
+    "coverage.list": {
+      "kind": "list",
+      "method": "listCoverages",
+      "output": "coverage[]",
+      "args": ["params"]
+    },
+    "coverage.get": {
+      "kind": "read",
+      "method": "getCoverage",
+      "input": { "coverageId": { "type": "string", "required": true } },
+      "output": "coverage",
+      "args": ["coverageId"]
+    },
+    "organization.list": {
+      "kind": "list",
+      "method": "listOrganizations",
+      "output": "organization[]",
+      "args": ["params"]
+    },
+    "organization.get": {
+      "kind": "read",
+      "method": "getOrganization",
+      "input": { "organizationId": { "type": "string", "required": true } },
+      "output": "organization",
+      "args": ["organizationId"]
+    }
+  }
+}

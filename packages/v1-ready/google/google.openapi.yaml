@@ -1,0 +1,679 @@
+openapi: 3.0.3
+info:
+  title: Google Multi-API OAuth Client (subset)
+  version: "1.0.0"
+  description: >-
+    Curated subset of Google REST APIs covered by @friggframework/api-module-google
+    under one OAuth consent: Gmail, Calendar, Drive, Docs, Sheets, Analytics
+    (Admin + Data), Search Console (Webmasters), and Google Ads. Paths, methods,
+    and parameters are taken from Google's official REST references / discovery
+    documents — nothing invented. operationIds are camelCase aliases matching
+    the hand-written Api methods 1:1. Identity uses OpenID Connect userinfo
+    (outside the primary www.googleapis.com server) and is not listed here.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Google APIs Explorer
+    url: https://developers.google.com/apis-explorer
+servers:
+  - url: https://www.googleapis.com
+    description: Default Google APIs host (Gmail, Calendar, Drive, Search Console Webmasters)
+security:
+  - oauth2: []
+tags:
+  - name: Gmail
+  - name: Calendar
+  - name: Drive
+  - name: Docs
+  - name: Sheets
+  - name: Analytics
+  - name: SearchConsole
+  - name: Ads
+  - name: Channels
+paths:
+  /gmail/v1/users/{userId}/messages:
+    get:
+      tags: [Gmail]
+      operationId: listMessages
+      summary: List Gmail messages
+      description: users.messages.list
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema: { type: string, default: me }
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: pageToken
+          schema: { type: string }
+        - in: query
+          name: maxResults
+          schema: { type: integer }
+        - in: query
+          name: labelIds
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Success
+
+  /gmail/v1/users/{userId}/messages/{id}:
+    get:
+      tags: [Gmail]
+      operationId: getMessage
+      summary: Get a Gmail message
+      description: users.messages.get
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: format
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+
+  /gmail/v1/users/{userId}/labels:
+    get:
+      tags: [Gmail]
+      operationId: listLabels
+      summary: List Gmail labels
+      description: users.labels.list
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema: { type: string, default: me }
+      responses:
+        "200":
+          description: Success
+
+  /gmail/v1/users/{userId}/watch:
+    post:
+      tags: [Gmail]
+      operationId: watchMailbox
+      summary: Watch a Gmail mailbox (Pub/Sub)
+      description: users.watch — push via Cloud Pub/Sub topicName
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema: { type: string, default: me }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+
+  /calendar/v3/users/me/calendarList:
+    get:
+      tags: [Calendar]
+      operationId: listCalendars
+      summary: List calendars
+      description: calendarList.list
+      parameters:
+        - in: query
+          name: pageToken
+          schema: { type: string }
+        - in: query
+          name: maxResults
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Success
+
+  /calendar/v3/calendars/{calendarId}/events:
+    get:
+      tags: [Calendar]
+      operationId: listEvents
+      summary: List events on a calendar
+      description: events.list
+      parameters:
+        - in: path
+          name: calendarId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: pageToken
+          schema: { type: string }
+        - in: query
+          name: timeMin
+          schema: { type: string, format: date-time }
+        - in: query
+          name: timeMax
+          schema: { type: string, format: date-time }
+        - in: query
+          name: singleEvents
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Success
+    post:
+      tags: [Calendar]
+      operationId: createEvent
+      summary: Create an event
+      description: events.insert
+      parameters:
+        - in: path
+          name: calendarId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+
+  /calendar/v3/calendars/{calendarId}/events/{eventId}:
+    get:
+      tags: [Calendar]
+      operationId: getEvent
+      summary: Get an event
+      description: events.get
+      parameters:
+        - in: path
+          name: calendarId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [Calendar]
+      operationId: updateEvent
+      summary: Update an event
+      description: events.update
+      parameters:
+        - in: path
+          name: calendarId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+    delete:
+      tags: [Calendar]
+      operationId: deleteEvent
+      summary: Delete an event
+      description: events.delete
+      parameters:
+        - in: path
+          name: calendarId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+
+  /calendar/v3/calendars/{calendarId}/events/watch:
+    post:
+      tags: [Calendar]
+      operationId: watchEvents
+      summary: Watch calendar events (web_hook channel)
+      description: events.watch
+      parameters:
+        - in: path
+          name: calendarId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Channel created
+
+  /calendar/v3/channels/stop:
+    post:
+      tags: [Channels]
+      operationId: stopChannel
+      summary: Stop a push notification channel
+      description: channels.stop (Calendar channels resource; also used with Drive)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "204":
+          description: Stopped
+
+  /drive/v3/files:
+    get:
+      tags: [Drive]
+      operationId: listFiles
+      summary: List Drive files
+      description: files.list
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: pageToken
+          schema: { type: string }
+        - in: query
+          name: pageSize
+          schema: { type: integer }
+        - in: query
+          name: fields
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    post:
+      tags: [Drive]
+      operationId: createFile
+      summary: Create a Drive file (metadata)
+      description: files.create (metadata; media upload uses /upload/drive/v3)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+
+  /drive/v3/files/{fileId}:
+    get:
+      tags: [Drive]
+      operationId: getFile
+      summary: Get Drive file metadata
+      description: files.get
+      parameters:
+        - in: path
+          name: fileId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: fields
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    patch:
+      tags: [Drive]
+      operationId: updateFile
+      summary: Update Drive file metadata
+      description: files.update (PATCH)
+      parameters:
+        - in: path
+          name: fileId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+
+  /drive/v3/changes/startPageToken:
+    get:
+      tags: [Drive]
+      operationId: getChangesStartPageToken
+      summary: Get Drive changes start page token
+      description: changes.getStartPageToken
+      responses:
+        "200":
+          description: Success
+
+  /drive/v3/changes:
+    get:
+      tags: [Drive]
+      operationId: listChanges
+      summary: List Drive changes
+      description: changes.list
+      parameters:
+        - in: query
+          name: pageToken
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+
+  /drive/v3/changes/watch:
+    post:
+      tags: [Drive]
+      operationId: watchChanges
+      summary: Watch Drive changes (web_hook channel)
+      description: changes.watch
+      parameters:
+        - in: query
+          name: pageToken
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Channel created
+
+  /v1/documents:
+    servers:
+      - url: https://docs.googleapis.com
+    post:
+      tags: [Docs]
+      operationId: createDocument
+      summary: Create a Google Doc
+      description: documents.create
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+
+  /v1/documents/{documentId}:
+    servers:
+      - url: https://docs.googleapis.com
+    get:
+      tags: [Docs]
+      operationId: getDocument
+      summary: Get a Google Doc
+      description: documents.get
+      parameters:
+        - in: path
+          name: documentId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+
+  /v1/documents/{documentId}:batchUpdate:
+    servers:
+      - url: https://docs.googleapis.com
+    post:
+      tags: [Docs]
+      operationId: batchUpdateDocument
+      summary: Batch update a Google Doc
+      description: documents.batchUpdate
+      parameters:
+        - in: path
+          name: documentId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+
+  /v4/spreadsheets:
+    servers:
+      - url: https://sheets.googleapis.com
+    post:
+      tags: [Sheets]
+      operationId: createSpreadsheet
+      summary: Create a spreadsheet
+      description: spreadsheets.create
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+
+  /v4/spreadsheets/{spreadsheetId}:
+    servers:
+      - url: https://sheets.googleapis.com
+    get:
+      tags: [Sheets]
+      operationId: getSpreadsheet
+      summary: Get a spreadsheet
+      description: spreadsheets.get
+      parameters:
+        - in: path
+          name: spreadsheetId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+
+  /v4/spreadsheets/{spreadsheetId}:batchUpdate:
+    servers:
+      - url: https://sheets.googleapis.com
+    post:
+      tags: [Sheets]
+      operationId: batchUpdateSpreadsheet
+      summary: Batch update a spreadsheet
+      description: spreadsheets.batchUpdate
+      parameters:
+        - in: path
+          name: spreadsheetId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+
+  /v4/spreadsheets/{spreadsheetId}/values/{range}:
+    servers:
+      - url: https://sheets.googleapis.com
+    get:
+      tags: [Sheets]
+      operationId: getValues
+      summary: Get spreadsheet values
+      description: spreadsheets.values.get
+      parameters:
+        - in: path
+          name: spreadsheetId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: range
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [Sheets]
+      operationId: updateValues
+      summary: Update spreadsheet values
+      description: spreadsheets.values.update
+      parameters:
+        - in: path
+          name: spreadsheetId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: range
+          required: true
+          schema: { type: string }
+        - in: query
+          name: valueInputOption
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+
+  /v1beta/accounts:
+    servers:
+      - url: https://analyticsadmin.googleapis.com
+    get:
+      tags: [Analytics]
+      operationId: listAnalyticsAccounts
+      summary: List Analytics Admin accounts
+      description: accounts.list (Analytics Admin API v1beta)
+      parameters:
+        - in: query
+          name: pageToken
+          schema: { type: string }
+        - in: query
+          name: pageSize
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Success
+
+  /v1beta/properties/{propertyId}:runReport:
+    servers:
+      - url: https://analyticsdata.googleapis.com
+    post:
+      tags: [Analytics]
+      operationId: runReport
+      summary: Run an Analytics Data report
+      description: properties.runReport (Analytics Data API v1beta)
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema: { type: string }
+          description: Property resource id (e.g. properties/123) or numeric id as used by the client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+
+  /webmasters/v3/sites:
+    get:
+      tags: [SearchConsole]
+      operationId: listSites
+      summary: List Search Console sites
+      description: sites.list
+      responses:
+        "200":
+          description: Success
+
+  /webmasters/v3/sites/{siteUrl}/searchAnalytics/query:
+    post:
+      tags: [SearchConsole]
+      operationId: querySearchAnalytics
+      summary: Query Search Analytics
+      description: searchanalytics.query
+      parameters:
+        - in: path
+          name: siteUrl
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+
+  /v26/customers:listAccessibleCustomers:
+    servers:
+      - url: https://googleads.googleapis.com
+    get:
+      tags: [Ads]
+      operationId: listAccessibleCustomers
+      summary: List accessible Google Ads customers
+      description: customers.listAccessibleCustomers (Google Ads API v26)
+      responses:
+        "200":
+          description: Success
+
+  /v26/customers/{customerId}/googleAds:search:
+    servers:
+      - url: https://googleads.googleapis.com
+    post:
+      tags: [Ads]
+      operationId: searchGoogleAds
+      summary: Search Google Ads (GAQL)
+      description: googleAds.search (Google Ads API v26)
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      description: >-
+        Google OAuth 2.0 authorization code. Use access_type=offline and
+        prompt=consent to obtain a refresh token.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts.google.com/o/oauth2/v2/auth
+          tokenUrl: https://oauth2.googleapis.com/token
+          scopes:
+            openid: OpenID Connect subject identifier
+            email: User email address
+            profile: User profile name/picture
+            https://www.googleapis.com/auth/gmail.modify: Gmail read/write (no delete forever)
+            https://www.googleapis.com/auth/calendar: Calendar full access
+            https://www.googleapis.com/auth/drive: Drive full access
+            https://www.googleapis.com/auth/documents: Docs full access
+            https://www.googleapis.com/auth/spreadsheets: Sheets full access
+            https://www.googleapis.com/auth/analytics.readonly: Analytics read-only
+            https://www.googleapis.com/auth/webmasters.readonly: Search Console read-only
+            https://www.googleapis.com/auth/adwords: Google Ads

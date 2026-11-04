@@ -1,0 +1,1101 @@
+openapi: 3.0.3
+info:
+  title: Zendesk Support API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Zendesk Support (Ticketing) REST API. Official reference:
+    https://developer.zendesk.com/api-reference/ticketing/introduction/.
+    Vendor OpenAPI (source of truth for Ticketing paths):
+    https://developer.zendesk.com/zendesk/oas.yaml — server template
+    `https://{subdomain}.{domain}.com`, paths under `/api/v2`, securitySchemes
+    `basicAuth` + `bearerAuth`. This file is Left Hook's curated subset of
+    that OAS covering exactly the endpoints `@friggframework/api-module-zendesk`
+    implements in api.js (one method per operationId), plus Webhooks API
+    paths which are NOT present in oas.yaml and are taken from
+    https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/
+    (same host + `/api/v2` prefix). Auth for this module is OAuth2
+    authorization-code + refresh producing a bearer token.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://{subdomain}.{domain}.com
+    description: Official Zendesk Support API server template from oas.yaml
+    variables:
+      subdomain:
+        default: example
+        description: Zendesk subdomain (acme from acme.zendesk.com)
+      domain:
+        default: zendesk
+        description: Apex domain (zendesk)
+security:
+  - bearerAuth: []
+tags:
+  - name: Users
+  - name: Tickets
+  - name: TicketFields
+  - name: Organizations
+  - name: Groups
+  - name: Search
+  - name: IncrementalExports
+  - name: Webhooks
+# Module helpers that wrap official OAS operations (not separate HTTP paths).
+x-frigg-helpers:
+  - operationId: addTicketComment
+    wraps: updateTicket
+    description: >-
+      Helper for lefthook-bots `ticket.addComment`. Calls UpdateTicket
+      (PUT /api/v2/tickets/{ticket_id}) with
+      `{ "ticket": { "comment": { "body", "public" } } }`. Official OAS has
+      no dedicated create-comment path.
+paths:
+  /api/v2/users/me:
+    get:
+      tags: [Users]
+      operationId: getCurrentUser
+      summary: Show the currently authenticated user
+      description: >-
+        Official operationId: ShowCurrentUser.
+        https://developer.zendesk.com/api-reference/ticketing/users/users/#show-the-currently-authenticated-user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+
+  /api/v2/tickets:
+    get:
+      tags: [Tickets]
+      operationId: listTickets
+      summary: List tickets
+      description: >-
+        Official operationId: ListTickets.
+        https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#list-tickets
+      parameters:
+        - in: query
+          name: external_id
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: string }
+          description: Offset page (prefer cursor pagination)
+        - in: query
+          name: per_page
+          schema: { type: integer }
+        - in: query
+          name: page[size]
+          schema: { type: integer }
+          description: Cursor pagination page size (recommended)
+        - in: query
+          name: page[after]
+          schema: { type: string }
+        - in: query
+          name: page[before]
+          schema: { type: string }
+        - in: query
+          name: sort_by
+          schema: { type: string }
+        - in: query
+          name: sort_order
+          schema: { type: string, enum: [asc, desc] }
+      responses:
+        "200":
+          description: Ticket list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Ticket"
+    post:
+      tags: [Tickets]
+      operationId: createTicket
+      summary: Create a ticket
+      description: "Official operationId: CreateTicket."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ticket]
+              properties:
+                ticket:
+                  $ref: "#/components/schemas/TicketWrite"
+                system_metadata:
+                  type: object
+      responses:
+        "201":
+          description: Created ticket
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+
+  /api/v2/tickets/{ticket_id}:
+    parameters:
+      - $ref: "#/components/parameters/TicketId"
+    get:
+      tags: [Tickets]
+      operationId: getTicket
+      summary: Show a ticket
+      description: "Official operationId: ShowTicket."
+      responses:
+        "200":
+          description: Ticket
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+    put:
+      tags: [Tickets]
+      operationId: updateTicket
+      summary: Update a ticket
+      description: >-
+        Official operationId: UpdateTicket. Official response schema
+        TicketUpdateResponse includes ticket + audit. Add comments via
+        `ticket.comment` (TicketCommentObject); module helper
+        `addTicketComment` wraps this path for lefthook-bots.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ticket:
+                  $ref: "#/components/schemas/TicketWrite"
+                system_metadata:
+                  type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated ticket
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+                  audit:
+                    type: object
+    delete:
+      tags: [Tickets]
+      operationId: deleteTicket
+      summary: Delete a ticket
+      description: "Official operationId: DeleteTicket."
+      responses:
+        "204":
+          description: Deleted
+
+  /api/v2/tickets/{ticket_id}/comments:
+    parameters:
+      - $ref: "#/components/parameters/TicketId"
+    get:
+      tags: [Tickets]
+      operationId: listTicketComments
+      summary: List ticket comments
+      description: "Official operationId: ListTicketComments."
+      parameters:
+        - in: query
+          name: page
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Comment list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TicketComment"
+
+  /api/v2/search:
+    get:
+      tags: [Search]
+      operationId: searchTickets
+      summary: Search tickets
+      description: >-
+        Official operationId: ListSearchResults (GET /api/v2/search).
+        Module helper `searchTickets` ensures the query includes `type:ticket`
+        so results are restricted to tickets. Query syntax:
+        https://developer.zendesk.com/api-reference/ticketing/ticket-management/search/
+      parameters:
+        - in: query
+          name: query
+          required: true
+          schema: { type: string }
+          description: Search query; module appends `type:ticket` when missing
+        - in: query
+          name: sort_by
+          schema: { type: string }
+        - in: query
+          name: sort_order
+          schema: { type: string }
+        - in: query
+          name: include
+          schema: { type: string }
+      responses:
+        "200":
+          description: SearchResponse
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+
+  /api/v2/groups:
+    get:
+      tags: [Groups]
+      operationId: listGroups
+      summary: List groups
+      description: "Official operationId: ListGroups."
+      parameters:
+        - in: query
+          name: exclude_deleted
+          schema: { type: boolean }
+        - in: query
+          name: page
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+      responses:
+        "200":
+          description: GroupsResponse
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  groups:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Group"
+
+  /api/v2/users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List users
+      description: "Official operationId: ListUsers."
+      parameters:
+        - in: query
+          name: role
+          schema: { type: string }
+        - in: query
+          name: external_id
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+      responses:
+        "200":
+          description: User list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+    post:
+      tags: [Users]
+      operationId: createUser
+      summary: Create a user
+      description: "Official operationId: CreateUser."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  $ref: "#/components/schemas/UserWrite"
+      responses:
+        "201":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+
+  /api/v2/users/{user_id}:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Show a user
+      description: "Official operationId: ShowUser."
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+    put:
+      tags: [Users]
+      operationId: updateUser
+      summary: Update a user
+      description: "Official operationId: UpdateUser."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  $ref: "#/components/schemas/UserWrite"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+    delete:
+      tags: [Users]
+      operationId: deleteUser
+      summary: Delete a user
+      description: "Official operationId: DeleteUser. Official OAS returns 200 with the deleted user payload."
+      responses:
+        "200":
+          description: Deleted user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+
+  /api/v2/organizations:
+    get:
+      tags: [Organizations]
+      operationId: listOrganizations
+      summary: List organizations
+      description: "Official operationId: ListOrganizations."
+      parameters:
+        - in: query
+          name: page
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Organization list (OrganizationsResponse)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organizations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Organization"
+                  count:
+                    type: integer
+                  next_page:
+                    type: string
+                    nullable: true
+                  previous_page:
+                    type: string
+                    nullable: true
+                  links:
+                    type: object
+                  meta:
+                    type: object
+    post:
+      tags: [Organizations]
+      operationId: createOrganization
+      summary: Create an organization
+      description: "Official operationId: CreateOrganization."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [organization]
+              properties:
+                organization:
+                  $ref: "#/components/schemas/OrganizationWrite"
+      responses:
+        "201":
+          description: Created organization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization:
+                    $ref: "#/components/schemas/Organization"
+
+  /api/v2/organizations/{organization_id}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Organizations]
+      operationId: getOrganization
+      summary: Show an organization
+      description: "Official operationId: ShowOrganization."
+      responses:
+        "200":
+          description: Organization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization:
+                    $ref: "#/components/schemas/Organization"
+    put:
+      tags: [Organizations]
+      operationId: updateOrganization
+      summary: Update an organization
+      description: >-
+        Official operationId: UpdateOrganization. The vendor oas.yaml documents
+        this operation without a requestBody schema; the official description
+        example uses `{ "organization": { ... } }` which this curated spec
+        records so the client/body stay aligned with Zendesk docs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                organization:
+                  $ref: "#/components/schemas/OrganizationWrite"
+      responses:
+        "200":
+          description: Updated organization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization:
+                    $ref: "#/components/schemas/Organization"
+    delete:
+      tags: [Organizations]
+      operationId: deleteOrganization
+      summary: Delete an organization
+      description: "Official operationId: DeleteOrganization."
+      responses:
+        "204":
+          description: Deleted
+
+  /api/v2/ticket_fields:
+    get:
+      tags: [TicketFields]
+      operationId: listTicketFields
+      summary: List ticket fields
+      description: >-
+        Official operationId: ListTicketFields.
+        https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_fields/#list-ticket-fields
+      parameters:
+        - in: query
+          name: locale
+          schema: { type: string }
+        - in: query
+          name: page[size]
+          schema: { type: integer }
+        - in: query
+          name: page[after]
+          schema: { type: string }
+        - in: query
+          name: page[before]
+          schema: { type: string }
+      responses:
+        "200":
+          description: Ticket field list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket_fields:
+                    type: array
+                    items:
+                      type: object
+
+  /api/v2/ticket_fields/{ticket_field_id}:
+    parameters:
+      - name: ticket_field_id
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [TicketFields]
+      operationId: getTicketField
+      summary: Show a ticket field
+      description: "Official operationId: ShowTicketField."
+      responses:
+        "200":
+          description: Ticket field
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket_field:
+                    type: object
+
+  /api/v2/incremental/tickets/cursor:
+    get:
+      tags: [IncrementalExports]
+      operationId: listIncrementalTickets
+      summary: Incremental ticket export (cursor-based)
+      description: >-
+        Official Incremental Ticket Export, Cursor Based.
+        https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-ticket-export-cursor-based
+        Initial request requires start_time; subsequent pages use cursor.
+        Rate limit: 10 req/min (30 with High Volume add-on); honor Retry-After on 429.
+      parameters:
+        - in: query
+          name: start_time
+          schema: { type: integer }
+          description: Unix epoch; required on the initial export
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+        - in: query
+          name: exclude_deleted
+          schema: { type: boolean }
+        - in: query
+          name: include
+          schema: { type: string }
+        - in: query
+          name: support_type_scope
+          schema: { type: string, enum: [all, agent, ai_agent] }
+      responses:
+        "200":
+          description: Incremental tickets page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Ticket"
+                  after_cursor:
+                    type: string
+                  end_of_stream:
+                    type: boolean
+
+  /api/v2/incremental/users/cursor:
+    get:
+      tags: [IncrementalExports]
+      operationId: listIncrementalUsers
+      summary: Incremental user export (cursor-based)
+      description: >-
+        Official Incremental User Export, Cursor Based.
+        https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-user-export-cursor-based
+      parameters:
+        - in: query
+          name: start_time
+          schema: { type: integer }
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+        - in: query
+          name: include
+          schema: { type: string }
+      responses:
+        "200":
+          description: Incremental users page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+                  after_cursor:
+                    type: string
+                  end_of_stream:
+                    type: boolean
+
+  /api/v2/incremental/organizations:
+    get:
+      tags: [IncrementalExports]
+      operationId: listIncrementalOrganizations
+      summary: Incremental organization export (time-based)
+      description: >-
+        Official Incremental Organization Export (time-based; no cursor variant).
+        https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-organization-export
+        Requires start_time. Subsequent pages use end_time / next_page.
+      parameters:
+        - in: query
+          name: start_time
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: per_page
+          schema: { type: integer }
+        - in: query
+          name: include
+          schema: { type: string }
+      responses:
+        "200":
+          description: Incremental organizations page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organizations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Organization"
+                  end_time:
+                    type: integer
+                  next_page:
+                    type: string
+                  end_of_stream:
+                    type: boolean
+
+  /api/v2/webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List webhooks
+      description: >-
+        Not present in https://developer.zendesk.com/zendesk/oas.yaml.
+        Source: https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/#list-webhooks
+        (same host template + /api/v2 prefix as the Ticketing OAS).
+      parameters:
+        - in: query
+          name: filter[name_contains]
+          schema: { type: string }
+        - in: query
+          name: filter[status]
+          schema: { type: string }
+        - in: query
+          name: page[size]
+          schema: { type: integer }
+        - in: query
+          name: page[after]
+          schema: { type: string }
+        - in: query
+          name: page[before]
+          schema: { type: string }
+        - in: query
+          name: sort
+          schema: { type: string }
+      responses:
+        "200":
+          description: Webhook list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Webhook"
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create or clone a webhook
+      description: >-
+        https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/#create-or-clone-webhook
+      parameters:
+        - in: query
+          name: clone_webhook_id
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhook]
+              properties:
+                webhook:
+                  $ref: "#/components/schemas/WebhookWrite"
+      responses:
+        "201":
+          description: Created webhook
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhook:
+                    $ref: "#/components/schemas/Webhook"
+
+  /api/v2/webhooks/{webhook_id}:
+    parameters:
+      - $ref: "#/components/parameters/WebhookId"
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Show a webhook
+      responses:
+        "200":
+          description: Webhook
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhook:
+                    $ref: "#/components/schemas/Webhook"
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update a webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhook]
+              properties:
+                webhook:
+                  $ref: "#/components/schemas/WebhookWrite"
+      responses:
+        "200":
+          description: Updated webhook
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhook:
+                    $ref: "#/components/schemas/Webhook"
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook
+      responses:
+        "204":
+          description: Deleted
+
+  /api/v2/webhooks/{webhook_id}/signing_secret:
+    parameters:
+      - $ref: "#/components/parameters/WebhookId"
+    get:
+      tags: [Webhooks]
+      operationId: getWebhookSigningSecret
+      summary: Show webhook signing secret
+      description: >-
+        https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/#show-webhook-signing-secret
+        Used with X-Zendesk-Webhook-Signature verification:
+        https://developer.zendesk.com/documentation/webhooks/verifying/
+      responses:
+        "200":
+          description: Signing secret
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  signing_secret:
+                    type: object
+                    properties:
+                      algorithm:
+                        type: string
+                        example: SHA256
+                      secret:
+                        type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        Bearer access token authentication (official oas.yaml `bearerAuth`).
+        Obtain tokens via OAuth authorization-code against
+        `https://{subdomain}.zendesk.com/oauth/authorizations/new` and
+        `https://{subdomain}.zendesk.com/oauth/tokens` (not part of oas.yaml
+        paths). Prefer `Authorization: Bearer {access_token}`. Scopes such as
+        `tickets:read`, `users:write`, `organizations:read`, `webhooks:write`
+        are documented at
+        https://developer.zendesk.com/api-reference/ticketing/oauth/grant_type_tokens/#scope
+        (not enumerated in oas.yaml securitySchemes).
+    basicAuth:
+      type: http
+      scheme: basic
+      description: >-
+        Official oas.yaml also declares basicAuth (email/token). This module
+        uses OAuth bearer tokens; API-token basic auth is deprecated/EOL.
+  parameters:
+    TicketId:
+      name: ticket_id
+      in: path
+      required: true
+      schema: { type: integer }
+    UserId:
+      name: user_id
+      in: path
+      required: true
+      schema: { type: integer }
+    OrganizationId:
+      name: organization_id
+      in: path
+      required: true
+      schema: { type: integer }
+    WebhookId:
+      name: webhook_id
+      in: path
+      required: true
+      schema: { type: string }
+  schemas:
+    Ticket:
+      type: object
+      properties:
+        id: { type: integer, readOnly: true }
+        url: { type: string, readOnly: true }
+        subject: { type: string }
+        description: "{ type: string, readOnly: true }"
+        status:
+          type: string
+          enum: [new, open, pending, hold, solved, closed]
+        priority:
+          type: string
+          nullable: true
+          enum: [urgent, high, normal, low]
+        type:
+          type: string
+          nullable: true
+          enum: [problem, incident, question, task]
+        requester_id: { type: integer }
+        submitter_id: { type: integer }
+        assignee_id: { type: integer }
+        group_id: { type: integer }
+        organization_id: { type: integer }
+        tags:
+          type: array
+          items: { type: string }
+        external_id: { type: string }
+        created_at: { type: string, format: date-time, readOnly: true }
+        updated_at: { type: string, format: date-time, readOnly: true }
+    TicketWrite:
+      type: object
+      properties:
+        subject: { type: string }
+        comment:
+          type: object
+          properties:
+            body: { type: string }
+            public: { type: boolean }
+        status: { type: string }
+        priority: { type: string }
+        type: { type: string }
+        requester_id: { type: integer }
+        assignee_id: { type: integer }
+        organization_id: { type: integer }
+        tags:
+          type: array
+          items: { type: string }
+        external_id: { type: string }
+    TicketComment:
+      type: object
+      description: Subset of official TicketCommentObject
+      properties:
+        id: { type: integer, readOnly: true }
+        type: { type: string }
+        body: { type: string }
+        html_body: { type: string }
+        plain_body: { type: string }
+        public: { type: boolean }
+        author_id: { type: integer }
+        audit_id: { type: integer, readOnly: true }
+        attachments: { type: array, items: { type: object } }
+        via: { type: object }
+        created_at: { type: string, format: date-time, readOnly: true }
+    User:
+      type: object
+      description: >-
+        Subset of fields common to official UserObject (anyOf UserForAdmin |
+        UserForEndUser). Role values per OAS description - end-user, agent, admin.
+      properties:
+        id: { type: integer, readOnly: true }
+        url: { type: string, readOnly: true }
+        name: { type: string }
+        email: { type: string, format: email }
+        role:
+          type: string
+          enum: [end-user, agent, admin]
+        organization_id: { type: integer }
+        external_id: { type: string }
+        phone: { type: string }
+        active: { type: boolean, readOnly: true }
+        verified: { type: boolean }
+        created_at: { type: string, format: date-time, readOnly: true }
+        updated_at: { type: string, format: date-time, readOnly: true }
+    UserWrite:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string }
+        organization_id: { type: integer }
+        external_id: { type: string }
+        phone: { type: string }
+    Organization:
+      type: object
+      description: Subset of official OrganizationObject (required name)
+      properties:
+        id: { type: integer, readOnly: true }
+        url: { type: string, readOnly: true }
+        name: { type: string }
+        external_id: { type: string }
+        domain_names:
+          type: array
+          items: { type: string }
+        details: { type: string }
+        notes: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        group_id: { type: integer }
+        created_at: { type: string, format: date-time, readOnly: true }
+        updated_at: { type: string, format: date-time, readOnly: true }
+    OrganizationWrite:
+      type: object
+      properties:
+        name: { type: string }
+        external_id: { type: string }
+        domain_names:
+          type: array
+          items: { type: string }
+        details: { type: string }
+        notes: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+    Group:
+      type: object
+      description: Subset of official GroupObject (required name)
+      properties:
+        id: { type: integer, readOnly: true }
+        url: { type: string, readOnly: true }
+        name: { type: string }
+        description: { type: string }
+        default: { type: boolean, readOnly: true }
+        deleted: { type: boolean, readOnly: true }
+        is_public: { type: boolean }
+        created_at: { type: string, format: date-time, readOnly: true }
+        updated_at: { type: string, format: date-time, readOnly: true }
+    SearchResponse:
+      type: object
+      description: Official SearchResponse from ListSearchResults
+      properties:
+        count: { type: integer, readOnly: true }
+        facets: { type: string, nullable: true, readOnly: true }
+        next_page: { type: string, nullable: true, readOnly: true }
+        previous_page: { type: string, nullable: true, readOnly: true }
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              url: { type: string }
+              result_type: { type: string }
+              subject: { type: string }
+              description: { type: string }
+              status: { type: string }
+              priority: { type: string }
+              created_at: { type: string, format: date-time }
+              updated_at: { type: string, format: date-time }
+    Webhook:
+      type: object
+      properties:
+        id: { type: string, readOnly: true }
+        name: { type: string }
+        status:
+          type: string
+          enum: [active, inactive]
+        endpoint: { type: string, format: uri }
+        http_method:
+          type: string
+          enum: [GET, POST, PUT, PATCH, DELETE]
+        request_format:
+          type: string
+          enum: [json, xml, form_encoded]
+        subscriptions:
+          type: array
+          items: { type: string }
+        created_at: { type: string, format: date-time, readOnly: true }
+        updated_at: { type: string, format: date-time, readOnly: true }
+    WebhookWrite:
+      type: object
+      required: [name, endpoint, http_method, request_format, status, subscriptions]
+      properties:
+        name: { type: string }
+        status:
+          type: string
+          enum: [active, inactive]
+        endpoint: { type: string, format: uri }
+        http_method:
+          type: string
+          enum: [GET, POST, PUT, PATCH, DELETE]
+        request_format:
+          type: string
+          enum: [json, xml, form_encoded]
+        subscriptions:
+          type: array
+          items: { type: string }
+        authentication:
+          type: object
+        custom_headers:
+          type: object
+          additionalProperties: { type: string }

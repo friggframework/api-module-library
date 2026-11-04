@@ -1,0 +1,9 @@
+{
+    "name": "zendesk",
+    "label": "Zendesk",
+    "productUrl": "https://www.zendesk.com",
+    "apiDocs": "https://developer.zendesk.com/api-reference/ticketing/introduction/",
+    "logoUrl": "https://friggframework.org/assets/img/zendesk-icon.png",
+    "categories": ["Customer Service", "Helpdesk"],
+    "description": "Zendesk Support Ticketing API"
+}

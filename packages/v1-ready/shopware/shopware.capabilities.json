@@ -1,0 +1,447 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "shopware",
+  "label": "Shop-Ware",
+  "package": "@friggframework/api-module-shopware",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Tenant identity from GET /tenants. Persisted as entity/credential externalId (tenant id).",
+    "fields": [
+      {
+        "name": "id",
+        "type": "integer",
+        "description": "Shop-Ware tenant id"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "Tenant display name"
+      },
+      {
+        "name": "cname",
+        "type": "string",
+        "description": "Tenant subdomain"
+      },
+      {
+        "name": "subscription_status",
+        "type": "string",
+        "description": "Active or Canceled"
+      }
+    ]
+  },
+  "objects": {
+    "tenant": {
+      "label": "Tenant",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "cname", "type": "string" },
+        { "name": "country_code", "type": "string" },
+        { "name": "subscription_status", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "tenant.list", "items": "results" },
+        "get": { "capability": "tenant.get", "id": "tenantId" }
+      }
+    },
+    "customer": {
+      "label": "Customer",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "first_name", "type": "string", "tag": "person.givenName" },
+        { "name": "last_name", "type": "string", "tag": "person.familyName" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "phone", "type": "string", "tag": "person.phone" },
+        { "name": "business_name", "type": "string", "tag": "org.name" },
+        { "name": "address", "type": "string" },
+        { "name": "city", "type": "string" },
+        { "name": "state", "type": "string" },
+        { "name": "zip", "type": "string" },
+        { "name": "customer_type", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "customer.list", "items": "results" },
+        "get": { "capability": "customer.get", "id": "customerId" },
+        "create": { "capability": "customer.create", "body": "body" },
+        "update": { "capability": "customer.update", "id": "customerId", "body": "body" }
+      }
+    },
+    "vehicle": {
+      "label": "Vehicle",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "vin", "type": "string" },
+        { "name": "customer_id", "type": "integer", "tag": "record.externalId" },
+        { "name": "year", "type": "integer" },
+        { "name": "make", "type": "string" },
+        { "name": "model", "type": "string" },
+        { "name": "license_plate", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "vehicle.list", "items": "results" },
+        "get": { "capability": "vehicle.get", "id": "vehicleId" },
+        "create": { "capability": "vehicle.create", "body": "body" },
+        "update": { "capability": "vehicle.update", "id": "vehicleId", "body": "body" }
+      }
+    },
+    "repairOrder": {
+      "label": "Repair Order",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "number", "type": "integer", "tag": "record.displayName" },
+        { "name": "state", "type": "string" },
+        { "name": "customer_id", "type": "integer" },
+        { "name": "vehicle_id", "type": "integer" },
+        { "name": "shop_id", "type": "integer" },
+        { "name": "technician_id", "type": "integer" },
+        { "name": "advisor_id", "type": "integer" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "repairOrder.list", "items": "results" },
+        "get": { "capability": "repairOrder.get", "id": "repairOrderId" },
+        "create": { "capability": "repairOrder.create", "body": "body" },
+        "update": { "capability": "repairOrder.update", "id": "repairOrderId", "body": "body" }
+      }
+    },
+    "shop": {
+      "label": "Shop",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "shop.list", "items": "results" },
+        "get": { "capability": "shop.get", "id": "shopId" }
+      }
+    },
+    "staff": {
+      "label": "Staff",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "first_name", "type": "string", "tag": "person.givenName" },
+        { "name": "last_name", "type": "string", "tag": "person.familyName" },
+        { "name": "email", "type": "email", "tag": "person.email" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "staff.list", "items": "results" },
+        "get": { "capability": "staff.get", "id": "staffId" }
+      }
+    },
+    "payment": {
+      "label": "Payment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "amount_cents", "type": "integer" },
+        { "name": "payment_type", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "payment.list", "items": "results" },
+        "get": { "capability": "payment.get", "id": "paymentId" }
+      }
+    },
+    "inventory": {
+      "label": "Inventory",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "number", "type": "string" },
+        { "name": "description", "type": "string", "tag": "record.displayName" },
+        { "name": "brand", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "inventory.list", "items": "results" },
+        "get": { "capability": "inventory.get", "id": "inventoryId" }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "url", "type": "string" },
+        { "name": "events", "type": "string[]" },
+        { "name": "format", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "webhook.list" },
+        "get": { "capability": "webhook.get", "id": "webhookId" },
+        "create": { "capability": "webhook.create", "body": "body" },
+        "update": { "capability": "webhook.update", "id": "webhookId", "body": "body" },
+        "delete": { "capability": "webhook.delete", "id": "webhookId" }
+      }
+    }
+  },
+  "events": {
+    "customer.created": {
+      "delivery": "webhook",
+      "object": "customer",
+      "match": "customer.created"
+    },
+    "customer.updated": {
+      "delivery": "webhook",
+      "object": "customer",
+      "match": "customer.updated"
+    },
+    "customer.deleted": {
+      "delivery": "webhook",
+      "object": "customer",
+      "match": "customer.deleted"
+    },
+    "vehicle.created": {
+      "delivery": "webhook",
+      "object": "vehicle",
+      "match": "vehicle.created"
+    },
+    "vehicle.updated": {
+      "delivery": "webhook",
+      "object": "vehicle",
+      "match": "vehicle.updated"
+    },
+    "repair_order.created": {
+      "delivery": "webhook",
+      "object": "repairOrder",
+      "match": "repair_order.created"
+    },
+    "repair_order.updated": {
+      "delivery": "webhook",
+      "object": "repairOrder",
+      "match": "repair_order.updated"
+    }
+  },
+  "capabilities": {
+    "identity.get": {
+      "kind": "read",
+      "method": "listTenants",
+      "output": "account",
+      "args": ["$rest"],
+      "note": "First authorized tenant is used as account identity."
+    },
+    "tenant.list": {
+      "kind": "read",
+      "method": "listTenants",
+      "output": "page<tenant>",
+      "args": ["$rest"]
+    },
+    "tenant.get": {
+      "kind": "read",
+      "method": "getTenant",
+      "input": {
+        "tenantId": { "type": "string", "required": true }
+      },
+      "output": "tenant",
+      "args": ["tenantId"]
+    },
+    "customer.list": {
+      "kind": "read",
+      "method": "listCustomers",
+      "output": "page<customer>",
+      "args": ["$rest"]
+    },
+    "customer.get": {
+      "kind": "read",
+      "method": "getCustomer",
+      "input": {
+        "customerId": { "type": "string", "required": true }
+      },
+      "output": "customer",
+      "args": ["customerId", "$rest"]
+    },
+    "customer.create": {
+      "kind": "write",
+      "method": "createCustomer",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "customer",
+      "args": ["body", "$rest"]
+    },
+    "customer.update": {
+      "kind": "write",
+      "method": "updateCustomer",
+      "input": {
+        "customerId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "customer",
+      "args": ["customerId", "body", "$rest"]
+    },
+    "vehicle.list": {
+      "kind": "read",
+      "method": "listVehicles",
+      "output": "page<vehicle>",
+      "args": ["$rest"]
+    },
+    "vehicle.get": {
+      "kind": "read",
+      "method": "getVehicle",
+      "input": {
+        "vehicleId": { "type": "string", "required": true }
+      },
+      "output": "vehicle",
+      "args": ["vehicleId", "$rest"]
+    },
+    "vehicle.create": {
+      "kind": "write",
+      "method": "createVehicle",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "vehicle",
+      "args": ["body", "$rest"]
+    },
+    "vehicle.update": {
+      "kind": "write",
+      "method": "updateVehicle",
+      "input": {
+        "vehicleId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "vehicle",
+      "args": ["vehicleId", "body", "$rest"]
+    },
+    "repairOrder.list": {
+      "kind": "read",
+      "method": "listRepairOrders",
+      "output": "page<repairOrder>",
+      "args": ["$rest"]
+    },
+    "repairOrder.get": {
+      "kind": "read",
+      "method": "getRepairOrder",
+      "input": {
+        "repairOrderId": { "type": "string", "required": true }
+      },
+      "output": "repairOrder",
+      "args": ["repairOrderId", "$rest"]
+    },
+    "repairOrder.create": {
+      "kind": "write",
+      "method": "createRepairOrder",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "repairOrder",
+      "args": ["body", "$rest"]
+    },
+    "repairOrder.update": {
+      "kind": "write",
+      "method": "updateRepairOrder",
+      "input": {
+        "repairOrderId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "repairOrder",
+      "args": ["repairOrderId", "body", "$rest"]
+    },
+    "shop.list": {
+      "kind": "read",
+      "method": "listShops",
+      "output": "page<shop>",
+      "args": ["$rest"]
+    },
+    "shop.get": {
+      "kind": "read",
+      "method": "getShop",
+      "input": {
+        "shopId": { "type": "string", "required": true }
+      },
+      "output": "shop",
+      "args": ["shopId", "$rest"]
+    },
+    "staff.list": {
+      "kind": "read",
+      "method": "listStaffs",
+      "output": "page<staff>",
+      "args": ["$rest"]
+    },
+    "staff.get": {
+      "kind": "read",
+      "method": "getStaff",
+      "input": {
+        "staffId": { "type": "string", "required": true }
+      },
+      "output": "staff",
+      "args": ["staffId", "$rest"]
+    },
+    "payment.list": {
+      "kind": "read",
+      "method": "listPayments",
+      "output": "page<payment>",
+      "args": ["$rest"]
+    },
+    "payment.get": {
+      "kind": "read",
+      "method": "getPayment",
+      "input": {
+        "paymentId": { "type": "string", "required": true }
+      },
+      "output": "payment",
+      "args": ["paymentId", "$rest"]
+    },
+    "inventory.list": {
+      "kind": "read",
+      "method": "listInventories",
+      "output": "page<inventory>",
+      "args": ["$rest"]
+    },
+    "inventory.get": {
+      "kind": "read",
+      "method": "getInventory",
+      "input": {
+        "inventoryId": { "type": "string", "required": true }
+      },
+      "output": "inventory",
+      "args": ["inventoryId", "$rest"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "output": "page<webhook>",
+      "args": []
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": {
+        "webhookId": { "type": "string", "required": true }
+      },
+      "output": "webhook",
+      "args": ["webhookId"]
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhook",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["body"]
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhook",
+      "input": {
+        "webhookId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["webhookId", "body"]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhook",
+      "input": {
+        "webhookId": { "type": "string", "required": true }
+      },
+      "args": ["webhookId"]
+    }
+  }
+}

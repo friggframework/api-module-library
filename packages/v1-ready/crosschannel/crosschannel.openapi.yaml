@@ -1,0 +1,492 @@
+openapi: 3.0.4
+info:
+  title: Listrak Cross Channel REST API
+  description: "# Introduction\n\nWelcome to the Listrak Cross Channel <a href='https://en.wikipedia.org/wiki/Representational_state_transfer'>REST\
+    \ API</a>!\n\nOur API allows developers to integrate with Listrak's application. It enables the seamless\
+    \ automation of a broad set of functionality, ranging from basic tasks to complex processes.\n\nWe\
+    \ aim to provide comprehensive documentation coverage of our API's capabilities. Each resource and\
+    \ method is described in detail with implementation notes, descriptions of parameters, headers, return\
+    \ values, and code samples to aid in development.\n\n# Versioning\n\nThe API version is denoted in\
+    \ the URI. This API's base URI is: v1\n\nThe API version will be incremented if breaking changes are\
+    \ introduced. Breaking changes may include:\n\n- Addition of required headers, parameters, or model\
+    \ fields to a current route\n- Alterations that would result in currently valid requests failing,\
+    \ or performing unexpectedly\n\nChanges that are not considered breaking may include:\n\n- Addition\
+    \ of new model fields\n- Addition of new routes\n- Addition of new response headers\n- Any alteration\
+    \ to a route that is marked as <span class=\"inDev\">In Development</span>\n\n# Feedback\n\nWe are\
+    \ actively seeking feedback in the following areas:\n- Code samples\n- Response examples\n- Resource\
+    \ and field descriptions\n\nPlease provide your feedback to us at restapifeedback@listrak.com.\n\n\
+    # Integration Setup\nTo enable API access, **you must create an _Integration_** on the _Integrations_\
+    \ page. In the Listrak application left menu, go to: Integrations &rarr; Integration Management.\n\
+    \nPlease specify integration type `Cross Channel` for your integration.\n\nMake sure to securely store\
+    \ a copy of your _Client ID_ and _Client Secret_. These values will be needed to authenticate with\
+    \ the API. For your security, the _Client Secret_ cannot be retrieved if it is lost.\n\n# Status Codes\n\
+    \n| Status Code | Status | Description |\n| --- | --- | --- |\n| 200 | OK | The request succeeded.\
+    \ |\n| 201 | Created | A new resource has been created. |\n| 400 | Bad Request | Your request is malformed\
+    \ or invalid. |\n| 401 | Unauthorized | Authentication is required. |\n| 404 | Not Found | The resource\
+    \ does not exist. |\n| 405 | Method Not Allowed | The route does not support the requested method.\
+    \ |\n| 415 | Unsupported Media Type | Please use a `Content-Type` of `application/json`. |\n| 500\
+    \ | Internal Server Error | An unexpected error occurred. Our development team has been notified.\
+    \ |\n\n# Parameters\n\n## Route Parameters\n\nResource identifiers are specified in the route. For\
+    \ example, in the route `/Resource/{resourceId}`, `resourceId` is a route parameter. In this example,\
+    \ if you wish to interact with Resource #123, its route would be `/Resource/123`.\n\n## Query Parameters\n\
+    \nSome routes support additional query parameters; for example, some resources support query parameters\
+    \ relating to paging. Supported query parameters are described in their respective documentation areas.\n\
+    \n## Request Body\n\nRequest bodies are required for most `POST` and `PUT` requests. Please use a\
+    \ `Content-Type` of `application/json` and provide a JSON object in your request body.\n\n# Authentication\n\
+    Authentication is accomplished using OAuth 2.0. After successful authentication, your token should\
+    \ be included with every request using the Bearer scheme; specifically, you should set your Authorization\
+    \ header value to Bearer (Your token value) in each request.\n\nYou may request a token by making\
+    \ a POST request to our token endpoint at https://auth.listrak.com/OAuth2/Token. \n\nThe request should\
+    \ have a Content-Type of x-www-form-urlencoded, and the request body should include a grant_type of\
+    \ client_credentials, your client_id, and your client_secret. Here is an example of a valid request:\n\
+    \n**POST /OAuth2/Token**\n\n**Body**\n\nContent-Type: application/x-www-form-urlencoded\n\n| Key |\
+    \ Value |\n| --- | --- |\n| grant_type: | client_credentials |\n| client_id: | (Your client ID) |\n\
+    | client_secret: | (Your client secret) |\n\nFor your security and convenience, you may pause and\
+    \ unpause your API access on our Integrations page. All requests will be rejected while your API access\
+    \ is paused, including requests to issue tokens.\n"
+  version: v1
+  x-logo:
+    url: https://api.listrak.com/Email/Resources/Images/Logo.png
+    altText: Listrak
+    href: https://www.listrak.com
+    backgroundColor: '#fafafa'
+  contact:
+    name: Listrak REST API feedback
+    email: restapifeedback@listrak.com
+  externalDocs:
+    description: Official Cross Channel docs (agent-friendly)
+    url: https://api-docs.tools.listrak.com/cross-channel/llms.txt
+servers:
+- url: https://api.listrak.com/crosschannel/v1
+paths:
+  /eventConfigurations/{eventUID}/events:
+    post:
+      tags:
+      - Events
+      summary: Route to post new Custom Events.
+      description: A route to post new Custom Events associated with the given Custom Event Configuration.
+        The data payload for these events should match the schema defined through your Custom Events Integration.
+      operationId: postEvents
+      parameters:
+      - name: eventUID
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventList'
+        required: true
+      responses:
+        '404':
+          description: Entity Not Found
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+            Strict-Transport-Security:
+              schema:
+                type: string
+            X-Content-Type-Options:
+              schema:
+                type: string
+            Content-Security-Policy:
+              schema:
+                type: string
+        '200':
+          description: Contains the response information for each submitted identifier, as well as metadata
+            associated with the overall response status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomEventPostResponse'
+        '400':
+          description: Bad Request
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+            Strict-Transport-Security:
+              schema:
+                type: string
+            X-Content-Type-Options:
+              schema:
+                type: string
+            Content-Security-Policy:
+              schema:
+                type: string
+        '500':
+          description: Internal Server Error
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+            Strict-Transport-Security:
+              schema:
+                type: string
+            X-Content-Type-Options:
+              schema:
+                type: string
+            Content-Security-Policy:
+              schema:
+                type: string
+      x-codeSamples:
+      - lang: JSON
+        source: |-
+          {
+              "events": [
+                  {
+                      "identifiers": [
+                          {
+                              "identifierValue": "alice@listrak.com",
+                              "identifierType": "EmailAddress"
+                          },
+                          {
+                              "identifierValue": "5551234567",
+                              "identifierType": "PhoneNumber"
+                          }
+                      ],
+                      "dataFields": {
+                          "firstName": "Alice",
+                          "lastName": "Smith"
+                      }
+                  },
+                  {
+                      "identifiers": [
+                          {
+                              "identifierValue": "bob@listrak.com",
+                              "identifierType": "EmailAddress"
+                          },
+                          {
+                              "identifierValue": "5551234568",
+                              "identifierType": "PhoneNumber"
+                          }
+                      ],
+                      "dataFields": {
+                          "firstName": "Bob",
+                          "lastName": "Smith"
+                      }
+                  }
+              ]
+          }
+  /eventConfigurations:
+    get:
+      tags:
+      - EventConfigurations
+      summary: Get all event configurations.
+      description: Get a list of all event configurations with names and unique identifiers. These can
+        be used to determine which event configuration should be used to post your custom events.
+      operationId: getEventConfigurations
+      responses:
+        '400':
+          description: Bad Request
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+            Strict-Transport-Security:
+              schema:
+                type: string
+            X-Content-Type-Options:
+              schema:
+                type: string
+            Content-Security-Policy:
+              schema:
+                type: string
+        '500':
+          description: Internal Server Error
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+            Strict-Transport-Security:
+              schema:
+                type: string
+            X-Content-Type-Options:
+              schema:
+                type: string
+            Content-Security-Policy:
+              schema:
+                type: string
+        '200':
+          description: Returns Custom Event List as a JSON document, along with the metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomEventConfigurationListResponse'
+  /eventConfigurations/{eventUID}:
+    get:
+      tags:
+      - EventConfigurations
+      summary: Get a Custom Event Configuration.
+      description: Get the details for a specific Custom Event Configuration.
+      operationId: getSchemaByEventUid
+      parameters:
+      - name: eventUID
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '404':
+          description: Entity Not Found
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+            Strict-Transport-Security:
+              schema:
+                type: string
+            X-Content-Type-Options:
+              schema:
+                type: string
+            Content-Security-Policy:
+              schema:
+                type: string
+        '200':
+          description: The details for a specific Custom Event Configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomEventDetailResponse'
+        '400':
+          description: Bad Request
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+            Strict-Transport-Security:
+              schema:
+                type: string
+            X-Content-Type-Options:
+              schema:
+                type: string
+            Content-Security-Policy:
+              schema:
+                type: string
+        '500':
+          description: Internal Server Error
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+            Strict-Transport-Security:
+              schema:
+                type: string
+            X-Content-Type-Options:
+              schema:
+                type: string
+            Content-Security-Policy:
+              schema:
+                type: string
+        '403':
+          description: Request Forbidden
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+            Strict-Transport-Security:
+              schema:
+                type: string
+            X-Content-Type-Options:
+              schema:
+                type: string
+            Content-Security-Policy:
+              schema:
+                type: string
+components:
+  schemas:
+    ResponseMetaData:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          description: Response Status Code
+          format: int32
+        message:
+          type: string
+          description: Explanation for the code
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+    CustomEventConfigurationListResponse:
+      title: CustomEventConfigurationListResponse
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomEventConfiguration'
+        meta:
+          $ref: '#/components/schemas/ResponseMetaData'
+    Identifier:
+      type: object
+      properties:
+        identifierValue:
+          type: string
+          description: The value for the identifier.
+        identifierType:
+          enum:
+          - EmailAddress
+          - PhoneNumber
+          - MobileContactUid
+          type: string
+          description: The type of identifier, e.g. an email address.
+      description: The identifier information that can be used to contact the person associated with this
+        event.
+    CustomEventDetailResponse:
+      title: CustomEventDetailResponse
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/CustomEventDetail'
+        meta:
+          $ref: '#/components/schemas/ResponseMetaData'
+    EventList:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+          description: The list of events.
+    RecipientDetailResponse:
+      type: object
+      properties:
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Identifier'
+          description: All recipient identifiers that received this included status code
+        statusCode:
+          type: integer
+          description: Response Status Code for the recipients in this JSON object
+          format: int32
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipientDetailResponseError'
+          description: Errors, if any, that occured to cause a non-200 series status code
+    CustomEventPostResponse:
+      title: CustomEventPostResponse
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipientDetailResponse'
+        meta:
+          $ref: '#/components/schemas/ResponseMetaData'
+    Event:
+      type: object
+      properties:
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Identifier'
+          description: A list of identifiers for the person associated with this event. One or more must
+            be included. Please note that consuming services may not be able to act on all identifiers
+            of the same type on an event (e.g. multiple email addresses on a single event) - please consider
+            this when creating events.
+        dataFields:
+          type: object
+          additionalProperties:
+            type: string
+          description: An object containing keys and values for user-defined data. This data should match
+            the fields defined when creating the Custom Event Schema defined through your Cross Channel
+            Integration. While the values may be passed as strings, it should be possible to parse these
+            values into their defined types. Omitted values will not cause errors, but will lead to gaps
+            in the available data for personalization. Additional fields beyond those defined in the schema
+            will be discarded.
+      description: Custom Events Configuration
+    Error:
+      type: object
+      properties:
+        userMessage:
+          type: string
+        internalMessage:
+          type: string
+          description: Internal Message
+    CustomEventConfiguration:
+      type: object
+      properties:
+        eventUID:
+          type: string
+          description: Event UID
+          format: uuid
+        eventName:
+          type: string
+          description: Event Name
+      description: Custom Events Configuration
+    RecipientDetailResponseError:
+      type: object
+      properties:
+        errorType:
+          type: string
+          description: The type of error
+          format: string
+        errorMessage:
+          type: string
+          description: The error message
+          format: string
+    CustomEventDetail:
+      type: object
+      properties:
+        eventUID:
+          type: string
+          description: Event UID
+          format: uuid
+        eventName:
+          type: string
+          description: Event Name
+        eventSchemaAttrs:
+          type: object
+          additionalProperties:
+            enum:
+            - String
+            - Int
+            - Double
+            - Date
+            type: string
+          description: Key value pairs with the key as the name of the schema property and the value as
+            its type (String, Int, Double, Date).
+        featureAccess:
+          type: array
+          items:
+            enum:
+            - Workflow
+            type: string
+          description: Array of values to determine which features have access to this event.
+      description: Custom Events Schema
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: 'OAuth 2.0 client_credentials. POST grant_type=client_credentials, client_id, and client_secret
+        as application/x-www-form-urlencoded to https://auth.listrak.com/OAuth2/Token; send the returned
+        token as Authorization: Bearer <access_token>. Use credentials from an Integration of type Cross
+        Channel. The published gateway export declares this as an apiKey Authorizer header — that is an
+        AWS API Gateway artifact, not the caller contract.'
+      flows:
+        clientCredentials:
+          tokenUrl: https://auth.listrak.com/OAuth2/Token
+          scopes: {}
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Listrak OAuth access token
+      description: Same token as OAuth2 client_credentials, presented as Bearer.
+tags:
+- name: Events
+  description: REST endpoints to manage Custom Events.
+- name: EventConfigurations
+  description: REST endpoints to manage Custom Event Configurations.
+x-tagGroups:
+- name: API Reference
+  tags:
+  - Events
+  - EventConfigurations
+security:
+- BearerAuth: []

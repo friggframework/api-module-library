@@ -1,0 +1,874 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "trello",
+  "label": "Trello",
+  "package": "@friggframework/api-module-trello",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Member identity from GET /members/me. Persisted as entity/credential externalId.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "string",
+        "description": "Trello member id from /members/me"
+      },
+      {
+        "name": "username",
+        "type": "string",
+        "description": "Trello username"
+      }
+    ]
+  },
+  "objects": {
+    "member": {
+      "label": "Member",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true,
+          "tag": "person.id"
+        },
+        {
+          "name": "fullName",
+          "type": "string",
+          "tag": "person.displayName"
+        },
+        {
+          "name": "username",
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "person.email"
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "tag": "record.url",
+          "readOnly": true
+        },
+        {
+          "name": "avatarUrl",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "initials",
+          "type": "string",
+          "readOnly": true
+        }
+      ]
+    },
+    "board": {
+      "label": "Board",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true,
+          "tag": "record.id"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "desc",
+          "type": "text"
+        },
+        {
+          "name": "closed",
+          "type": "boolean"
+        },
+        {
+          "name": "idOrganization",
+          "type": "string"
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "tag": "record.url",
+          "readOnly": true
+        },
+        {
+          "name": "shortUrl",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "dateLastActivity",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "dateLastActivity",
+        "list": {
+          "capability": "board.list",
+          "items": "$",
+          "paging": "none"
+        },
+        "get": {
+          "capability": "board.get",
+          "id": "boardId"
+        },
+        "create": {
+          "capability": "board.create",
+          "body": "$rest"
+        },
+        "update": {
+          "capability": "board.update",
+          "id": "boardId",
+          "body": "$rest"
+        }
+      }
+    },
+    "list": {
+      "label": "List",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true,
+          "tag": "record.id"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "closed",
+          "type": "boolean"
+        },
+        {
+          "name": "idBoard",
+          "type": "string"
+        },
+        {
+          "name": "pos",
+          "type": "number"
+        },
+        {
+          "name": "subscribed",
+          "type": "boolean"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "list.list",
+          "items": "$",
+          "paging": "none"
+        },
+        "get": {
+          "capability": "list.get",
+          "id": "listId"
+        },
+        "create": {
+          "capability": "list.create",
+          "body": "$rest"
+        },
+        "update": {
+          "capability": "list.update",
+          "id": "listId",
+          "body": "$rest"
+        }
+      }
+    },
+    "card": {
+      "label": "Card",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true,
+          "tag": "record.id"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "desc",
+          "type": "text"
+        },
+        {
+          "name": "closed",
+          "type": "boolean"
+        },
+        {
+          "name": "idBoard",
+          "type": "string"
+        },
+        {
+          "name": "idList",
+          "type": "string"
+        },
+        {
+          "name": "idMembers",
+          "type": "string[]",
+          "tag": "person.id"
+        },
+        {
+          "name": "idLabels",
+          "type": "string[]"
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "tag": "record.url",
+          "readOnly": true
+        },
+        {
+          "name": "due",
+          "type": "datetime"
+        },
+        {
+          "name": "dueComplete",
+          "type": "boolean"
+        },
+        {
+          "name": "dateLastActivity",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        {
+          "name": "pos",
+          "type": "number"
+        },
+        {
+          "name": "shortLink",
+          "type": "string",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "dateLastActivity",
+        "list": {
+          "capability": "card.list",
+          "items": "$",
+          "paging": "none"
+        },
+        "get": {
+          "capability": "card.get",
+          "id": "cardId"
+        },
+        "create": {
+          "capability": "card.create",
+          "body": "$rest"
+        },
+        "update": {
+          "capability": "card.update",
+          "id": "cardId",
+          "body": "$rest"
+        }
+      }
+    },
+    "organization": {
+      "label": "Organization (Workspace)",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true,
+          "tag": "record.id"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "displayName",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "tag": "record.url",
+          "readOnly": true
+        },
+        {
+          "name": "idBoards",
+          "type": "string[]",
+          "readOnly": true
+        },
+        {
+          "name": "idEnterprise",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "dateLastActivity",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        {
+          "name": "offering",
+          "type": "string",
+          "readOnly": true
+        }
+      ]
+    },
+    "label": {
+      "label": "Label",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true,
+          "tag": "record.id"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "color",
+          "type": "string"
+        },
+        {
+          "name": "idBoard",
+          "type": "string"
+        }
+      ]
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "idModel",
+          "type": "string"
+        },
+        {
+          "name": "callbackURL",
+          "type": "string"
+        },
+        {
+          "name": "active",
+          "type": "boolean"
+        },
+        {
+          "name": "consecutiveFailures",
+          "type": "number",
+          "readOnly": true
+        },
+        {
+          "name": "firstConsecutiveFailDate",
+          "type": "datetime",
+          "readOnly": true
+        }
+      ]
+    }
+  },
+  "events": {
+    "trello.action": {
+      "delivery": "webhook",
+      "object": "card",
+      "description": "Any Action on a watched model (board/list/card/member/organization). Payload carries action, model, webhook.",
+      "payload": {
+        "action": {
+          "id": "51f9424bcd6e040f3c002412",
+          "type": "updateCard",
+          "date": "2013-07-31T16:58:51.949Z",
+          "idMemberCreator": "4fc78a59a885233f4b349bd9",
+          "data": {}
+        },
+        "model": {
+          "id": "4d5ea62fd76aa1136000000c",
+          "name": "Example Board"
+        },
+        "webhook": {
+          "id": "5f5ea62fd76aa1136003300c",
+          "idModel": "4d5ea62fd76aa1136000000c",
+          "callbackURL": "https://example.com/webhooks/trello?memberId=4fc78a59a885233f4b349bd9",
+          "active": true
+        }
+      },
+      "record": "model"
+    }
+  },
+  "webhook": {
+    "scope": "token",
+    "topic": "{{body.action.type}}",
+    "eventId": "{{body.action.id}}",
+    "account": "{{body.webhook.callbackURL}}",
+    "verify": "verifyWebhookSignature"
+  },
+  "capabilities": {
+    "member.get": {
+      "kind": "read",
+      "method": "getMember",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "member",
+      "args": [
+        "id",
+        "$rest"
+      ]
+    },
+    "board.list": {
+      "kind": "read",
+      "method": "listBoards",
+      "input": {
+        "memberId": {
+          "type": "string"
+        },
+        "filter": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "string"
+        }
+      },
+      "output": "board[]",
+      "args": [
+        "memberId",
+        "$rest"
+      ]
+    },
+    "board.get": {
+      "kind": "read",
+      "method": "getBoard",
+      "input": {
+        "boardId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "board",
+      "args": [
+        "boardId",
+        "$rest"
+      ]
+    },
+    "board.create": {
+      "kind": "write",
+      "method": "createBoard",
+      "input": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "desc": {
+          "type": "string"
+        },
+        "idOrganization": {
+          "type": "string"
+        }
+      },
+      "output": "board",
+      "args": [
+        "$rest"
+      ]
+    },
+    "board.update": {
+      "kind": "write",
+      "method": "updateBoard",
+      "input": {
+        "boardId": {
+          "type": "string",
+          "required": true
+        },
+        "name": {
+          "type": "string"
+        },
+        "desc": {
+          "type": "string"
+        },
+        "closed": {
+          "type": "boolean"
+        }
+      },
+      "output": "board",
+      "args": [
+        "boardId",
+        "$rest"
+      ]
+    },
+    "list.list": {
+      "kind": "read",
+      "method": "listLists",
+      "input": {
+        "boardId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "list[]",
+      "args": [
+        "boardId",
+        "$rest"
+      ]
+    },
+    "list.get": {
+      "kind": "read",
+      "method": "getList",
+      "input": {
+        "listId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "list",
+      "args": [
+        "listId",
+        "$rest"
+      ]
+    },
+    "list.create": {
+      "kind": "write",
+      "method": "createList",
+      "input": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "idBoard": {
+          "type": "string",
+          "required": true
+        },
+        "pos": {
+          "type": "string"
+        }
+      },
+      "output": "list",
+      "args": [
+        "$rest"
+      ]
+    },
+    "list.update": {
+      "kind": "write",
+      "method": "updateList",
+      "input": {
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "name": {
+          "type": "string"
+        },
+        "closed": {
+          "type": "boolean"
+        },
+        "pos": {
+          "type": "string"
+        }
+      },
+      "output": "list",
+      "args": [
+        "listId",
+        "$rest"
+      ]
+    },
+    "card.list": {
+      "kind": "read",
+      "method": "listCards",
+      "input": {
+        "boardId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "card[]",
+      "args": [
+        "boardId",
+        "$rest"
+      ]
+    },
+    "card.listByList": {
+      "kind": "read",
+      "method": "listListCards",
+      "input": {
+        "listId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "card[]",
+      "args": [
+        "listId",
+        "$rest"
+      ]
+    },
+    "card.get": {
+      "kind": "read",
+      "method": "getCard",
+      "input": {
+        "cardId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "card",
+      "args": [
+        "cardId",
+        "$rest"
+      ]
+    },
+    "card.create": {
+      "kind": "write",
+      "method": "createCard",
+      "input": {
+        "idList": {
+          "type": "string",
+          "required": true
+        },
+        "name": {
+          "type": "string"
+        },
+        "desc": {
+          "type": "string"
+        },
+        "due": {
+          "type": "string"
+        }
+      },
+      "output": "card",
+      "args": [
+        "$rest"
+      ]
+    },
+    "card.update": {
+      "kind": "write",
+      "method": "updateCard",
+      "input": {
+        "cardId": {
+          "type": "string",
+          "required": true
+        },
+        "name": {
+          "type": "string"
+        },
+        "desc": {
+          "type": "string"
+        },
+        "idList": {
+          "type": "string"
+        },
+        "closed": {
+          "type": "boolean"
+        }
+      },
+      "output": "card",
+      "args": [
+        "cardId",
+        "$rest"
+      ]
+    },
+    "organization.list": {
+      "kind": "read",
+      "method": "listOrganizations",
+      "input": {
+        "memberId": {
+          "type": "string"
+        }
+      },
+      "output": "organization[]",
+      "args": [
+        "memberId",
+        "$rest"
+      ]
+    },
+    "organization.get": {
+      "kind": "read",
+      "method": "getOrganization",
+      "input": {
+        "organizationId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "organization",
+      "args": [
+        "organizationId",
+        "$rest"
+      ]
+    },
+    "label.list": {
+      "kind": "read",
+      "method": "listLabels",
+      "input": {
+        "boardId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "label[]",
+      "args": [
+        "boardId",
+        "$rest"
+      ]
+    },
+    "label.create": {
+      "kind": "write",
+      "method": "createLabel",
+      "input": {
+        "idBoard": {
+          "type": "string",
+          "required": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "color": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "label",
+      "args": [
+        "$rest"
+      ]
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhook",
+      "input": {
+        "callbackURL": {
+          "type": "string",
+          "required": true
+        },
+        "idModel": {
+          "type": "string",
+          "required": true
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "output": "webhook",
+      "args": [
+        "$rest"
+      ]
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": {
+        "webhookId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "webhook",
+      "args": [
+        "webhookId"
+      ]
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhook",
+      "input": {
+        "webhookId": {
+          "type": "string",
+          "required": true
+        },
+        "callbackURL": {
+          "type": "string"
+        },
+        "idModel": {
+          "type": "string"
+        },
+        "active": {
+          "type": "boolean"
+        }
+      },
+      "output": "webhook",
+      "args": [
+        "webhookId",
+        "$rest"
+      ]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhook",
+      "input": {
+        "webhookId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "webhook",
+      "args": [
+        "webhookId"
+      ]
+    },
+    "webhook.listByToken": {
+      "kind": "read",
+      "method": "listTokenWebhooks",
+      "input": {
+        "token": {
+          "type": "string"
+        }
+      },
+      "output": "webhook[]",
+      "args": [
+        "token"
+      ]
+    },
+    "webhook.createForToken": {
+      "kind": "write",
+      "method": "createTokenWebhook",
+      "input": {
+        "callbackURL": {
+          "type": "string",
+          "required": true
+        },
+        "idModel": {
+          "type": "string",
+          "required": true
+        },
+        "description": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        }
+      },
+      "output": "webhook",
+      "args": [
+        "$rest",
+        "token"
+      ]
+    }
+  },
+  "options": {
+    "board": {
+      "capability": "board.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id"
+    },
+    "organization": {
+      "capability": "organization.list",
+      "label": "{{item.displayName}}",
+      "value": "$.item.id"
+    }
+  }
+}

@@ -1,0 +1,105 @@
+# Fenestra Document: Trello Power-Ups
+#
+# Trello Power-Ups are iframe-hosted extensions that run inside the Trello UI.
+# The connector page loads power-up.js and registers capability handlers via
+# `window.TrelloPowerUp.initialize({ ... })`. Secondary pages (popups, sections)
+# use `window.TrelloPowerUp.iframe()`.
+#
+# Docs: https://developer.atlassian.com/cloud/trello/power-ups/
+# Client library: https://developer.atlassian.com/cloud/trello/power-ups/client-library/
+#
+# Drafted against Fenestra 0.1.0
+# (api-module-library branch claude/fenestra-spec-draft-Q367t).
+# Trello is listed under Productivity & Collaboration in
+# specs/fenestra/PLATFORMS.md (Iframe / Power-Ups).
+#
+# The `@friggframework/api-module-trello` package implements the REST API
+# (key+token auth, boards/lists/cards/webhooks), not the browser Power-Up SDK.
+
+fenestra: "0.1.0"
+
+info:
+  title: Trello Power-Ups
+  version: "1.0.0"
+  description: |
+    Trello Power-Ups extend the Trello board and card UI via an HTTPS iframe
+    connector. Capabilities are declared in the Power-Up admin portal and
+    implemented as handlers on `TrelloPowerUp.initialize`.
+
+    Common capabilities (non-exhaustive; see Power-Ups reference):
+    - board-buttons — buttons on the board header
+    - card-buttons — buttons on the card back
+    - card-badges / card-detail-badges — badges on cards
+    - attachment-sections — rich iframes for claimed attachment URLs
+    - attachment-thumbnail — custom attachment previews
+    - authorization-status / show-authorization — OAuth / authorize UX
+    - on-enable / on-disable — lifecycle hooks
+
+platform:
+  name: Trello
+  vendor: Atlassian
+  documentation: https://developer.atlassian.com/cloud/trello/power-ups/
+  appMarketplace: https://trello.com/app-marketplace
+  developerPortal: https://trello.com/apps/admin
+
+sdks:
+  power-up-client:
+    name: Trello Power-Up Client Library
+    packageManager: npm
+    package: power-up.min.js
+    platform: web
+    documentation: https://developer.atlassian.com/cloud/trello/power-ups/client-library/
+    description: |
+      Distributed as a CDN browser script (`https://p.trellocdn.com/power-up.min.js`),
+      not an npm package — `packageManager: npm` is used only to satisfy the
+      Fenestra 0.1.0 enum. Exposes `window.TrelloPowerUp`. Use `.initialize`
+      once on the connector page and `.iframe` on secondary iframe pages.
+      Capability handlers return button/section descriptors; `t.signUrl`
+      is required for some iframe content URLs (attachment-sections,
+      attachment-thumbnail initialize).
+    exports:
+      TrelloPowerUp:
+        type: utility
+        description: Global Power-Up client (`initialize`, `iframe`, `util`).
+      initialize:
+        type: hook
+        description: Register capability handlers on the connector page.
+      iframe:
+        type: hook
+        description: Bind a secondary iframe page to the Power-Up context (`t`).
+
+extensionPoints:
+  - id: board-buttons
+    name: Board buttons
+    type: toolbar
+    extensionType: iframe
+    description: |
+      Buttons rendered on the board header. Handler returns an array of
+      `{ icon, text, callback | url | condition }` descriptors.
+    documentation: https://developer.atlassian.com/cloud/trello/power-ups/capabilities/board-buttons/
+    supportedComponents:
+      - all
+
+  - id: card-buttons
+    name: Card buttons
+    type: sidebar
+    extensionType: iframe
+    description: |
+      Buttons on the card back. Typically open a popup (`t.popup`) or
+      navigate to a signed URL.
+    documentation: https://developer.atlassian.com/cloud/trello/power-ups/capabilities/card-buttons/
+    supportedComponents:
+      - all
+
+  - id: attachment-sections
+    name: Attachment sections
+    type: embedded
+    extensionType: iframe
+    description: |
+      Claim card attachment URLs and render an iframe section above the
+      attachments list. Content URL must be signed with `t.signUrl`.
+    documentation: https://developer.atlassian.com/cloud/trello/power-ups/capabilities/attachment-sections/
+    supportedComponents:
+      - all
+    constraints:
+      httpsOnly: true

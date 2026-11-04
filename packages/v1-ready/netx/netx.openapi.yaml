@@ -1,0 +1,453 @@
+openapi: 3.0.3
+info:
+  title: NetX Public API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    NetX Digital Asset Management JSON-RPC / import API as documented at
+    https://developer.netx.net/. NetX does not publish an OpenAPI document; this
+    file is Left Hook's curated subset covering exactly the endpoints the
+    @friggframework/api-module-netx client in api.js implements. JSON-RPC methods
+    are modeled as POST paths under /api/rpc/{methodName}; at runtime every such
+    call is a single POST to {baseUrl}/api/rpc with a JSON-RPC 2.0 body
+    (`jsonrpc`, `id`, `method`, `params`). NetX does not support named parameters
+    or batched calls.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://example.netx.net
+    description: >-
+      Per-tenant NetX instance root. Replace with the customer site
+      (e.g. https://acme.netx.net). Matches Api.baseUrl.
+security:
+  - ApiTokenAuth: []
+tags:
+  - name: Identity
+  - name: Assets
+  - name: Folders
+  - name: Webhooks
+paths:
+  /api/rpc/getSelf:
+    post:
+      tags: [Identity]
+      operationId: getSelf
+      summary: Get the user that owns the API token
+      description: >-
+        JSON-RPC method `getSelf`. Params: `[null]`. Returns the user object
+        for the token owner (userId, username, email, names, …).
+      responses:
+        "200":
+          description: JSON-RPC envelope with user result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonRpcUserResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/rpc/getAssets:
+    post:
+      tags: [Assets]
+      operationId: getAssets
+      summary: Get one or more assets by id
+      description: >-
+        JSON-RPC method `getAssets`. Params: `[assetIds[], options]`.
+        `options.data` selects returned fields (asset.id, asset.base, asset.file, …).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assetIds:
+                  type: array
+                  items: { type: integer }
+                options:
+                  $ref: "#/components/schemas/AssetOptions"
+      responses:
+        "200":
+          description: JSON-RPC envelope with asset list
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/rpc/getAssetsByFolder:
+    post:
+      tags: [Assets]
+      operationId: getAssetsByFolder
+      summary: List assets in a folder
+      description: >-
+        JSON-RPC method `getAssetsByFolder`.
+        Params: `[folderId, recursive, options]` where options may include
+        `page` and `data`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [folderId]
+              properties:
+                folderId: { type: integer }
+                recursive: { type: boolean, default: false }
+                options:
+                  $ref: "#/components/schemas/AssetPageOptions"
+      responses:
+        "200":
+          description: JSON-RPC envelope with paged asset results
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/rpc/getAssetsByQuery:
+    post:
+      tags: [Assets]
+      operationId: getAssetsByQuery
+      summary: Search assets with a query
+      description: >-
+        JSON-RPC method `getAssetsByQuery`.
+        Params: `[{ query }, options]`. Query is an array of clause objects
+        (operator + criterion) as documented on developer.netx.net.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query:
+                  description: >-
+                    Search clauses, or an object wrapping them as
+                    `query: [...]` per the NetX docs.
+                  oneOf:
+                    - type: array
+                      items: { type: object }
+                    - type: object
+                options:
+                  $ref: "#/components/schemas/AssetPageOptions"
+      responses:
+        "200":
+          description: JSON-RPC envelope with matching assets
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/rpc/updateAsset:
+    post:
+      tags: [Assets]
+      operationId: updateAsset
+      summary: Update an asset name and/or fileName
+      description: >-
+        JSON-RPC method `updateAsset`.
+        Params: `[{ id, name?, fileName? }, options]`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [asset]
+              properties:
+                asset:
+                  type: object
+                  required: [id]
+                  properties:
+                    id: { type: integer }
+                    name: { type: string }
+                    fileName: { type: string }
+                options:
+                  $ref: "#/components/schemas/AssetOptions"
+      responses:
+        "200":
+          description: JSON-RPC envelope with updated asset
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/import/asset:
+    post:
+      tags: [Assets]
+      operationId: importAsset
+      summary: Import a new asset file
+      description: >-
+        Multipart POST (not JSON-RPC). Form fields: `file` (binary),
+        `folderId` (integer), `fileName` (string). Same Authorization header.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, folderId, fileName]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                folderId:
+                  type: integer
+                fileName:
+                  type: string
+      responses:
+        "200":
+          description: Created asset (includes id)
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/rpc/createFolder:
+    post:
+      tags: [Folders]
+      operationId: createFolder
+      summary: Create a folder
+      description: >-
+        JSON-RPC method `createFolder`.
+        Params: `[{ parentId, name, description? }, options]`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [folder]
+              properties:
+                folder:
+                  type: object
+                  required: [parentId, name]
+                  properties:
+                    parentId: { type: integer }
+                    name: { type: string }
+                    description: { type: string }
+                options:
+                  $ref: "#/components/schemas/FolderOptions"
+      responses:
+        "200":
+          description: JSON-RPC envelope with created folder
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/rpc/getFolderById:
+    post:
+      tags: [Folders]
+      operationId: getFolderById
+      summary: Get a folder by id
+      description: >-
+        JSON-RPC method `getFolderById`. Params: `[folderId, options]`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [folderId]
+              properties:
+                folderId:
+                  oneOf:
+                    - type: integer
+                    - type: string
+                options:
+                  $ref: "#/components/schemas/FolderOptions"
+      responses:
+        "200":
+          description: JSON-RPC envelope with folder
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/rpc/getFoldersByParent:
+    post:
+      tags: [Folders]
+      operationId: getFoldersByParent
+      summary: List child folders of a parent
+      description: >-
+        JSON-RPC method `getFoldersByParent`.
+        Params: `[parentId, options]` with page/data options.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [parentId]
+              properties:
+                parentId: { type: integer }
+                options:
+                  $ref: "#/components/schemas/FolderPageOptions"
+      responses:
+        "200":
+          description: JSON-RPC envelope with paged folders
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/rpc/setWebhook:
+    post:
+      tags: [Webhooks]
+      operationId: setWebhook
+      summary: Create or update a webhook
+      description: >-
+        JSON-RPC method `setWebhook`. Params: `[webhook]`.
+        `id` of 0 (or omitted) creates; a positive id updates.
+        `actions` must be from the documented action name set.
+        `status` is ACTIVE or USER_DISABLED (optional; defaults ACTIVE).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Webhook"
+      responses:
+        "200":
+          description: JSON-RPC envelope with stored webhook
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/rpc/getWebhooks:
+    post:
+      tags: [Webhooks]
+      operationId: getWebhooks
+      summary: List webhooks
+      description: >-
+        JSON-RPC method `getWebhooks`. Params: `[options]` with page/sort.
+        Signing secrets are never included.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookPageOptions"
+      responses:
+        "200":
+          description: JSON-RPC envelope with paged webhooks
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/rpc/deleteWebhook:
+    post:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook by id
+      description: >-
+        JSON-RPC method `deleteWebhook`. Params: `[webhookId]`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhookId]
+              properties:
+                webhookId: { type: integer }
+      responses:
+        "200":
+          description: JSON-RPC envelope with empty result
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    ApiTokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >-
+        Value must be `apiToken <netx_api_token>` (literal prefix `apiToken`,
+        then a space, then the access token). Not Bearer.
+  responses:
+    Unauthorized:
+      description: Missing or invalid Authorization header / token
+  schemas:
+    AssetOptions:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { type: string }
+          description: >-
+            Field selectors such as asset.id, asset.base, asset.file,
+            asset.attributes, asset.folders, …
+    AssetPageOptions:
+      allOf:
+        - $ref: "#/components/schemas/AssetOptions"
+        - type: object
+          properties:
+            page:
+              type: object
+              properties:
+                startIndex: { type: integer }
+                size: { type: integer }
+            sort:
+              type: object
+              properties:
+                field: { type: string }
+                order: { type: string, enum: [asc, desc] }
+    FolderOptions:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { type: string }
+          description: folder.id, folder.base, folder.children
+    FolderPageOptions:
+      allOf:
+        - $ref: "#/components/schemas/FolderOptions"
+        - type: object
+          properties:
+            page:
+              type: object
+              properties:
+                startIndex: { type: integer }
+                size: { type: integer }
+    Webhook:
+      type: object
+      required: [name, endpointUrl, actions]
+      properties:
+        id:
+          type: integer
+          description: 0 or omitted to create; positive id to update
+        name: { type: string }
+        endpointUrl:
+          type: string
+          format: uri
+        actions:
+          type: array
+          items:
+            type: string
+            enum:
+              - asset.create
+              - asset.addToFolder
+              - asset.checkin
+              - asset.checkout
+              - asset.delete
+              - asset.expire
+              - asset.updateAttributes
+              - folder.create
+              - folder.delete
+              - folder.update
+              - user.create
+              - user.expire
+              - user.update
+        status:
+          type: string
+          enum: [ACTIVE, USER_DISABLED]
+    WebhookPageOptions:
+      type: object
+      properties:
+        page:
+          type: object
+          properties:
+            startIndex: { type: integer }
+            size: { type: integer }
+        sort:
+          type: object
+          properties:
+            field: { type: string, enum: [name] }
+            order: { type: string, enum: [asc, desc] }
+    JsonRpcUserResponse:
+      type: object
+      properties:
+        jsonrpc: { type: string, example: "2.0" }
+        id: {}
+        result:
+          type: object
+          properties:
+            userId: { type: integer }
+            username: { type: string }
+            email: { type: string }
+            firstName: { type: string }
+            lastName: { type: string }
+            userType: { type: integer }
+            organization: { type: string }

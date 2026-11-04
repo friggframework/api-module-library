@@ -1,0 +1,399 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "gusto",
+  "label": "Gusto",
+  "package": "@friggframework/api-module-gusto",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected Gusto company, persisted by the module (apiPropertiesToPersist).",
+    "fields": [
+      {
+        "name": "company_uuid",
+        "type": "string",
+        "description": "Gusto company UUID authorized for this OAuth grant (from GET /v1/token_info resource.uuid)"
+      }
+    ]
+  },
+  "objects": {
+    "company": {
+      "label": "Company",
+      "fields": [
+        {
+          "name": "uuid",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "organization.name"
+        },
+        {
+          "name": "trade_name",
+          "type": "string",
+          "tag": "organization.tradeName"
+        },
+        {
+          "name": "ein",
+          "type": "string",
+          "tag": "organization.ein"
+        },
+        {
+          "name": "entity_type",
+          "type": "string"
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "uuid",
+        "get": {
+          "capability": "company.get",
+          "id": "companyId"
+        },
+        "update": {
+          "capability": "company.update",
+          "id": "companyId",
+          "body": "body"
+        }
+      }
+    },
+    "employee": {
+      "label": "Employee",
+      "fields": [
+        {
+          "name": "uuid",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "first_name",
+          "type": "string",
+          "tag": "person.givenName"
+        },
+        {
+          "name": "last_name",
+          "type": "string",
+          "tag": "person.familyName"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "work_email",
+          "type": "email",
+          "tag": "contact.workEmail"
+        },
+        {
+          "name": "date_of_birth",
+          "type": "date",
+          "tag": "person.dateOfBirth"
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "company_uuid",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "onboarded",
+          "type": "boolean",
+          "readOnly": true
+        },
+        {
+          "name": "preferred_first_name",
+          "type": "string",
+          "tag": "person.preferredName"
+        }
+      ],
+      "sync": {
+        "id": "uuid",
+        "list": {
+          "capability": "employee.list",
+          "cursor": "page",
+          "limit": "per",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "employee.get",
+          "id": "employeeId"
+        },
+        "create": {
+          "capability": "employee.create",
+          "body": "body"
+        },
+        "update": {
+          "capability": "employee.update",
+          "id": "employeeId",
+          "body": "body"
+        }
+      }
+    },
+    "payroll": {
+      "label": "Payroll",
+      "fields": [
+        {
+          "name": "uuid",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "company_uuid",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "check_date",
+          "type": "date",
+          "tag": "payroll.checkDate"
+        },
+        {
+          "name": "processed",
+          "type": "boolean",
+          "tag": "payroll.processed",
+          "readOnly": true
+        },
+        {
+          "name": "payroll_type",
+          "type": "string",
+          "tag": "payroll.type"
+        },
+        {
+          "name": "pay_period.start_date",
+          "type": "date"
+        },
+        {
+          "name": "pay_period.end_date",
+          "type": "date"
+        }
+      ],
+      "sync": {
+        "id": "uuid",
+        "list": {
+          "capability": "payroll.list",
+          "cursor": "page",
+          "limit": "per",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "payroll.get",
+          "id": "payrollId"
+        }
+      }
+    }
+  },
+  "events": {
+    "employee.created": {
+      "delivery": "webhook",
+      "object": "employee",
+      "subscribe": "webhook.create",
+      "match": "employee.created",
+      "description": "Fired when an employee is created on the connected company.",
+      "payload": {
+        "event_type": "employee.created",
+        "resource_type": "Company",
+        "resource_uuid": "5df911a0-e8e9-412d-8aaf-a46ad193dd96",
+        "entity_type": "Employee",
+        "entity_uuid": "bcfc9744-0ab3-4ef3-ab0d-e728255d659c",
+        "timestamp": 1671058841
+      },
+      "idPath": "entity_uuid",
+      "recordId": "entity_uuid"
+    },
+    "employee.updated": {
+      "delivery": "webhook",
+      "object": "employee",
+      "subscribe": "webhook.create",
+      "match": "employee.updated",
+      "description": "Fired when an employee is updated.",
+      "payload": {
+        "event_type": "employee.updated",
+        "resource_type": "Company",
+        "resource_uuid": "5df911a0-e8e9-412d-8aaf-a46ad193dd96",
+        "entity_type": "Employee",
+        "entity_uuid": "bcfc9744-0ab3-4ef3-ab0d-e728255d659c",
+        "timestamp": 1671058841
+      },
+      "idPath": "entity_uuid",
+      "recordId": "entity_uuid"
+    },
+    "company.provisioned": {
+      "delivery": "webhook",
+      "object": "company",
+      "subscribe": "webhook.create",
+      "match": "company.provisioned",
+      "description": "Fired when an OAuth connection is established between the company and the partner.",
+      "payload": {
+        "event_type": "company.provisioned",
+        "resource_type": "Company",
+        "resource_uuid": "5df911a0-e8e9-412d-8aaf-a46ad193dd96",
+        "entity_type": "Company",
+        "entity_uuid": "5df911a0-e8e9-412d-8aaf-a46ad193dd96",
+        "timestamp": 1671058841
+      },
+      "idPath": "entity_uuid",
+      "recordId": "entity_uuid"
+    }
+  },
+  "webhook": {
+    "scope": "app",
+    "topic": "{{body.event_type}}",
+    "eventId": "{{body.entity_uuid}}",
+    "account": "{{body.resource_uuid}}",
+    "verify": "verifyWebhookSignature",
+    "handshake": {
+      "when": "body.verification_token && !body.event_type",
+      "status": 200,
+      "body": { "received": true }
+    },
+    "note": "HMAC-SHA256 of raw body with subscription verification_token; compare to X-Gusto-Signature. Webhook subscription CRUD requires system-level auth (system_access_token)."
+  },
+  "capabilities": {
+    "token.info": {
+      "kind": "read",
+      "method": "getTokenInfo",
+      "input": {},
+      "output": "tokenInfo"
+    },
+    "company.get": {
+      "kind": "read",
+      "method": "getCompany",
+      "input": {
+        "companyId": { "type": "string" }
+      },
+      "output": "company",
+      "args": ["companyId"]
+    },
+    "company.update": {
+      "kind": "write",
+      "method": "updateCompany",
+      "input": {
+        "companyId": { "type": "string" },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "company",
+      "args": ["companyId", "body"]
+    },
+    "employee.list": {
+      "kind": "read",
+      "method": "listEmployees",
+      "input": {
+        "companyId": { "type": "string" },
+        "query": { "type": "object" }
+      },
+      "output": "page<employee>",
+      "args": ["companyId", "query"]
+    },
+    "employee.get": {
+      "kind": "read",
+      "method": "getEmployee",
+      "input": {
+        "employeeId": { "type": "string", "required": true }
+      },
+      "output": "employee",
+      "args": ["employeeId"]
+    },
+    "employee.create": {
+      "kind": "write",
+      "method": "createEmployee",
+      "input": {
+        "companyId": { "type": "string" },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "employee",
+      "args": ["companyId", "body"]
+    },
+    "employee.update": {
+      "kind": "write",
+      "method": "updateEmployee",
+      "input": {
+        "employeeId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "employee",
+      "args": ["employeeId", "body"]
+    },
+    "payroll.list": {
+      "kind": "read",
+      "method": "listPayrolls",
+      "input": {
+        "companyId": { "type": "string" },
+        "query": { "type": "object" }
+      },
+      "output": "page<payroll>",
+      "args": ["companyId", "query"]
+    },
+    "payroll.get": {
+      "kind": "read",
+      "method": "getPayroll",
+      "input": {
+        "companyId": { "type": "string" },
+        "payrollId": { "type": "string", "required": true }
+      },
+      "output": "payroll",
+      "args": ["companyId", "payrollId"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhookSubscriptions",
+      "input": {},
+      "output": "page<webhookSubscription>"
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhookSubscription",
+      "input": {
+        "webhookSubscriptionUuid": { "type": "string", "required": true }
+      },
+      "output": "webhookSubscription",
+      "args": ["webhookSubscriptionUuid"]
+    },
+    "webhook.create": {
+      "kind": "subscribe",
+      "method": "createWebhookSubscription",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "webhookSubscription",
+      "args": ["body"]
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhookSubscription",
+      "input": {
+        "webhookSubscriptionUuid": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "webhookSubscription",
+      "args": ["webhookSubscriptionUuid", "body"]
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhookSubscription",
+      "input": {
+        "webhookSubscriptionUuid": { "type": "string", "required": true }
+      },
+      "args": ["webhookSubscriptionUuid"]
+    },
+    "webhook.verify": {
+      "kind": "write",
+      "method": "verifyWebhookSubscription",
+      "input": {
+        "webhookSubscriptionUuid": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "webhookSubscription",
+      "args": ["webhookSubscriptionUuid", "body"]
+    }
+  }
+}

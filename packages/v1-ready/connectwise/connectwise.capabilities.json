@@ -1,0 +1,385 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "connectwise",
+  "label": "ConnectWise Manage (PSA)",
+  "package": "@friggframework/api-module-connectwise",
+  "version": "1.0.4",
+  "auth": "basic",
+  "account": {
+    "description": "Connected ConnectWise PSA company. Entity/credential externalId is company_id used for Basic auth.",
+    "fields": [
+      {
+        "name": "companyId",
+        "type": "string",
+        "description": "ConnectWise company id (login company)"
+      },
+      {
+        "name": "site",
+        "type": "string",
+        "description": "PSA site base URL (e.g. https://api-na.myconnectwise.net)"
+      }
+    ]
+  },
+  "objects": {
+    "company": {
+      "label": "Company",
+      "description": "PSA company record (field shapes UNVERIFIED — login-gated docs)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" },
+        { "name": "identifier", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "company.list", "items": "$" },
+        "get": { "capability": "company.get", "id": "id" },
+        "create": { "capability": "company.create", "body": "$" },
+        "update": { "capability": "company.patch", "id": "id", "body": "$" },
+        "delete": { "capability": "company.delete", "id": "id" }
+      }
+    },
+    "contact": {
+      "label": "Contact",
+      "description": "PSA contact (field shapes UNVERIFIED)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "firstName", "type": "string", "tag": "person.givenName" },
+        { "name": "lastName", "type": "string", "tag": "person.familyName" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "contact.list", "items": "$" },
+        "get": { "capability": "contact.get", "id": "id" },
+        "create": { "capability": "contact.create", "body": "$" },
+        "update": { "capability": "contact.update", "id": "id", "body": "$" },
+        "delete": { "capability": "contact.delete", "id": "id" }
+      }
+    },
+    "companyType": {
+      "label": "Company type",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "required": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "companyType.list", "items": "$" },
+        "create": { "capability": "companyType.create", "body": "$" },
+        "delete": { "capability": "companyType.delete", "id": "id" }
+      }
+    },
+    "communicationType": {
+      "label": "Communication type",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "communicationType.list", "items": "$" }
+      }
+    },
+    "country": {
+      "label": "Country",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "country.list", "items": "$" }
+      }
+    },
+    "invoice": {
+      "label": "Invoice",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "type", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "invoice.list", "items": "$" },
+        "create": { "capability": "invoice.createForCompany", "body": "$" }
+      }
+    },
+    "payment": {
+      "label": "Invoice payment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "invoice.listPayments", "items": "$" }
+      }
+    },
+    "catalogItem": {
+      "label": "Catalog item",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "identifier", "type": "string" },
+        { "name": "description", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "catalogItem.list", "items": "$" },
+        "create": { "capability": "catalogItem.create", "body": "$" }
+      }
+    },
+    "productType": {
+      "label": "Product type",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "required": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "productType.list", "items": "$" },
+        "create": { "capability": "productType.create", "body": "$" }
+      }
+    },
+    "productCategory": {
+      "label": "Product category",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "productCategory.list", "items": "$" }
+      }
+    },
+    "productSubcategory": {
+      "label": "Product subcategory",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "productSubcategory.list", "items": "$" }
+      }
+    },
+    "unitOfMeasure": {
+      "label": "Unit of measure",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "unitOfMeasure.list", "items": "$" }
+      }
+    },
+    "invoiceProduct": {
+      "label": "Invoice product line",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "quantity", "type": "number" },
+        { "name": "price", "type": "number" }
+      ],
+      "sync": {
+        "id": "id",
+        "create": { "capability": "invoiceProduct.add", "body": "$" }
+      }
+    },
+    "callback": {
+      "label": "System callback",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "url", "type": "string" },
+        { "name": "type", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "callback.list", "items": "$" },
+        "get": { "capability": "callback.get", "id": "id" },
+        "create": { "capability": "callback.create", "body": "$" },
+        "delete": { "capability": "callback.delete", "id": "id" }
+      }
+    }
+  },
+  "events": {},
+  "capabilities": {
+    "company.list": {
+      "kind": "list",
+      "method": "listCompanies",
+      "output": "company[]",
+      "args": ["query"]
+    },
+    "company.get": {
+      "kind": "read",
+      "method": "getCompanyById",
+      "output": "company",
+      "args": ["id"]
+    },
+    "company.create": {
+      "kind": "create",
+      "method": "createCompany",
+      "output": "company",
+      "args": ["company"]
+    },
+    "company.patch": {
+      "kind": "update",
+      "method": "patchCompanyById",
+      "output": "company",
+      "args": ["id", "company"]
+    },
+    "company.delete": {
+      "kind": "delete",
+      "method": "deleteCompanyById",
+      "args": ["id"]
+    },
+    "companyType.list": {
+      "kind": "list",
+      "method": "listCompanyTypes",
+      "output": "companyType[]",
+      "args": ["query"]
+    },
+    "companyType.create": {
+      "kind": "create",
+      "method": "createCompanyType",
+      "output": "companyType",
+      "args": ["companyType"]
+    },
+    "companyType.delete": {
+      "kind": "delete",
+      "method": "deleteCompanyType",
+      "args": ["id"]
+    },
+    "companyType.addToCompany": {
+      "kind": "create",
+      "method": "addTypeToCompany",
+      "args": ["company_id", "type_id"]
+    },
+    "communicationType.list": {
+      "kind": "list",
+      "method": "listCommunicationTypes",
+      "output": "communicationType[]",
+      "args": ["query"]
+    },
+    "country.list": {
+      "kind": "list",
+      "method": "listCountries",
+      "output": "country[]",
+      "args": []
+    },
+    "contact.list": {
+      "kind": "list",
+      "method": "listContacts",
+      "output": "contact[]",
+      "args": ["query"]
+    },
+    "contact.get": {
+      "kind": "read",
+      "method": "getContact",
+      "output": "contact",
+      "args": ["id"]
+    },
+    "contact.create": {
+      "kind": "create",
+      "method": "createContact",
+      "output": "contact",
+      "args": ["contact"]
+    },
+    "contact.update": {
+      "kind": "update",
+      "method": "updateContact",
+      "output": "contact",
+      "args": ["id", "contacts"]
+    },
+    "contact.delete": {
+      "kind": "delete",
+      "method": "deleteContact",
+      "args": ["id"]
+    },
+    "invoice.list": {
+      "kind": "list",
+      "method": "listInvoices",
+      "output": "invoice[]",
+      "args": ["query"]
+    },
+    "invoice.createForCompany": {
+      "kind": "create",
+      "method": "createInvoiceForCompany",
+      "output": "invoice",
+      "args": ["params"]
+    },
+    "invoice.listPayments": {
+      "kind": "list",
+      "method": "getPaymentsForInvoice",
+      "output": "payment[]",
+      "args": ["id", "query"]
+    },
+    "unitOfMeasure.list": {
+      "kind": "list",
+      "method": "listUnitOfMeasures",
+      "output": "unitOfMeasure[]",
+      "args": ["query"]
+    },
+    "productSubcategory.list": {
+      "kind": "list",
+      "method": "listProductSubcategories",
+      "output": "productSubcategory[]",
+      "args": ["query"]
+    },
+    "productCategory.list": {
+      "kind": "list",
+      "method": "listProductCategories",
+      "output": "productCategory[]",
+      "args": ["query"]
+    },
+    "catalogItem.list": {
+      "kind": "list",
+      "method": "listCatalogItems",
+      "output": "catalogItem[]",
+      "args": ["query"]
+    },
+    "catalogItem.create": {
+      "kind": "create",
+      "method": "createCatalogItem",
+      "output": "catalogItem",
+      "args": ["params"]
+    },
+    "productType.list": {
+      "kind": "list",
+      "method": "listProductTypes",
+      "output": "productType[]",
+      "args": ["query"]
+    },
+    "productType.create": {
+      "kind": "create",
+      "method": "createProductType",
+      "output": "productType",
+      "args": ["params"]
+    },
+    "invoiceProduct.add": {
+      "kind": "create",
+      "method": "addProductToInvoice",
+      "output": "invoiceProduct",
+      "args": ["params"]
+    },
+    "callback.list": {
+      "kind": "list",
+      "method": "listCallbacks",
+      "output": "callback[]",
+      "args": []
+    },
+    "callback.get": {
+      "kind": "read",
+      "method": "getCallbackId",
+      "output": "callback",
+      "args": ["id"]
+    },
+    "callback.create": {
+      "kind": "create",
+      "method": "createCallback",
+      "output": "callback",
+      "args": ["callback"]
+    },
+    "callback.delete": {
+      "kind": "delete",
+      "method": "deleteCallbackId",
+      "args": ["id"]
+    }
+  }
+}

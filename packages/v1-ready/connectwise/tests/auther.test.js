@@ -13,13 +13,23 @@ const authorizeParams = {
     site: process.env.CONNECTWISE_SITE,
 }
 
+const hasLiveCreds = Boolean(
+    process.env.CONNECTWISE_PUBLIC_KEY &&
+        process.env.CONNECTWISE_PRIVATE_KEY &&
+        process.env.CONNECTWISE_COMPANY_ID &&
+        process.env.CONNECTWISE_SITE
+);
+
 const mocks = {
     listCallbacks: [],
     authorizeParams,
 }
-testAutherDefinition(Definition, mocks)
 
-describe('Connectwise Module Live Tests', () => {
+if (hasLiveCreds) {
+    testAutherDefinition(Definition, mocks)
+}
+
+(hasLiveCreds ? describe : describe.skip)('Connectwise Module Live Tests', () => {
     let auther;
     beforeAll(async () => {
         await connectToDatabase();

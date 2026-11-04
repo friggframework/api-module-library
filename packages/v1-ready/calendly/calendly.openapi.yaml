@@ -1,0 +1,367 @@
+openapi: 3.0.3
+info:
+  title: Calendly API (Frigg curated subset)
+  version: "2.0.0"
+  description: >-
+    Calendly REST API v2 curated subset covering exactly the endpoints the
+    @friggframework/api-module-calendly client in api.js implements. Paths,
+    parameters, and fields are taken from Calendly's official OpenAPI at
+    https://developer.calendly.com/openapi/calendly-api.yaml. One method per
+    operationId.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.calendly.com
+    description: Calendly API v2
+security:
+  - OAuth2: []
+tags:
+  - name: Users
+  - name: Event Types
+  - name: Scheduled Events
+  - name: Invitees
+  - name: Webhooks
+paths:
+  /users/me:
+    get:
+      tags: [Users]
+      operationId: getCurrentUser
+      summary: Get current user
+      description: >-
+        Returns basic information about your user account.
+        Required scope: users:read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [resource]
+                properties:
+                  resource:
+                    $ref: "#/components/schemas/User"
+
+  /event_types:
+    get:
+      tags: [Event Types]
+      operationId: listEventTypes
+      summary: List User's Event Types
+      description: >-
+        Returns Event Types for a user or organization. Either `organization`
+        or `user` is required. Required scope: event_types:read
+      parameters:
+        - in: query
+          name: active
+          schema: { type: boolean }
+        - in: query
+          name: organization
+          schema: { type: string, format: uri }
+          description: Organization URI. Required unless `user` is set.
+        - in: query
+          name: user
+          schema: { type: string, format: uri }
+          description: User URI. Required unless `organization` is set.
+        - in: query
+          name: user_availability_schedule
+          schema: { type: string, format: uri }
+        - in: query
+          name: sort
+          schema: { type: string }
+        - in: query
+          name: admin_managed
+          schema: { type: boolean }
+        - in: query
+          name: page_token
+          schema: { type: string }
+        - in: query
+          name: count
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+
+  /event_types/{uuid}:
+    get:
+      tags: [Event Types]
+      operationId: getEventType
+      summary: Get Event Type
+      description: "Required scope: event_types:read"
+      parameters:
+        - in: path
+          name: uuid
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+
+  /scheduled_events:
+    get:
+      tags: [Scheduled Events]
+      operationId: listScheduledEvents
+      summary: List Events
+      description: >-
+        Pass `user`, `organization`, and/or `group` per Calendly docs.
+        Required scope: scheduled_events:read
+      parameters:
+        - in: query
+          name: user
+          schema: { type: string, format: uri }
+        - in: query
+          name: organization
+          schema: { type: string, format: uri }
+        - in: query
+          name: invitee_email
+          schema: { type: string, format: email }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, canceled]
+        - in: query
+          name: sort
+          schema: { type: string }
+        - in: query
+          name: min_start_time
+          schema: { type: string, format: date-time }
+        - in: query
+          name: max_start_time
+          schema: { type: string, format: date-time }
+        - in: query
+          name: page_token
+          schema: { type: string }
+        - in: query
+          name: count
+          schema: { type: integer }
+        - in: query
+          name: group
+          schema: { type: string, format: uri }
+      responses:
+        "200":
+          description: OK
+
+  /scheduled_events/{uuid}:
+    get:
+      tags: [Scheduled Events]
+      operationId: getScheduledEvent
+      summary: Get Event
+      description: "Required scope: scheduled_events:read"
+      parameters:
+        - in: path
+          name: uuid
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+
+  /scheduled_events/{uuid}/invitees:
+    get:
+      tags: [Invitees]
+      operationId: listEventInvitees
+      summary: List Event Invitees
+      description: "Required scope: scheduled_events:read"
+      parameters:
+        - in: path
+          name: uuid
+          required: true
+          schema: { type: string }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, canceled]
+        - in: query
+          name: sort
+          schema: { type: string }
+        - in: query
+          name: email
+          schema: { type: string, format: email }
+        - in: query
+          name: page_token
+          schema: { type: string }
+        - in: query
+          name: count
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+
+  /scheduled_events/{event_uuid}/invitees/{invitee_uuid}:
+    get:
+      tags: [Invitees]
+      operationId: getEventInvitee
+      summary: Get Event Invitee
+      description: "Required scope: scheduled_events:read"
+      parameters:
+        - in: path
+          name: event_uuid
+          required: true
+          schema: { type: string }
+        - in: path
+          name: invitee_uuid
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+
+  /webhook_subscriptions:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookSubscriptions
+      summary: List Webhook Subscriptions
+      description: >-
+        Required query params: organization, scope.
+        Required scope: webhooks:read
+      parameters:
+        - in: query
+          name: organization
+          required: true
+          schema: { type: string, format: uri }
+        - in: query
+          name: scope
+          required: true
+          schema:
+            type: string
+            enum: [organization, user, group]
+        - in: query
+          name: user
+          schema: { type: string, format: uri }
+        - in: query
+          name: group
+          schema: { type: string, format: uri }
+        - in: query
+          name: page_token
+          schema: { type: string }
+        - in: query
+          name: count
+          schema: { type: integer }
+        - in: query
+          name: sort
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+    post:
+      tags: [Webhooks]
+      operationId: createWebhookSubscription
+      summary: Create Webhook Subscription
+      description: "Required scope: webhooks:write"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, events, organization, scope]
+              properties:
+                url:
+                  type: string
+                  format: uri
+                events:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - invitee.canceled
+                      - invitee.created
+                      - invitee_no_show.created
+                      - invitee_no_show.deleted
+                      - meeting_recap.created
+                      - meeting_recap.updated
+                      - meeting_recap.deleted
+                      - routing_form_submission.created
+                      - contact.created
+                      - contact.updated
+                      - contact.deleted
+                organization:
+                  type: string
+                  format: uri
+                scope:
+                  type: string
+                  enum: [organization, user, group]
+                user:
+                  type: string
+                  format: uri
+                group:
+                  type: string
+                  format: uri
+                signing_key:
+                  type: string
+      responses:
+        "201":
+          description: Created
+
+  /webhook_subscriptions/{webhook_uuid}:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhookSubscription
+      summary: Get Webhook Subscription
+      description: "Required scope: webhooks:read"
+      parameters:
+        - in: path
+          name: webhook_uuid
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhookSubscription
+      summary: Delete Webhook Subscription
+      description: "Required scope: webhooks:write"
+      parameters:
+        - in: path
+          name: webhook_uuid
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.calendly.com/oauth/authorize
+          tokenUrl: https://auth.calendly.com/oauth/token
+          scopes:
+            users:read: Retrieve user information
+            event_types:read: Retrieve event type details
+            scheduled_events:read: Retrieve scheduled events and invitees
+            webhooks:read: Retrieve webhook subscriptions
+            webhooks:write: Create or delete webhook subscriptions
+  schemas:
+    User:
+      type: object
+      required:
+        - uri
+        - name
+        - slug
+        - email
+        - scheduling_url
+        - timezone
+        - created_at
+        - updated_at
+        - current_organization
+        - resource_type
+      properties:
+        uri: { type: string, format: uri }
+        name: { type: string }
+        slug: { type: string }
+        email: { type: string, format: email }
+        scheduling_url: { type: string, format: uri }
+        timezone: { type: string }
+        avatar_url: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        current_organization: { type: string, format: uri }
+        resource_type: { type: string }
+        locale: { type: string }
+        time_notation: { type: string, enum: [12h, 24h] }

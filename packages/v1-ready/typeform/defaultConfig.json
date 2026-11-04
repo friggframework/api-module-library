@@ -1,0 +1,10 @@
+{
+    "name": "typeform",
+    "config": {
+        "oauth": true,
+        "batch": {
+            "concurrency": 2,
+            "delay": 500
+        }
+    }
+}

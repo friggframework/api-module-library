@@ -1,0 +1,257 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "typeform",
+  "label": "Typeform",
+  "package": "@friggframework/api-module-typeform",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Typeform account identity from GET /me (alias, email, language).",
+    "fields": [
+      {
+        "name": "email",
+        "type": "string",
+        "description": "Account email from GET /me; used as entity externalId."
+      },
+      {
+        "name": "alias",
+        "type": "string",
+        "description": "Display alias from GET /me."
+      }
+    ]
+  },
+  "objects": {
+    "account": {
+      "label": "Account",
+      "fields": [
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "alias", "type": "string", "tag": "person.displayName" },
+        { "name": "language", "type": "string" }
+      ]
+    },
+    "form": {
+      "label": "Form",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "title", "type": "string", "tag": "record.title" },
+        { "name": "type", "type": "string" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "last_updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "settings.is_public", "type": "boolean" },
+        { "name": "fields", "type": "json" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "form.list",
+          "items": "items"
+        },
+        "get": {
+          "capability": "form.get",
+          "id": "formId"
+        },
+        "create": {
+          "capability": "form.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "form.update",
+          "id": "formId",
+          "body": "data"
+        }
+      }
+    },
+    "response": {
+      "label": "Form response",
+      "fields": [
+        { "name": "response_id", "type": "id", "readOnly": true },
+        { "name": "token", "type": "string", "readOnly": true },
+        { "name": "landed_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "submitted_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "answers", "type": "json" },
+        { "name": "hidden", "type": "json" },
+        { "name": "calculated", "type": "json" },
+        { "name": "metadata", "type": "json" }
+      ],
+      "sync": {
+        "id": "response_id",
+        "list": {
+          "capability": "response.list",
+          "items": "items"
+        }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "form_id", "type": "string", "readOnly": true },
+        { "name": "tag", "type": "string" },
+        { "name": "url", "type": "string" },
+        { "name": "enabled", "type": "boolean" },
+        { "name": "verify_ssl", "type": "boolean", "readOnly": true },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "event_types", "type": "json" }
+      ],
+      "sync": {
+        "id": "tag",
+        "list": {
+          "capability": "webhook.list",
+          "items": "items"
+        },
+        "get": {
+          "capability": "webhook.get",
+          "id": "tag"
+        },
+        "create": {
+          "capability": "webhook.createOrUpdate",
+          "body": "data"
+        },
+        "update": {
+          "capability": "webhook.createOrUpdate",
+          "body": "data"
+        }
+      }
+    }
+  },
+  "events": {
+    "form_response": {
+      "delivery": "webhook",
+      "object": "response",
+      "subscribe": "webhook.createOrUpdate",
+      "description": "Fired when a respondent submits a completed form response.",
+      "idPath": "form_response.token"
+    },
+    "form_response_partial": {
+      "delivery": "webhook",
+      "object": "response",
+      "subscribe": "webhook.createOrUpdate",
+      "description": "Fired when a partial (in-progress) response is staged.",
+      "idPath": "form_response.token"
+    }
+  },
+  "webhook": {
+    "scope": "installation",
+    "topic": "form_response",
+    "eventId": "{{body.event_id}}",
+    "verify": "verifyTypeformSignature",
+    "note": "HMAC-SHA256 of raw body with webhook secret; header Typeform-Signature is sha256=<base64>. Webhooks are registered per form via createOrUpdateWebhook. Docs: https://www.typeform.com/developers/webhooks/secure-your-webhooks/"
+  },
+  "capabilities": {
+    "account.get": {
+      "kind": "read",
+      "method": "getMe",
+      "input": {},
+      "output": "account"
+    },
+    "form.list": {
+      "kind": "read",
+      "method": "listForms",
+      "input": {
+        "search": { "type": "string" },
+        "page": { "type": "integer" },
+        "page_size": { "type": "integer" },
+        "workspace_id": { "type": "string" },
+        "sort_by": { "type": "string" },
+        "order_by": { "type": "string" },
+        "is_public": { "type": "boolean" }
+      },
+      "output": "page<form>"
+    },
+    "form.get": {
+      "kind": "read",
+      "method": "getForm",
+      "input": {
+        "formId": { "type": "string", "required": true }
+      },
+      "output": "form",
+      "args": ["formId"]
+    },
+    "form.create": {
+      "kind": "write",
+      "method": "createForm",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "form",
+      "args": ["data"]
+    },
+    "form.update": {
+      "kind": "write",
+      "method": "updateForm",
+      "input": {
+        "formId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "form",
+      "args": ["formId", "data"]
+    },
+    "form.delete": {
+      "kind": "delete",
+      "method": "deleteForm",
+      "input": {
+        "formId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["formId"]
+    },
+    "response.list": {
+      "kind": "read",
+      "method": "listResponses",
+      "input": {
+        "formId": { "type": "string", "required": true },
+        "page_size": { "type": "integer" },
+        "since": { "type": "string" },
+        "until": { "type": "string" },
+        "after": { "type": "string" },
+        "before": { "type": "string" },
+        "response_type": { "type": "string" },
+        "sort": { "type": "string" },
+        "query": { "type": "string" }
+      },
+      "output": "page<response>",
+      "args": ["formId"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "input": {
+        "formId": { "type": "string", "required": true }
+      },
+      "output": "page<webhook>",
+      "args": ["formId"]
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": {
+        "formId": { "type": "string", "required": true },
+        "tag": { "type": "string", "required": true }
+      },
+      "output": "webhook",
+      "args": ["formId", "tag"]
+    },
+    "webhook.createOrUpdate": {
+      "kind": "subscribe",
+      "method": "createOrUpdateWebhook",
+      "input": {
+        "formId": { "type": "string", "required": true },
+        "tag": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["formId", "tag", "data"]
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhook",
+      "input": {
+        "formId": { "type": "string", "required": true },
+        "tag": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["formId", "tag"]
+    }
+  }
+}

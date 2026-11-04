@@ -1,0 +1,10 @@
+{
+    "name": "factorial",
+    "config": {
+        "apiKey": false,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

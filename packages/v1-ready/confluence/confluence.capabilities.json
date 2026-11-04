@@ -1,0 +1,341 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "confluence",
+  "label": "Confluence Cloud",
+  "package": "@friggframework/api-module-confluence",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Confluence Cloud site identity from accessible-resources (cloudId).",
+    "fields": [
+      {
+        "name": "cloudId",
+        "type": "string",
+        "description": "Atlassian cloud id used as entity externalId."
+      },
+      {
+        "name": "siteUrl",
+        "type": "string",
+        "description": "Site URL from accessible-resources (e.g. https://example.atlassian.net)."
+      },
+      {
+        "name": "siteName",
+        "type": "string",
+        "description": "Human-readable site name from accessible-resources."
+      }
+    ]
+  },
+  "objects": {
+    "space": {
+      "label": "Space",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "key", "type": "string", "tag": "record.key" },
+        { "name": "name", "type": "string", "tag": "record.name" },
+        { "name": "type", "type": "string", "readOnly": true },
+        { "name": "status", "type": "string" },
+        { "name": "authorId", "type": "string", "tag": "record.owner", "readOnly": true },
+        { "name": "spaceOwnerId", "type": "string", "readOnly": true },
+        { "name": "currentActiveAlias", "type": "string", "readOnly": true },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "homepageId", "type": "string", "readOnly": true },
+        { "name": "description", "type": "json" },
+        { "name": "icon", "type": "json", "readOnly": true },
+        { "name": "_links", "type": "json", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "space.list",
+          "limit": "limit",
+          "cursor": "cursor",
+          "items": "results",
+          "next": "_links.next"
+        },
+        "get": {
+          "capability": "space.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "space.create",
+          "body": "data"
+        }
+      }
+    },
+    "page": {
+      "label": "Page",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "status", "type": "string" },
+        { "name": "title", "type": "string", "tag": "record.name" },
+        { "name": "spaceId", "type": "string" },
+        { "name": "parentId", "type": "string" },
+        { "name": "parentType", "type": "string", "readOnly": true },
+        { "name": "position", "type": "integer", "readOnly": true },
+        { "name": "authorId", "type": "string", "tag": "record.owner", "readOnly": true },
+        { "name": "ownerId", "type": "string", "readOnly": true },
+        { "name": "lastOwnerId", "type": "string", "readOnly": true },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "version", "type": "json" },
+        { "name": "body", "type": "json" },
+        { "name": "isFavoritedByCurrentUser", "type": "boolean", "readOnly": true },
+        { "name": "_links", "type": "json", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "page.list",
+          "limit": "limit",
+          "cursor": "cursor",
+          "items": "results",
+          "next": "_links.next"
+        },
+        "get": {
+          "capability": "page.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "page.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "page.update",
+          "id": "id",
+          "body": "data"
+        }
+      }
+    },
+    "blogpost": {
+      "label": "Blog post",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "status", "type": "string" },
+        { "name": "title", "type": "string", "tag": "record.name" },
+        { "name": "spaceId", "type": "string" },
+        { "name": "authorId", "type": "string", "tag": "record.owner", "readOnly": true },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "version", "type": "json" },
+        { "name": "body", "type": "json" },
+        { "name": "isFavoritedByCurrentUser", "type": "boolean", "readOnly": true },
+        { "name": "_links", "type": "json", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "blogpost.list",
+          "limit": "limit",
+          "cursor": "cursor",
+          "items": "results",
+          "next": "_links.next"
+        },
+        "get": {
+          "capability": "blogpost.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "blogpost.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "blogpost.update",
+          "id": "id",
+          "body": "data"
+        }
+      }
+    }
+  },
+  "capabilities": {
+    "account.resources.list": {
+      "kind": "read",
+      "method": "listAccessibleResources",
+      "input": {},
+      "output": "json"
+    },
+    "account.me.get": {
+      "kind": "read",
+      "method": "getCurrentUser",
+      "input": {},
+      "output": "json"
+    },
+    "space.list": {
+      "kind": "read",
+      "method": "getSpaces",
+      "input": {
+        "limit": { "type": "integer" },
+        "cursor": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "keys": { "type": "json" }
+      },
+      "output": "page<space>"
+    },
+    "space.get": {
+      "kind": "read",
+      "method": "getSpaceById",
+      "args": ["id", "params"],
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "space"
+    },
+    "space.create": {
+      "kind": "write",
+      "method": "createSpace",
+      "args": ["data"],
+      "input": {
+        "name": { "type": "string", "required": true },
+        "key": { "type": "string" },
+        "alias": { "type": "string" },
+        "description": { "type": "json" },
+        "roleAssignments": { "type": "json" },
+        "copySpaceAccessConfiguration": { "type": "integer" },
+        "createPrivateSpace": { "type": "boolean" },
+        "templateKey": { "type": "string" }
+      },
+      "output": "space"
+    },
+    "page.list": {
+      "kind": "read",
+      "method": "getPages",
+      "input": {
+        "limit": { "type": "integer" },
+        "cursor": { "type": "string" },
+        "space-id": { "type": "json" },
+        "title": { "type": "string" },
+        "status": { "type": "json" },
+        "body-format": { "type": "string" }
+      },
+      "output": "page<page>"
+    },
+    "page.listInSpace": {
+      "kind": "read",
+      "method": "getPagesInSpace",
+      "args": ["spaceId", "params"],
+      "input": {
+        "spaceId": { "type": "string", "required": true },
+        "limit": { "type": "integer" },
+        "cursor": { "type": "string" }
+      },
+      "output": "page<page>"
+    },
+    "page.get": {
+      "kind": "read",
+      "method": "getPageById",
+      "args": ["id", "params"],
+      "input": {
+        "id": { "type": "string", "required": true },
+        "body-format": { "type": "string" }
+      },
+      "output": "page"
+    },
+    "page.create": {
+      "kind": "write",
+      "method": "createPage",
+      "args": ["data", "params"],
+      "input": {
+        "spaceId": { "type": "string", "required": true },
+        "title": { "type": "string" },
+        "parentId": { "type": "string" },
+        "body": { "type": "json" },
+        "status": { "type": "string" },
+        "subtype": { "type": "string" }
+      },
+      "output": "page"
+    },
+    "page.update": {
+      "kind": "write",
+      "method": "updatePage",
+      "args": ["id", "data"],
+      "input": {
+        "id": { "type": "string", "required": true },
+        "status": { "type": "string", "required": true },
+        "title": { "type": "string", "required": true },
+        "body": { "type": "json", "required": true },
+        "version": { "type": "json", "required": true },
+        "spaceId": { "type": "string" },
+        "parentId": { "type": "string" },
+        "ownerId": { "type": "string" }
+      },
+      "output": "page"
+    },
+    "page.delete": {
+      "kind": "delete",
+      "method": "deletePage",
+      "args": ["id", "params"],
+      "input": {
+        "id": { "type": "string", "required": true },
+        "purge": { "type": "boolean" },
+        "draft": { "type": "boolean" }
+      }
+    },
+    "blogpost.list": {
+      "kind": "read",
+      "method": "getBlogPosts",
+      "input": {
+        "limit": { "type": "integer" },
+        "cursor": { "type": "string" },
+        "space-id": { "type": "json" },
+        "title": { "type": "string" }
+      },
+      "output": "page<blogpost>"
+    },
+    "blogpost.listInSpace": {
+      "kind": "read",
+      "method": "getBlogPostsInSpace",
+      "args": ["spaceId", "params"],
+      "input": {
+        "spaceId": { "type": "string", "required": true },
+        "limit": { "type": "integer" },
+        "cursor": { "type": "string" }
+      },
+      "output": "page<blogpost>"
+    },
+    "blogpost.get": {
+      "kind": "read",
+      "method": "getBlogPostById",
+      "args": ["id", "params"],
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "blogpost"
+    },
+    "blogpost.create": {
+      "kind": "write",
+      "method": "createBlogPost",
+      "args": ["data", "params"],
+      "input": {
+        "spaceId": { "type": "string", "required": true },
+        "title": { "type": "string" },
+        "body": { "type": "json" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "output": "blogpost"
+    },
+    "blogpost.update": {
+      "kind": "write",
+      "method": "updateBlogPost",
+      "args": ["id", "data"],
+      "input": {
+        "id": { "type": "string", "required": true },
+        "status": { "type": "string", "required": true },
+        "title": { "type": "string", "required": true },
+        "body": { "type": "json", "required": true },
+        "version": { "type": "json", "required": true },
+        "spaceId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "output": "blogpost"
+    },
+    "blogpost.delete": {
+      "kind": "delete",
+      "method": "deleteBlogPost",
+      "args": ["id", "params"],
+      "input": {
+        "id": { "type": "string", "required": true },
+        "purge": { "type": "boolean" },
+        "draft": { "type": "boolean" }
+      }
+    }
+  }
+}

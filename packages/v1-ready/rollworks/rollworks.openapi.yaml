@@ -1,0 +1,354 @@
+openapi: 3.0.3
+info:
+  title: RollWorks / AdRoll ABM (NextRoll) API
+  version: "1.0.0"
+  description: >-
+    Curated subset of the NextRoll API used by AdRoll ABM (formerly RollWorks).
+    Official docs: https://apidocs.nextroll.com/guides/get-started-rollworks.html,
+    https://apidocs.nextroll.com/guides/oauth.html,
+    https://apidocs.nextroll.com/crud-api/reference.html,
+    https://apidocs.nextroll.com/audience-api/reference.html.
+    This file covers exactly the endpoints the
+    @friggframework/api-module-rollworks client in api.js implements — one method
+    per operationId.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://services.adroll.com
+    description: NextRoll / AdRoll services API
+security:
+  - OAuth2: []
+tags:
+  - name: Organization
+  - name: TargetAccounts
+paths:
+  /api/v1/organization/get:
+    get:
+      tags: [Organization]
+      operationId: getOrganization
+      summary: Fetch organization details
+      description: >-
+        Returns the authenticated organization (or a specific organization when
+        `organization` is supplied). Fields include eid, name, created_date.
+      parameters:
+        - in: query
+          name: organization
+          schema: { type: string }
+          description: Organization EID (optional; defaults to the caller's organization).
+      responses:
+        "200":
+          description: Organization details
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /api/v1/organization/get_advertisables:
+    get:
+      tags: [Organization]
+      operationId: listAdvertisables
+      summary: List advertisables for an organization
+      description: >-
+        Advertisable EIDs are required by most Audience API calls. Response shape
+        is `{ results: [ ... ] }`.
+      parameters:
+        - in: query
+          name: organization
+          schema: { type: string }
+          description: Organization EID (optional; defaults to the caller's organization).
+      responses:
+        "200":
+          description: Advertisable list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+
+  /audience/v1/target_accounts:
+    get:
+      tags: [TargetAccounts]
+      operationId: listTargetAccounts
+      summary: List Target Account Lists
+      parameters:
+        - in: query
+          name: advertisable_eid
+          required: true
+          schema: { type: string }
+        - in: query
+          name: scoring_model_id
+          schema: { type: string }
+        - in: query
+          name: include_deleted
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Target Account Lists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: { $ref: '#/components/schemas/TargetAccountsList' }
+    post:
+      tags: [TargetAccounts]
+      operationId: createTargetAccount
+      summary: Create a Target Account List
+      parameters:
+        - in: query
+          name: advertisable_eid
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TargetAccountsListCreate'
+      responses:
+        "200":
+          description: Created Target Account List
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetAccountsList'
+
+  /audience/v1/target_accounts/{talEid}:
+    get:
+      tags: [TargetAccounts]
+      operationId: getTargetAccount
+      summary: Get a Target Account List
+      parameters:
+        - in: path
+          name: talEid
+          required: true
+          schema: { type: string }
+        - in: query
+          name: advertisable_eid
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Target Account List
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetAccountsList'
+    post:
+      tags: [TargetAccounts]
+      operationId: updateTargetAccount
+      summary: Update a Target Account List
+      parameters:
+        - in: path
+          name: talEid
+          required: true
+          schema: { type: string }
+        - in: query
+          name: advertisable_eid
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TargetAccountsListUpdate'
+      responses:
+        "200":
+          description: Updated Target Account List
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetAccountsList'
+    delete:
+      tags: [TargetAccounts]
+      operationId: deleteTargetAccount
+      summary: Delete a Target Account List
+      parameters:
+        - in: path
+          name: talEid
+          required: true
+          schema: { type: string }
+        - in: query
+          name: advertisable_eid
+          required: true
+          schema: { type: string }
+        - in: query
+          name: force
+          schema: { type: boolean }
+      responses:
+        "204":
+          description: Deleted
+
+  /audience/v1/target_accounts/{talEid}/tiers/{tierEid}/items:
+    get:
+      tags: [TargetAccounts]
+      operationId: listTargetAccountItems
+      summary: List domains in a Target Account List tier
+      parameters:
+        - in: path
+          name: talEid
+          required: true
+          schema: { type: string }
+        - in: path
+          name: tierEid
+          required: true
+          schema: { type: string }
+          description: Tier EID; use `all` for every domain on the list.
+        - in: query
+          name: advertisable_eid
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Domain items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_items: { type: integer }
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        domain: { type: string }
+                        score: { type: number, nullable: true }
+                        source: { type: string }
+                        updated_at: { type: string, format: date-time }
+    post:
+      tags: [TargetAccounts]
+      operationId: addTargetAccountItems
+      summary: Upsert domains into a Target Account List tier
+      parameters:
+        - in: path
+          name: talEid
+          required: true
+          schema: { type: string }
+        - in: path
+          name: tierEid
+          required: true
+          schema: { type: string }
+        - in: query
+          name: advertisable_eid
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [domain]
+                    properties:
+                      domain: { type: string }
+                      score: { type: number }
+                      source: { type: string }
+      responses:
+        "200":
+          description: Insert/update result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  existing_domains:
+                    type: array
+                    items: { type: string }
+                  new_domains:
+                    type: array
+                    items: { type: string }
+    delete:
+      tags: [TargetAccounts]
+      operationId: removeTargetAccountItems
+      summary: Remove domains from a Target Account List tier
+      parameters:
+        - in: path
+          name: talEid
+          required: true
+          schema: { type: string }
+        - in: path
+          name: tierEid
+          required: true
+          schema: { type: string }
+        - in: query
+          name: advertisable_eid
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domains:
+                  type: array
+                  items: { type: string }
+                force: { type: boolean }
+      responses:
+        "204":
+          description: Domains removed
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        NextRoll OAuth 2.0 (RFC 6749) with Bearer tokens (RFC 6750).
+        Authorize at https://services.adroll.com/auth/authorize;
+        token at https://services.adroll.com/auth/token. Scope `all`.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://services.adroll.com/auth/authorize
+          tokenUrl: https://services.adroll.com/auth/token
+          scopes:
+            all: Access to all resources (only documented scope)
+  schemas:
+    TargetAccountsList:
+      type: object
+      properties:
+        eid: { type: string }
+        name: { type: string }
+        advertisable_eid: { type: string }
+        items_count: { type: integer }
+        updated_at: { type: string, format: date-time }
+        tiers:
+          type: array
+          items: { type: object, additionalProperties: true }
+      additionalProperties: true
+    TargetAccountsListCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        domains:
+          type: array
+          items: { type: string }
+        advertisable_eid: { type: string }
+        source: { type: string }
+        sfdc_company_list_name: { type: string }
+        sfdc_company_list_object_id: { type: string }
+        sfdc_sync_state: { type: string }
+    TargetAccountsListUpdate:
+      type: object
+      properties:
+        eid: { type: string }
+        name: { type: string }
+        scoring_status: { type: string }
+        sfdc_sync_state: { type: string }
+      additionalProperties: true

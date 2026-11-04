@@ -2,7 +2,15 @@ require('dotenv').config();
 const {Api} = require('../api');
 const {Authenticator} = require('@friggframework/devtools');
 
-describe('Deel API Tests', () => {
+const hasLiveCredentials =
+    process.env.DEEL_CLIENT_ID &&
+    process.env.DEEL_CLIENT_SECRET &&
+    process.env.REDIRECT_URI &&
+    process.env.DEEL_SCOPE;
+
+const describeLive = hasLiveCredentials ? describe : describe.skip;
+
+describeLive('Deel API Tests', () => {
     /* eslint-disable camelcase */
     const apiParams = {
         client_id: process.env.DEEL_CLIENT_ID,

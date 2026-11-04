@@ -1,0 +1,634 @@
+openapi: 3.0.3
+info:
+  title: Planhat Main REST API (curated subset)
+  version: "1.0.0"
+  description: >-
+    Planhat is a customer-success platform. This file is Left Hook's curated
+    subset of the Main API documented at https://www.planhat.com/developers/api/
+    covering exactly the endpoints the @friggframework/api-module-planhat
+    client in api.js implements. Planhat does not publish an official OpenAPI
+    document; this is reconstructed from the vendor HTML docs and is the
+    source of truth the hand-written client mirrors 1:1 (one method per
+    operationId). Analytics endpoints (analytics.planhat.com) are out of scope.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Planhat API documentation
+    url: https://www.planhat.com/developers/api/introduction
+servers:
+  - url: https://api.planhat.com
+    description: Planhat main API
+security:
+  - BearerAuth: []
+tags:
+  - name: Companies
+  - name: Endusers
+  - name: Tasks
+  - name: Conversations
+  - name: CustomFields
+  - name: Users
+paths:
+  /companies:
+    get:
+      tags: [Companies]
+      operationId: listCompanies
+      summary: List companies
+      description: >-
+        Paginated company list. Query params: companyId, limit (default 100,
+        max 5000), offset, sort, select.
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/select'
+        - in: query
+          name: companyId
+          schema: { type: string }
+          description: Filter by company id(s), comma-separated.
+      responses:
+        '200':
+          description: Array of company objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Company' }
+    post:
+      tags: [Companies]
+      operationId: createCompany
+      summary: Create a company
+      description: Requires `name`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CompanyWrite' }
+      responses:
+        '200':
+          description: Created company
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Company' }
+
+  /companies/{companyId}:
+    get:
+      tags: [Companies]
+      operationId: getCompany
+      summary: Get a company by id
+      description: >-
+        `companyId` may be a Planhat `_id`, or a keyable `extid-{externalId}` /
+        `srcid-{sourceId}`. Health score lives on this object as `h` /
+        `hProfile` / `csmScore`.
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+      responses:
+        '200':
+          description: Company
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Company' }
+    put:
+      tags: [Companies]
+      operationId: updateCompany
+      summary: Update a company
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CompanyWrite' }
+      responses:
+        '200':
+          description: Updated company
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Company' }
+
+  /leancompanies:
+    get:
+      tags: [Companies]
+      operationId: listLeanCompanies
+      summary: Lightweight company id list
+      description: >-
+        Returns `_id`, `name`, `externalId`, `sourceId` for matching. Query:
+        externalId, sourceId, status.
+      parameters:
+        - in: query
+          name: externalId
+          schema: { type: string }
+        - in: query
+          name: sourceId
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+          description: Comma-separated statuses (prospect, coming, customer, canceled, lost).
+      responses:
+        '200':
+          description: Lean company array
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    _id: { type: string }
+                    name: { type: string }
+                    externalId: { type: string }
+                    sourceId: { type: string }
+
+  /endusers:
+    get:
+      tags: [Endusers]
+      operationId: listEndusers
+      summary: List endusers (contacts)
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/select'
+        - in: query
+          name: companyId
+          schema: { type: string }
+        - in: query
+          name: archived
+          schema: { type: boolean }
+        - in: query
+          name: email
+          schema: { type: string, format: email }
+        - in: query
+          name: euId
+          schema: { type: string }
+      responses:
+        '200':
+          description: Array of endusers
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Enduser' }
+    post:
+      tags: [Endusers]
+      operationId: createEnduser
+      summary: Create an enduser
+      description: Requires companyId and one of email, externalId, sourceId.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EnduserWrite' }
+      responses:
+        '200':
+          description: Created enduser
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Enduser' }
+
+  /endusers/{enduserId}:
+    get:
+      tags: [Endusers]
+      operationId: getEnduser
+      summary: Get an enduser by id
+      parameters:
+        - $ref: '#/components/parameters/enduserId'
+      responses:
+        '200':
+          description: Enduser
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Enduser' }
+    put:
+      tags: [Endusers]
+      operationId: updateEnduser
+      summary: Update an enduser
+      parameters:
+        - $ref: '#/components/parameters/enduserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EnduserWrite' }
+      responses:
+        '200':
+          description: Updated enduser
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Enduser' }
+
+  /tasks:
+    get:
+      tags: [Tasks]
+      operationId: listTasks
+      summary: List tasks (CTAs) and events
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/select'
+        - in: query
+          name: companyId
+          schema: { type: string }
+        - in: query
+          name: enduserIds
+          schema: { type: string }
+        - in: query
+          name: isArchived
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: Array of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Task' }
+    post:
+      tags: [Tasks]
+      operationId: createTask
+      summary: Create a task
+      description: Requires companyId. mainType defaults to "task".
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TaskWrite' }
+      responses:
+        '200':
+          description: Created task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+
+  /tasks/{taskId}:
+    get:
+      tags: [Tasks]
+      operationId: getTask
+      summary: Get a task by id
+      parameters:
+        - $ref: '#/components/parameters/taskId'
+      responses:
+        '200':
+          description: Task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+    put:
+      tags: [Tasks]
+      operationId: updateTask
+      summary: Update a task
+      parameters:
+        - $ref: '#/components/parameters/taskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TaskWrite' }
+      responses:
+        '200':
+          description: Updated task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+
+  /conversations:
+    get:
+      tags: [Conversations]
+      operationId: listConversations
+      summary: List conversations (timeline / activities)
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/select'
+        - in: query
+          name: companyId
+          schema: { type: string }
+      responses:
+        '200':
+          description: Array of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Conversation' }
+    post:
+      tags: [Conversations]
+      operationId: createConversation
+      summary: Create a conversation
+      description: Requires companyId.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConversationWrite' }
+      responses:
+        '200':
+          description: Created conversation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Conversation' }
+
+  /conversations/{conversationId}:
+    get:
+      tags: [Conversations]
+      operationId: getConversation
+      summary: Get a conversation by id
+      parameters:
+        - $ref: '#/components/parameters/conversationId'
+      responses:
+        '200':
+          description: Conversation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Conversation' }
+    put:
+      tags: [Conversations]
+      operationId: updateConversation
+      summary: Update a conversation
+      parameters:
+        - $ref: '#/components/parameters/conversationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConversationWrite' }
+      responses:
+        '200':
+          description: Updated conversation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Conversation' }
+
+  /customfields:
+    get:
+      tags: [CustomFields]
+      operationId: listCustomFields
+      summary: List custom field definitions
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/select'
+      responses:
+        '200':
+          description: Array of custom fields
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CustomField' }
+
+  /customfields/{customFieldId}:
+    get:
+      tags: [CustomFields]
+      operationId: getCustomField
+      summary: Get a custom field by id
+      parameters:
+        - $ref: '#/components/parameters/customFieldId'
+      responses:
+        '200':
+          description: Custom field
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomField' }
+
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List team users
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/select'
+      responses:
+        '200':
+          description: Array of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/User' }
+
+  /users/{userId}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Get a user by id
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: User
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >-
+        API Access Token from a Private App. Send as `Bearer <token>`.
+        Docs also allow Basic with a trailing colon after the token; this
+        module uses Bearer only.
+  parameters:
+    limit:
+      in: query
+      name: limit
+      schema: { type: integer }
+    offset:
+      in: query
+      name: offset
+      schema: { type: integer }
+    sort:
+      in: query
+      name: sort
+      schema: { type: string }
+    select:
+      in: query
+      name: select
+      schema: { type: string }
+      description: Comma-separated property names.
+    companyId:
+      in: path
+      name: companyId
+      required: true
+      schema: { type: string }
+    enduserId:
+      in: path
+      name: enduserId
+      required: true
+      schema: { type: string }
+    taskId:
+      in: path
+      name: taskId
+      required: true
+      schema: { type: string }
+    conversationId:
+      in: path
+      name: conversationId
+      required: true
+      schema: { type: string }
+    customFieldId:
+      in: path
+      name: customFieldId
+      required: true
+      schema: { type: string }
+    userId:
+      in: path
+      name: userId
+      required: true
+      schema: { type: string }
+  schemas:
+    Company:
+      type: object
+      properties:
+        _id: { type: string }
+        name: { type: string }
+        externalId: { type: string }
+        sourceId: { type: string }
+        status: { type: string }
+        phase: { type: string }
+        owner: { type: string }
+        h: { type: integer, description: Health number (autogenerated) }
+        hProfile: { type: string, description: Health profile objectId }
+        csmScore: { type: integer }
+        hDiff: { type: number }
+        web: { type: string }
+        phonePrimary: { type: string }
+        country: { type: string }
+        city: { type: string }
+        custom: { type: object }
+        createDate: { type: string, format: date-time }
+        lastUpdated: { type: string, format: date-time }
+    CompanyWrite:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        externalId: { type: string }
+        sourceId: { type: string }
+        status: { type: string }
+        phase: { type: string }
+        owner: { type: string }
+        web: { type: string }
+        phonePrimary: { type: string }
+        country: { type: string }
+        city: { type: string }
+        description: { type: string }
+        custom: { type: object }
+        tags:
+          type: array
+          items: { type: string }
+    Enduser:
+      type: object
+      properties:
+        _id: { type: string }
+        email: { type: string, format: email }
+        firstName: { type: string }
+        lastName: { type: string }
+        name: { type: string }
+        companyId: { type: string }
+        companyName: { type: string }
+        externalId: { type: string }
+        sourceId: { type: string }
+        phone: { type: string }
+        position: { type: string }
+        custom: { type: object }
+        createDate: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    EnduserWrite:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        firstName: { type: string }
+        lastName: { type: string }
+        companyId: { type: string }
+        externalId: { type: string }
+        sourceId: { type: string }
+        phone: { type: string }
+        position: { type: string }
+        custom: { type: object }
+    Task:
+      type: object
+      properties:
+        _id: { type: string }
+        mainType: { type: string }
+        companyId: { type: string }
+        companyName: { type: string }
+        action: { type: string }
+        description: { type: string }
+        status: { type: string }
+        ownerId: { type: string }
+        startTime: { type: string, format: date-time }
+        endTime: { type: string, format: date-time }
+        isArchived: { type: boolean }
+        custom: { type: object }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    TaskWrite:
+      type: object
+      properties:
+        mainType: { type: string }
+        companyId: { type: string }
+        action: { type: string }
+        description: { type: string }
+        status: { type: string }
+        ownerId: { type: string }
+        startTime: { type: string, format: date-time }
+        endTime: { type: string, format: date-time }
+        custom: { type: object }
+    Conversation:
+      type: object
+      properties:
+        _id: { type: string }
+        subject: { type: string }
+        companyId: { type: string }
+        companyName: { type: string }
+        type: { type: string }
+        description: { type: string }
+        snippet: { type: string }
+        date: { type: string, format: date-time }
+        sentiment: { type: string }
+        custom: { type: object }
+        createDate: { type: string, format: date-time }
+    ConversationWrite:
+      type: object
+      properties:
+        companyId: { type: string }
+        subject: { type: string }
+        type: { type: string }
+        description: { type: string }
+        date: { type: string, format: date-time }
+        custom: { type: object }
+    CustomField:
+      type: object
+      properties:
+        _id: { type: string }
+        name: { type: string }
+        type: { type: string }
+        parent: { type: string }
+        isFeatured: { type: boolean }
+        isHidden: { type: boolean }
+        listValues:
+          type: array
+          items: { type: string }
+    User:
+      type: object
+      properties:
+        _id: { type: string }
+        email: { type: string, format: email }
+        nickName: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        inactive: { type: boolean }
+        externalId: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }

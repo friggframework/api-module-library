@@ -1,0 +1,369 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "planhat",
+  "label": "Planhat",
+  "package": "@friggframework/api-module-planhat",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Tenant identity derived from GET /users (first email) or sha256 fingerprint of the Private App API Access Token. Persisted as entity/credential externalId.",
+    "fields": [
+      {
+        "name": "externalId",
+        "type": "string",
+        "description": "User email when listUsers succeeds; otherwise sha256(api_token)"
+      }
+    ]
+  },
+  "objects": {
+    "company": {
+      "label": "Company",
+      "fields": [
+        { "name": "_id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "externalId", "type": "string", "tag": "record.externalId" },
+        { "name": "sourceId", "type": "string" },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "status", "type": "string" },
+        { "name": "phase", "type": "string" },
+        { "name": "owner", "type": "string", "tag": "person.id" },
+        { "name": "web", "type": "string", "tag": "org.website" },
+        { "name": "phonePrimary", "type": "string", "tag": "org.phone" },
+        { "name": "country", "type": "string" },
+        { "name": "city", "type": "string" },
+        { "name": "h", "type": "number", "readOnly": true, "tag": "health.score" },
+        { "name": "hProfile", "type": "string", "readOnly": true },
+        { "name": "csmScore", "type": "number", "readOnly": true },
+        { "name": "custom", "type": "object" },
+        { "name": "createDate", "type": "string", "tag": "record.createdAt", "readOnly": true },
+        { "name": "lastUpdated", "type": "string", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "_id",
+        "updatedAt": "lastUpdated",
+        "list": {
+          "capability": "company.list",
+          "items": "$",
+          "paging": "offset",
+          "note": "Response is a bare array; paginate with limit/offset."
+        },
+        "get": { "capability": "company.get", "id": "companyId" },
+        "create": { "capability": "company.create", "body": "body" },
+        "update": { "capability": "company.update", "id": "companyId", "body": "body" }
+      }
+    },
+    "enduser": {
+      "label": "Enduser",
+      "fields": [
+        { "name": "_id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "externalId", "type": "string", "tag": "record.externalId" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "firstName", "type": "string", "tag": "person.firstName" },
+        { "name": "lastName", "type": "string", "tag": "person.lastName" },
+        { "name": "name", "type": "string", "tag": "person.displayName" },
+        { "name": "phone", "type": "string", "tag": "person.phone" },
+        { "name": "position", "type": "string", "tag": "person.title" },
+        { "name": "companyId", "type": "string", "tag": "org.id" },
+        { "name": "custom", "type": "object" },
+        { "name": "createDate", "type": "string", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updatedAt", "type": "string", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "_id",
+        "updatedAt": "updatedAt",
+        "list": {
+          "capability": "enduser.list",
+          "items": "$",
+          "paging": "offset"
+        },
+        "get": { "capability": "enduser.get", "id": "enduserId" },
+        "create": { "capability": "enduser.create", "body": "body" },
+        "update": { "capability": "enduser.update", "id": "enduserId", "body": "body" }
+      }
+    },
+    "task": {
+      "label": "Task",
+      "fields": [
+        { "name": "_id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "mainType", "type": "string" },
+        { "name": "action", "type": "string", "tag": "record.displayName" },
+        { "name": "description", "type": "string" },
+        { "name": "status", "type": "string" },
+        { "name": "companyId", "type": "string", "tag": "org.id" },
+        { "name": "ownerId", "type": "string", "tag": "person.id" },
+        { "name": "startTime", "type": "string" },
+        { "name": "endTime", "type": "string" },
+        { "name": "isArchived", "type": "boolean" },
+        { "name": "custom", "type": "object" },
+        { "name": "createdAt", "type": "string", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updatedAt", "type": "string", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "_id",
+        "updatedAt": "updatedAt",
+        "list": {
+          "capability": "task.list",
+          "items": "$",
+          "paging": "offset"
+        },
+        "get": { "capability": "task.get", "id": "taskId" },
+        "create": { "capability": "task.create", "body": "body" },
+        "update": { "capability": "task.update", "id": "taskId", "body": "body" }
+      }
+    },
+    "conversation": {
+      "label": "Conversation",
+      "fields": [
+        { "name": "_id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "subject", "type": "string", "tag": "record.displayName" },
+        { "name": "type", "type": "string" },
+        { "name": "companyId", "type": "string", "tag": "org.id" },
+        { "name": "snippet", "type": "string" },
+        { "name": "date", "type": "string", "tag": "record.createdAt" },
+        { "name": "sentiment", "type": "string" },
+        { "name": "custom", "type": "object" }
+      ],
+      "sync": {
+        "id": "_id",
+        "updatedAt": "date",
+        "list": {
+          "capability": "conversation.list",
+          "items": "$",
+          "paging": "offset"
+        },
+        "get": { "capability": "conversation.get", "id": "conversationId" },
+        "create": { "capability": "conversation.create", "body": "body" },
+        "update": { "capability": "conversation.update", "id": "conversationId", "body": "body" }
+      }
+    },
+    "custom_field": {
+      "label": "Custom Field",
+      "fields": [
+        { "name": "_id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "type", "type": "string" },
+        { "name": "parent", "type": "string" },
+        { "name": "isFeatured", "type": "boolean" },
+        { "name": "isHidden", "type": "boolean" }
+      ],
+      "sync": {
+        "id": "_id",
+        "list": {
+          "capability": "custom_field.list",
+          "items": "$",
+          "paging": "offset"
+        },
+        "get": { "capability": "custom_field.get", "id": "customFieldId" }
+      }
+    },
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "_id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "nickName", "type": "string", "tag": "person.displayName" },
+        { "name": "firstName", "type": "string", "tag": "person.firstName" },
+        { "name": "lastName", "type": "string", "tag": "person.lastName" },
+        { "name": "inactive", "type": "boolean" }
+      ],
+      "sync": {
+        "id": "_id",
+        "list": {
+          "capability": "user.list",
+          "items": "$",
+          "paging": "offset"
+        },
+        "get": { "capability": "user.get", "id": "userId" }
+      }
+    },
+    "account_health": {
+      "label": "Account Health",
+      "fields": [
+        { "name": "_id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "h", "type": "number", "tag": "health.score", "readOnly": true },
+        { "name": "hProfile", "type": "string", "readOnly": true },
+        { "name": "csmScore", "type": "number", "readOnly": true },
+        { "name": "hDiff", "type": "number", "readOnly": true },
+        { "name": "hDiffDate", "type": "string", "readOnly": true },
+        { "name": "orgHealthTotal", "type": "number", "readOnly": true }
+      ],
+      "sync": {
+        "id": "_id",
+        "get": { "capability": "account_health.get", "id": "companyId" },
+        "note": "Projected from Company health fields via getCompanyHealth; no dedicated Planhat health resource."
+      }
+    }
+  },
+  "events": {},
+  "webhook": {
+    "note": "Planhat does not publish a REST webhook-subscription API. Outbound/inbound webhooks are configured in Automations (Call a webhook / Incoming webhook), not via Main API CRUD. See https://www.planhat.com/developers/automations/triggers and https://help.planhat.com/en/articles/11432236-webhooks-in-automations."
+  },
+  "capabilities": {
+    "identity.listUsers": {
+      "kind": "read",
+      "method": "listUsers",
+      "output": "page<user>",
+      "args": ["$rest"]
+    },
+    "company.list": {
+      "kind": "read",
+      "method": "listCompanies",
+      "output": "page<company>",
+      "args": ["$rest"]
+    },
+    "company.listLean": {
+      "kind": "read",
+      "method": "listLeanCompanies",
+      "output": "page<company>",
+      "args": ["$rest"]
+    },
+    "company.get": {
+      "kind": "read",
+      "method": "getCompany",
+      "input": { "companyId": { "type": "string", "required": true } },
+      "output": "company",
+      "args": ["companyId"]
+    },
+    "company.create": {
+      "kind": "write",
+      "method": "createCompany",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "company",
+      "args": ["body"]
+    },
+    "company.update": {
+      "kind": "write",
+      "method": "updateCompany",
+      "input": {
+        "companyId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "company",
+      "args": ["companyId", "body"]
+    },
+    "account_health.get": {
+      "kind": "read",
+      "method": "getCompanyHealth",
+      "input": { "companyId": { "type": "string", "required": true } },
+      "output": "account_health",
+      "args": ["companyId"],
+      "note": "Convenience projection over getCompany health fields."
+    },
+    "enduser.list": {
+      "kind": "read",
+      "method": "listEndusers",
+      "output": "page<enduser>",
+      "args": ["$rest"]
+    },
+    "enduser.get": {
+      "kind": "read",
+      "method": "getEnduser",
+      "input": { "enduserId": { "type": "string", "required": true } },
+      "output": "enduser",
+      "args": ["enduserId"]
+    },
+    "enduser.create": {
+      "kind": "write",
+      "method": "createEnduser",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "enduser",
+      "args": ["body"]
+    },
+    "enduser.update": {
+      "kind": "write",
+      "method": "updateEnduser",
+      "input": {
+        "enduserId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "enduser",
+      "args": ["enduserId", "body"]
+    },
+    "task.list": {
+      "kind": "read",
+      "method": "listTasks",
+      "output": "page<task>",
+      "args": ["$rest"]
+    },
+    "task.get": {
+      "kind": "read",
+      "method": "getTask",
+      "input": { "taskId": { "type": "string", "required": true } },
+      "output": "task",
+      "args": ["taskId"]
+    },
+    "task.create": {
+      "kind": "write",
+      "method": "createTask",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "task",
+      "args": ["body"]
+    },
+    "task.update": {
+      "kind": "write",
+      "method": "updateTask",
+      "input": {
+        "taskId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "task",
+      "args": ["taskId", "body"]
+    },
+    "conversation.list": {
+      "kind": "read",
+      "method": "listConversations",
+      "output": "page<conversation>",
+      "args": ["$rest"]
+    },
+    "conversation.get": {
+      "kind": "read",
+      "method": "getConversation",
+      "input": { "conversationId": { "type": "string", "required": true } },
+      "output": "conversation",
+      "args": ["conversationId"]
+    },
+    "conversation.create": {
+      "kind": "write",
+      "method": "createConversation",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "conversation",
+      "args": ["body"]
+    },
+    "conversation.update": {
+      "kind": "write",
+      "method": "updateConversation",
+      "input": {
+        "conversationId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "conversation",
+      "args": ["conversationId", "body"]
+    },
+    "custom_field.list": {
+      "kind": "read",
+      "method": "listCustomFields",
+      "output": "page<custom_field>",
+      "args": ["$rest"]
+    },
+    "custom_field.get": {
+      "kind": "read",
+      "method": "getCustomField",
+      "input": { "customFieldId": { "type": "string", "required": true } },
+      "output": "custom_field",
+      "args": ["customFieldId"]
+    },
+    "user.list": {
+      "kind": "read",
+      "method": "listUsers",
+      "output": "page<user>",
+      "args": ["$rest"]
+    },
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": { "userId": { "type": "string", "required": true } },
+      "output": "user",
+      "args": ["userId"]
+    }
+  }
+}

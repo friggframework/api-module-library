@@ -1,0 +1,10 @@
+{
+    "name": "revio",
+    "label": "Rev.io",
+    "authType": "basic",
+    "productUrl": "https://rev.io",
+    "apiDocs": "https://developers.rev.io",
+    "logoUrl": "https://friggframework.org/assets/img/revio-icon.jpeg",
+    "categories": ["Billing", "Telecom", "Customer Management"],
+    "description": "Rev.io usage-based billing and customer management REST API module."
+}

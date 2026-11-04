@@ -1,0 +1,746 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "revio",
+  "label": "Rev.io",
+  "package": "@friggframework/api-module-revio",
+  "version": "1.0.0",
+  "auth": "basic",
+  "account": {
+    "description": "Values about the connected Rev.io instance, persisted by the module (apiPropertiesToPersist).",
+    "fields": [
+      {
+        "name": "client_code",
+        "type": "string",
+        "description": "Rev.io client / instance code used in Basic auth (username@client_code)"
+      }
+    ]
+  },
+  "objects": {
+    "customer": {
+      "label": "Customer",
+      "fields": [
+        {
+          "name": "customer_id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "account_number",
+          "type": "string",
+          "tag": "record.displayId"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "tag": "record.status",
+          "values": [
+            "PROSPECT",
+            "PENDING",
+            "CLOSED",
+            "OPEN"
+          ]
+        },
+        {
+          "name": "billing_address.company_name",
+          "type": "string",
+          "tag": "organization.name"
+        },
+        {
+          "name": "billing_address.line_1",
+          "type": "string",
+          "tag": "address.line1"
+        },
+        {
+          "name": "billing_address.city",
+          "type": "string",
+          "tag": "address.locality"
+        },
+        {
+          "name": "billing_address.state_or_province",
+          "type": "string",
+          "tag": "address.region"
+        },
+        {
+          "name": "billing_address.postal_code",
+          "type": "string",
+          "tag": "address.postalCode"
+        },
+        {
+          "name": "billing_address.country_code",
+          "type": "string",
+          "tag": "address.country"
+        },
+        {
+          "name": "finance.bill_profile_id",
+          "type": "integer"
+        },
+        {
+          "name": "created_date",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_date",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "customer_id",
+        "updatedAt": "updated_date",
+        "list": {
+          "capability": "customer.list",
+          "cursor": "page",
+          "limit": "page_size",
+          "since": "updated_date_start",
+          "items": "records",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "customer.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "customer.create",
+          "body": "body"
+        },
+        "update": {
+          "capability": "customer.update",
+          "id": "id",
+          "body": "body"
+        }
+      }
+    },
+    "contact": {
+      "label": "Contact",
+      "fields": [
+        {
+          "name": "contact_id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "person.fullName"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "company",
+          "type": "string",
+          "tag": "organization.name"
+        },
+        {
+          "name": "customer_id",
+          "type": "integer"
+        },
+        {
+          "name": "phone",
+          "type": "phone",
+          "tag": "contact.phone"
+        },
+        {
+          "name": "mobile",
+          "type": "phone",
+          "tag": "contact.mobile"
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "tag": "person.title"
+        },
+        {
+          "name": "created_date",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "contact_id",
+        "list": {
+          "capability": "contact.list",
+          "cursor": "page",
+          "limit": "page_size",
+          "items": "records",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "contact.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "contact.create",
+          "body": "body"
+        },
+        "update": {
+          "capability": "contact.update",
+          "id": "id",
+          "body": "body"
+        }
+      }
+    },
+    "bill": {
+      "label": "Bill",
+      "fields": [
+        {
+          "name": "bill_id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "customer_id",
+          "type": "integer"
+        },
+        {
+          "name": "created_date",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "bill_id",
+        "list": {
+          "capability": "bill.list",
+          "cursor": "page",
+          "limit": "page_size",
+          "items": "records",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "bill.get",
+          "id": "id"
+        }
+      }
+    },
+    "payment": {
+      "label": "Payment",
+      "fields": [
+        {
+          "name": "payment_id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "customer_id",
+          "type": "integer"
+        },
+        {
+          "name": "bill_id",
+          "type": "integer"
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "tag": "payment.amount"
+        },
+        {
+          "name": "reference_number",
+          "type": "string",
+          "tag": "payment.reference"
+        },
+        {
+          "name": "received_date",
+          "type": "datetime",
+          "tag": "payment.receivedAt"
+        }
+      ],
+      "sync": {
+        "id": "payment_id",
+        "list": {
+          "capability": "payment.list",
+          "cursor": "page",
+          "limit": "page_size",
+          "items": "records",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "payment.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "payment.create",
+          "body": "body"
+        }
+      }
+    },
+    "charge": {
+      "label": "Charge",
+      "fields": [
+        {
+          "name": "charge_id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "customer_id",
+          "type": "integer"
+        }
+      ],
+      "sync": {
+        "id": "charge_id",
+        "list": {
+          "capability": "charge.list",
+          "cursor": "page",
+          "limit": "page_size",
+          "items": "records",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "charge.get",
+          "id": "id"
+        }
+      }
+    },
+    "billProfile": {
+      "label": "Bill profile",
+      "fields": [
+        {
+          "name": "bill_profile_id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "tag": "record.displayName"
+        }
+      ],
+      "sync": {
+        "id": "bill_profile_id",
+        "list": {
+          "capability": "billProfile.list",
+          "cursor": "page",
+          "limit": "page_size",
+          "items": "records",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "billProfile.get",
+          "id": "id"
+        }
+      }
+    }
+  },
+  "events": {
+    "customer.created": {
+      "delivery": "webhook",
+      "object": "customer",
+      "subscribe": "webhook.subscription.create",
+      "description": "Fired when a customer is created (event_type CUSTOMER_CREATED)."
+    },
+    "customer.updated": {
+      "delivery": "webhook",
+      "object": "customer",
+      "subscribe": "webhook.subscription.create",
+      "description": "Fired when a customer is updated (event_type CUSTOMER_UPDATED)."
+    },
+    "contact.created": {
+      "delivery": "webhook",
+      "object": "contact",
+      "subscribe": "webhook.subscription.create",
+      "description": "Fired when a contact is created (event_type CONTACT_CREATED)."
+    },
+    "bill.created": {
+      "delivery": "webhook",
+      "object": "bill",
+      "subscribe": "webhook.subscription.create",
+      "description": "Fired when a bill is created (event_type BILL_CREATED)."
+    },
+    "payment.created": {
+      "delivery": "webhook",
+      "object": "payment",
+      "subscribe": "webhook.subscription.create",
+      "description": "Fired when a payment is created (event_type PAYMENT_CREATED)."
+    }
+  },
+  "capabilities": {
+    "billProfile.list": {
+      "kind": "read",
+      "method": "listBillProfiles",
+      "input": {
+        "search.page": {
+          "type": "integer"
+        },
+        "search.page_size": {
+          "type": "integer"
+        }
+      },
+      "output": "page<billProfile>"
+    },
+    "billProfile.get": {
+      "kind": "read",
+      "method": "getBillProfile",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      },
+      "output": "billProfile",
+      "args": [
+        "id"
+      ]
+    },
+    "customer.list": {
+      "kind": "read",
+      "method": "listCustomers",
+      "input": {
+        "page": {
+          "type": "integer"
+        },
+        "page_size": {
+          "type": "integer"
+        },
+        "updated_date_start": {
+          "type": "string"
+        }
+      },
+      "output": "page<customer>"
+    },
+    "customer.get": {
+      "kind": "read",
+      "method": "getCustomer",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      },
+      "output": "customer",
+      "args": [
+        "id"
+      ]
+    },
+    "customer.create": {
+      "kind": "write",
+      "method": "createCustomer",
+      "input": {
+        "body": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "create",
+      "args": [
+        "body"
+      ]
+    },
+    "customer.update": {
+      "kind": "write",
+      "method": "updateCustomer",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        },
+        "body": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "success",
+      "args": [
+        "id",
+        "body"
+      ]
+    },
+    "contact.list": {
+      "kind": "read",
+      "method": "listContacts",
+      "input": {
+        "page": {
+          "type": "integer"
+        },
+        "page_size": {
+          "type": "integer"
+        }
+      },
+      "output": "page<contact>"
+    },
+    "contact.get": {
+      "kind": "read",
+      "method": "getContact",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      },
+      "output": "contact",
+      "args": [
+        "id"
+      ]
+    },
+    "contact.create": {
+      "kind": "write",
+      "method": "createContact",
+      "input": {
+        "body": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "create",
+      "args": [
+        "body"
+      ]
+    },
+    "contact.update": {
+      "kind": "write",
+      "method": "updateContact",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        },
+        "body": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "success",
+      "args": [
+        "id",
+        "body"
+      ]
+    },
+    "contact.delete": {
+      "kind": "delete",
+      "method": "deleteContact",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      },
+      "output": "void",
+      "args": [
+        "id"
+      ]
+    },
+    "bill.list": {
+      "kind": "read",
+      "method": "listBills",
+      "input": {
+        "page": {
+          "type": "integer"
+        },
+        "page_size": {
+          "type": "integer"
+        }
+      },
+      "output": "page<bill>"
+    },
+    "bill.get": {
+      "kind": "read",
+      "method": "getBill",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      },
+      "output": "bill",
+      "args": [
+        "id"
+      ]
+    },
+    "payment.list": {
+      "kind": "read",
+      "method": "listPayments",
+      "input": {
+        "page": {
+          "type": "integer"
+        },
+        "page_size": {
+          "type": "integer"
+        }
+      },
+      "output": "page<payment>"
+    },
+    "payment.get": {
+      "kind": "read",
+      "method": "getPayment",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      },
+      "output": "payment",
+      "args": [
+        "id"
+      ]
+    },
+    "payment.create": {
+      "kind": "write",
+      "method": "createPayment",
+      "input": {
+        "body": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "create",
+      "args": [
+        "body"
+      ]
+    },
+    "charge.list": {
+      "kind": "read",
+      "method": "listCharges",
+      "input": {
+        "page": {
+          "type": "integer"
+        },
+        "page_size": {
+          "type": "integer"
+        }
+      },
+      "output": "page<charge>"
+    },
+    "charge.get": {
+      "kind": "read",
+      "method": "getCharge",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      },
+      "output": "charge",
+      "args": [
+        "id"
+      ]
+    },
+    "webhook.receiver.list": {
+      "kind": "read",
+      "method": "listWebhookReceivers",
+      "input": {},
+      "output": "page<webhookReceiver>"
+    },
+    "webhook.receiver.get": {
+      "kind": "read",
+      "method": "getWebhookReceiver",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      },
+      "output": "webhookReceiver",
+      "args": [
+        "id"
+      ]
+    },
+    "webhook.receiver.create": {
+      "kind": "subscribe",
+      "method": "createWebhookReceiver",
+      "input": {
+        "url": {
+          "type": "string",
+          "required": true
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "output": "create"
+    },
+    "webhook.receiver.delete": {
+      "kind": "delete",
+      "method": "deleteWebhookReceiver",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      },
+      "output": "void",
+      "args": [
+        "id"
+      ]
+    },
+    "webhook.receiver.activate": {
+      "kind": "write",
+      "method": "activateWebhookReceiver",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        },
+        "confirmationCode": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "success",
+      "args": [
+        "id",
+        "confirmationCode"
+      ]
+    },
+    "webhook.subscription.list": {
+      "kind": "read",
+      "method": "listWebhookSubscriptions",
+      "input": {},
+      "output": "page<webhookSubscription>"
+    },
+    "webhook.subscription.get": {
+      "kind": "read",
+      "method": "getWebhookSubscription",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      },
+      "output": "webhookSubscription",
+      "args": [
+        "id"
+      ]
+    },
+    "webhook.subscription.create": {
+      "kind": "subscribe",
+      "method": "createWebhookSubscription",
+      "input": {
+        "webhook_receiver_id": {
+          "type": "integer",
+          "required": true
+        },
+        "event_type": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "create"
+    },
+    "webhook.subscription.delete": {
+      "kind": "delete",
+      "method": "deleteWebhookSubscription",
+      "input": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      },
+      "output": "void",
+      "args": [
+        "id"
+      ]
+    }
+  }
+}

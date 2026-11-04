@@ -1,0 +1,16 @@
+{
+    "name": "microsoft-teams",
+    "label": "Microsoft Teams",
+    "productUrl": "https://www.microsoft.com/microsoft-teams",
+    "apiDocs": "https://learn.microsoft.com/en-us/graph/api/resources/teams-api-overview",
+    "logoUrl": "https://friggframework.org/assets/img/microsoft-teams-icon.png",
+    "categories": ["Collaboration", "Messaging"],
+    "description": "Microsoft Teams via Microsoft Graph — teams, channels, chats, messages, and change-notification subscriptions",
+    "config": {
+        "oauth": true,
+        "batch": {
+            "concurrency": 4,
+            "delay": 250
+        }
+    }
+}

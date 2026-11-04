@@ -1,0 +1,424 @@
+openapi: 3.0.3
+info:
+  title: Microsoft Teams (Microsoft Graph) API — Frigg subset
+  version: "1.2.0"
+  description: >-
+    Curated subset of Microsoft Graph v1.0 covering the Teams objects the
+    @friggframework/api-module-microsoft-teams client implements. Source of truth
+    is Microsoft Learn Graph docs; this file mirrors api.js 1:1 (one method per
+    operationId). Official Graph OpenAPI metadata:
+    https://github.com/microsoftgraph/msgraph-metadata
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Teams API overview
+    url: https://learn.microsoft.com/en-us/graph/api/resources/teams-api-overview
+servers:
+  - url: https://graph.microsoft.com/v1.0
+    description: Microsoft Graph v1.0 (global)
+security:
+  - OAuth2: []
+tags:
+  - name: Identity
+  - name: Teams
+  - name: Channels
+  - name: ChannelMessages
+  - name: Chats
+  - name: Members
+  - name: Subscriptions
+paths:
+  /me:
+    get:
+      tags: [Identity]
+      operationId: getMe
+      summary: Get the signed-in user
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/user-get
+      responses:
+        "200":
+          description: user
+  /organization:
+    get:
+      tags: [Identity]
+      operationId: getOrganization
+      summary: Get organization (tenant) details
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/organization-get
+      responses:
+        "200":
+          description: organization (client returns value[0])
+  /me/joinedTeams:
+    get:
+      tags: [Teams]
+      operationId: listJoinedTeams
+      summary: List teams the signed-in user has joined
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/user-list-joinedteams
+      parameters:
+        - $ref: "#/components/parameters/ODataSelect"
+        - $ref: "#/components/parameters/ODataFilter"
+      responses:
+        "200":
+          description: team collection
+  /teams/{team-id}:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+    get:
+      tags: [Teams]
+      operationId: getTeam
+      summary: Get a team
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/team-get
+      responses:
+        "200":
+          description: team
+  /teams/{team-id}/channels:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+    get:
+      tags: [Channels]
+      operationId: listChannels
+      summary: List channels in a team
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/channel-list
+      parameters:
+        - $ref: "#/components/parameters/ODataFilter"
+        - $ref: "#/components/parameters/ODataSelect"
+      responses:
+        "200":
+          description: channel collection
+    post:
+      tags: [Channels]
+      operationId: createChannel
+      summary: Create a channel
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/channel-post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [displayName]
+              properties:
+                displayName: { type: string }
+                description: { type: string }
+                membershipType:
+                  type: string
+                  enum: [standard, private, shared]
+      responses:
+        "201":
+          description: channel
+  /teams/{team-id}/channels/{channel-id}:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+      - $ref: "#/components/parameters/ChannelId"
+    get:
+      tags: [Channels]
+      operationId: getChannel
+      summary: Get a channel
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/channel-get
+      responses:
+        "200":
+          description: channel
+    patch:
+      tags: [Channels]
+      operationId: updateChannel
+      summary: Update a channel
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/channel-patch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName: { type: string }
+                description: { type: string }
+      responses:
+        "200":
+          description: channel
+  /teams/{team-id}/channels/{channel-id}/messages:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+      - $ref: "#/components/parameters/ChannelId"
+    get:
+      tags: [ChannelMessages]
+      operationId: listChannelMessages
+      summary: List messages in a channel
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/channel-list-messages
+      parameters:
+        - $ref: "#/components/parameters/ODataTop"
+        - $ref: "#/components/parameters/ODataExpand"
+      responses:
+        "200":
+          description: chatMessage collection
+    post:
+      tags: [ChannelMessages]
+      operationId: sendChannelMessage
+      summary: Send a message in a channel
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/chatmessage-post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageBody"
+      responses:
+        "201":
+          description: chatMessage
+  /teams/{team-id}/channels/{channel-id}/messages/{message-id}:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+      - $ref: "#/components/parameters/ChannelId"
+      - $ref: "#/components/parameters/MessageId"
+    get:
+      tags: [ChannelMessages]
+      operationId: getChannelMessage
+      summary: Get a channel message
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/chatmessage-get
+      responses:
+        "200":
+          description: chatMessage
+  /chats:
+    get:
+      tags: [Chats]
+      operationId: listChats
+      summary: List chats
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/chat-list
+      parameters:
+        - $ref: "#/components/parameters/ODataTop"
+        - $ref: "#/components/parameters/ODataFilter"
+        - $ref: "#/components/parameters/ODataExpand"
+      responses:
+        "200":
+          description: chat collection
+  /chats/{chat-id}:
+    parameters:
+      - $ref: "#/components/parameters/ChatId"
+    get:
+      tags: [Chats]
+      operationId: getChat
+      summary: Get a chat
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/chat-get
+      responses:
+        "200":
+          description: chat
+  /chats/{chat-id}/messages:
+    parameters:
+      - $ref: "#/components/parameters/ChatId"
+    get:
+      tags: [Chats]
+      operationId: listChatMessages
+      summary: List messages in a chat
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/chat-list-messages
+      parameters:
+        - $ref: "#/components/parameters/ODataTop"
+      responses:
+        "200":
+          description: chatMessage collection
+    post:
+      tags: [Chats]
+      operationId: sendChatMessage
+      summary: Send a message in a chat
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/chatmessage-post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageBody"
+      responses:
+        "201":
+          description: chatMessage
+  /teams/{team-id}/members:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+    get:
+      tags: [Members]
+      operationId: listTeamMembers
+      summary: List members of a team
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/team-list-members
+      responses:
+        "200":
+          description: conversationMember collection
+  /subscriptions:
+    get:
+      tags: [Subscriptions]
+      operationId: listSubscriptions
+      summary: List change-notification subscriptions
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/subscription-list
+      responses:
+        "200":
+          description: subscription collection
+    post:
+      tags: [Subscriptions]
+      operationId: createSubscription
+      summary: Create a change-notification subscription
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Subscription"
+      responses:
+        "201":
+          description: subscription
+  /subscriptions/{subscription-id}:
+    parameters:
+      - $ref: "#/components/parameters/SubscriptionId"
+    get:
+      tags: [Subscriptions]
+      operationId: getSubscription
+      summary: Get a subscription
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/subscription-get
+      responses:
+        "200":
+          description: subscription
+    patch:
+      tags: [Subscriptions]
+      operationId: renewSubscription
+      summary: Renew or update a subscription
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/subscription-update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expirationDateTime:
+                  type: string
+                  format: date-time
+      responses:
+        "200":
+          description: subscription
+    delete:
+      tags: [Subscriptions]
+      operationId: deleteSubscription
+      summary: Delete a subscription
+      externalDocs:
+        url: https://learn.microsoft.com/en-us/graph/api/subscription-delete
+      responses:
+        "204":
+          description: deleted
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Microsoft identity platform OAuth 2.0. Authorize at
+        https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.microsoftonline.com/common/oauth2/v2.0/authorize
+          tokenUrl: https://login.microsoftonline.com/common/oauth2/v2.0/token
+          scopes:
+            User.Read: Sign in and read user profile
+            Organization.Read.All: Read organization information
+            Team.ReadBasic.All: Read the names and descriptions of teams
+            Channel.ReadBasic.All: Read the names and descriptions of channels
+            Channel.Create: Create channels
+            ChannelSettings.ReadWrite.All: Read and write channel names, descriptions, and settings
+            ChannelMessage.Read.All: Read user channel messages
+            ChannelMessage.Send: Send channel messages
+            Chat.Read: Read user chat messages
+            Chat.ReadWrite: Read and write user chat messages
+            offline_access: Maintain access to data you have given it access to
+  parameters:
+    TeamId:
+      name: team-id
+      in: path
+      required: true
+      schema: { type: string }
+    ChannelId:
+      name: channel-id
+      in: path
+      required: true
+      schema: { type: string }
+    MessageId:
+      name: message-id
+      in: path
+      required: true
+      schema: { type: string }
+    ChatId:
+      name: chat-id
+      in: path
+      required: true
+      schema: { type: string }
+    SubscriptionId:
+      name: subscription-id
+      in: path
+      required: true
+      schema: { type: string }
+    ODataSelect:
+      name: $select
+      in: query
+      schema: { type: string }
+    ODataFilter:
+      name: $filter
+      in: query
+      schema: { type: string }
+    ODataTop:
+      name: $top
+      in: query
+      schema: { type: integer }
+    ODataExpand:
+      name: $expand
+      in: query
+      schema: { type: string }
+  schemas:
+    ChatMessageBody:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: object
+          required: [content]
+          properties:
+            contentType:
+              type: string
+              enum: [text, html]
+            content:
+              type: string
+        subject:
+          type: string
+    Subscription:
+      type: object
+      required: [changeType, notificationUrl, resource, expirationDateTime]
+      properties:
+        changeType:
+          type: string
+          description: Comma-separated created, updated, deleted
+        notificationUrl:
+          type: string
+          format: uri
+        resource:
+          type: string
+          description: >-
+            e.g. /teams/{id}/channels/{id}/messages or /chats/{id}/messages
+        expirationDateTime:
+          type: string
+          format: date-time
+        clientState:
+          type: string
+          description: Secret echoed on each notification for authenticity checks
+        lifecycleNotificationUrl:
+          type: string
+          format: uri

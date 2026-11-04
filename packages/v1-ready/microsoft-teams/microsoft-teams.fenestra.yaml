@@ -1,0 +1,222 @@
+# Fenestra Document: Microsoft Teams App Platform (draft)
+#
+# Teams is a hybrid UI platform: Adaptive Cards (declarative JSON), Tabs
+# (iframe web apps + Teams JS SDK), Bots, and message extensions.
+# Drafted from official Teams platform docs and the fenestra example on
+# branch claude/fenestra-spec-draft-Q367t (upstream example currently fails
+# fenestra.js validate due to sdk export type / sdkBinding drift).
+#
+# Docs: https://learn.microsoft.com/en-us/microsoftteams/platform/
+
+fenestra: "0.1.0"
+
+info:
+  title: Microsoft Teams App Platform
+  version: "1.0.0"
+  description: |
+    Microsoft Teams App Platform enables collaborative experiences using
+    Adaptive Cards (declarative JSON UI), iframe Tabs with the Teams JS SDK,
+    Bot Framework bots, and message extensions across Teams, Outlook, and
+    Microsoft 365.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+
+platform:
+  name: Microsoft Teams
+  vendor: Microsoft Corporation
+  documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/
+  appMarketplace: https://appsource.microsoft.com/en-us/marketplace/apps?product=teams
+  developerPortal: https://dev.teams.microsoft.com/
+
+sdks:
+  teams-js:
+    name: Microsoft Teams JavaScript SDK
+    packageManager: npm
+    package: "@microsoft/teams-js"
+    version: "^2.0.0"
+    repository: https://github.com/OfficeDev/microsoft-teams-library-js
+    documentation: https://learn.microsoft.com/en-us/javascript/api/overview/msteams-client
+    description: |
+      Enables tabs (web pages) to access Teams context, authenticate users,
+      open dialogs, and interact with Teams capabilities.
+    exports:
+      app:
+        type: utility
+        description: Core app initialization and context
+      authentication:
+        type: utility
+        description: Authentication flows and token management
+      dialog:
+        type: utility
+        description: Open dialogs and task modules
+      pages:
+        type: utility
+        description: Page navigation and configuration
+
+  adaptivecards:
+    name: Adaptive Cards SDK
+    packageManager: npm
+    package: "adaptivecards"
+    version: "^3.0.0"
+    repository: https://github.com/microsoft/AdaptiveCards
+    documentation: https://learn.microsoft.com/en-us/adaptive-cards/
+    description: |
+      JavaScript SDK for authoring/previewing Adaptive Cards. Teams hosts
+      render cards natively in bots, messages, and extensions.
+    exports:
+      AdaptiveCard:
+        type: component
+        description: Adaptive Card renderer
+      HostConfig:
+        type: utility
+        description: Host configuration for styling cards
+
+  botbuilder:
+    name: Microsoft Bot Framework SDK
+    packageManager: npm
+    package: "botbuilder"
+    version: "^4.0.0"
+    repository: https://github.com/microsoft/botbuilder-js
+    documentation: https://learn.microsoft.com/en-us/azure/bot-service/
+    description: |
+      Bot Framework SDK for conversational bots that send Adaptive Cards and
+      handle Teams activity types.
+    exports:
+      TeamsActivityHandler:
+        type: utility
+        description: Teams-specific bot handler
+      CardFactory:
+        type: utility
+        description: Factory for Adaptive Cards and other card types
+      MessageFactory:
+        type: utility
+        description: Factory for creating bot messages
+
+componentCatalog:
+  categories:
+    cardElements:
+      name: Adaptive Card Elements
+      description: Visual elements for displaying content in cards
+      components:
+        - TextBlock
+        - Image
+    cardActions:
+      name: Adaptive Card Actions
+      description: Interactive actions users can trigger
+      components:
+        - ActionSubmit
+        - ActionOpenUrl
+
+  components:
+    TextBlock:
+      name: TextBlock
+      description: Display text with formatting options (Adaptive Cards)
+      category: cardElements
+      sdkBinding:
+        sdk: adaptivecards
+        export: AdaptiveCard
+      webStandardMapping:
+        htmlElement: p
+        ariaRole: text
+        semanticType: display
+      examples:
+        - title: Simple text
+          language: json
+          code: |
+            { "type": "TextBlock", "text": "Hello Teams", "wrap": true }
+
+    Image:
+      name: Image
+      description: Display an image in an Adaptive Card
+      category: cardElements
+      sdkBinding:
+        sdk: adaptivecards
+        export: AdaptiveCard
+      webStandardMapping:
+        htmlElement: img
+        ariaRole: img
+        semanticType: display
+
+    ActionSubmit:
+      name: Action.Submit
+      description: Submit card input data back to the bot/app
+      category: cardActions
+      sdkBinding:
+        sdk: adaptivecards
+        export: AdaptiveCard
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+
+    ActionOpenUrl:
+      name: Action.OpenUrl
+      description: Open a URL from an Adaptive Card action
+      category: cardActions
+      sdkBinding:
+        sdk: adaptivecards
+        export: AdaptiveCard
+      webStandardMapping:
+        htmlElement: a
+        ariaRole: link
+        semanticType: navigation
+
+policies:
+  componentRequirement:
+    level: required
+    scope: all
+    rationale: |
+      Bot and messaging extension surfaces in Teams expect Adaptive Cards
+      (or other Teams card types). Tab surfaces are free-form web apps
+      constrained by the Teams JS host.
+  customComponents:
+    allowed: true
+    constraints:
+      - mustFollowDesignSystem
+      - sandboxOnly
+    registrationRequired: false
+    approvalRequired: false
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/tabs/what-are-tabs
+  publishing:
+    privateApps:
+      componentRequirement: optional
+      customComponentsAllowed: true
+      reviewRequired: false
+    publicApps:
+      componentRequirement: required
+      customComponentsAllowed: true
+      reviewRequired: true
+      notes: "Appsource / Teams Store review for public distribution."
+
+extensionPoints:
+  - id: personal-tab
+    name: Personal Tab
+    type: fullPage
+    extensionType: iframe
+    description: Personal app tab for the signed-in user
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/tabs/what-are-tabs
+  - id: channel-tab
+    name: Channel / Group Tab
+    type: embedded
+    extensionType: iframe
+    description: Tab configurable in a team channel or group chat
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/tabs/what-are-tabs
+  - id: bot-message
+    name: Bot message with Adaptive Card
+    type: card
+    extensionType: jsonResponse
+    description: Bot-posted messages that render Adaptive Cards
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/task-modules-and-cards/cards/cards-reference
+  - id: message-extension
+    name: Message extension
+    type: composer
+    extensionType: jsonResponse
+    description: Search/action commands extending the compose box
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/messaging-extensions/what-are-messaging-extensions
+  - id: task-module
+    name: Task module / dialog
+    type: modal
+    extensionType: iframe
+    description: Modal dialogs invoked from tabs, bots, or message extensions
+    documentation: https://learn.microsoft.com/en-us/microsoftteams/platform/task-modules-and-cards/what-are-task-modules

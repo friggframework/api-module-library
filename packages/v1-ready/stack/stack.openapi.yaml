@@ -1,0 +1,163 @@
+openapi: 3.0.3
+info:
+  title: Stack Global Partner Integration API (curated subset)
+  version: "1.0.0"
+  description: >-
+    Stack Global (https://www.stackglobal.io) is a sales-enablement platform
+    focused on sales-cycle / playbook definition and CRM-native coaching
+    (HubSpot, Salesforce). Stack does **not** publish a public developer OpenAPI
+    or REST reference as of this module's authorship.
+
+    This file is Left Hook's curated OpenAPI subset covering exactly the
+    endpoints the @friggframework/api-module-stack client in api.js implements.
+    It is the source of truth the hand-written client mirrors 1:1 (one method
+    per operationId). Paths and the Bearer auth scheme are ported from
+    Left Hook-owned module code cleared for this library; response schemas are
+    intentionally opaque / UNVERIFIED until Stack publishes an official contract.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Stack Global product site (no public API docs)
+    url: https://www.stackglobal.io/
+servers:
+  - url: https://api.stackglobal.io
+    description: >-
+      Inferred partner API host (responds on the public internet). Override with
+      STACK_BASE_URL / auth-form base_url for the host Stack issues to partners.
+security:
+  - BearerAuth: []
+tags:
+  - name: Authorize
+  - name: SalesCycle
+  - name: Company
+  - name: Members
+paths:
+  /integration/authorize:
+    post:
+      tags: [Authorize]
+      operationId: authorize
+      summary: Authorize a partner integration
+      description: >-
+        POST body from the ported client: `{ companyId, token, type }`.
+        Response schema is unpublished — treat as opaque.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                companyId:
+                  description: Stack company identifier
+                  oneOf:
+                    - type: string
+                    - type: number
+                token:
+                  type: string
+                  description: Partner secret (typically the same Bearer secret)
+                type:
+                  type: string
+                  description: Integration type discriminator
+      responses:
+        "200":
+          description: Authorization result (schema unpublished)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "401":
+          description: Invalid secret
+  /integration/salesCycle:
+    get:
+      tags: [SalesCycle]
+      operationId: getSalesCycle
+      summary: Get the company sales cycle definition
+      description: >-
+        Returns the sales-cycle / playbook template for the company.
+        Response schema is unpublished.
+      parameters:
+        - in: query
+          name: companyId
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+          description: Stack company id
+        - in: query
+          name: type
+          schema: { type: string }
+          description: Integration type discriminator
+      responses:
+        "200":
+          description: Sales cycle payload (schema unpublished)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "401":
+          description: Invalid secret
+  /integration/company:
+    get:
+      tags: [Company]
+      operationId: getCompany
+      summary: Get Stack company data
+      description: Response schema is unpublished.
+      parameters:
+        - in: query
+          name: companyId
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+        - in: query
+          name: type
+          schema: { type: string }
+      responses:
+        "200":
+          description: Company payload (schema unpublished)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "401":
+          description: Invalid secret
+  /integration/company/members:
+    get:
+      tags: [Members]
+      operationId: getTeamMembers
+      summary: Get Stack company team members
+      description: Response schema is unpublished.
+      parameters:
+        - in: query
+          name: companyId
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+        - in: query
+          name: type
+          schema: { type: string }
+      responses:
+        "200":
+          description: Team members payload (schema unpublished)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "401":
+          description: Invalid secret
+components:
+  securitySchemes:
+    BearerAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >-
+        Static partner secret. Client sends `Authorization: Bearer <secret>`
+        (OpenAPI apiKey scheme on the Authorization header; value includes the
+        Bearer prefix at request time).

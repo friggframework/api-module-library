@@ -1,0 +1,119 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "stack",
+  "label": "Stack",
+  "package": "@friggframework/api-module-stack",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Connected Stack company. Identity prefers companyId from auth params, then fields on GET /integration/company when present, then a bearer-token fingerprint.",
+    "fields": [
+      {
+        "name": "companyId",
+        "type": "id",
+        "description": "Stack company id used on /integration/* calls"
+      },
+      {
+        "name": "externalId",
+        "type": "string",
+        "description": "Stable entity external id used by Frigg credentials"
+      },
+      {
+        "name": "integrationType",
+        "type": "string",
+        "description": "Partner integration type discriminator"
+      }
+    ]
+  },
+  "objects": {
+    "company": {
+      "label": "Company",
+      "description": "Stack company record from GET /integration/company",
+      "fields": [
+        { "name": "id", "type": "id", "tag": "organization.id", "readOnly": true },
+        { "name": "companyId", "type": "id", "tag": "organization.id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" }
+      ],
+      "sync": {
+        "id": "companyId",
+        "get": { "capability": "company.get", "id": "companyId" }
+      }
+    },
+    "member": {
+      "label": "Team member",
+      "description": "Company member from GET /integration/company/members",
+      "fields": [
+        { "name": "id", "type": "id", "tag": "person.id", "readOnly": true },
+        { "name": "email", "type": "string", "tag": "person.email" },
+        { "name": "name", "type": "string", "tag": "person.fullName" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "member.list" }
+      }
+    },
+    "salesCycle": {
+      "label": "Sales cycle",
+      "description": "Sales-cycle / playbook template from GET /integration/salesCycle (not a CRM Deal instance)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "stages", "type": "array" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "salesCycle.get" }
+      }
+    }
+  },
+  "capabilities": {
+    "auth.authorize": {
+      "kind": "action",
+      "method": "authorize",
+      "input": {
+        "companyId": { "type": "string" },
+        "token": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "output": "authorizeResult",
+      "args": ["params"]
+    },
+    "auth.browserExtension": {
+      "kind": "action",
+      "method": "browserExtensionAuth",
+      "input": { "params": { "type": "object" } },
+      "output": "authorizeResult",
+      "args": ["params"]
+    },
+    "company.get": {
+      "kind": "read",
+      "method": "getCompany",
+      "input": {
+        "companyId": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "output": "company",
+      "args": ["params"]
+    },
+    "member.list": {
+      "kind": "list",
+      "method": "getTeamMembers",
+      "input": {
+        "companyId": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "output": "member[]",
+      "args": ["params"]
+    },
+    "salesCycle.get": {
+      "kind": "read",
+      "method": "getSalesCycle",
+      "input": {
+        "companyId": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "output": "salesCycle",
+      "args": ["params"]
+    }
+  }
+}

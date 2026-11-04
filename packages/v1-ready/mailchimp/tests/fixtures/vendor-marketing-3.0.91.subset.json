@@ -1,0 +1,651 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Mailchimp Marketing API",
+    "version": "3.0.91"
+  },
+  "host": "server.api.mailchimp.com",
+  "basePath": "/3.0",
+  "schemes": [
+    "https"
+  ],
+  "securityDefinitions": {
+    "basicAuth": {
+      "type": "basic"
+    }
+  },
+  "security": [
+    {
+      "basicAuth": []
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "getRoot",
+        "summary": "List api root resources",
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "exclude_fields",
+            "in": "query",
+            "required": false
+          }
+        ]
+      }
+    },
+    "/ping": {
+      "get": {
+        "operationId": "getPing",
+        "summary": "Ping",
+        "parameters": []
+      }
+    },
+    "/lists": {
+      "get": {
+        "operationId": "getLists",
+        "summary": "Get lists info",
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "exclude_fields",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "before_date_created",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "since_date_created",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "before_campaign_last_sent",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "since_campaign_last_sent",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "sort_field",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "sort_dir",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "has_ecommerce_store",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "include_total_contacts",
+            "in": "query",
+            "required": false
+          }
+        ]
+      },
+      "post": {
+        "operationId": "postLists",
+        "summary": "Add list",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "required_body_fields": [
+              "name",
+              "permission_reminder",
+              "email_type_option",
+              "contact",
+              "campaign_defaults"
+            ]
+          }
+        ]
+      }
+    },
+    "/lists/{list_id}": {
+      "get": {
+        "operationId": "getListsId",
+        "summary": "Get list info",
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "exclude_fields",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "list_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "include_total_contacts",
+            "in": "query",
+            "required": false
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "patchListsId",
+        "summary": "Update lists",
+        "parameters": [
+          {
+            "name": "list_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "required_body_fields": [
+              "name",
+              "permission_reminder",
+              "email_type_option",
+              "contact",
+              "campaign_defaults"
+            ]
+          }
+        ]
+      }
+    },
+    "/lists/{list_id}/members": {
+      "get": {
+        "operationId": "getListsIdMembers",
+        "summary": "List members info",
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "exclude_fields",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "list_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "email_type",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "since_timestamp_opt",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "before_timestamp_opt",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "since_last_changed",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "before_last_changed",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "unique_email_id",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "vip_only",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "interest_category_id",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "interest_ids",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "interest_match",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "sort_field",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "sort_dir",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "since_last_campaign",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "unsubscribed_since",
+            "in": "query",
+            "required": false
+          }
+        ]
+      },
+      "post": {
+        "operationId": "postListsIdMembers",
+        "summary": "Add member to list",
+        "parameters": [
+          {
+            "name": "list_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "skip_merge_validation",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "required_body_fields": [
+              "email_address",
+              "status"
+            ]
+          }
+        ]
+      }
+    },
+    "/lists/{list_id}/members/{subscriber_hash}": {
+      "get": {
+        "operationId": "getListsIdMembersId",
+        "summary": "Get member info",
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "exclude_fields",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "list_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "subscriber_hash",
+            "in": "path",
+            "required": true
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "patchListsIdMembersId",
+        "summary": "Update list member",
+        "parameters": [
+          {
+            "name": "list_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "subscriber_hash",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "skip_merge_validation",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true
+          }
+        ]
+      },
+      "put": {
+        "operationId": "putListsIdMembersId",
+        "summary": "Add or update list member",
+        "parameters": [
+          {
+            "name": "list_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "subscriber_hash",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "skip_merge_validation",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "required_body_fields": [
+              "email_address",
+              "status_if_new"
+            ]
+          }
+        ]
+      }
+    },
+    "/campaigns": {
+      "get": {
+        "operationId": "getCampaigns",
+        "summary": "List campaigns",
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "exclude_fields",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "before_send_time",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "since_send_time",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "before_create_time",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "since_create_time",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "list_id",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "folder_id",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "member_id",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "sort_field",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "sort_dir",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "include_resend_shortcut_eligibility",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "include_resend_shortcut_usage",
+            "in": "query",
+            "required": false
+          }
+        ]
+      },
+      "post": {
+        "operationId": "postCampaigns",
+        "summary": "Add campaign",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "required_body_fields": [
+              "type"
+            ]
+          }
+        ]
+      }
+    },
+    "/campaigns/{campaign_id}": {
+      "get": {
+        "operationId": "getCampaignsId",
+        "summary": "Get campaign info",
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "exclude_fields",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "include_resend_shortcut_eligibility",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "include_resend_shortcut_usage",
+            "in": "query",
+            "required": false
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "patchCampaignsId",
+        "summary": "Update campaign settings",
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "required_body_fields": [
+              "settings"
+            ]
+          }
+        ]
+      }
+    },
+    "/lists/{list_id}/webhooks": {
+      "get": {
+        "operationId": "getListsIdWebhooks",
+        "summary": "List webhooks",
+        "parameters": [
+          {
+            "name": "list_id",
+            "in": "path",
+            "required": true
+          }
+        ]
+      },
+      "post": {
+        "operationId": "postListsIdWebhooks",
+        "summary": "Add webhook",
+        "parameters": [
+          {
+            "name": "list_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/lists/{list_id}/webhooks/{webhook_id}": {
+      "get": {
+        "operationId": "getListsIdWebhooksId",
+        "summary": "Get webhook info",
+        "parameters": [
+          {
+            "name": "list_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "webhook_id",
+            "in": "path",
+            "required": true
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "patchListsIdWebhooksId",
+        "summary": "Update webhook",
+        "parameters": [
+          {
+            "name": "list_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "webhook_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteListsIdWebhooksId",
+        "summary": "Delete webhook",
+        "parameters": [
+          {
+            "name": "list_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "webhook_id",
+            "in": "path",
+            "required": true
+          }
+        ]
+      }
+    }
+  }
+}

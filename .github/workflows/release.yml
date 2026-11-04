@@ -28,5 +28,11 @@ jobs:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
       run: |
-        npm ci
+        if [ "${{ github.ref }}" = "refs/heads/next" ] || [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          # Real release: lockfile must be in sync
+          npm ci
+        else
+          # Canary/PR branches: tolerate new workspace packages missing from root package-lock.json
+          npm ci || npm install --no-audit --no-fund --no-save
+        fi
         npx auto shipit

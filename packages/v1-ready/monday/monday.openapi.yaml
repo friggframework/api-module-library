@@ -1,0 +1,303 @@
+openapi: 3.0.3
+info:
+  title: monday.com Platform GraphQL API v2 (CRM boards curated subset)
+  version: "1.0.0"
+  description: >-
+    monday.com exposes a single GraphQL endpoint at https://api.monday.com/v2.
+    There is no vendor-published OpenAPI; this file is Left Hook's curated
+    subset covering exactly the GraphQL operations the
+    @friggframework/api-module-monday client in api.js implements (CRM boards,
+    items, webhooks, and Emails & Activities timeline). Each path is a
+    documentation handle — every operation is an HTTP POST to the server URL
+    (baseUrl) with body `{ query, variables }`. One operationId per Api method
+    (excluding transport/helpers). Verified against
+    https://developer.monday.com/api-reference/.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.monday.com/v2
+    description: monday.com Platform GraphQL API
+security:
+  - OAuth2: []
+  - BearerAuth: []
+tags:
+  - name: Identity
+  - name: Boards
+  - name: Columns
+  - name: Items
+  - name: CRM Activities
+  - name: Webhooks
+paths:
+  /graphql/me:
+    post:
+      tags: [Identity]
+      operationId: getMe
+      summary: Query the authenticated user (me)
+      description: >-
+        GraphQL `query { me { ... } }`. Required scope: `me:read`.
+        Docs: https://developer.monday.com/api-reference/reference/me
+      responses:
+        "200":
+          description: GraphQL data.me
+  /graphql/account:
+    post:
+      tags: [Identity]
+      operationId: getAccount
+      summary: Query the account for the token
+      description: >-
+        GraphQL `query { account { ... } }`. Required scope: `account:read`.
+        Docs: https://developer.monday.com/api-reference/reference/account
+      responses:
+        "200":
+          description: GraphQL data.account
+  /graphql/boards:
+    post:
+      tags: [Boards]
+      operationId: listBoards
+      summary: List boards
+      description: >-
+        GraphQL `query { boards(...) { ... } }`. Required scope: `boards:read`.
+        Docs: https://developer.monday.com/api-reference/reference/boards
+      responses:
+        "200":
+          description: GraphQL data.boards
+  /graphql/boards/{boardId}:
+    post:
+      tags: [Boards]
+      operationId: getBoard
+      summary: Get a board by id (with columns and groups)
+      description: >-
+        GraphQL `query { boards(ids: ...) { columns groups ... } }`.
+        Required scope: `boards:read`.
+      parameters:
+        - in: path
+          name: boardId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: GraphQL data.boards[0]
+  /graphql/create_board:
+    post:
+      tags: [Boards]
+      operationId: createBoard
+      summary: Create a board
+      description: >-
+        GraphQL `mutation { create_board(...) { ... } }`.
+        Required scope: `boards:write`.
+      responses:
+        "200":
+          description: GraphQL data.create_board
+  /graphql/create_column:
+    post:
+      tags: [Columns]
+      operationId: createColumn
+      summary: Create a column on a board
+      description: >-
+        GraphQL `mutation { create_column(...) { ... } }`.
+        Required scope: `boards:write`.
+        Docs: https://developer.monday.com/api-reference/reference/columns
+      responses:
+        "200":
+          description: GraphQL data.create_column
+  /graphql/boards/{boardId}/columns:
+    post:
+      tags: [Columns]
+      operationId: listColumns
+      summary: List columns on a board
+      description: >-
+        GraphQL `query { boards(ids:) { columns { ... } } }`.
+        Required scope: `boards:read`.
+      parameters:
+        - in: path
+          name: boardId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: columns array
+  /graphql/items:
+    post:
+      tags: [Items]
+      operationId: listItems
+      summary: Get items by ids
+      description: >-
+        GraphQL `query { items(ids: ...) { ... } }`. Required scope: `boards:read`.
+        Docs: https://developer.monday.com/api-reference/reference/items
+      responses:
+        "200":
+          description: GraphQL data.items
+  /graphql/boards/{boardId}/items_page:
+    post:
+      tags: [Items]
+      operationId: listBoardItems
+      summary: Page items on a board (items_page)
+      description: >-
+        GraphQL `query { boards(ids:) { items_page(...) { cursor items } } }`.
+        Required scope: `boards:read`.
+        Docs: https://developer.monday.com/api-reference/reference/items_page
+      parameters:
+        - in: path
+          name: boardId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: items_page { cursor, items }
+  /graphql/next_items_page:
+    post:
+      tags: [Items]
+      operationId: nextItemsPage
+      summary: Continue items_page cursor
+      description: >-
+        GraphQL `query { next_items_page(cursor:, limit:) { ... } }`.
+        Required scope: `boards:read`.
+        Docs: https://developer.monday.com/api-reference/reference/items_page
+      responses:
+        "200":
+          description: next_items_page { cursor, items }
+  /graphql/items_page_by_column_values:
+    post:
+      tags: [Items]
+      operationId: findItemsByColumnValues
+      summary: Find items by column values
+      description: >-
+        GraphQL `query { items_page_by_column_values(...) { ... } }`.
+        Required scope: `boards:read`.
+        Docs: https://developer.monday.com/api-reference/reference/items-page-by-column-values
+      responses:
+        "200":
+          description: items_page_by_column_values
+  /graphql/create_item:
+    post:
+      tags: [Items]
+      operationId: createItem
+      summary: Create an item
+      description: >-
+        GraphQL `mutation { create_item(...) { ... } }`.
+        Required scope: `boards:write`.
+      responses:
+        "200":
+          description: GraphQL data.create_item
+  /graphql/change_multiple_column_values:
+    post:
+      tags: [Items]
+      operationId: changeMultipleColumnValues
+      summary: Change multiple column values on an item
+      description: >-
+        GraphQL `mutation { change_multiple_column_values(...) { ... } }`.
+        Required scope: `boards:write`.
+      responses:
+        "200":
+          description: GraphQL data.change_multiple_column_values
+  /graphql/delete_item:
+    post:
+      tags: [Items]
+      operationId: deleteItem
+      summary: Delete an item
+      description: >-
+        GraphQL `mutation { delete_item(item_id: ...) { id } }`.
+        Required scope: `boards:write`.
+      responses:
+        "200":
+          description: GraphQL data.delete_item
+  /graphql/custom_activity:
+    post:
+      tags: [CRM Activities]
+      operationId: listCustomActivities
+      summary: List Emails & Activities custom activities
+      description: >-
+        GraphQL `query { custom_activity { ... } }`.
+        Docs: https://developer.monday.com/api-reference/reference/custom-activity
+      responses:
+        "200":
+          description: GraphQL data.custom_activity
+  /graphql/create_custom_activity:
+    post:
+      tags: [CRM Activities]
+      operationId: createCustomActivity
+      summary: Create a custom activity
+      description: >-
+        GraphQL `mutation { create_custom_activity(...) { ... } }`.
+        Docs: https://developer.monday.com/api-reference/reference/custom-activity
+      responses:
+        "200":
+          description: GraphQL data.create_custom_activity
+  /graphql/create_timeline_item:
+    post:
+      tags: [CRM Activities]
+      operationId: createTimelineItem
+      summary: Create an E&A timeline item on a CRM item
+      description: >-
+        GraphQL `mutation { create_timeline_item(...) { id } }`.
+        Docs: https://developer.monday.com/api-reference/reference/timeline-item-ea
+      responses:
+        "200":
+          description: GraphQL data.create_timeline_item
+  /graphql/delete_timeline_item:
+    post:
+      tags: [CRM Activities]
+      operationId: deleteTimelineItem
+      summary: Delete an E&A timeline item
+      description: >-
+        GraphQL `mutation { delete_timeline_item(id: ...) { id } }`.
+        Docs: https://developer.monday.com/api-reference/reference/timeline-item-ea
+      responses:
+        "200":
+          description: GraphQL data.delete_timeline_item
+  /graphql/webhooks:
+    post:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List webhooks for a board
+      description: >-
+        GraphQL `query { webhooks(board_id: ...) { ... } }`.
+        Required scope: `webhooks:read`.
+        Docs: https://developer.monday.com/api-reference/reference/webhooks
+      responses:
+        "200":
+          description: GraphQL data.webhooks
+  /graphql/create_webhook:
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a board webhook
+      description: >-
+        GraphQL `mutation { create_webhook(...) { ... } }`.
+        Required scope: `webhooks:write`. Receiver must echo `{ challenge }`.
+      responses:
+        "200":
+          description: GraphQL data.create_webhook
+  /graphql/delete_webhook:
+    post:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook
+      description: >-
+        GraphQL `mutation { delete_webhook(id: ...) { ... } }`.
+        Required scope: `webhooks:write`.
+      responses:
+        "200":
+          description: GraphQL data.delete_webhook
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        OAuth access token (token_type Bearer). Personal API tokens may also be
+        sent as the Authorization header value; the client normalizes to Bearer.
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.monday.com/oauth2/authorize
+          tokenUrl: https://auth.monday.com/oauth2/token
+          scopes:
+            me:read: Read the authenticated user's profile
+            account:read: Read account metadata
+            boards:read: Read boards, items, columns, groups
+            boards:write: Create and modify boards, items, columns
+            webhooks:read: Read webhook subscriptions
+            webhooks:write: Create and delete webhooks

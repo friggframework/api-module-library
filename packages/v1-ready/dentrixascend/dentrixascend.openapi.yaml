@@ -1,0 +1,644 @@
+openapi: 3.0.3
+info:
+  title: Dentrix Ascend Public API (subset)
+  version: "1.0.0"
+  description: >-
+    Curated subset of the Henry Schein One Dentrix Ascend Public API used by
+    `@friggframework/api-module-dentrixascend`. Authored from the official
+    Consumer Guide and published OpenAPI
+    (https://papidocs.hs1api.com/publicapi/api-consumer-guide,
+    https://papidocs.hs1api.com/publicapi/apispec). One `operationId` per
+    hand-written `Api` method. Paths are relative to the Public API base
+    (`…/ascend-gateway/api`) except OrgMapper `listLinkedOrganizations`, which
+    is served from the API host root.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://prod.hs1api.com/ascend-gateway/api
+    description: Production Public API
+  - url: https://test.hs1api.com/ascend-gateway/api
+    description: Sandbox Public API
+security:
+  - bearerAuth: []
+tags:
+  - name: Identity
+  - name: Locations
+  - name: Providers
+  - name: Patients
+  - name: Appointments
+  - name: Transactions
+  - name: Claims
+  - name: FeeSchedules
+  - name: Procedures
+  - name: Statements
+  - name: Insurance
+paths:
+  /orgmapper/LinkedOrgs:
+    servers:
+      - url: https://prod.hs1api.com
+        description: Production API host
+      - url: https://test.hs1api.com
+        description: Sandbox API host
+    get:
+      tags: [Identity]
+      operationId: listLinkedOrganizations
+      summary: List OrgMapper organization ids for this client
+      description: >-
+        Returns plain JSON `{ organizations: [id, ...] }` (not the Public API
+        statusCode/data envelope). Use an id as the Organization-ID header.
+      responses:
+        "200":
+          description: Linked organization ids
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organizations:
+                    type: array
+                    items: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/organizations/{organizationId}:
+    get:
+      tags: [Identity]
+      operationId: getOrganization
+      summary: Get an organization by id
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: organizationId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/ResponseFields"
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/locations:
+    get:
+      tags: [Locations]
+      operationId: listLocations
+      summary: List locations
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/ResponseFields"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/LastId"
+      responses:
+        "200": { $ref: "#/components/responses/EnvelopeList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/locations/{locationId}:
+    get:
+      tags: [Locations]
+      operationId: getLocation
+      summary: Get a location by id
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: locationId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/ResponseFields"
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Locations]
+      operationId: updateLocation
+      summary: Update a location
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: locationId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/providers:
+    get:
+      tags: [Providers]
+      operationId: listProviders
+      summary: List providers
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/ResponseFields"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/LastId"
+      responses:
+        "200": { $ref: "#/components/responses/EnvelopeList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Providers]
+      operationId: createProvider
+      summary: Create a provider
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/providers/{providerId}:
+    get:
+      tags: [Providers]
+      operationId: getProvider
+      summary: Get a provider by id
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/ResponseFields"
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Providers]
+      operationId: updateProvider
+      summary: Update a provider
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/patients:
+    get:
+      tags: [Patients]
+      operationId: listPatients
+      summary: List patients
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/ResponseFields"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/LastId"
+      responses:
+        "200": { $ref: "#/components/responses/EnvelopeList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Patients]
+      operationId: createPatient
+      summary: Create a patient
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/patients/{patientId}:
+    get:
+      tags: [Patients]
+      operationId: getPatient
+      summary: Get a patient by id
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: patientId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/ResponseFields"
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Patients]
+      operationId: updatePatient
+      summary: Update a patient
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: patientId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/appointments:
+    get:
+      tags: [Appointments]
+      operationId: listAppointments
+      summary: List appointments
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/ResponseFields"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/LastId"
+      responses:
+        "200": { $ref: "#/components/responses/EnvelopeList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Appointments]
+      operationId: createAppointment
+      summary: Create an appointment
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/appointments/{appointmentId}:
+    get:
+      tags: [Appointments]
+      operationId: getAppointment
+      summary: Get an appointment by id
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: appointmentId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/ResponseFields"
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Appointments]
+      operationId: updateAppointment
+      summary: Update an appointment
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: appointmentId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Appointments]
+      operationId: deleteAppointment
+      summary: Delete an appointment
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: appointmentId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/transactions:
+    get:
+      tags: [Transactions]
+      operationId: listTransactions
+      summary: List ledger transactions (all types)
+      description: >-
+        Requires a filter. Prefer narrow filters (patient.id, location.id,
+        lastModified). See Transactions V1 developer guide.
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - $ref: "#/components/parameters/FilterRequired"
+        - $ref: "#/components/parameters/ResponseFields"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/LastId"
+      responses:
+        "200": { $ref: "#/components/responses/EnvelopeList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/transactions/{transactionId}:
+    get:
+      tags: [Transactions]
+      operationId: getTransaction
+      summary: Get a ledger transaction by id
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/ResponseFields"
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/transactions/patientpayments:
+    get:
+      tags: [Transactions]
+      operationId: listPatientPayments
+      summary: List patient payment transactions
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - $ref: "#/components/parameters/FilterRequired"
+        - $ref: "#/components/parameters/ResponseFields"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/LastId"
+      responses:
+        "200": { $ref: "#/components/responses/EnvelopeList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/transactions/patientpayments/{transactionId}:
+    get:
+      tags: [Transactions]
+      operationId: getPatientPayment
+      summary: Get a patient payment transaction by id
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/ResponseFields"
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/insuranceclaims:
+    get:
+      tags: [Claims]
+      operationId: listInsuranceClaims
+      summary: List insurance claims
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/ResponseFields"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/LastId"
+      responses:
+        "200": { $ref: "#/components/responses/EnvelopeList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/insuranceclaims/{claimId}:
+    get:
+      tags: [Claims]
+      operationId: getInsuranceClaim
+      summary: Get an insurance claim by id
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: claimId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/ResponseFields"
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/feeschedules:
+    get:
+      tags: [FeeSchedules]
+      operationId: listFeeSchedules
+      summary: List fee schedules
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/ResponseFields"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/LastId"
+      responses:
+        "200": { $ref: "#/components/responses/EnvelopeList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/feeschedules/{feeScheduleId}:
+    get:
+      tags: [FeeSchedules]
+      operationId: getFeeSchedule
+      summary: Get a fee schedule by id
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: feeScheduleId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/ResponseFields"
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/patientprocedures:
+    get:
+      tags: [Procedures]
+      operationId: listPatientProcedures
+      summary: List patient procedures
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/ResponseFields"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/LastId"
+      responses:
+        "200": { $ref: "#/components/responses/EnvelopeList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/patientprocedures/{procedureId}:
+    get:
+      tags: [Procedures]
+      operationId: getPatientProcedure
+      summary: Get a patient procedure by id
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: procedureId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/ResponseFields"
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/patientstatements:
+    get:
+      tags: [Statements]
+      operationId: listPatientStatements
+      summary: List patient statements
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/ResponseFields"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/LastId"
+      responses:
+        "200": { $ref: "#/components/responses/EnvelopeList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/patientstatements/{patientstatementId}:
+    get:
+      tags: [Statements]
+      operationId: getPatientStatement
+      summary: Get a patient statement by id
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: patientstatementId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/ResponseFields"
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/patientinsuranceplans:
+    get:
+      tags: [Insurance]
+      operationId: listPatientInsurancePlans
+      summary: List patient insurance plans
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/ResponseFields"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/LastId"
+      responses:
+        "200": { $ref: "#/components/responses/EnvelopeList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/patientinsuranceplans/{patientInsurancePlanId}:
+    get:
+      tags: [Insurance]
+      operationId: getPatientInsurancePlan
+      summary: Get a patient insurance plan by id
+      parameters:
+        - $ref: "#/components/parameters/OrganizationIdHeader"
+        - name: patientInsurancePlanId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/ResponseFields"
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        OAuth 2.0 access token from
+        POST {apiHost}/oauth/client_credential/accesstoken?grant_type=client_credentials
+        with x-www-form-urlencoded client_id and client_secret.
+  parameters:
+    OrganizationIdHeader:
+      name: Organization-ID
+      in: header
+      required: true
+      schema: { type: string }
+      description: Organization context; must be authorized for the access token.
+    Filter:
+      name: filter
+      in: query
+      required: false
+      schema: { type: string }
+      description: Ascend filter expression (e.g. lastModified>=2025-01-01).
+    FilterRequired:
+      name: filter
+      in: query
+      required: true
+      schema: { type: string }
+      description: Ascend filter expression (required on this endpoint).
+    ResponseFields:
+      name: responseFields
+      in: query
+      required: false
+      schema: { type: string }
+      description: Comma-delimited field names, or ALL.
+    PageSize:
+      name: pageSize
+      in: query
+      required: false
+      schema: { type: integer }
+    LastId:
+      name: lastId
+      in: query
+      required: false
+      schema: { type: string }
+      description: Cursor — largest id from the previous page.
+  responses:
+    Envelope:
+      description: Public API success envelope
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode: { type: integer }
+              data: { type: object }
+              warnings: { type: array, items: { type: object } }
+              errors: { type: array, items: { type: object } }
+    EnvelopeList:
+      description: Public API success envelope (list)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode: { type: integer }
+              data:
+                type: array
+                items: { type: object }
+              meta:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      limit: { type: integer }
+                      offset: { type: integer }
+                      total: { type: integer }
+    Unauthorized:
+      description: Authentication failed or missing
+    NotFound:
+      description: Resource missing or not accessible in organization context

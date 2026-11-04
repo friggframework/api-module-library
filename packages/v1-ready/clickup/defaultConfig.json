@@ -1,0 +1,14 @@
+{
+    "name": "clickup",
+    "label": "ClickUp",
+    "productUrl": "https://clickup.com",
+    "apiDocs": "https://developer.clickup.com/",
+    "categories": ["Project Management", "Productivity"],
+    "description": "ClickUp — workspaces, spaces, folders, lists, tasks, and webhooks via the public REST API v2",
+    "config": {
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

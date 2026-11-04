@@ -1,0 +1,3429 @@
+openapi: 3.0.3
+info:
+  title: ClickUp API v2 (Frigg module subset)
+  version: '2.0'
+  description: Curated OpenAPI subset of the official ClickUp API v2 reference for `@friggframework/api-module-clickup`. Paths,
+    methods, parameters, request/response fields, auth security scheme, and the server URL are taken from https://developer.clickup.com/openapi/clickup-api-v2-reference.json
+    (not third-party mirrors). operationIds are camelCase to match Api methods; official PascalCase ids are noted on each
+    operation. Only endpoints implemented by the client appear. $refs from the vendor document are inlined so this subset
+    is self-contained.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+- url: https://api.clickup.com/api
+  description: ClickUp
+security:
+- Authorization_Token: []
+tags:
+- name: Authorization
+- name: Workspaces
+- name: Spaces
+- name: Folders
+- name: Lists
+- name: Tasks
+- name: Webhooks
+paths:
+  /v2/user:
+    get:
+      summary: Get Authorized User
+      tags:
+      - Authorization
+      description: 'View the details of the authenticated user''s ClickUp account.
+
+
+        Official operationId: `GetAuthorizedUser`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json'
+      operationId: getAuthorizedUser
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: GetAuthorizedUserresponse
+                type: object
+                properties:
+                  user:
+                    title: User
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      username:
+                        type: string
+                      email:
+                        type: string
+                      color:
+                        type: string
+                      profilePicture:
+                        type: string
+                      initials:
+                        type: string
+                      week_start_day:
+                        type: integer
+                        description: The user's preferred start of the calendar week setting. \ `0` is Sunday. \ `1` is Monday.
+                      global_font_support:
+                        type: boolean
+                      timezeone:
+                        type: string
+      deprecated: false
+  /v2/team:
+    get:
+      summary: Get Authorized Workspaces
+      tags:
+      - Workspaces
+      description: 'View the Workspaces available to the authenticated user.
+
+
+        Official operationId: `GetAuthorizedTeams`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json'
+      operationId: getAuthorizedTeams
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: GetAuthorizedTeamsresponse
+                required:
+                - teams
+                type: object
+                properties:
+                  teams:
+                    type: array
+                    items:
+                      title: Team
+                      required:
+                      - id
+                      - name
+                      - color
+                      - avatar
+                      - members
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        color:
+                          type: string
+                        avatar:
+                          type: string
+                        members:
+                          type: array
+                          items:
+                            title: Member
+                            required:
+                            - user
+                            type: object
+                            properties:
+                              user:
+                                title: User
+                                type: object
+                                properties:
+                                  id:
+                                    type: integer
+                                  username:
+                                    type: string
+                                  email:
+                                    type: string
+                                  color:
+                                    type: string
+                                  profilePicture:
+                                    type: string
+                                  initials:
+                                    type: string
+                                  week_start_day:
+                                    type: integer
+                                    description: The user's preferred start of the calendar week setting. \ `0` is Sunday.
+                                      \ `1` is Monday.
+                                  global_font_support:
+                                    type: boolean
+                                  timezeone:
+                                    type: string
+                          description: ''
+                    description: ''
+      deprecated: false
+  /v2/team/{team_id}/space:
+    get:
+      summary: Get Spaces
+      tags:
+      - Spaces
+      description: 'View the Spaces avialable in a Workspace. You can only get member info in private Spaces.
+
+
+        Official operationId: `GetSpaces`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json'
+      operationId: getSpaces
+      parameters:
+      - name: team_id
+        in: path
+        description: Workspace ID
+        required: true
+        style: simple
+        schema:
+          type: number
+      - name: archived
+        in: query
+        description: ''
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: GetSpacesresponse
+                required:
+                - spaces
+                type: object
+                properties:
+                  spaces:
+                    type: array
+                    items:
+                      title: Space13
+                      required:
+                      - id
+                      - name
+                      - private
+                      - statuses
+                      - multiple_assignees
+                      - features
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        private:
+                          type: boolean
+                        color:
+                          type: string
+                        avatar:
+                          type: string
+                        admin_can_manage:
+                          type: boolean
+                        archived:
+                          type: boolean
+                        members:
+                          type: array
+                          items:
+                            title: Member
+                            required:
+                            - user
+                            type: object
+                            properties:
+                              user:
+                                title: User
+                                type: object
+                                properties:
+                                  id:
+                                    type: integer
+                                  username:
+                                    type: string
+                                  email:
+                                    type: string
+                                  color:
+                                    type: string
+                                  profilePicture:
+                                    type: string
+                                  initials:
+                                    type: string
+                                  week_start_day:
+                                    type: integer
+                                    description: The user's preferred start of the calendar week setting. \ `0` is Sunday.
+                                      \ `1` is Monday.
+                                  global_font_support:
+                                    type: boolean
+                                  timezeone:
+                                    type: string
+                          description: ''
+                          user:
+                            id:
+                              type: string
+                            username:
+                              type: string
+                            color:
+                              type: string
+                            profilePicture:
+                              type: string
+                            initials:
+                              type: string
+                        statuses:
+                          type: array
+                          items:
+                            title: Status
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              status:
+                                type: string
+                              color:
+                                type: string
+                              orderindex:
+                                type: integer
+                              type:
+                                type: string
+                          description: ''
+                        multiple_assignees:
+                          type: boolean
+                        features:
+                          title: Features4
+                          required:
+                          - due_dates
+                          - time_tracking
+                          - tags
+                          - time_estimates
+                          - checklists
+                          type: object
+                          properties:
+                            due_dates:
+                              title: DueDates
+                              required:
+                              - enabled
+                              - start_date
+                              - remap_due_dates
+                              - remap_closed_due_date
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                                start_date:
+                                  type: boolean
+                                remap_due_dates:
+                                  type: boolean
+                                remap_closed_due_date:
+                                  type: boolean
+                            time_tracking:
+                              title: TimeTracking
+                              required:
+                              - enabled
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                            tags:
+                              title: Tags
+                              required:
+                              - enabled
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                            time_estimates:
+                              title: TimeEstimates
+                              required:
+                              - enabled
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                            checklists:
+                              title: Checklists
+                              required:
+                              - enabled
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                            custom_fields:
+                              title: CustomFields
+                              required:
+                              - enabled
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                            remap_dependencies:
+                              title: RemapDependencies
+                              required:
+                              - enabled
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                            dependency_warning:
+                              title: DependencyWarning
+                              required:
+                              - enabled
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                            portfolios:
+                              title: Portfolios
+                              required:
+                              - enabled
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                    description: ''
+      deprecated: false
+  /v2/space/{space_id}:
+    get:
+      summary: Get Space
+      tags:
+      - Spaces
+      description: 'View the Spaces available in a Workspace.
+
+
+        Official operationId: `GetSpace`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json'
+      operationId: getSpace
+      parameters:
+      - name: space_id
+        in: path
+        description: ''
+        required: true
+        style: simple
+        schema:
+          type: number
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: GetSpaceresponse
+                required:
+                - id
+                - name
+                - private
+                - statuses
+                - multiple_assignees
+                - features
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  private:
+                    type: boolean
+                  statuses:
+                    type: array
+                    items:
+                      title: Status
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        status:
+                          type: string
+                        color:
+                          type: string
+                        orderindex:
+                          type: integer
+                        type:
+                          type: string
+                    description: ''
+                  multiple_assignees:
+                    type: boolean
+                  features:
+                    title: Features
+                    required:
+                    - due_dates
+                    - time_tracking
+                    - tags
+                    - time_estimates
+                    - checklists
+                    - custom_fields
+                    - remap_dependencies
+                    - dependency_warning
+                    - portfolios
+                    type: object
+                    properties:
+                      due_dates:
+                        title: DueDates
+                        required:
+                        - enabled
+                        - start_date
+                        - remap_due_dates
+                        - remap_closed_due_date
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                          start_date:
+                            type: boolean
+                          remap_due_dates:
+                            type: boolean
+                          remap_closed_due_date:
+                            type: boolean
+                      time_tracking:
+                        title: TimeTracking
+                        required:
+                        - enabled
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                      tags:
+                        title: Tags
+                        required:
+                        - enabled
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                      time_estimates:
+                        title: TimeEstimates
+                        required:
+                        - enabled
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                      checklists:
+                        title: Checklists
+                        required:
+                        - enabled
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                      custom_fields:
+                        title: CustomFields
+                        required:
+                        - enabled
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                      remap_dependencies:
+                        title: RemapDependencies
+                        required:
+                        - enabled
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                      dependency_warning:
+                        title: DependencyWarning
+                        required:
+                        - enabled
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                      portfolios:
+                        title: Portfolios
+                        required:
+                        - enabled
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+      deprecated: false
+  /v2/space/{space_id}/folder:
+    get:
+      summary: Get Folders
+      tags:
+      - Folders
+      description: 'View the Folders in a Space. Subfolders are returned in the same flat list as top-level Folders, each
+        with a `parent_folder` field holding the ID of the Folder it is nested inside of. This endpoint does not nest them;
+        to get a Folder''s subfolder tree, use [Get Folder](#tag/Folders/operation/GetFolder) with `include_subfolders=true`.
+
+
+
+        Official operationId: `GetFolders`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json'
+      operationId: getFolders
+      parameters:
+      - name: space_id
+        in: path
+        description: ''
+        required: true
+        style: simple
+        schema:
+          type: number
+      - name: archived
+        in: query
+        description: ''
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: GetFoldersresponse
+                required:
+                - folders
+                type: object
+                properties:
+                  folders:
+                    type: array
+                    description: 'The Folders in the Space. Subfolders are included in this flat list alongside top-level
+                      Folders, each with a `parent_folder` field identifying the Folder it is nested inside of. This endpoint
+                      does not nest them; to get a Folder''s subfolder tree, use [Get Folder](#tag/Folders/operation/GetFolder)
+                      with `include_subfolders=true`.
+
+                      '
+                    items:
+                      title: Folder5
+                      required:
+                      - id
+                      - name
+                      - orderindex
+                      - override_statuses
+                      - hidden
+                      - space
+                      - task_count
+                      - lists
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        orderindex:
+                          type: integer
+                        override_statuses:
+                          type: boolean
+                        hidden:
+                          type: boolean
+                        space:
+                          title: Space2
+                          required:
+                          - id
+                          - name
+                          - access
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            access:
+                              type: boolean
+                        task_count:
+                          type: string
+                        archived:
+                          type: boolean
+                          description: Whether the Folder is archived.
+                        statuses:
+                          type: array
+                          description: 'Statuses defined on this Folder. Only populated when `override_statuses` is `true`.
+                            A Folder that inherits its statuses returns an empty array here; its effective statuses are those
+                            of its nearest ancestor Folder that overrides them, or of the Space when no ancestor does. To
+                            get the resolved statuses for a Folder, request it with [Get Folder](#tag/Folders/operation/GetFolder).
+
+                            '
+                          items:
+                            title: FolderStatus
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                description: 'Unique identifier of the status. Not returned on the Create Folder response.
+
+                                  '
+                              status:
+                                type: string
+                                description: Name of the status.
+                              orderindex:
+                                type: integer
+                                description: Position of the status within its status group.
+                              color:
+                                type: string
+                                description: Hex color code for the status.
+                              type:
+                                type: string
+                                description: Type of the status (`open`, `custom`, `closed`, or `done`).
+                        lists:
+                          type: array
+                          items:
+                            type: string
+                        parent_folder:
+                          type: string
+                          description: 'ID of the parent Folder if this Folder is a subfolder. Only present when the Folder
+                            is nested inside another Folder.
+
+                            '
+      deprecated: false
+  /v2/folder/{folder_id}/list:
+    get:
+      summary: Get Lists
+      tags:
+      - Lists
+      description: 'View the Lists within a Folder.
+
+
+        Official operationId: `GetLists`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json'
+      operationId: getLists
+      parameters:
+      - name: folder_id
+        in: path
+        description: ''
+        required: true
+        style: simple
+        schema:
+          type: number
+      - name: archived
+        in: query
+        description: ''
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: GetListsresponse
+                required:
+                - lists
+                type: object
+                properties:
+                  lists:
+                    type: array
+                    items:
+                      title: List4
+                      required:
+                      - id
+                      - name
+                      - orderindex
+                      - content
+                      - status
+                      - priority
+                      - assignee
+                      - task_count
+                      - due_date
+                      - start_date
+                      - folder
+                      - space
+                      - archived
+                      - override_statuses
+                      - permission_level
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        orderindex:
+                          type: integer
+                        content:
+                          type: string
+                        status:
+                          oneOf:
+                          - title: Status11
+                            type: object
+                            properties:
+                              status:
+                                type: string
+                              color:
+                                type: string
+                              hide_label:
+                                type: boolean
+                          - type:
+                            - string
+                            - 'null'
+                          - {}
+                        priority:
+                          oneOf:
+                          - title: Priority4
+                            type: object
+                            properties:
+                              priority:
+                                type: string
+                              color:
+                                type: string
+                          - type:
+                            - string
+                            - 'null'
+                          - {}
+                        assignee:
+                          type:
+                          - string
+                          - 'null'
+                        task_count:
+                          type:
+                          - string
+                          - 'null'
+                        due_date:
+                          type:
+                          - string
+                          - 'null'
+                        start_date:
+                          type:
+                          - string
+                          - 'null'
+                        folder:
+                          title: Folder3
+                          required:
+                          - id
+                          - name
+                          - hidden
+                          - access
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            hidden:
+                              type: boolean
+                            access:
+                              type: boolean
+                        space:
+                          title: Space2
+                          required:
+                          - id
+                          - name
+                          - access
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            access:
+                              type: boolean
+                        archived:
+                          type: boolean
+                        override_statuses:
+                          type: boolean
+                        permission_level:
+                          type: string
+                    description: ''
+      deprecated: false
+  /v2/space/{space_id}/list:
+    get:
+      summary: Get Folderless Lists
+      tags:
+      - Lists
+      description: 'View the Lists in a Space that aren''t located in a Folder.
+
+
+        Official operationId: `GetFolderlessLists`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json'
+      operationId: getFolderlessLists
+      parameters:
+      - name: space_id
+        in: path
+        description: ''
+        required: true
+        style: simple
+        schema:
+          type: number
+      - name: archived
+        in: query
+        description: ''
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: GetFolderlessListsresponse
+                required:
+                - lists
+                type: object
+                properties:
+                  lists:
+                    type: array
+                    items:
+                      title: List4
+                      required:
+                      - id
+                      - name
+                      - orderindex
+                      - content
+                      - status
+                      - priority
+                      - assignee
+                      - task_count
+                      - due_date
+                      - start_date
+                      - folder
+                      - space
+                      - archived
+                      - override_statuses
+                      - permission_level
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        orderindex:
+                          type: integer
+                        content:
+                          type: string
+                        status:
+                          oneOf:
+                          - title: Status11
+                            type: object
+                            properties:
+                              status:
+                                type: string
+                              color:
+                                type: string
+                              hide_label:
+                                type: boolean
+                          - type:
+                            - string
+                            - 'null'
+                          - {}
+                        priority:
+                          oneOf:
+                          - title: Priority4
+                            type: object
+                            properties:
+                              priority:
+                                type: string
+                              color:
+                                type: string
+                          - type:
+                            - string
+                            - 'null'
+                          - {}
+                        assignee:
+                          type:
+                          - string
+                          - 'null'
+                        task_count:
+                          type:
+                          - string
+                          - 'null'
+                        due_date:
+                          type:
+                          - string
+                          - 'null'
+                        start_date:
+                          type:
+                          - string
+                          - 'null'
+                        folder:
+                          title: Folder3
+                          required:
+                          - id
+                          - name
+                          - hidden
+                          - access
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            hidden:
+                              type: boolean
+                            access:
+                              type: boolean
+                        space:
+                          title: Space2
+                          required:
+                          - id
+                          - name
+                          - access
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            access:
+                              type: boolean
+                        archived:
+                          type: boolean
+                        override_statuses:
+                          type: boolean
+                        permission_level:
+                          type: string
+                    description: ''
+      deprecated: false
+  /v2/list/{list_id}/task:
+    get:
+      summary: Get Tasks
+      tags:
+      - Tasks
+      description: "View the tasks in a List. Responses are limited to 100 tasks per page. You can only view task information\
+        \ of tasks you can access. \\\n \\\nThis endpoint only includes tasks where the specified `list_id` is their home\
+        \ List. Tasks added to the `list_id` with a different home List are not included in the response by default. To include\
+        \ tasks that exist in multiple lists, use the `include_timl` parameter. \\\n \\\nThe `time_spent` field displays time\
+        \ tracked in milliseconds, and is only included in the response for tasks with time entries.\\\n \\\nEach task's `custom_fields`\
+        \ array only includes Custom Fields applicable to that task's `custom_item_id`.\n\nOfficial operationId: `GetTasks`.\
+        \ Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json"
+      operationId: getTasks
+      parameters:
+      - name: list_id
+        in: path
+        description: 'To find the list_id: \ 1. In the Sidebar, hover over the List and click the **ellipsis ...** menu. \
+          2. Select **Copy link.** \ 3. Use the copied URL to find the list_id. The list_id is the number that follows /li
+          in the URL.'
+        required: true
+        style: simple
+        schema:
+          type: number
+      - name: archived
+        in: query
+        description: ''
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: include_markdown_description
+        in: query
+        description: To return task descriptions in Markdown format, use `?include_markdown_description=true`.
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: page
+        in: query
+        description: Page to fetch (starts at 0).
+        style: form
+        explode: true
+        schema:
+          type: integer
+      - name: order_by
+        in: query
+        description: "Order by a particular field. By default, tasks are ordered by `created`.\\\n \\\nOptions include: `id`,\
+          \ `created`, `updated`, and `due_date`."
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: reverse
+        in: query
+        description: Tasks are displayed in reverse order.
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: subtasks
+        in: query
+        description: Include or exclude subtasks. By default, subtasks are excluded.
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: statuses
+        in: query
+        description: "Filter by statuses. To include closed tasks, use the `include_closed` parameter. \\\n \\\nFor example:\
+          \ \\\n \\\n`?statuses[]=to%20do&statuses[]=in%20progress`"
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: include_closed
+        in: query
+        description: "Include or excluse closed tasks. By default, they are excluded.\\\n \\\nTo include closed tasks, use\
+          \ `include_closed: true`."
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: include_timl
+        in: query
+        description: "Include Tasks in Multiple Lists. By default, tasks that exist in multiple lists are excluded from the\
+          \ response.\\\n \\\nTo include tasks that exist in multiple lists, use `include_timl: true`."
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: assignees
+        in: query
+        description: "Filter by Assignees. For example: \\\n \\\n`?assignees[]=1234&assignees[]=5678`"
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: watchers
+        in: query
+        description: Filter by watchers.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: tags
+        in: query
+        description: "Filter by tags. For example: \\\n \\\n`?tags[]=tag1&tags[]=this%20tag`"
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: due_date_gt
+        in: query
+        description: Filter by due date greater than Unix time in milliseconds.
+        style: form
+        explode: true
+        schema:
+          type: integer
+      - name: due_date_lt
+        in: query
+        description: Filter by due date less than Unix time in milliseconds.
+        style: form
+        explode: true
+        schema:
+          type: integer
+      - name: date_created_gt
+        in: query
+        description: Filter by date created greater than Unix time in milliseconds.
+        style: form
+        explode: true
+        schema:
+          type: integer
+      - name: date_created_lt
+        in: query
+        description: Filter by date created less than Unix time in milliseconds.
+        style: form
+        explode: true
+        schema:
+          type: integer
+      - name: date_updated_gt
+        in: query
+        description: Filter by date updated greater than Unix time in milliseconds.
+        style: form
+        explode: true
+        schema:
+          type: integer
+      - name: date_updated_lt
+        in: query
+        description: Filter by date updated less than Unix time in milliseconds.
+        style: form
+        explode: true
+        schema:
+          type: integer
+      - name: date_done_gt
+        in: query
+        description: Filter by date done greater than Unix time in milliseconds.
+        style: form
+        explode: true
+        schema:
+          type: integer
+      - name: date_done_lt
+        in: query
+        description: Filter by date done less than Unix time in milliseconds.
+        style: form
+        explode: true
+        schema:
+          type: integer
+      - name: custom_fields
+        in: query
+        description: "Include tasks with specific values in one or more Custom Fields. Custom Relationships are included.\\\
+          \n \\\nFor example: `?custom_fields=[{\"field_id\":\"abcdefghi12345678\",\"operator\":\"=\",\"value\":\"1234\"},{\"\
+          field_id\":\"jklmnop123456\",\"operator\":\"<\",\"value\":\"5\"}]`\\\n \\\nOnly set Custom Field values display\
+          \ in the `value` property of the `custom_fields` parameter. If you want to include tasks with specific values in\
+          \ only one Custom Field, use `custom_field` instead.\\\n \\\nLearn more about [filtering using Custom Fields.](doc:taskfilters)"
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: custom_field
+        in: query
+        description: Include tasks with specific values in only one Custom Field. This Custom Field can be a Custom Relationship.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: custom_items
+        in: query
+        description: "Filter by custom task types. For example: \\\n \\\n`?custom_items[]=0&custom_items[]=1300` \\\n \\\n\
+          Including `0` returns tasks. Including `1` returns Milestones. Including any other number returns the custom task\
+          \ type as defined in your Workspace."
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: number
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: GetTasksresponse
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      title: TaskWithMixedOrderIndexType
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        custom_id:
+                          type:
+                          - string
+                          - 'null'
+                        custom_item_id:
+                          type:
+                          - number
+                          - 'null'
+                          description: "The custom task type ID for this task. A value of `0` represents task type \"Task\"\
+                            .\\\n \\\nTo get a list of available custom task type IDs for your Workspace, use the [Get Custom\
+                            \ Task Types endpoint](ref:getcustomitems)."
+                        name:
+                          type: string
+                        text_content:
+                          type: string
+                        description:
+                          type: string
+                        markdown_description:
+                          type: string
+                        status:
+                          title: Status
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            status:
+                              type: string
+                            color:
+                              type: string
+                            orderindex:
+                              type: integer
+                            type:
+                              type: string
+                        orderindex:
+                          type:
+                          - string
+                          - number
+                        date_created:
+                          type: string
+                        date_updated:
+                          type: string
+                        date_closed:
+                          type:
+                          - string
+                          - 'null'
+                        date_done:
+                          type:
+                          - string
+                          - 'null'
+                        archived:
+                          type: boolean
+                        creator:
+                          title: Creator
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            username:
+                              type: string
+                            color:
+                              type: string
+                            email:
+                              type: string
+                            profilePicture:
+                              type:
+                              - string
+                              - 'null'
+                        assignees:
+                          type: array
+                          items:
+                            type: string
+                          description: ''
+                        group_assignees:
+                          type: array
+                          items:
+                            type: string
+                          description: ''
+                        watchers:
+                          type: array
+                          items:
+                            type: string
+                          description: ''
+                        checklists:
+                          type: array
+                          items:
+                            type: string
+                          description: ''
+                        tags:
+                          type: array
+                          items:
+                            type: string
+                          description: ''
+                        parent:
+                          type:
+                          - string
+                          - 'null'
+                        top_level_parent:
+                          type:
+                          - string
+                          - 'null'
+                        priority:
+                          title: Priority
+                          type: object
+                          nullable: true
+                          properties:
+                            color:
+                              type: string
+                            id:
+                              type: string
+                            orderindex:
+                              type: string
+                            priority:
+                              type: string
+                        due_date:
+                          type:
+                          - string
+                          - 'null'
+                        start_date:
+                          type:
+                          - string
+                          - 'null'
+                        points:
+                          type:
+                          - number
+                          - 'null'
+                        time_estimate:
+                          type:
+                          - string
+                          - 'null'
+                        time_spent:
+                          type: number
+                          description: Time tracked in milliseconds. Only included in the response for tasks with time entries.
+                        custom_fields:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              name:
+                                type: string
+                              type:
+                                type: string
+                                description: The Custom Field type.
+                              type_config:
+                                type: object
+                                description: '[Configuration options](doc:customfields#the-type_config-property) specific
+                                  to each Custom Field based on the Custom Field type.'
+                              date_created:
+                                type: string
+                              hide_from_guests:
+                                type: boolean
+                              required:
+                                type: boolean
+                        dependencies:
+                          type: array
+                          items:
+                            type: string
+                          description: ''
+                        linked_tasks:
+                          type: array
+                          items:
+                            type: string
+                          description: ''
+                        locations:
+                          type: array
+                          items:
+                            title: ListLocation
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                description: The ID of the List where the task has been added.
+                              name:
+                                type: string
+                                description: The name of the List where the task has been added.
+                          description: Array of Lists where the task has been added.
+                        team_id:
+                          type: string
+                        url:
+                          type: string
+                        sharing:
+                          type: object
+                          properties:
+                            public:
+                              type: boolean
+                            public_share_expires_on:
+                              type:
+                              - string
+                              - 'null'
+                            public_fields:
+                              type: array
+                              items:
+                                type: string
+                            token:
+                              type:
+                              - string
+                              - 'null'
+                            seo_optimized:
+                              type: boolean
+                        permission_level:
+                          type: string
+                        list:
+                          title: List
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            access:
+                              type: boolean
+                        project:
+                          title: Folder
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            hidden:
+                              type: boolean
+                            access:
+                              type: boolean
+                        folder:
+                          title: Folder
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            hidden:
+                              type: boolean
+                            access:
+                              type: boolean
+                        space:
+                          title: Space
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                    description: ''
+                  last_page:
+                    type: boolean
+      deprecated: false
+    post:
+      summary: Create Task
+      tags:
+      - Tasks
+      description: "Create a new task.\\\n \\\nCustom Field values in the request body are only saved when the field is applicable\
+        \ to the task's `custom_item_id`. Use [Get Custom Fields](ref:getaccessiblecustomfields) and each field's `applied_objects`\
+        \ to determine applicability before creating the task.\n\nOfficial operationId: `CreateTask`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json"
+      operationId: createTask
+      parameters:
+      - name: list_id
+        in: path
+        description: ''
+        required: true
+        style: simple
+        schema:
+          type: number
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              title: CreateTaskrequest
+              required:
+              - name
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                assignees:
+                  type: array
+                  items:
+                    type: integer
+                  description: ''
+                archived:
+                  type: boolean
+                group_assignees:
+                  type: array
+                  items:
+                    type: string
+                  description: Assign multiple user groups to the task.
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: ''
+                status:
+                  type: string
+                priority:
+                  type:
+                  - integer
+                  - 'null'
+                due_date:
+                  type: integer
+                due_date_time:
+                  type: boolean
+                time_estimate:
+                  type: integer
+                start_date:
+                  type: integer
+                start_date_time:
+                  type: boolean
+                points:
+                  type: number
+                  description: Add Sprint Points to the task.
+                notify_all:
+                  type: boolean
+                  description: If `notify_all` is true, the creator of the task will also be notified. Other assignees and
+                    watchers are always notified regardless of this setting.
+                parent:
+                  description: "You can create a subtask by including an existing task ID.\\\n \\\nThe `parent` task ID you\
+                    \ include can be a subtask, but must be in the same List specified in the path parameter."
+                  type:
+                  - string
+                  - 'null'
+                markdown_content:
+                  type: string
+                  description: Markdown formatted description for the task. If both `markdown_content` and `description` are
+                    provided, `markdown_content` will be used instead of `description`.
+                links_to:
+                  description: Include a task ID to create a linked dependency with your new task.
+                  type:
+                  - string
+                  - 'null'
+                check_required_custom_fields:
+                  description: "When creating a task via API any required Custom Fields are ignored by default (`false`).\\\
+                    \n \\\nYou can enforce required Custom Fields by including `check_required_custom_fields: true`."
+                  type: boolean
+                custom_fields:
+                  type: array
+                  items:
+                    title: SetCustomFieldValueOnCreateTaskrequest
+                    anyOf:
+                    - type: object
+                      title: URL Custom Field
+                      description: The `value` must be a string with a valid URL.
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type:
+                          - string
+                          - 'null'
+                    - type: object
+                      title: Dropdown Custom Field
+                      description: Enter the universal unique identifier (UUID) of the dropdown menu option you want to set.
+                        You can find the UUIDs available for each Dropdown Custom Field using [Get Accessible Custom Fields.](ref:getaccessiblecustomfields)
+                        New Dropdown Custom Field options cannot be created from this request.
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type:
+                          - string
+                          - 'null'
+                    - type: object
+                      title: Email Custom Field
+                      description: The `value` must be a string with a valid email address.
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type:
+                          - string
+                          - 'null'
+                    - type: object
+                      title: Phone Custom Field
+                      description: The `value` must be a string with a valid country code.
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type:
+                          - string
+                          - 'null'
+                    - type: object
+                      title: Date Custom Field
+                      description: 'The `value` must be Unix time in milliseconds. To display the time in a Date Custom Field
+                        in ClickUp, you must include `time: true` in the `value_options` property.'
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type:
+                          - integer
+                          - 'null'
+                          format: int64
+                        value_options:
+                          type: object
+                          properties:
+                            time:
+                              type: boolean
+                    - type: object
+                      title: Short or Long Text Custom Field
+                      description: Enter a string of text.
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type:
+                          - string
+                          - 'null'
+                    - type: object
+                      title: Number Custom Field
+                      description: Enter a number.
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type:
+                          - number
+                          - 'null'
+                    - type: object
+                      title: Money Custom Field
+                      description: You can set an amount, but not the currency of a Money Custom Field via the API. You can
+                        check the currency of a Money Custom Field using [Get Accessible Custom Fields.](ref:getaccessiblecustomfields)
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type:
+                          - number
+                          - 'null'
+                    - type: object
+                      title: Task Relationship Custom Field
+                      description: 'Enter an array of task ids in the `add` property to add them to a Task Relationship Custom
+                        Field. Enter them into the `rem` property to remove tasks from the Relationship. Task Relationship
+                        Custom Fields are nullable: `"value": null`.'
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type: object
+                          properties:
+                            add:
+                              type: array
+                              items:
+                                type: string
+                            rem:
+                              type: array
+                              items:
+                                type: string
+                    - type: object
+                      title: People Custom Field
+                      description: 'Enter an array of user ids or a Team id in the `add` property to add them to a People
+                        Custom Field. Enter them into the `rem` property to remove users from a People Custom Field. You can
+                        get a list of people in the Workspace using [Get Authorized Teams (Workspaces).](ref:getauthorizedteams)
+                        People Custom Fields are nullable: `"value": null`.'
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type: object
+                          properties:
+                            add:
+                              type: array
+                              items:
+                                type: number
+                            rem:
+                              type: array
+                              items:
+                                type: number
+                    - type: object
+                      title: Emoji (Rating) Custom Field
+                      description: Enter an integer that is greater than or equal to zero and where the `count` property is
+                        greater than or equal to the `value`. You can find the `count` property for each Emoji (Rating) Custom
+                        Field using [Get Accessible Custom Fields.](ref:getaccessiblecustomfields)
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type:
+                          - integer
+                          - 'null'
+                          format: int32
+                    - type: object
+                      title: Manual Progress Custom Field
+                      description: 'Enter a number between the `start` and `end` values of each Manual Progress Custom Field.
+                        For example, for a field with `start: 10` and `end: 30`, sending `current: 20` will be displayed as
+                        50% complete in ClickUp. You can find the `start` and `end` values for each Manual Progress Custom
+                        Field using [Get Accessible Custom Fields.](ref:getaccessiblecustomfields) Manual Progress Custom
+                        Fields are nullable: `"value": null`.'
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type: object
+                          required:
+                          - current
+                          properties:
+                            current:
+                              type: number
+                    - type: object
+                      title: Label Custom Field
+                      description: 'Enter an array of the universal unique identifiers (UUIDs) of the labels you want to apply.
+                        You can find the UUIDs available for each Label Custom Field using [Get Accessible Custom Fields.](ref:getaccessiblecustomfields)
+                        Label Custom Fields are nullable: `"value": null`.'
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type: array
+                          items:
+                            type: string
+                    - type: object
+                      title: Location Custom Field
+                      description: Include the latitude, longitude, and formatted address as defined in the [Google Maps Geocoding
+                        API.](https://developers.google.com/maps/documentation/geocoding/overview)
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type: object
+                          properties:
+                            location:
+                              type: object
+                              properties:
+                                lat:
+                                  type: number
+                                lng:
+                                  type: number
+                            formatted_address:
+                              type: string
+                    - type: object
+                      title: Button Custom Field
+                      description: Set a button Custom Field to `true` to "click" it. This will trigger the button's action
+                        as if it was clicked in the UI.
+                      required:
+                      - id
+                      - value
+                      properties:
+                        id:
+                          type: string
+                        value:
+                          type:
+                          - boolean
+                          - 'null'
+                  description: "You can include one or more Custom Fields to set them when creating a new task.\\\n \\\nCustom\
+                    \ Fields that use object and array type values are nullable by sending `\"value\": null`.\\\n \\\nOnly\
+                    \ Custom Fields applicable to the task's `custom_item_id` are saved. Values for fields scoped to other\
+                    \ custom task types are ignored. Use a [Get Custom Fields](ref:getaccessiblecustomfields) endpoint and\
+                    \ check each field's `applied_objects` to see which fields apply to which task types before creating the\
+                    \ task."
+                custom_item_id:
+                  type: number
+                  description: "The custom task type ID for this task. A value of `0` (default) creates a standard task type\
+                    \ \"Task\".\\\n \\\nThis determines which Custom Fields from the `custom_fields` array are accepted.\\\
+                    \n \\\nTo get a list of available custom task type IDs for your Workspace, use the [Get Custom Task Types\
+                    \ endpoint](ref:getcustomitems)."
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: CreateTaskresponse.yaml
+                type: object
+                properties:
+                  id:
+                    type: string
+                  custom_id:
+                    type:
+                    - string
+                    - 'null'
+                  custom_item_id:
+                    type:
+                    - number
+                    - 'null'
+                    description: "The custom task type ID for this task. A value of `0` (default) creates a standard task\
+                      \ type \"Task\".\\\n \\\nTo get a list of available custom task type IDs for your Workspace, use the\
+                      \ [Get Custom Task Types endpoint](ref:getcustomitems)."
+                  name:
+                    type: string
+                  text_content:
+                    type: string
+                  description:
+                    type: string
+                  markdown_description:
+                    type: string
+                  status:
+                    title: Status
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      status:
+                        type: string
+                      color:
+                        type: string
+                      orderindex:
+                        type: integer
+                      type:
+                        type: string
+                  orderindex:
+                    type: string
+                  date_created:
+                    type: string
+                  date_updated:
+                    type: string
+                  date_closed:
+                    type:
+                    - string
+                    - 'null'
+                  date_done:
+                    type:
+                    - string
+                    - 'null'
+                  archived:
+                    type: boolean
+                  creator:
+                    title: Creator
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      username:
+                        type: string
+                      color:
+                        type: string
+                      email:
+                        type: string
+                      profilePicture:
+                        type:
+                        - string
+                        - 'null'
+                  assignees:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  group_assignees:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  watchers:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  checklists:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  parent:
+                    type:
+                    - string
+                    - 'null'
+                  top_level_parent:
+                    type:
+                    - string
+                    - 'null'
+                  priority:
+                    title: Priority
+                    type: object
+                    nullable: true
+                    properties:
+                      color:
+                        type: string
+                      id:
+                        type: string
+                      orderindex:
+                        type: string
+                      priority:
+                        type: string
+                  due_date:
+                    type:
+                    - string
+                    - 'null'
+                  start_date:
+                    type:
+                    - string
+                    - 'null'
+                  points:
+                    type:
+                    - number
+                    - 'null'
+                  time_estimate:
+                    type:
+                    - string
+                    - 'null'
+                  time_spent:
+                    type: number
+                  custom_fields:
+                    type: array
+                    items:
+                      title: CustomFields8
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        type:
+                          type: string
+                        type_config:
+                          type: object
+                          description: The configuration of the Custom Field. The structure of this object varies depending
+                            on the [Custom Field type](ref:docs/customfields).
+                        date_created:
+                          type: string
+                        hide_from_guests:
+                          type: boolean
+                        value:
+                          description: The value of the Custom Field. The structure of this value varies depending on the
+                            [Custom Field type](https://developer.clickup.com/docs/customfields).
+                        value_richtext:
+                          type: string
+                        value_markdown:
+                          type: string
+                        required:
+                          type: boolean
+                    description: ''
+                  dependencies:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  linked_tasks:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  locations:
+                    type: array
+                    items:
+                      title: ListLocation
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: The ID of the List where the task has been added.
+                        name:
+                          type: string
+                          description: The name of the List where the task has been added.
+                    description: Array of Lists where the task has been added.
+                  team_id:
+                    type: string
+                  url:
+                    type: string
+                  sharing:
+                    type: object
+                    properties:
+                      public:
+                        type: boolean
+                      public_share_expires_on:
+                        type:
+                        - string
+                        - 'null'
+                      public_fields:
+                        type: array
+                        items:
+                          type: string
+                      token:
+                        type:
+                        - string
+                        - 'null'
+                      seo_optimized:
+                        type: boolean
+                  permission_level:
+                    type: string
+                  list:
+                    title: List
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      access:
+                        type: boolean
+                  project:
+                    title: Folder
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      hidden:
+                        type: boolean
+                      access:
+                        type: boolean
+                  folder:
+                    title: Folder
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      hidden:
+                        type: boolean
+                      access:
+                        type: boolean
+                  space:
+                    title: Space
+                    type: object
+                    properties:
+                      id:
+                        type: string
+      deprecated: false
+  /v2/task/{task_id}:
+    get:
+      summary: Get Task
+      tags:
+      - Tasks
+      description: "View information about a task. You can only view task information of tasks you can access. \\\n \\\nTasks\
+        \ with attachments will return an \"attachments\" response. \\\n \\\nDocs attached to a task are not returned.\\\n\
+        \ \\\nThe `custom_fields` array only includes Custom Fields applicable to the task's `custom_item_id`. Use [Get Custom\
+        \ Fields](ref:getaccessiblecustomfields) and each field's `applied_objects` to discover which fields apply to which\
+        \ task types.\n\nOfficial operationId: `GetTask`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json"
+      operationId: getTask
+      parameters:
+      - name: task_id
+        in: path
+        description: ''
+        required: true
+        style: simple
+        schema:
+          type: string
+      - name: custom_task_ids
+        in: query
+        description: If you want to reference a task by its custom task id, this value must be `true`.
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: team_id
+        in: query
+        description: "When the `custom_task_ids` parameter is set to `true`, the Workspace ID must be provided using the `team_id`\
+          \ parameter.\n \\\nFor example: `custom_task_ids=true&team_id=123`."
+        style: form
+        explode: true
+        schema:
+          type: number
+      - name: include_subtasks
+        in: query
+        description: Include subtasks, default false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: include_markdown_description
+        in: query
+        description: To return task descriptions in Markdown format, use `?include_markdown_description=true`.
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: custom_fields
+        in: query
+        description: "Include tasks with specific values in one or more Custom Fields. Custom Relationships are included.\\\
+          \n \\\nFor example: `?custom_fields=[{\"field_id\":\"abcdefghi12345678\",\"operator\":\"=\",\"value\":\"1234\"},{\"\
+          field_id\":\"jklmnop123456\",\"operator\":\"<\",\"value\":\"5\"}]`\\\n \\\nOnly set Custom Field values display\
+          \ in the `value` property of the `custom_fields` parameter. If you want to include tasks with specific values in\
+          \ only one Custom Field, use `custom_field` instead.\\\n \\\nLearn more about [filtering using Custom Fields.](doc:filtertasks)"
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: GetTaskresponse
+                type: object
+                properties:
+                  id:
+                    type: string
+                  custom_id:
+                    type:
+                    - string
+                    - 'null'
+                  custom_item_id:
+                    type:
+                    - number
+                    - 'null'
+                    description: "The custom task type ID for this task. A value of `0` represents task type \"Task\".\\\n\
+                      \ \\\nTo get a list of available custom task type IDs for your Workspace, use the [Get Custom Task Types\
+                      \ endpoint](ref:getcustomitems)."
+                  name:
+                    type: string
+                  text_content:
+                    type: string
+                  description:
+                    type: string
+                  markdown_description:
+                    type: string
+                    description: Only returned if `include_markdown_description=true` is passed as a query parameter.
+                  status:
+                    title: Status
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      status:
+                        type: string
+                      color:
+                        type: string
+                      orderindex:
+                        type: integer
+                      type:
+                        type: string
+                  orderindex:
+                    type: string
+                  date_created:
+                    type: string
+                  date_updated:
+                    type: string
+                  date_closed:
+                    type:
+                    - string
+                    - 'null'
+                  date_done:
+                    type:
+                    - string
+                    - 'null'
+                  archived:
+                    type: boolean
+                  creator:
+                    title: Creator
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      username:
+                        type: string
+                      color:
+                        type: string
+                      email:
+                        type: string
+                      profilePicture:
+                        type:
+                        - string
+                        - 'null'
+                  assignees:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        username:
+                          type: string
+                        color:
+                          type: string
+                        initials:
+                          type: string
+                        email:
+                          type: string
+                        profilePicture:
+                          type:
+                          - string
+                          - 'null'
+                    description: ''
+                  group_assignees:
+                    type: array
+                    items:
+                      type: object
+                    description: ''
+                  watchers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        username:
+                          type: string
+                        color:
+                          type: string
+                        initials:
+                          type: string
+                        email:
+                          type: string
+                        profilePicture:
+                          type:
+                          - string
+                          - 'null'
+                    description: ''
+                  checklists:
+                    type: array
+                    items:
+                      type: object
+                    description: ''
+                  tags:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        tag_fg:
+                          type: string
+                        tag_bg:
+                          type: string
+                        creator:
+                          type: integer
+                    description: ''
+                  parent:
+                    type:
+                    - string
+                    - 'null'
+                  top_level_parent:
+                    type:
+                    - string
+                    - 'null'
+                  priority:
+                    title: Priority
+                    type: object
+                    nullable: true
+                    properties:
+                      color:
+                        type: string
+                      id:
+                        type: string
+                      orderindex:
+                        type: string
+                      priority:
+                        type: string
+                  due_date:
+                    type:
+                    - string
+                    - 'null'
+                  start_date:
+                    type:
+                    - string
+                    - 'null'
+                  points:
+                    type:
+                    - number
+                    - 'null'
+                  time_estimate:
+                    type:
+                    - number
+                    - 'null'
+                  time_spent:
+                    type:
+                    - number
+                    - 'null'
+                  custom_fields:
+                    type: array
+                    items:
+                      title: CustomFields8
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        type:
+                          type: string
+                        type_config:
+                          type: object
+                          description: The configuration of the Custom Field. The structure of this object varies depending
+                            on the [Custom Field type](ref:docs/customfields).
+                        date_created:
+                          type: string
+                        hide_from_guests:
+                          type: boolean
+                        value:
+                          description: The value of the Custom Field. The structure of this value varies depending on the
+                            [Custom Field type](https://developer.clickup.com/docs/customfields).
+                        value_richtext:
+                          type: string
+                        value_markdown:
+                          type: string
+                        required:
+                          type: boolean
+                    description: Custom Fields applicable to the task's `custom_item_id`. Fields scoped to other custom task
+                      types are excluded. Fields without a value may still appear with their definition.
+                  dependencies:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        task_id:
+                          type: string
+                        depends_on:
+                          type: string
+                        type:
+                          type: integer
+                        date_created:
+                          type: string
+                        userid:
+                          type: string
+                        workspace_id:
+                          type: string
+                        chain_id:
+                          type:
+                          - string
+                          - 'null'
+                    description: ''
+                  linked_tasks:
+                    type: array
+                    items:
+                      type: object
+                    description: ''
+                  locations:
+                    type: array
+                    items:
+                      title: ListLocation
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: The ID of the List where the task has been added.
+                        name:
+                          type: string
+                          description: The name of the List where the task has been added.
+                    description: Array of Lists where the task has been added.
+                  team_id:
+                    type: string
+                  url:
+                    type: string
+                  sharing:
+                    type: object
+                    properties:
+                      public:
+                        type: boolean
+                      public_share_expires_on:
+                        type:
+                        - string
+                        - 'null'
+                      public_fields:
+                        type: array
+                        items:
+                          type: string
+                      token:
+                        type:
+                        - string
+                        - 'null'
+                      seo_optimized:
+                        type: boolean
+                  permission_level:
+                    type: string
+                  list:
+                    title: List
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      access:
+                        type: boolean
+                  project:
+                    title: Folder
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      hidden:
+                        type: boolean
+                      access:
+                        type: boolean
+                  folder:
+                    title: Folder
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      hidden:
+                        type: boolean
+                      access:
+                        type: boolean
+                  space:
+                    title: Space
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                  subtasks:
+                    type: array
+                    description: Only returned if `include_subtasks=true` is passed as a query parameter.
+                    items:
+                      title: Subtask
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        custom_item_id:
+                          type:
+                          - number
+                          - 'null'
+                        name:
+                          type: string
+                        status:
+                          type: object
+                          properties:
+                            status:
+                              type: string
+                            orderindex:
+                              type: integer
+                            color:
+                              type: string
+                            type:
+                              type: string
+                        orderindex:
+                          type: string
+                        date_created:
+                          type: string
+                        date_updated:
+                          type: string
+                        date_closed:
+                          type:
+                          - string
+                          - 'null'
+                        date_done:
+                          type:
+                          - string
+                          - 'null'
+                        archived:
+                          type: boolean
+                        creator:
+                          title: Creator
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            username:
+                              type: string
+                            color:
+                              type: string
+                            email:
+                              type: string
+                            profilePicture:
+                              type:
+                              - string
+                              - 'null'
+                        assignees:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              username:
+                                type: string
+                              color:
+                                type: string
+                              initials:
+                                type: string
+                              email:
+                                type: string
+                              profilePicture:
+                                type:
+                                - string
+                                - 'null'
+                        group_assignees:
+                          type: array
+                          items:
+                            type: object
+                        watchers:
+                          type: array
+                          items:
+                            type: object
+                        checklists:
+                          type: array
+                          items:
+                            type: object
+                        tags:
+                          type: array
+                          items:
+                            type: object
+                        parent:
+                          type:
+                          - string
+                          - 'null'
+                        top_level_parent:
+                          type:
+                          - string
+                          - 'null'
+                        due_date:
+                          type:
+                          - string
+                          - 'null'
+                        start_date:
+                          type:
+                          - string
+                          - 'null'
+                        points:
+                          type:
+                          - number
+                          - 'null'
+                        time_estimate:
+                          type:
+                          - number
+                          - 'null'
+                        time_spent:
+                          type:
+                          - number
+                          - 'null'
+                        custom_fields:
+                          type: array
+                          items:
+                            title: CustomFields8
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              name:
+                                type: string
+                              type:
+                                type: string
+                              type_config:
+                                type: object
+                                description: The configuration of the Custom Field. The structure of this object varies depending
+                                  on the [Custom Field type](ref:docs/customfields).
+                              date_created:
+                                type: string
+                              hide_from_guests:
+                                type: boolean
+                              value:
+                                description: The value of the Custom Field. The structure of this value varies depending on
+                                  the [Custom Field type](https://developer.clickup.com/docs/customfields).
+                              value_richtext:
+                                type: string
+                              value_markdown:
+                                type: string
+                              required:
+                                type: boolean
+                        dependencies:
+                          type: array
+                          items:
+                            type: object
+                        linked_tasks:
+                          type: array
+                          items:
+                            type: object
+                        locations:
+                          type: array
+                          items:
+                            type: object
+                        url:
+                          type: string
+                  attachments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        date:
+                          type: integer
+                          format: int64
+                        title:
+                          type: string
+                        type:
+                          type: integer
+                        source:
+                          type: integer
+                        version:
+                          type: integer
+                        extension:
+                          type: string
+                        thumbnail_small:
+                          type: string
+                        thumbnail_medium:
+                          type: string
+                        thumbnail_large:
+                          type: string
+                        is_folder:
+                          type: boolean
+                        mimetype:
+                          type: string
+                        hidden:
+                          type: boolean
+                        parent_id:
+                          type: string
+                        size:
+                          type: integer
+                          format: int64
+                        total_comments:
+                          type: integer
+                        resolved_comments:
+                          type: integer
+                        user:
+                          title: User2
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            username:
+                              type: string
+                            initials:
+                              type: string
+                            email:
+                              type: string
+                            color:
+                              type: string
+                            profilePicture:
+                              type: string
+                        deleted:
+                          type: boolean
+                        orientation:
+                          type: string
+                        url:
+                          type: string
+                        email_data:
+                          type: object
+                        url_w_query:
+                          type: string
+                        url_w_host:
+                          type: string
+      deprecated: false
+    put:
+      summary: Update Task
+      tags:
+      - Tasks
+      description: 'Update a task by including one or more fields in the request body.
+
+
+        Official operationId: `UpdateTask`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json'
+      operationId: updateTask
+      parameters:
+      - name: task_id
+        in: path
+        description: ''
+        required: true
+        style: simple
+        schema:
+          type: string
+      - name: custom_task_ids
+        in: query
+        description: If you want to reference a task by its custom task id, this value must be `true`.
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: team_id
+        in: query
+        description: "When the `custom_task_ids` parameter is set to `true`, the Workspace ID must be provided using the `team_id`\
+          \ parameter.\n \\\nFor example: `custom_task_ids=true&team_id=123`."
+        style: form
+        explode: true
+        schema:
+          type: number
+      requestBody:
+        description: '***Note:** To update Custom Fields on a task, you must use the Set Custom Field endpoint.*'
+        content:
+          application/json:
+            schema:
+              title: UpdateTaskrequest
+              type: object
+              properties:
+                custom_item_id:
+                  type:
+                  - number
+                  - 'null'
+                  description: "The custom task type ID for this task. A value of `0` (default) sets the task type to type\
+                    \ \"Task\".\\\n \\\nChanging the task type affects which Custom Fields appear on subsequent [Get Task](ref:gettask)\
+                    \ responses.\\\n \\\nTo get a list of available custom task type IDs for your Workspace, use the [Get\
+                    \ Custom Task Types endpoint](ref:getcustomitems)."
+                name:
+                  type: string
+                description:
+                  description: To clear the task description, include `Description` with `" "`.
+                  type: string
+                markdown_content:
+                  type: string
+                  description: Markdown formatted description for the task. If both `markdown_content` and `description` are
+                    provided, `markdown_content` will be used instead of `description`.
+                status:
+                  type: string
+                priority:
+                  type: integer
+                due_date:
+                  type: integer
+                due_date_time:
+                  type: boolean
+                parent:
+                  description: "You can move a subtask to another parent task by including `\"parent\"` with a valid `task\
+                    \ id`.\\\n \\\nYou cannot convert a subtask to a task by setting `\"parent\"` to `null`."
+                  type: string
+                time_estimate:
+                  type: integer
+                start_date:
+                  type: integer
+                start_date_time:
+                  type: boolean
+                points:
+                  type: number
+                  description: Update the task's Sprint Points.
+                assignees:
+                  title: Assignees
+                  required:
+                  - add
+                  - rem
+                  type: object
+                  properties:
+                    add:
+                      type: array
+                      items:
+                        type: integer
+                      description: ''
+                    rem:
+                      type: array
+                      items:
+                        type: integer
+                      description: ''
+                group_assignees:
+                  type: object
+                  properties:
+                    add:
+                      type: array
+                      items:
+                        type: string
+                      description: ''
+                    rem:
+                      type: array
+                      items:
+                        type: string
+                      description: ''
+                watchers:
+                  title: Watchers
+                  required:
+                  - add
+                  - rem
+                  type: object
+                  properties:
+                    add:
+                      type: array
+                      items:
+                        type: integer
+                      description: ''
+                    rem:
+                      type: array
+                      items:
+                        type: integer
+                      description: ''
+                archived:
+                  type: boolean
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: UpdateTaskresponse
+                type: object
+                properties:
+                  id:
+                    type: string
+                  custom_id:
+                    type:
+                    - string
+                    - 'null'
+                  custom_item_id:
+                    type:
+                    - number
+                    - 'null'
+                    description: "The custom task type ID for this task. A value of `0` represents task type \"Task\".\\\n\
+                      \ \\\nTo get a list of available custom task type IDs for your Workspace, use the [Get Custom Task Types\
+                      \ endpoint](ref:getcustomitems)."
+                  name:
+                    type: string
+                  text_content:
+                    type:
+                    - string
+                    - 'null'
+                  description:
+                    type:
+                    - string
+                    - 'null'
+                  markdown_description:
+                    type: string
+                  status:
+                    title: Status
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      status:
+                        type: string
+                      color:
+                        type: string
+                      orderindex:
+                        type: integer
+                      type:
+                        type: string
+                  archived:
+                    type: boolean
+                  orderindex:
+                    type: string
+                  date_created:
+                    type: string
+                  date_updated:
+                    type: string
+                  date_closed:
+                    type:
+                    - string
+                    - 'null'
+                  date_done:
+                    type:
+                    - string
+                    - 'null'
+                  creator:
+                    title: Creator
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      username:
+                        type: string
+                      color:
+                        type: string
+                      email:
+                        type: string
+                      profilePicture:
+                        type:
+                        - string
+                        - 'null'
+                  assignees:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  group_assignees:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  watchers:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  checklists:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  parent:
+                    type:
+                    - string
+                    - 'null'
+                  top_level_parent:
+                    type:
+                    - string
+                    - 'null'
+                  priority:
+                    title: Priority
+                    type: object
+                    nullable: true
+                    properties:
+                      color:
+                        type: string
+                      id:
+                        type: string
+                      orderindex:
+                        type: string
+                      priority:
+                        type: string
+                  due_date:
+                    type:
+                    - string
+                    - 'null'
+                  start_date:
+                    type:
+                    - string
+                    - 'null'
+                  points:
+                    type:
+                    - number
+                    - 'null'
+                  time_estimate:
+                    type:
+                    - string
+                    - 'null'
+                  time_spent:
+                    type: number
+                  custom_fields:
+                    type: array
+                    items:
+                      title: CustomFields8
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        type:
+                          type: string
+                        type_config:
+                          type: object
+                          description: The configuration of the Custom Field. The structure of this object varies depending
+                            on the [Custom Field type](ref:docs/customfields).
+                        date_created:
+                          type: string
+                        hide_from_guests:
+                          type: boolean
+                        value:
+                          description: The value of the Custom Field. The structure of this value varies depending on the
+                            [Custom Field type](https://developer.clickup.com/docs/customfields).
+                        value_richtext:
+                          type: string
+                        value_markdown:
+                          type: string
+                        required:
+                          type: boolean
+                    description: ''
+                  dependencies:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  linked_tasks:
+                    type: array
+                    items:
+                      type: string
+                    description: ''
+                  locations:
+                    type: array
+                    items:
+                      title: ListLocation
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: The ID of the List where the task has been added.
+                        name:
+                          type: string
+                          description: The name of the List where the task has been added.
+                    description: Array of Lists where the task has been added.
+                  team_id:
+                    type: string
+                  url:
+                    type: string
+                  sharing:
+                    type: object
+                    properties:
+                      public:
+                        type: boolean
+                      public_share_expires_on:
+                        type:
+                        - string
+                        - 'null'
+                      public_fields:
+                        type: array
+                        items:
+                          type: string
+                      token:
+                        type:
+                        - string
+                        - 'null'
+                      seo_optimized:
+                        type: boolean
+                  permission_level:
+                    type: string
+                  list:
+                    title: List
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      access:
+                        type: boolean
+                  project:
+                    title: Folder
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      hidden:
+                        type: boolean
+                      access:
+                        type: boolean
+                  folder:
+                    title: Folder
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      hidden:
+                        type: boolean
+                      access:
+                        type: boolean
+                  space:
+                    title: Space
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                  subtasks:
+                    type: array
+                    items:
+                      type: object
+                    description: ''
+                  attachments:
+                    type: array
+                    items:
+                      type: object
+                    description: ''
+      deprecated: false
+  /v2/team/{team_id}/webhook:
+    get:
+      summary: Get Webhooks
+      tags:
+      - Webhooks
+      description: 'View the webhooks created via the API for a Workspace. This endpoint returns webhooks created by the authenticated
+        user.
+
+
+        Official operationId: `GetWebhooks`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json'
+      operationId: getWebhooks
+      parameters:
+      - name: team_id
+        in: path
+        description: Workspace ID
+        required: true
+        style: simple
+        schema:
+          type: number
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: GetWebhooksresponse
+                required:
+                - webhooks
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      title: Webhook
+                      required:
+                      - id
+                      - userid
+                      - team_id
+                      - endpoint
+                      - client_id
+                      - events
+                      - task_id
+                      - list_id
+                      - folder_id
+                      - space_id
+                      - health
+                      - secret
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        userid:
+                          type: integer
+                        team_id:
+                          type: integer
+                        endpoint:
+                          type: string
+                        client_id:
+                          type: string
+                        events:
+                          type: array
+                          items:
+                            type: string
+                          description: ''
+                        task_id:
+                          type:
+                          - string
+                          - 'null'
+                        list_id:
+                          type:
+                          - string
+                          - 'null'
+                        folder_id:
+                          type:
+                          - string
+                          - 'null'
+                        space_id:
+                          type:
+                          - string
+                          - 'null'
+                        health:
+                          title: Health
+                          required:
+                          - status
+                          - fail_count
+                          type: object
+                          properties:
+                            status:
+                              type: string
+                            fail_count:
+                              type: integer
+                        secret:
+                          type: string
+                    description: ''
+      deprecated: false
+    post:
+      summary: Create Webhook
+      tags:
+      - Webhooks
+      description: 'Set up a webhook to monitor for events.<br> We do not have a dedicated IP address for webhooks. We use
+        our domain name and dynamic addressing.
+
+
+        Official operationId: `CreateWebhook`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json'
+      operationId: createWebhook
+      parameters:
+      - name: team_id
+        in: path
+        description: Workspace ID
+        required: true
+        style: simple
+        schema:
+          type: number
+      requestBody:
+        description: You can subscribe to specific events, and one specific location per webhook. [Learn more](doc:webhooks).
+        content:
+          application/json:
+            schema:
+              title: CreateWebhookrequest
+              required:
+              - endpoint
+              - events
+              type: object
+              properties:
+                endpoint:
+                  type: string
+                events:
+                  type: array
+                  description: See [documentation](doc:webhooks#task-webhooks) for available event options. Use `*` to subscribe
+                    to all events.
+                  items:
+                    type: string
+                space_id:
+                  type: integer
+                folder_id:
+                  type: integer
+                list_id:
+                  type: integer
+                task_id:
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: CreateWebhookresponse
+                required:
+                - id
+                - webhook
+                type: object
+                properties:
+                  id:
+                    type: string
+                  webhook:
+                    title: Webhook
+                    required:
+                    - id
+                    - userid
+                    - team_id
+                    - endpoint
+                    - client_id
+                    - events
+                    - task_id
+                    - list_id
+                    - folder_id
+                    - space_id
+                    - health
+                    - secret
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      userid:
+                        type: integer
+                      team_id:
+                        type: integer
+                      endpoint:
+                        type: string
+                      client_id:
+                        type: string
+                      events:
+                        type: array
+                        items:
+                          type: string
+                        description: ''
+                      task_id:
+                        type:
+                        - string
+                        - 'null'
+                      list_id:
+                        type:
+                        - string
+                        - 'null'
+                      folder_id:
+                        type:
+                        - string
+                        - 'null'
+                      space_id:
+                        type:
+                        - string
+                        - 'null'
+                      health:
+                        title: Health
+                        required:
+                        - status
+                        - fail_count
+                        type: object
+                        properties:
+                          status:
+                            type: string
+                          fail_count:
+                            type: integer
+                      secret:
+                        type: string
+      deprecated: false
+  /v2/webhook/{webhook_id}:
+    put:
+      summary: Update Webhook
+      tags:
+      - Webhooks
+      description: 'Update a webhook to change the events to be monitored.
+
+
+        Official operationId: `UpdateWebhook`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json'
+      operationId: updateWebhook
+      parameters:
+      - name: webhook_id
+        in: path
+        description: e506-4a29-9d42-26e504e3435e (uuid)
+        required: true
+        style: simple
+        schema:
+          type: string
+      requestBody:
+        description: "To subscribe to specific events, pass an array of `events` that you want to subscribe to, or use the\
+          \ wildcard character `\"*\"` to subscribe to everything.\\\n \\\nIf you don't specify any events, all events will\
+          \ be sent to the webhook."
+        content:
+          application/json:
+            schema:
+              title: UpdateWebhookrequest
+              required:
+              - endpoint
+              - events
+              - status
+              type: object
+              properties:
+                endpoint:
+                  type: string
+                events:
+                  type: string
+                status:
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                title: UpdateWebhookresponse
+                required:
+                - id
+                - webhook
+                type: object
+                properties:
+                  id:
+                    type: string
+                  webhook:
+                    title: Webhook
+                    required:
+                    - id
+                    - userid
+                    - team_id
+                    - endpoint
+                    - client_id
+                    - events
+                    - task_id
+                    - list_id
+                    - folder_id
+                    - space_id
+                    - health
+                    - secret
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      userid:
+                        type: integer
+                      team_id:
+                        type: integer
+                      endpoint:
+                        type: string
+                      client_id:
+                        type: string
+                      events:
+                        type: array
+                        items:
+                          type: string
+                        description: ''
+                      task_id:
+                        type:
+                        - string
+                        - 'null'
+                      list_id:
+                        type:
+                        - string
+                        - 'null'
+                      folder_id:
+                        type:
+                        - string
+                        - 'null'
+                      space_id:
+                        type:
+                        - string
+                        - 'null'
+                      health:
+                        title: Health
+                        required:
+                        - status
+                        - fail_count
+                        type: object
+                        properties:
+                          status:
+                            type: string
+                          fail_count:
+                            type: integer
+                      secret:
+                        type: string
+      deprecated: false
+    delete:
+      summary: Delete Webhook
+      tags:
+      - Webhooks
+      description: 'Delete a webhook to stop monitoring the events and locations of the webhook.
+
+
+        Official operationId: `DeleteWebhook`. Source: https://developer.clickup.com/openapi/clickup-api-v2-reference.json'
+      operationId: deleteWebhook
+      parameters:
+      - name: webhook_id
+        in: path
+        description: e506-4a29-9d42-26e504e3435e (uuid)
+        required: true
+        style: simple
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+      deprecated: false
+components:
+  securitySchemes:
+    Authorization_Token:
+      name: Authorization
+      type: apiKey
+      in: header
+      description: 'API token required for authentication. Two types of tokens are supported:
+
+        **Personal API Key** Obtain from ClickUp''s settings page under ''Apps'' and add it to the header as `Authorization:
+        pk_...`
+
+        **OAuth2 Access Token** Generated through the OAuth2 flow and add it to the header as `Authorization: Bearer {access_token}`'

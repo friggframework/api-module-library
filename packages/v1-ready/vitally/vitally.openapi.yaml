@@ -1,0 +1,684 @@
+openapi: 3.0.3
+info:
+  title: Vitally REST API (Frigg curated subset)
+  version: '1.0.0'
+  description: |
+    Curated OpenAPI contract for `@friggframework/api-module-vitally`.
+    Transcribed from Vitally's official Help Center REST API docs (no provider-published
+    OpenAPI). One operationId per `Api` method. Keep in sync with `./api.js`.
+
+    Sources:
+      - https://docs.vitally.io/en/articles/9880649-rest-api-overview
+      - https://docs.vitally.io/en/articles/9880654-rest-api-accounts
+      - https://docs.vitally.io/en/articles/9880652-rest-api-organizations
+      - https://docs.vitally.io/en/articles/9880661-rest-api-users
+      - https://docs.vitally.io/en/articles/9880855-rest-api-tasks
+      - https://docs.vitally.io/en/articles/9880672-rest-api-notes
+      - https://docs.vitally.io/en/articles/9880665-rest-api-conversations
+      - https://docs.vitally.io/en/articles/9880864-rest-api-custom-traits
+      - https://docs.vitally.io/en/articles/9880861-rest-api-nps-responses
+      - https://docs.vitally.io/en/articles/9880663-rest-api-admins
+servers:
+  - url: https://yoursubdomain.rest.vitally.io/resources
+    description: US data center example (replace yoursubdomain). EU host is https://rest.vitally-eu.io/resources
+security:
+  - BasicAuth: []
+tags:
+  - name: Accounts
+  - name: Organizations
+  - name: Users
+  - name: Tasks
+  - name: Notes
+  - name: Conversations
+  - name: CustomTraits
+  - name: NpsResponses
+  - name: Admins
+paths:
+  /accounts:
+    get:
+      operationId: listAccounts
+      tags: [Accounts]
+      summary: List Accounts
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/sortBy'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, churned, activeOrChurned]
+            default: active
+      responses:
+        '200':
+          description: Paginated Accounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+    post:
+      operationId: createAccount
+      tags: [Accounts]
+      summary: Create an Account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [externalId, name]
+              properties:
+                externalId: { type: string }
+                name: { type: string }
+                organizationId: { type: string }
+                traits: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Created Account
+  /accounts/{accountId}:
+    parameters:
+      - $ref: '#/components/parameters/accountId'
+    get:
+      operationId: getAccount
+      tags: [Accounts]
+      summary: Get an Account
+      responses:
+        '200':
+          description: Account
+    put:
+      operationId: updateAccount
+      tags: [Accounts]
+      summary: Update an Account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                organizationId: { type: string, nullable: true }
+                traits: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Updated Account
+  /accounts/{accountId}/healthScores:
+    parameters:
+      - $ref: '#/components/parameters/accountId'
+    get:
+      operationId: getAccountHealthScores
+      tags: [Accounts]
+      summary: Get an Account's health score breakdown
+      responses:
+        '200':
+          description: Health score breakdown
+  /accounts/{accountId}/users:
+    parameters:
+      - $ref: '#/components/parameters/accountId'
+    get:
+      operationId: listUsersForAccount
+      tags: [Users]
+      summary: List Users for an Account
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/sortBy'
+      responses:
+        '200':
+          description: Paginated Users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+  /accounts/{accountId}/tasks:
+    parameters:
+      - $ref: '#/components/parameters/accountId'
+    get:
+      operationId: listTasksForAccount
+      tags: [Tasks]
+      summary: List Tasks for an Account
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/sortBy'
+        - $ref: '#/components/parameters/source'
+      responses:
+        '200':
+          description: Paginated Tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+  /accounts/{accountId}/notes:
+    parameters:
+      - $ref: '#/components/parameters/accountId'
+    get:
+      operationId: listNotesForAccount
+      tags: [Notes]
+      summary: List Notes for an Account
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/sortBy'
+        - $ref: '#/components/parameters/archived'
+        - $ref: '#/components/parameters/source'
+      responses:
+        '200':
+          description: Paginated Notes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+  /accounts/{accountId}/conversations:
+    parameters:
+      - $ref: '#/components/parameters/accountId'
+    get:
+      operationId: listConversationsForAccount
+      tags: [Conversations]
+      summary: List Conversations for an Account
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/sortBy'
+        - $ref: '#/components/parameters/source'
+      responses:
+        '200':
+          description: Paginated Conversations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+  /accounts/{accountId}/npsResponses:
+    parameters:
+      - $ref: '#/components/parameters/accountId'
+    get:
+      operationId: listNpsResponsesForAccount
+      tags: [NpsResponses]
+      summary: List NPS Responses for an Account
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/sortBy'
+      responses:
+        '200':
+          description: Paginated NPS Responses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+  /organizations:
+    get:
+      operationId: listOrganizations
+      tags: [Organizations]
+      summary: List Organizations
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/sortBy'
+      responses:
+        '200':
+          description: Paginated Organizations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+    post:
+      operationId: createOrganization
+      tags: [Organizations]
+      summary: Create an Organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [externalId, name]
+              properties:
+                externalId: { type: string }
+                name: { type: string }
+                traits: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Created Organization
+  /organizations/{organizationId}:
+    parameters:
+      - name: organizationId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getOrganization
+      tags: [Organizations]
+      summary: Get an Organization
+      responses:
+        '200':
+          description: Organization
+    put:
+      operationId: updateOrganization
+      tags: [Organizations]
+      summary: Update an Organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                traits: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Updated Organization
+  /users:
+    get:
+      operationId: listUsers
+      tags: [Users]
+      summary: List Users
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/sortBy'
+      responses:
+        '200':
+          description: Paginated Users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+    post:
+      operationId: createUser
+      tags: [Users]
+      summary: Create a User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [externalId]
+              properties:
+                externalId: { type: string }
+                accountIds:
+                  type: array
+                  items: { type: string }
+                organizationIds:
+                  type: array
+                  items: { type: string }
+                name: { type: string }
+                email: { type: string }
+                avatar: { type: string }
+                traits: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Created User
+  /users/search:
+    get:
+      operationId: searchUsers
+      tags: [Users]
+      summary: Search Users by email, externalId, or emailSubdomain
+      parameters:
+        - name: externalId
+          in: query
+          schema: { type: string }
+        - name: email
+          in: query
+          schema: { type: string }
+        - name: emailSubdomain
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Matching Users
+  /users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getUser
+      tags: [Users]
+      summary: Get a User
+      responses:
+        '200':
+          description: User
+    put:
+      operationId: updateUser
+      tags: [Users]
+      summary: Update a User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                email: { type: string }
+                avatar: { type: string }
+                accountIds:
+                  type: array
+                  items: { type: string }
+                organizationIds:
+                  type: array
+                  items: { type: string }
+                traits: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Updated User
+  /tasks:
+    get:
+      operationId: listTasks
+      tags: [Tasks]
+      summary: List Tasks
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/sortBy'
+        - $ref: '#/components/parameters/archived'
+        - $ref: '#/components/parameters/source'
+      responses:
+        '200':
+          description: Paginated Tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+    post:
+      operationId: createTask
+      tags: [Tasks]
+      summary: Create a Task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                accountId: { type: string }
+                organizationId: { type: string }
+                externalId: { type: string }
+                description: { type: string }
+                assignedToId: { type: string }
+                dueDate: { type: string }
+                traits: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Created Task
+  /tasks/{taskId}:
+    parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getTask
+      tags: [Tasks]
+      summary: Get a Task
+      parameters:
+        - $ref: '#/components/parameters/source'
+      responses:
+        '200':
+          description: Task
+    put:
+      operationId: updateTask
+      tags: [Tasks]
+      summary: Update a Task
+      parameters:
+        - $ref: '#/components/parameters/source'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Updated Task
+  /taskCategories:
+    get:
+      operationId: listTaskCategories
+      tags: [Tasks]
+      summary: List Task Categories
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+      responses:
+        '200':
+          description: Paginated Task Categories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+  /notes:
+    get:
+      operationId: listNotes
+      tags: [Notes]
+      summary: List Notes
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/sortBy'
+        - $ref: '#/components/parameters/archived'
+        - $ref: '#/components/parameters/source'
+      responses:
+        '200':
+          description: Paginated Notes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+    post:
+      operationId: createNote
+      tags: [Notes]
+      summary: Create a Note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [note, noteDate]
+              properties:
+                note: { type: string }
+                noteDate: { type: string, format: date-time }
+                externalId: { type: string }
+                subject: { type: string }
+                accountId: { type: string }
+                organizationId: { type: string }
+                authorId: { type: string }
+                traits: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Created Note
+  /notes/{noteId}:
+    parameters:
+      - name: noteId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getNote
+      tags: [Notes]
+      summary: Get a Note
+      parameters:
+        - $ref: '#/components/parameters/source'
+      responses:
+        '200':
+          description: Note
+    put:
+      operationId: updateNote
+      tags: [Notes]
+      summary: Update a Note
+      parameters:
+        - $ref: '#/components/parameters/source'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Updated Note
+  /conversations:
+    get:
+      operationId: listConversations
+      tags: [Conversations]
+      summary: List Conversations
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/sortBy'
+        - $ref: '#/components/parameters/source'
+      responses:
+        '200':
+          description: Paginated Conversations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+  /conversations/{conversationId}:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getConversation
+      tags: [Conversations]
+      summary: Get a Conversation
+      responses:
+        '200':
+          description: Conversation
+  /customFields:
+    get:
+      operationId: listCustomFields
+      tags: [CustomTraits]
+      summary: List custom traits by model
+      parameters:
+        - name: model
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - users
+              - accounts
+              - organizations
+              - customObjects
+              - tasks
+              - notes
+              - projects
+              - conversations
+              - team
+        - name: customObjectId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Custom trait definitions
+  /npsResponses:
+    get:
+      operationId: listNpsResponses
+      tags: [NpsResponses]
+      summary: List NPS Responses
+      parameters:
+        - name: target
+          in: query
+          schema:
+            type: string
+            enum: [accounts, organizations]
+            default: accounts
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/sortBy'
+      responses:
+        '200':
+          description: Paginated NPS Responses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+  /admins:
+    get:
+      operationId: listAdmins
+      tags: [Admins]
+      summary: List Admins
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/from'
+      responses:
+        '200':
+          description: Paginated Admins
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResults'
+  /admins/search:
+    get:
+      operationId: searchAdmins
+      tags: [Admins]
+      summary: Search Admins by email
+      parameters:
+        - name: email
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Matching Admin
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: >
+        REST API key as username, empty password.
+        Authorization: Basic base64(<api_key>:)
+  parameters:
+    accountId:
+      name: accountId
+      in: path
+      required: true
+      schema: { type: string }
+      description: Vitally Account id or externalId (where documented)
+    limit:
+      name: limit
+      in: query
+      schema: { type: number, maximum: 100, default: 100 }
+    from:
+      name: from
+      in: query
+      schema: { type: string }
+      description: Cursor from a previous page
+    sortBy:
+      name: sortBy
+      in: query
+      schema:
+        type: string
+        enum: [createdAt, updatedAt]
+        default: updatedAt
+    archived:
+      name: archived
+      in: query
+      schema: { type: boolean }
+    source:
+      name: source
+      in: query
+      schema: { type: string }
+      description: Integration name (e.g. hubspot, salesforce, zapier)
+  schemas:
+    PaginatedResults:
+      type: object
+      properties:
+        results:
+          type: array
+          items: { type: object, additionalProperties: true }
+        next:
+          type: string
+          nullable: true

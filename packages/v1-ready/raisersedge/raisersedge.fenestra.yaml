@@ -1,0 +1,92 @@
+# Fenestra Document: Blackbaud SKY Add-ins (Raiser's Edge NXT)
+#
+# Blackbaud exposes iframe-based SKY Add-ins that render at named extension
+# points inside Raiser's Edge NXT (tiles, page actions, full pages, and more).
+# Add-ins use @blackbaud/sky-addin-client to handshake with the host.
+# Draft only — validate with specs/fenestra/tools when available.
+#
+# Sources:
+#   https://developer.blackbaud.com/skyapi/docs/addins/overview
+#   https://developer.blackbaud.com/skyapi/docs/addins/concepts/extension-points
+#   https://developer.blackbaud.com/skyapi/docs/addins/quick-start
+#   https://www.npmjs.com/package/@blackbaud/sky-addin-client
+
+fenestra: "0.1.0"
+
+info:
+  title: Blackbaud SKY Add-ins (Raiser's Edge NXT)
+  version: "0.1.0"
+  description: |
+    SKY Add-ins are external web apps loaded in sandboxed iframes at registered
+    extension points inside Blackbaud solutions (including Raiser's Edge NXT).
+    Register the add-in URL + extension point on the SKY application in the
+    Developer Portal. At runtime the host supplies context (e.g. recordId) via
+    the AddinClient init callback.
+
+platform:
+  name: Blackbaud Raiser's Edge NXT
+  vendor: Blackbaud, Inc.
+  documentation: https://developer.blackbaud.com/skyapi/docs/addins/overview
+  appMarketplace: https://www.blackbaud.com/marketplace
+
+sdks:
+  sky-addin-client:
+    name: SKY Add-in Client
+    packageManager: npm
+    package: "@blackbaud/sky-addin-client"
+    documentation: https://developer.blackbaud.com/skyapi/docs/addins/client
+    repository: https://github.com/blackbaud/sky-addin-client
+    description: |
+      Low-level client that must run inside the add-in iframe. Handles the
+      host handshake (init / ready), context delivery, and host commands
+      (modals, flyouts, navigation).
+    exports:
+      AddinClient:
+        type: utility
+        description: Primary client class for host ↔ iframe messaging
+      AddinTileSummaryStyle:
+        type: utility
+        description: Enum for collapsed-tile summary presentation
+
+extensionPoints:
+  - id: renxt.constituent.tile
+    name: Constituent Tile Dashboard
+    type: card
+    extensionType: iframe
+    description: |
+      Tile on the Add-ins tab of a constituent record. Context: { recordId }.
+  - id: renxt.constituent.page_action
+    name: Constituent Page Action
+    type: toolbar
+    extensionType: iframe
+    description: |
+      Action button on the constituent record page. Context: { recordId }.
+      Modeled as Fenestra `toolbar` (closest enum to SKY page actions).
+  - id: renxt.constituent.overview.tile
+    name: Constituent Overview Tab Tile Dashboard
+    type: card
+    extensionType: iframe
+    description: |
+      Tile on the Overview tab of a constituent record. Context: { recordId }.
+  - id: renxt.gift.tile
+    name: Gift Tile Dashboard
+    type: card
+    extensionType: iframe
+    description: |
+      Tile dashboard on a gift record page (when registered for gift extension
+      points). See extension-points docs for the exact gift recordId context.
+  - id: renxt.page
+    name: Page Add-in
+    type: fullPage
+    extensionType: iframe
+    description: |
+      Full-page experience via the Page Host SPA
+      (app.blackbaud.com/pages/applications/{appId}/pages/{pageName}).
+  - id: renxt.development_office.tile
+    name: Development Office Home Tile
+    type: card
+    extensionType: iframe
+    description: |
+      Top-level tile on the Development Office home page (no record context).
+
+components: []

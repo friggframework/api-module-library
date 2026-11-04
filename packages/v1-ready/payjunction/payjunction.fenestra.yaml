@@ -1,0 +1,70 @@
+# Fenestra Document: PayJunction JavaScript SDK (tokenization)
+#
+# PayJunction exposes a browser tokenization SDK under the Trinity host
+# (sdk.js). Card/ACH data is tokenized client-side; the merchant backend
+# charges via POST /transactions with tokenId — reducing PCI scope.
+#
+# Drafted from PayJunction's published docs against Fenestra 0.1.0
+# (api-module-library branch claude/fenestra-spec-draft-Q367t).
+#
+# Docs: https://developer.payjunction.com/hc/en-us/articles/4404249724571-PayJunction-JavaScript-SDK
+
+fenestra: "0.1.0"
+
+info:
+  title: PayJunction JavaScript SDK
+  version: "1.0.0"
+  description: |
+    PayJunction's JavaScript SDK tokenizes sensitive payment information in
+    the browser and returns a single-use `tokenId` that can be charged via
+    the REST API (`POST /transactions` with `tokenId`).
+
+    The `@friggframework/api-module-payjunction` package itself implements
+    the REST API (OAuth/Basic + merchants, customers, transactions, invoices,
+    settlements, deposits, terminals, webhook subscriptions), not the browser
+    SDK. This Fenestra document covers the UI tokenization surface.
+
+platform:
+  name: PayJunction
+  vendor: PayJunction
+  documentation: https://developer.payjunction.com/
+  appMarketplace: https://www.payjunction.com/
+
+sdks:
+  payjunction-js:
+    name: PayJunction JavaScript SDK
+    packageManager: npm
+    package: sdk.js
+    platform: web
+    documentation: https://developer.payjunction.com/hc/en-us/articles/4404249724571-PayJunction-JavaScript-SDK
+    cdn: https://www.payjunction.com/trinity/js/sdk.js
+    cdnRequired: true
+    description: |
+      Load sdk.js directly from PayJunction's CDN (production:
+      www.payjunction.com/trinity/js/sdk.js; Labs:
+      www.payjunctionlabs.com/trinity/js/sdk.js). There is no npm package —
+      `cdnRequired: true`. Instantiate with a publishable key, then call
+      createToken() for card or ACH data.
+    exports:
+      PayJunction:
+        type: utility
+        description: Global factory — PayJunction(publishableKey)
+      createToken:
+        type: utility
+        description: >-
+          Tokenize card (cardNumber, cardExpMonth, cardExpYear, cardCvv)
+          or ACH (achRoutingNumber, achAccountNumber, achAccountType)
+          into a single-use tokenId
+
+extensionPoints:
+  - id: web-checkout-tokenization
+    name: Merchant web checkout tokenization
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Embed PayJunction's SDK on a merchant-hosted checkout page. Tokenize
+      card or ACH details in-browser, then call POST /transactions with the
+      returned tokenId from the backend (Api.createTransaction).
+    documentation: https://developer.payjunction.com/hc/en-us/articles/4404249724571-PayJunction-JavaScript-SDK
+    supportedComponents:
+      - createToken

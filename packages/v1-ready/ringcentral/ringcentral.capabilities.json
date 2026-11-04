@@ -1,0 +1,578 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "ringcentral",
+  "label": "RingCentral",
+  "package": "@friggframework/api-module-ringcentral",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected RingCentral account. Definitions read them as $.install.accounts.ringcentral.<name>.",
+    "fields": [
+      {
+        "name": "accountId",
+        "type": "string",
+        "description": "RingCentral account id from readAccountInfo(~)"
+      },
+      {
+        "name": "extensionId",
+        "type": "string",
+        "description": "Authorized extension id when account id was unavailable"
+      }
+    ]
+  },
+  "objects": {
+    "account": {
+      "label": "Account",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "mainNumber", "type": "phone", "tag": "contact.phone" },
+        {
+          "name": "serviceInfo.servicePlanName",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "operator.name",
+          "type": "string",
+          "tag": "person.displayName"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "account.get" }
+      }
+    },
+    "extension": {
+      "label": "Extension",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        {
+          "name": "extensionNumber",
+          "type": "string",
+          "tag": "record.displayId"
+        },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "type", "type": "string" },
+        { "name": "status", "type": "string" },
+        {
+          "name": "contact.firstName",
+          "type": "string",
+          "tag": "person.givenName"
+        },
+        {
+          "name": "contact.lastName",
+          "type": "string",
+          "tag": "person.familyName"
+        },
+        {
+          "name": "contact.email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "contact.businessPhone",
+          "type": "phone",
+          "tag": "contact.phone"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "extension.list",
+          "cursor": "page",
+          "limit": "perPage",
+          "items": "records",
+          "paging": "page"
+        },
+        "get": { "capability": "extension.get", "id": "extensionId" },
+        "update": { "capability": "extension.update", "body": "body" }
+      }
+    },
+    "phoneNumber": {
+      "label": "Phone number",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        {
+          "name": "phoneNumber",
+          "type": "phone",
+          "tag": "contact.phone",
+          "required": true
+        },
+        { "name": "usageType", "type": "string" },
+        { "name": "type", "type": "string" },
+        { "name": "label", "type": "string", "tag": "record.displayName" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "phoneNumber.list",
+          "cursor": "page",
+          "limit": "perPage",
+          "items": "records",
+          "paging": "page"
+        }
+      }
+    },
+    "message": {
+      "label": "Message",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "type", "type": "string" },
+        { "name": "direction", "type": "string" },
+        { "name": "subject", "type": "text", "tag": "record.displayName" },
+        {
+          "name": "creationTime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "lastModifiedTime",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        { "name": "readStatus", "type": "string" },
+        { "name": "messageStatus", "type": "string" },
+        {
+          "name": "from.phoneNumber",
+          "type": "phone",
+          "tag": "contact.phone"
+        },
+        {
+          "name": "to[0].phoneNumber",
+          "type": "phone",
+          "tag": "contact.phone"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "lastModifiedTime",
+        "list": {
+          "capability": "message.list",
+          "cursor": "page",
+          "limit": "perPage",
+          "since": "dateFrom",
+          "items": "records",
+          "paging": "page"
+        },
+        "get": { "capability": "message.get", "id": "messageId" },
+        "update": { "capability": "message.update", "body": "body" },
+        "create": { "capability": "message.createSms", "body": "body" }
+      }
+    },
+    "callLog": {
+      "label": "Call log record",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "sessionId", "type": "string" },
+        {
+          "name": "startTime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        { "name": "duration", "type": "number" },
+        { "name": "type", "type": "string" },
+        { "name": "direction", "type": "string" },
+        { "name": "action", "type": "string" },
+        { "name": "result", "type": "string" },
+        {
+          "name": "from.phoneNumber",
+          "type": "phone",
+          "tag": "contact.phone"
+        },
+        {
+          "name": "to.phoneNumber",
+          "type": "phone",
+          "tag": "contact.phone"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "callLog.list",
+          "cursor": "page",
+          "limit": "perPage",
+          "since": "dateFrom",
+          "items": "records",
+          "paging": "page"
+        },
+        "get": { "capability": "callLog.get", "id": "callRecordId" }
+      }
+    },
+    "contact": {
+      "label": "Address-book contact",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        {
+          "name": "firstName",
+          "type": "string",
+          "tag": "person.givenName"
+        },
+        {
+          "name": "lastName",
+          "type": "string",
+          "tag": "person.familyName"
+        },
+        {
+          "name": "company",
+          "type": "string",
+          "tag": "organization.name"
+        },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        {
+          "name": "businessPhone",
+          "type": "phone",
+          "tag": "contact.phone"
+        },
+        {
+          "name": "mobilePhone",
+          "type": "phone",
+          "tag": "contact.phone"
+        },
+        { "name": "notes", "type": "text" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "contact.list",
+          "cursor": "page",
+          "limit": "perPage",
+          "items": "records",
+          "paging": "page"
+        },
+        "get": { "capability": "contact.get", "id": "contactId" },
+        "create": { "capability": "contact.create", "body": "body" },
+        "update": { "capability": "contact.update", "body": "body" }
+      }
+    },
+    "subscription": {
+      "label": "Event subscription",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "status", "type": "string" },
+        {
+          "name": "creationTime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "expirationTime",
+          "type": "datetime",
+          "readOnly": true
+        },
+        { "name": "eventFilters", "type": "string[]" },
+        {
+          "name": "deliveryMode.transportType",
+          "type": "string"
+        },
+        {
+          "name": "deliveryMode.address",
+          "type": "string",
+          "tag": "record.url"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "subscription.list",
+          "items": "records"
+        },
+        "get": { "capability": "subscription.get", "id": "subscriptionId" },
+        "create": { "capability": "subscription.create", "body": "body" },
+        "update": { "capability": "subscription.update", "body": "body" },
+        "delete": { "capability": "subscription.delete", "id": "subscriptionId" }
+      }
+    }
+  },
+  "events": {
+    "message.changed": {
+      "delivery": "webhook",
+      "object": "message",
+      "payload": {
+        "uuid": "b11c9430-9687-4498-b12b-3fcb470bfe04",
+        "event": "/restapi/v1.0/account/406149828004/extension/406149828004/message-store",
+        "timestamp": "2014-04-29T14:29:27.408Z",
+        "subscriptionId": "9d38419f-645f-4ee3-a053-8cf1368c21c4",
+        "ownerId": "406149828004",
+        "body": {
+          "accountId": "406149828004",
+          "extensionId": "406149828004",
+          "lastUpdated": "2014-04-29T14:29:20.531Z",
+          "changes": [{ "type": "SMS", "newCount": 1, "updatedCount": 0 }]
+        }
+      },
+      "match": "message-store"
+    },
+    "extension.changed": {
+      "delivery": "webhook",
+      "object": "extension",
+      "payload": {
+        "uuid": "example",
+        "event": "/restapi/v1.0/account/~/extension",
+        "timestamp": "2024-01-01T00:00:00.000Z",
+        "subscriptionId": "sub-id",
+        "body": { "accountId": "406149828004" }
+      },
+      "match": "/extension"
+    }
+  },
+  "webhook": {
+    "scope": "subscription",
+    "account": "{{body.body.accountId || body.ownerId}}",
+    "eventId": "{{body.uuid}}",
+    "topic": "{{body.event}}",
+    "verify": "verifyWebhookSignature",
+    "note": "RingCentral does not HMAC-sign webhook bodies. Set deliveryMode.verificationToken on createSubscription; deliveries carry it as the Verification-Token header. Subscription setup also requires echoing Validation-Token. Api.verifyWebhookSignature compares Verification-Token to RINGCENTRAL_WEBHOOK_VERIFICATION_TOKEN."
+  },
+  "capabilities": {
+    "account.get": {
+      "kind": "read",
+      "method": "readAccountInfo",
+      "input": {
+        "accountId": { "type": "string" }
+      },
+      "output": "account",
+      "args": ["accountId"]
+    },
+    "extension.list": {
+      "kind": "read",
+      "method": "listExtensions",
+      "input": {
+        "accountId": { "type": "string" },
+        "page": { "type": "number" },
+        "perPage": { "type": "number" },
+        "status": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "output": "page<extension>",
+      "args": ["accountId", "$rest"]
+    },
+    "extension.get": {
+      "kind": "read",
+      "method": "readExtension",
+      "input": {
+        "accountId": { "type": "string" },
+        "extensionId": { "type": "string" }
+      },
+      "output": "extension",
+      "args": ["accountId", "extensionId"]
+    },
+    "extension.update": {
+      "kind": "write",
+      "method": "updateExtension",
+      "input": {
+        "accountId": { "type": "string" },
+        "extensionId": { "type": "string" },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "extension",
+      "args": ["accountId", "extensionId", "body"]
+    },
+    "phoneNumber.list": {
+      "kind": "read",
+      "method": "listAccountPhoneNumbers",
+      "input": {
+        "accountId": { "type": "string" },
+        "page": { "type": "number" },
+        "perPage": { "type": "number" }
+      },
+      "output": "page<phoneNumber>",
+      "args": ["accountId", "$rest"]
+    },
+    "message.list": {
+      "kind": "read",
+      "method": "listMessages",
+      "input": {
+        "accountId": { "type": "string" },
+        "extensionId": { "type": "string" },
+        "dateFrom": { "type": "string" },
+        "dateTo": { "type": "string" },
+        "messageType": { "type": "string" },
+        "direction": { "type": "string" },
+        "page": { "type": "number" },
+        "perPage": { "type": "number" }
+      },
+      "output": "page<message>",
+      "args": ["accountId", "extensionId", "$rest"]
+    },
+    "message.get": {
+      "kind": "read",
+      "method": "readMessage",
+      "input": {
+        "accountId": { "type": "string" },
+        "extensionId": { "type": "string" },
+        "messageId": { "type": "string", "required": true }
+      },
+      "output": "message",
+      "args": ["accountId", "extensionId", "messageId"]
+    },
+    "message.update": {
+      "kind": "write",
+      "method": "updateMessage",
+      "input": {
+        "accountId": { "type": "string" },
+        "extensionId": { "type": "string" },
+        "messageId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "message",
+      "args": ["accountId", "extensionId", "messageId", "body"]
+    },
+    "message.createSms": {
+      "kind": "write",
+      "method": "createSMSMessage",
+      "input": {
+        "accountId": { "type": "string" },
+        "extensionId": { "type": "string" },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "message",
+      "args": ["accountId", "extensionId", "body"]
+    },
+    "callLog.list": {
+      "kind": "read",
+      "method": "readUserCallLog",
+      "input": {
+        "accountId": { "type": "string" },
+        "extensionId": { "type": "string" },
+        "dateFrom": { "type": "string" },
+        "dateTo": { "type": "string" },
+        "view": { "type": "string" },
+        "page": { "type": "number" },
+        "perPage": { "type": "number" }
+      },
+      "output": "page<callLog>",
+      "args": ["accountId", "extensionId", "$rest"]
+    },
+    "callLog.get": {
+      "kind": "read",
+      "method": "readUserCallRecord",
+      "input": {
+        "accountId": { "type": "string" },
+        "extensionId": { "type": "string" },
+        "callRecordId": { "type": "string", "required": true }
+      },
+      "output": "callLog",
+      "args": ["accountId", "extensionId", "callRecordId", "$rest"]
+    },
+    "contact.list": {
+      "kind": "read",
+      "method": "listContacts",
+      "input": {
+        "accountId": { "type": "string" },
+        "extensionId": { "type": "string" },
+        "page": { "type": "number" },
+        "perPage": { "type": "number" }
+      },
+      "output": "page<contact>",
+      "args": ["accountId", "extensionId", "$rest"]
+    },
+    "contact.get": {
+      "kind": "read",
+      "method": "readContact",
+      "input": {
+        "accountId": { "type": "string" },
+        "extensionId": { "type": "string" },
+        "contactId": { "type": "string", "required": true }
+      },
+      "output": "contact",
+      "args": ["accountId", "extensionId", "contactId"]
+    },
+    "contact.create": {
+      "kind": "write",
+      "method": "createContact",
+      "input": {
+        "accountId": { "type": "string" },
+        "extensionId": { "type": "string" },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "contact",
+      "args": ["accountId", "extensionId", "body"]
+    },
+    "contact.update": {
+      "kind": "write",
+      "method": "updateContact",
+      "input": {
+        "accountId": { "type": "string" },
+        "extensionId": { "type": "string" },
+        "contactId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "contact",
+      "args": ["accountId", "extensionId", "contactId", "body"]
+    },
+    "subscription.list": {
+      "kind": "read",
+      "method": "listSubscriptions",
+      "input": {},
+      "output": "page<subscription>",
+      "args": ["$rest"]
+    },
+    "subscription.get": {
+      "kind": "read",
+      "method": "readSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "output": "subscription",
+      "args": ["subscriptionId"]
+    },
+    "subscription.create": {
+      "kind": "write",
+      "method": "createSubscription",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "subscription",
+      "args": ["body"]
+    },
+    "subscription.update": {
+      "kind": "write",
+      "method": "updateSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true },
+        "body": { "type": "object" }
+      },
+      "output": "subscription",
+      "args": ["subscriptionId", "body"]
+    },
+    "subscription.delete": {
+      "kind": "write",
+      "method": "deleteSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["subscriptionId"]
+    },
+    "subscription.renew": {
+      "kind": "write",
+      "method": "renewSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "output": "subscription",
+      "args": ["subscriptionId"]
+    }
+  },
+  "options": {
+    "extension": {
+      "capability": "extension.list",
+      "label": "{{item.name}} ({{item.extensionNumber}})",
+      "value": "$.item.id"
+    },
+    "phoneNumber": {
+      "capability": "phoneNumber.list",
+      "label": "{{item.phoneNumber}}",
+      "value": "$.item.id"
+    },
+    "contact": {
+      "capability": "contact.list",
+      "label": "{{item.firstName}} {{item.lastName}}",
+      "value": "$.item.id"
+    }
+  }
+}

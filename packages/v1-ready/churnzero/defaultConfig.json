@@ -1,0 +1,10 @@
+{
+    "name": "churnzero",
+    "label": "ChurnZero",
+    "authType": "basic",
+    "productUrl": "https://churnzero.com",
+    "apiDocs": "https://app.churnzero.net/developers",
+    "logoUrl": "https://churnzero.com/favicon.ico",
+    "categories": ["Customer Success", "Account Health", "Demand Signal"],
+    "description": "ChurnZero REST (OData v4) API module — list/get Accounts, Contacts, ChurnScores, Tasks, Events, Notes, Meetings, Messages, and UserAccounts."
+}

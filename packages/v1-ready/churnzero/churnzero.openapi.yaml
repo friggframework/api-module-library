@@ -1,0 +1,676 @@
+# Generated curated subset of ChurnZero official OAS — do not invent paths.
+openapi: 3.0.4
+info:
+  title: ChurnZero REST API (OData v4 subset)
+  version: 1.0.0
+  description: 'ChurnZero customer-success REST API (OData v4). This is Left Hook''s curated subset of
+    the official OpenAPI at https://app.churnzero.net/developers/churnzero_oas.json covering the endpoints
+    implemented by @friggframework/api-module-churnzero (one method per operationId). Official reference:
+    https://app.churnzero.net/developers. Published OpenAPI is GET-only. Tenant host is personalized;
+    sample server below matches the vendor demo tenant from the published OAS.'
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+- url: https://marketingpony.us1app.churnzero.net/public/v1
+  description: Sample server from ChurnZero's published OpenAPI (trailing slash stripped). Real tenants
+    use https://{tenant}.{region}app.churnzero.net/public/v1 and pass base_url.
+security:
+- BasicAuth: []
+tags:
+- name: Account
+- name: Contact
+- name: UserAccount
+- name: ChurnScore
+- name: ChurnScoreCalculation
+- name: Task
+- name: Event
+- name: Note
+- name: Meeting
+- name: Message
+paths:
+  /Account:
+    get:
+      tags:
+      - Account
+      operationId: listAccounts
+      summary: List accounts
+      parameters:
+      - &id001
+        name: $filter
+        in: query
+        schema:
+          type: string
+        description: OData filter expression.
+      - &id002
+        name: $select
+        in: query
+        schema:
+          type: string
+        description: Comma-separated properties. Custom fields use Cf/{FieldName}.
+      - &id003
+        name: $top
+        in: query
+        schema:
+          type: integer
+        description: Page size.
+      - &id004
+        name: $skip
+        in: query
+        schema:
+          type: integer
+        description: Offset.
+      - &id005
+        name: $orderby
+        in: query
+        schema:
+          type: string
+      - &id006
+        name: $expand
+        in: query
+        schema:
+          type: string
+      - &id007
+        name: $count
+        in: query
+        schema:
+          type: boolean
+      - &id008
+        name: $apply
+        in: query
+        schema:
+          type: string
+      - &id009
+        name: $search
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Account({Id}):
+    get:
+      tags:
+      - Account
+      operationId: getAccount
+      summary: Get account by Id
+      parameters:
+      - name: Id
+        in: path
+        required: true
+        schema:
+          type: string
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Account(AccountExternalId='{AccountExternalId}'):
+    get:
+      tags:
+      - Account
+      operationId: getAccountByExternalId
+      summary: Get account by external id
+      parameters:
+      - name: AccountExternalId
+        in: path
+        required: true
+        schema:
+          type: string
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Account({Id})/PrimaryChurnScore:
+    get:
+      tags:
+      - Account
+      operationId: getAccountPrimaryChurnScore
+      summary: Get account primary churn score
+      parameters:
+      - name: Id
+        in: path
+        required: true
+        schema:
+          type: string
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Contact:
+    get:
+      tags:
+      - Contact
+      operationId: listContacts
+      summary: List contacts
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Contact({Id}):
+    get:
+      tags:
+      - Contact
+      operationId: getContact
+      summary: Get contact by Id
+      parameters:
+      - name: Id
+        in: path
+        required: true
+        schema:
+          type: string
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Contact(AccountExternalId='{AccountExternalId}',ContactExternalId='{ContactExternalId}'):
+    get:
+      tags:
+      - Contact
+      operationId: getContactByExternalId
+      summary: Get contact by account + contact external ids
+      parameters:
+      - name: AccountExternalId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: ContactExternalId
+        in: path
+        required: true
+        schema:
+          type: string
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /UserAccount:
+    get:
+      tags:
+      - UserAccount
+      operationId: listUserAccounts
+      summary: List internal user accounts
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /UserAccount({Id}):
+    get:
+      tags:
+      - UserAccount
+      operationId: getUserAccount
+      summary: Get user account by Id
+      parameters:
+      - name: Id
+        in: path
+        required: true
+        schema:
+          type: string
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /ChurnScore:
+    get:
+      tags:
+      - ChurnScore
+      operationId: listChurnScores
+      summary: List churn score definitions
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /ChurnScore({Id}):
+    get:
+      tags:
+      - ChurnScore
+      operationId: getChurnScore
+      summary: Get churn score definition
+      parameters:
+      - name: Id
+        in: path
+        required: true
+        schema:
+          type: string
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /ChurnScoreCalculation:
+    get:
+      tags:
+      - ChurnScoreCalculation
+      operationId: listChurnScoreCalculations
+      summary: List churn score calculations
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /ChurnScoreCalculation({Id}):
+    get:
+      tags:
+      - ChurnScoreCalculation
+      operationId: getChurnScoreCalculation
+      summary: Get churn score calculation
+      parameters:
+      - name: Id
+        in: path
+        required: true
+        schema:
+          type: string
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Task:
+    get:
+      tags:
+      - Task
+      operationId: listTasks
+      summary: List tasks
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Task({Id}):
+    get:
+      tags:
+      - Task
+      operationId: getTask
+      summary: Get task by Id
+      parameters:
+      - name: Id
+        in: path
+        required: true
+        schema:
+          type: string
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Event:
+    get:
+      tags:
+      - Event
+      operationId: listEvents
+      summary: List events
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Event({Id}):
+    get:
+      tags:
+      - Event
+      operationId: getEvent
+      summary: Get event by Id
+      parameters:
+      - name: Id
+        in: path
+        required: true
+        schema:
+          type: string
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Note:
+    get:
+      tags:
+      - Note
+      operationId: listNotes
+      summary: List notes
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Note({Id}):
+    get:
+      tags:
+      - Note
+      operationId: getNote
+      summary: Get note by Id
+      parameters:
+      - name: Id
+        in: path
+        required: true
+        schema:
+          type: string
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Meeting:
+    get:
+      tags:
+      - Meeting
+      operationId: listMeetings
+      summary: List meetings
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Meeting({Id}):
+    get:
+      tags:
+      - Meeting
+      operationId: getMeeting
+      summary: Get meeting by Id
+      parameters:
+      - name: Id
+        in: path
+        required: true
+        schema:
+          type: string
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Message:
+    get:
+      tags:
+      - Message
+      operationId: listMessages
+      summary: List messages
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+  /Message({Id}):
+    get:
+      tags:
+      - Message
+      operationId: getMessage
+      summary: Get message by Id
+      parameters:
+      - name: Id
+        in: path
+        required: true
+        schema:
+          type: string
+      - *id001
+      - *id002
+      - *id003
+      - *id004
+      - *id005
+      - *id006
+      - *id007
+      - *id008
+      - *id009
+      responses:
+        '200':
+          description: 'OData success (entity or { value: [...] })'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited (>200 req/min)
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: 'HTTP Basic: ChurnZero username + user API Key (password).'

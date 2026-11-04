@@ -1,0 +1,438 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "fastspring-iq",
+  "label": "FastSpring IQ",
+  "package": "@friggframework/api-module-fastspring-iq",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Organization for the connected api_key (GET /my-organization).",
+    "fields": [
+      {
+        "name": "id",
+        "type": "id",
+        "description": "FastSpring IQ organization id",
+        "readOnly": true
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "tag": "organization.name"
+      }
+    ]
+  },
+  "objects": {
+    "quote": {
+      "label": "Quote",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "title", "type": "string", "tag": "record.displayName" },
+        { "name": "status", "type": "string" },
+        { "name": "organizationId", "type": "string", "readOnly": true },
+        { "name": "clientId", "type": "string" },
+        { "name": "clientName", "type": "string", "tag": "organization.name" },
+        { "name": "currency", "type": "string" },
+        { "name": "ownerEmail", "type": "email", "tag": "contact.email" },
+        { "name": "ownerName", "type": "string", "tag": "person.displayName" },
+        { "name": "url", "type": "string" },
+        { "name": "publishedId", "type": "string" },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updatedAt",
+        "list": {
+          "capability": "quote.list",
+          "items": "$",
+          "paging": "none"
+        },
+        "get": {
+          "capability": "quote.get",
+          "id": "quoteId"
+        },
+        "create": {
+          "capability": "quote.create",
+          "body": "data"
+        }
+      }
+    },
+    "company": {
+      "label": "Company",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name", "required": true },
+        { "name": "website", "type": "string", "tag": "organization.website" },
+        { "name": "address", "type": "string", "tag": "address.full" },
+        { "name": "sourceType", "type": "string" },
+        { "name": "sourceId", "type": "string", "tag": "record.externalId" },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updatedAt",
+        "list": { "capability": "company.list", "items": "$", "paging": "none" },
+        "get": { "capability": "company.get", "id": "companyId" },
+        "create": { "capability": "company.create", "body": "data" }
+      }
+    },
+    "contact": {
+      "label": "Contact",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "companyId", "type": "string", "required": true },
+        { "name": "firstName", "type": "string", "tag": "person.givenName" },
+        { "name": "lastName", "type": "string", "tag": "person.familyName" },
+        { "name": "email", "type": "email", "tag": "contact.email", "required": true },
+        { "name": "phone", "type": "phone", "tag": "contact.phone" },
+        { "name": "sourceType", "type": "string" },
+        { "name": "sourceId", "type": "string", "tag": "record.externalId" },
+        { "name": "sourceLink", "type": "string" },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updatedAt",
+        "list": { "capability": "contact.list", "items": "$", "paging": "none" },
+        "get": { "capability": "contact.get", "id": "contactId" },
+        "create": { "capability": "contact.create", "body": "data" }
+      }
+    },
+    "activity": {
+      "label": "Activity",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "quoteId", "type": "string" },
+        { "name": "organizationId", "type": "string", "readOnly": true },
+        { "name": "type", "type": "string" },
+        { "name": "message", "type": "text" },
+        { "name": "userName", "type": "string", "tag": "person.displayName" },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ]
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "url", "type": "string", "required": true },
+        { "name": "topic", "type": "string", "required": true },
+        { "name": "method", "type": "string" },
+        { "name": "active", "type": "boolean" },
+        { "name": "headers", "type": "json" },
+        { "name": "filters", "type": "json" },
+        { "name": "createdAt", "type": "datetime", "readOnly": true },
+        { "name": "updatedAt", "type": "datetime", "readOnly": true }
+      ]
+    },
+    "template": {
+      "label": "Quote template",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "title", "type": "string", "tag": "record.displayName" },
+        { "name": "isActive", "type": "boolean" }
+      ]
+    },
+    "publishedQuote": {
+      "label": "Published quote",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "title", "type": "string", "tag": "record.displayName" },
+        { "name": "status", "type": "string" },
+        { "name": "url", "type": "string" }
+      ]
+    }
+  },
+  "events": {
+    "quotes.create": {
+      "delivery": "webhook",
+      "object": "quote",
+      "description": "Subscribe via POST /webhooks with topic quotes/create (or quotes/* / */*).",
+      "match": "quotes/create"
+    },
+    "quotes.update": {
+      "delivery": "webhook",
+      "object": "quote",
+      "match": "quotes/update"
+    },
+    "quotes.delete": {
+      "delivery": "webhook",
+      "object": "quote",
+      "match": "quotes/delete"
+    },
+    "activities.create": {
+      "delivery": "webhook",
+      "object": "activity",
+      "match": "activities/create"
+    },
+    "published-quotes.create": {
+      "delivery": "webhook",
+      "object": "publishedQuote",
+      "match": "published-quotes/create"
+    },
+    "published-quotes.update": {
+      "delivery": "webhook",
+      "object": "publishedQuote",
+      "match": "published-quotes/update"
+    },
+    "published-quotes.delete": {
+      "delivery": "webhook",
+      "object": "publishedQuote",
+      "match": "published-quotes/delete"
+    }
+  },
+  "webhook": {
+    "scope": "organization",
+    "subscribe": "createWebhook",
+    "list": "listWebhooks",
+    "get": "getWebhook",
+    "update": "updateWebhook",
+    "unsubscribe": "deleteWebhook",
+    "topics": [
+      "*/*",
+      "quotes/*",
+      "quotes/create",
+      "quotes/update",
+      "quotes/delete",
+      "published-quotes/*",
+      "published-quotes/create",
+      "published-quotes/update",
+      "published-quotes/delete",
+      "activities/*",
+      "activities/create"
+    ],
+    "note": "Webhooks are managed via the FastSpring IQ REST API. Optional custom headers (e.g. x-secret) can be set on the subscription; no platform HMAC signature scheme is documented for IQ (unlike the main FastSpring commerce webhooks X-FS-Signature)."
+  },
+  "capabilities": {
+    "organization.get": {
+      "kind": "read",
+      "method": "getMyOrganization",
+      "output": "organization"
+    },
+    "auth.rotateApiKey": {
+      "kind": "write",
+      "method": "rotateApiKey",
+      "output": "organization"
+    },
+    "quote.list": {
+      "kind": "read",
+      "method": "listQuotes",
+      "input": { "includes": { "type": "string" } },
+      "output": "quote[]",
+      "args": ["$rest"]
+    },
+    "quote.search": {
+      "kind": "search",
+      "method": "searchQuotes",
+      "input": {
+        "query": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "companyId": { "type": "string" }
+      },
+      "output": "quote[]",
+      "args": ["$rest"]
+    },
+    "quote.get": {
+      "kind": "read",
+      "method": "getQuote",
+      "input": { "quoteId": { "type": "string", "required": true } },
+      "output": "quote",
+      "args": ["quoteId"]
+    },
+    "quote.getBreakdown": {
+      "kind": "read",
+      "method": "getQuoteBreakdown",
+      "input": {
+        "quoteId": { "type": "string", "required": true },
+        "asHtml": { "type": "boolean" }
+      },
+      "args": ["quoteId", "$rest"]
+    },
+    "quote.create": {
+      "kind": "write",
+      "method": "createQuote",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "quote",
+      "args": ["data"]
+    },
+    "quote.update": {
+      "kind": "write",
+      "method": "updateQuote",
+      "input": {
+        "quoteId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "quote",
+      "args": ["quoteId", "data"]
+    },
+    "quote.copy": {
+      "kind": "write",
+      "method": "copyQuote",
+      "input": {
+        "sourceQuoteId": { "type": "string", "required": true },
+        "data": { "type": "object" }
+      },
+      "output": "quote",
+      "args": ["sourceQuoteId", "data"]
+    },
+    "quote.setClosedWon": {
+      "kind": "write",
+      "method": "setQuoteClosedWon",
+      "args": ["quoteId", "data"]
+    },
+    "quote.setClosedLost": {
+      "kind": "write",
+      "method": "setQuoteClosedLost",
+      "args": ["quoteId", "data"]
+    },
+    "quote.publish": {
+      "kind": "write",
+      "method": "publishQuote",
+      "args": ["quoteId", "data"]
+    },
+    "quote.unpublish": {
+      "kind": "write",
+      "method": "unpublishQuote",
+      "args": ["quoteId", "data"]
+    },
+    "publishedQuote.list": {
+      "kind": "read",
+      "method": "listPublishedQuotes",
+      "output": "publishedQuote[]",
+      "args": ["$rest"]
+    },
+    "publishedQuote.get": {
+      "kind": "read",
+      "method": "getPublishedQuote",
+      "args": ["quoteId"]
+    },
+    "publishedQuote.getAnalytics": {
+      "kind": "read",
+      "method": "getPublishedQuoteAnalytics",
+      "args": ["publishedQuoteId"]
+    },
+    "publishedQuote.getBreakdown": {
+      "kind": "read",
+      "method": "getPublishedQuoteBreakdown",
+      "args": ["quoteId", "$rest"]
+    },
+    "template.list": {
+      "kind": "read",
+      "method": "listTemplates",
+      "output": "template[]",
+      "args": ["$rest"]
+    },
+    "template.search": {
+      "kind": "search",
+      "method": "searchTemplates",
+      "args": ["$rest"]
+    },
+    "template.get": {
+      "kind": "read",
+      "method": "getTemplate",
+      "args": ["templateId"]
+    },
+    "template.create": {
+      "kind": "write",
+      "method": "createTemplate",
+      "args": ["data"]
+    },
+    "template.update": {
+      "kind": "write",
+      "method": "updateTemplate",
+      "args": ["templateId", "data"]
+    },
+    "company.list": {
+      "kind": "read",
+      "method": "listCompanies",
+      "output": "company[]",
+      "args": ["$rest"]
+    },
+    "company.get": {
+      "kind": "read",
+      "method": "getCompany",
+      "args": ["companyId"]
+    },
+    "company.create": {
+      "kind": "write",
+      "method": "createCompany",
+      "args": ["data"]
+    },
+    "company.update": {
+      "kind": "write",
+      "method": "updateCompany",
+      "args": ["companyId", "data"]
+    },
+    "contact.list": {
+      "kind": "read",
+      "method": "listContacts",
+      "input": { "companyId": { "type": "string" } },
+      "output": "contact[]",
+      "args": ["$rest"]
+    },
+    "contact.get": {
+      "kind": "read",
+      "method": "getContact",
+      "args": ["contactId"]
+    },
+    "contact.create": {
+      "kind": "write",
+      "method": "createContact",
+      "args": ["data"]
+    },
+    "contact.update": {
+      "kind": "write",
+      "method": "updateContact",
+      "args": ["contactId", "data"]
+    },
+    "contact.delete": {
+      "kind": "write",
+      "method": "deleteContact",
+      "args": ["contactId"]
+    },
+    "activity.list": {
+      "kind": "read",
+      "method": "listActivities",
+      "output": "activity[]",
+      "args": ["$rest"]
+    },
+    "activity.get": {
+      "kind": "read",
+      "method": "getActivity",
+      "args": ["activityId"]
+    },
+    "activity.create": {
+      "kind": "write",
+      "method": "createActivity",
+      "args": ["data"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "output": "webhook[]",
+      "args": ["$rest"]
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "args": ["webhookId"]
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhook",
+      "args": ["data"]
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhook",
+      "args": ["webhookId", "data"]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhook",
+      "args": ["webhookId"]
+    }
+  }
+}

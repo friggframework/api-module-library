@@ -1,0 +1,254 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "bamboohr",
+  "label": "BambooHR",
+  "package": "@friggframework/api-module-bamboohr",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "objects": {
+    "company": {
+      "label": "Company",
+      "fields": [
+        { "name": "domain", "type": "string", "tag": "org.id", "readOnly": true },
+        { "name": "displayName", "type": "string", "tag": "org.name" },
+        { "name": "legalName", "type": "string", "tag": "org.legalName" },
+        { "name": "phone", "type": "string", "tag": "org.phone" },
+        { "name": "timezone", "type": "string", "tag": "org.timezone" }
+      ]
+    },
+    "employee": {
+      "label": "Employee",
+      "fields": [
+        { "name": "id", "type": "id", "tag": "person.id", "readOnly": true },
+        { "name": "employeeNumber", "type": "string", "tag": "record.displayId" },
+        { "name": "firstName", "type": "string", "tag": "person.firstName" },
+        { "name": "lastName", "type": "string", "tag": "person.lastName" },
+        { "name": "preferredName", "type": "string", "tag": "person.preferredName" },
+        { "name": "workEmail", "type": "email", "tag": "person.email" },
+        { "name": "jobTitleName", "type": "string", "tag": "person.title" },
+        { "name": "status", "type": "string", "tag": "person.status" },
+        { "name": "department", "type": "string", "tag": "person.department" },
+        { "name": "location", "type": "string", "tag": "person.location" },
+        { "name": "hireDate", "type": "date", "tag": "person.hireDate" },
+        { "name": "workPhone", "type": "string", "tag": "person.phone" },
+        { "name": "mobilePhone", "type": "string", "tag": "person.mobile" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "employee.get", "id": "id" },
+        "create": { "capability": "employee.create" },
+        "update": { "capability": "employee.update", "id": "id", "body": "data" },
+        "list": { "capability": "employee.list" },
+        "changed": { "capability": "employee.changed", "since": "since" }
+      }
+    },
+    "field": {
+      "label": "Employee field metadata",
+      "fields": [
+        { "name": "id", "type": "string", "readOnly": true },
+        { "name": "name", "type": "string", "readOnly": true },
+        { "name": "type", "type": "string", "readOnly": true },
+        { "name": "alias", "type": "string", "readOnly": true }
+      ]
+    },
+    "webhook": {
+      "label": "Permissioned webhook",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" },
+        { "name": "url", "type": "string", "tag": "webhook.url" },
+        { "name": "format", "type": "string" },
+        { "name": "created", "type": "datetime", "readOnly": true },
+        { "name": "lastSent", "type": "datetime", "readOnly": true },
+        { "name": "privateKey", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "webhook.get", "id": "id" },
+        "create": { "capability": "webhook.create" },
+        "update": { "capability": "webhook.update", "id": "id", "body": "data" },
+        "list": { "capability": "webhook.list" },
+        "delete": { "capability": "webhook.delete", "id": "id" }
+      }
+    }
+  },
+  "events": {
+    "employee.created": {
+      "delivery": "webhook",
+      "object": "employee",
+      "description": "Permissioned webhook event employee.created (and field-based employee_with_fields.created). Payload identifies employeeId / employees[].id.",
+      "payload": {
+        "type": "employee.created",
+        "timestamp": "2025-02-18T15:30:00Z",
+        "data": {
+          "companyId": "12345",
+          "employeeId": "42"
+        }
+      }
+    },
+    "employee.updated": {
+      "delivery": "webhook",
+      "object": "employee",
+      "description": "Permissioned webhook event employee.updated (and field-based employee_with_fields.updated).",
+      "payload": {
+        "type": "employee.updated",
+        "timestamp": "2025-02-18T15:30:00Z",
+        "data": {
+          "companyId": "12345",
+          "employeeId": "42"
+        }
+      }
+    },
+    "employee.deleted": {
+      "delivery": "webhook",
+      "object": "employee",
+      "description": "Permissioned webhook event employee.deleted (and field-based employee_with_fields.deleted).",
+      "payload": {
+        "type": "employee.deleted",
+        "timestamp": "2025-02-18T15:30:00Z",
+        "data": {
+          "companyId": "12345",
+          "employeeId": "42"
+        }
+      }
+    }
+  },
+  "webhook": {
+    "scope": "company",
+    "verify": {
+      "headers": ["X-BambooHR-Signature", "X-BambooHR-Timestamp"],
+      "algorithm": "HMAC-SHA256",
+      "material": "rawBody + timestamp",
+      "method": "verifyBambooHRWebhookSignature"
+    },
+    "subscribe": {
+      "create": "webhook.create",
+      "update": "webhook.update",
+      "delete": "webhook.delete",
+      "list": "webhook.list",
+      "monitorFields": "webhook.listMonitorFields"
+    },
+    "resolveKey": ["companyDomain", "data.companyId"]
+  },
+  "capabilities": {
+    "company.get": {
+      "kind": "read",
+      "method": "getCompanyInformation",
+      "input": {},
+      "output": "company"
+    },
+    "employee.list": {
+      "kind": "read",
+      "method": "listEmployees",
+      "input": {
+        "filter": { "type": "object" },
+        "sort": { "type": "object" },
+        "fields": { "type": "string" },
+        "page": { "type": "object" }
+      },
+      "output": "page<employee>"
+    },
+    "employee.get": {
+      "kind": "read",
+      "method": "getEmployee",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "fields": { "type": "string" },
+        "onlyCurrent": { "type": "boolean" }
+      },
+      "output": "employee",
+      "args": ["id", "params"]
+    },
+    "employee.create": {
+      "kind": "write",
+      "method": "createEmployee",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "employee",
+      "args": ["data"]
+    },
+    "employee.update": {
+      "kind": "write",
+      "method": "updateEmployee",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "employee",
+      "args": ["id", "data"]
+    },
+    "employee.directory": {
+      "kind": "read",
+      "method": "getEmployeesDirectory",
+      "input": {
+        "onlyCurrent": { "type": "boolean" }
+      },
+      "output": "directory"
+    },
+    "employee.changed": {
+      "kind": "read",
+      "method": "getChangedEmployeeIds",
+      "input": {
+        "since": { "type": "string", "required": true },
+        "type": { "type": "string" }
+      },
+      "output": "changedIds"
+    },
+    "field.list": {
+      "kind": "read",
+      "method": "listFields",
+      "input": {},
+      "output": "field[]"
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "input": {},
+      "output": "webhook[]"
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "webhook",
+      "args": ["id"]
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhook",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["data"]
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhook",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["id", "data"]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhook",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "webhook.listMonitorFields": {
+      "kind": "read",
+      "method": "listMonitorFields",
+      "input": {},
+      "output": "field[]"
+    }
+  }
+}

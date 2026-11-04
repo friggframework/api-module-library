@@ -1,0 +1,438 @@
+openapi: 3.0.3
+info:
+  title: BambooHR Public API (curated)
+  version: "1.0.0"
+  description: >-
+    BambooHR is an HRIS platform. This file is Left Hook's curated subset of the
+    official BambooHR OpenAPI covering exactly the endpoints the
+    @friggframework/api-module-bamboohr client in api.js implements. It is the
+    source of truth the hand-written client mirrors 1:1 (one method per
+    operationId). Official vendor OpenAPI:
+    https://openapi.bamboohr.io/main/latest/docs/openapi/public-openapi.yaml
+    Docs: https://documentation.bamboohr.com/
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://{companyDomain}.bamboohr.com/api/v1
+    description: >-
+      BambooHR company-scoped API (JSON). Always send Accept
+      application/json (otherwise many endpoints default to XML).
+    variables:
+      companyDomain:
+        default: companySubDomain
+        description: >-
+          Subdomain used to access BambooHR. If you log in at
+          https://mycompany.bamboohr.com, companyDomain is "mycompany".
+security:
+  - BasicAuth: []
+tags:
+  - name: Company
+  - name: Employees
+  - name: Fields
+  - name: Webhooks
+paths:
+  /company_information:
+    get:
+      tags: [Company]
+      operationId: getCompanyInformation
+      summary: Get Company Information
+      description: >-
+        Returns legal name, display name, address, phone, BambooHR subdomain
+        (`domain`), and timezone. Official operationId: get-company-information.
+        Supports Basic auth and OAuth scope company:info.
+      responses:
+        "200":
+          description: Company information retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanyInformation"
+        "401":
+          description: Unauthorized.
+
+  /employees:
+    get:
+      tags: [Employees]
+      operationId: listEmployees
+      summary: List Employees
+      description: >-
+        Cursor-paginated employee roster. Official operationId: list-employees.
+        Response: { data, meta, _links }.
+      parameters:
+        - in: query
+          name: filter
+          schema: { type: object }
+          description: Filter object (see official list-employees docs).
+        - in: query
+          name: sort
+          schema: { type: object }
+          description: Sort object.
+        - in: query
+          name: fields
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items: { type: string }
+          description: Additional field aliases to include beyond the base set.
+        - in: query
+          name: page
+          schema: { type: object }
+          description: Cursor pagination page object.
+      responses:
+        "200":
+          description: Paginated list of employees.
+        "401":
+          description: Unauthorized.
+    post:
+      tags: [Employees]
+      operationId: createEmployee
+      summary: Create Employee
+      description: >-
+        Create a new employee. At minimum provide firstName and lastName.
+        Official operationId: create-employee. Body keys are field aliases from
+        listFields().
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+      responses:
+        "201":
+          description: Employee created (Location header may carry the new resource URL).
+        "400":
+          description: Invalid request.
+        "401":
+          description: Unauthorized.
+
+  /employees/{id}:
+    parameters:
+      - $ref: "#/components/parameters/EmployeeId"
+    get:
+      tags: [Employees]
+      operationId: getEmployee
+      summary: Get Employee
+      description: >-
+        Returns a single employee. `id` is always present (string). Pass id `0`
+        for the authenticated caller's own record. Official operationId:
+        get-employee. Request fields via the `fields` query parameter.
+      parameters:
+        - in: query
+          name: fields
+          schema: { type: string }
+          description: Comma-separated field aliases to include.
+        - in: query
+          name: onlyCurrent
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Employee object keyed by field alias.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        "401":
+          description: Unauthorized.
+        "403":
+          description: Forbidden.
+        "404":
+          description: Employee not found.
+    post:
+      tags: [Employees]
+      operationId: updateEmployee
+      summary: Update Employee
+      description: >-
+        Update employee fields via POST (not PATCH). Official operationId:
+        update-employee. Unknown field aliases are silently ignored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Employee updated.
+        "400":
+          description: Invalid request.
+        "401":
+          description: Unauthorized.
+        "403":
+          description: Forbidden.
+        "404":
+          description: Employee not found.
+
+  /employees/directory:
+    get:
+      tags: [Employees]
+      operationId: getEmployeesDirectory
+      summary: Get Employees Directory
+      description: >-
+        Published company directory ({ fields, employees }). Not a full roster —
+        inactive and excluded employees are omitted. Official operationId:
+        get-employees-directory.
+      parameters:
+        - in: query
+          name: onlyCurrent
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Directory fieldset plus employees.
+        "401":
+          description: Unauthorized.
+        "403":
+          description: Directory disabled for this account.
+
+  /employees/changed:
+    get:
+      tags: [Employees]
+      operationId: getChangedEmployeeIds
+      summary: Get Changed Employee IDs
+      description: >-
+        Employee IDs changed since the given timestamp. Official operationId:
+        get-changed-employee-ids.
+      parameters:
+        - in: query
+          name: since
+          required: true
+          schema: { type: string, format: date-time }
+          description: Only return employees changed at/after this timestamp.
+        - in: query
+          name: type
+          schema: { type: string }
+      responses:
+        "200":
+          description: Changed employee IDs.
+        "401":
+          description: Unauthorized.
+
+  /meta/fields:
+    get:
+      tags: [Fields]
+      operationId: listFields
+      summary: List Fields
+      description: >-
+        All employee fields available in the account (id, name, type, alias).
+        Official operationId: list-fields.
+      responses:
+        "200":
+          description: Field list.
+        "401":
+          description: Unauthorized.
+
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List Webhooks
+      description: >-
+        Permissioned webhooks for the authenticated user. Official operationId:
+        list-webhooks.
+      responses:
+        "200":
+          description: Webhook list.
+        "401":
+          description: Unauthorized.
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create Webhook
+      description: >-
+        Creates a permissioned webhook. Response includes `privateKey` once —
+        store it to verify X-BambooHR-Signature. Official operationId:
+        create-webhook. Required: name, url (https), format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewWebHook"
+      responses:
+        "201":
+          description: Webhook created (includes privateKey).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webhook"
+        "400":
+          description: Malformed body or missing required fields.
+        "401":
+          description: Unauthorized.
+        "403":
+          description: Field permission violation.
+
+  /webhooks/{id}:
+    parameters:
+      - $ref: "#/components/parameters/WebhookId"
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Get Webhook
+      description: Official operationId get-webhook.
+      responses:
+        "200":
+          description: Webhook.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webhook"
+        "401":
+          description: Unauthorized.
+        "404":
+          description: Not found.
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update Webhook
+      description: Official operationId update-webhook.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewWebHook"
+      responses:
+        "200":
+          description: Webhook updated.
+        "400":
+          description: Bad request.
+        "401":
+          description: Unauthorized.
+        "404":
+          description: Not found.
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete Webhook
+      description: Official operationId delete-webhook.
+      responses:
+        "200":
+          description: Deleted.
+        "401":
+          description: Unauthorized.
+        "404":
+          description: Not found.
+
+  /webhooks/monitor_fields:
+    get:
+      tags: [Webhooks]
+      operationId: listMonitorFields
+      summary: List Monitor Fields
+      description: >-
+        Employee fields that can be monitored by a webhook (for monitorFields).
+        Official operationId: list-monitor-fields.
+      responses:
+        "200":
+          description: Monitorable fields.
+        "401":
+          description: Unauthorized.
+        "403":
+          description: No webhook permission.
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: >-
+        API key as username, any string as password (docs use "x").
+        Equivalent to curl -u "{API Key}:x".
+  parameters:
+    EmployeeId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+      description: >-
+        Internal employee ID (string). The special id `0` means the employee
+        associated with the API key / authenticated caller.
+    WebhookId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+      description: Webhook id.
+  schemas:
+    CompanyInformation:
+      type: object
+      properties:
+        legalName: { type: string }
+        displayName: { type: string }
+        phone: { type: string }
+        domain:
+          type: string
+          description: BambooHR subdomain.
+        timezone: { type: string }
+        address:
+          type: object
+          properties:
+            line1: { type: string }
+            line2: { type: string }
+            city: { type: string }
+            state: { type: string }
+            zip: { type: string }
+    Employee:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          description: Internal employee ID.
+        employeeNumber: { type: string, nullable: true }
+        firstName: { type: string, nullable: true }
+        lastName: { type: string, nullable: true }
+        preferredName: { type: string, nullable: true }
+        workEmail: { type: string, nullable: true }
+        jobTitleName: { type: string, nullable: true }
+        status: { type: string, nullable: true }
+        department: { type: string, nullable: true }
+        location: { type: string, nullable: true }
+        hireDate: { type: string, nullable: true }
+      additionalProperties: true
+    NewWebHook:
+      type: object
+      required: [name, url, format]
+      properties:
+        name: { type: string }
+        url:
+          type: string
+          description: Must begin with https://.
+        format:
+          type: string
+          enum: [json, form-encoded]
+        monitorFields:
+          type: array
+          items: { type: string }
+        postFields:
+          type: object
+          additionalProperties: { type: string }
+        includeCompanyDomain: { type: boolean }
+        events:
+          type: array
+          items: { type: string }
+    Webhook:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        created: { type: string }
+        lastSent: { type: string, nullable: true }
+        url: { type: string }
+        format: { type: string }
+        privateKey:
+          type: string
+          description: Returned only on create; used for HMAC-SHA256 verification.
+        includeCompanyDomain: { type: boolean }
+        monitorFields:
+          type: array
+          items: { type: string }
+        events:
+          type: array
+          items: { type: string }

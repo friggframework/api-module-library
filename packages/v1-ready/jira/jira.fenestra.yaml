@@ -1,0 +1,221 @@
+# Fenestra Document: Atlassian Forge UI for Jira Cloud
+#
+# Jira is listed in specs/fenestra/PLATFORMS.md (Productivity) with
+# "Iframe + Coded" extension types via Forge / Connect. Connect publishing
+# is ending; new UI uses Forge UI Kit. Draft only — validate with
+# specs/fenestra/tools/bin/fenestra.js validate.
+
+fenestra: "0.1.0"
+
+info:
+  title: Jira Cloud Forge UI Ecosystem
+  version: "1.0.0"
+  description: |
+    Atlassian Forge lets developers build apps that extend Jira Cloud with
+    issue panels, project pages, admin pages, custom fields, and other modules.
+    UI is coded with Forge UI Kit (React-like declarative components) or Custom
+    UI (iframe + bridge). Marketplace distribution is via Atlassian Marketplace.
+
+    Sources:
+      https://developer.atlassian.com/platform/forge/
+      https://developer.atlassian.com/platform/forge/ui-kit/
+      https://developer.atlassian.com/platform/forge/manifest-reference/modules/jira/
+      https://developer.atlassian.com/cloud/jira/platform/
+
+platform:
+  name: Jira Cloud
+  vendor: Atlassian
+  documentation: https://developer.atlassian.com/cloud/jira/platform/
+  appMarketplace: https://marketplace.atlassian.com
+
+sdks:
+  forge-ui-kit:
+    name: Forge UI Kit
+    packageManager: npm
+    package: "@forge/react"
+    documentation: https://developer.atlassian.com/platform/forge/ui-kit/
+    description: |
+      Declarative React components for Forge Custom UI / UI Kit 2 surfaces
+      inside Jira modules (issue panels, project pages, etc.).
+    exports:
+      Text:
+        type: component
+        description: Text display
+      Heading:
+        type: component
+        description: Section heading
+      Button:
+        type: component
+        description: Primary action button
+      ButtonGroup:
+        type: component
+        description: Group of buttons
+      Form:
+        type: component
+        description: Form container
+      TextField:
+        type: component
+        description: Text input
+      TextArea:
+        type: component
+        description: Multi-line text input
+      Select:
+        type: component
+        description: Select / dropdown
+      Checkbox:
+        type: component
+        description: Checkbox input
+      Toggle:
+        type: component
+        description: Toggle switch
+      Table:
+        type: component
+        description: Data table
+      Badge:
+        type: component
+        description: Status badge
+      Lozenge:
+        type: component
+        description: Status lozenge
+      SectionMessage:
+        type: component
+        description: Inline message / alert
+      Spinner:
+        type: component
+        description: Loading indicator
+      Modal:
+        type: component
+        description: Modal dialog
+      Tabs:
+        type: component
+        description: Tab navigation
+      Stack:
+        type: component
+        description: Vertical stack layout
+      Inline:
+        type: component
+        description: Horizontal layout
+
+  forge-bridge:
+    name: Forge Bridge
+    packageManager: npm
+    package: "@forge/bridge"
+    documentation: https://developer.atlassian.com/platform/forge/custom-ui-bridge/
+    exports:
+      invoke:
+        type: utility
+        description: Call a Forge resolver from Custom UI
+      requestJira:
+        type: utility
+        description: Call Jira REST APIs as the signed-in user
+      router:
+        type: utility
+        description: Navigate within the host product
+      view:
+        type: utility
+        description: Close/resize/get context for the current view
+
+componentCatalog:
+  categories:
+    action:
+      name: Actions
+      description: Interactive elements
+      components: [Button, ButtonGroup]
+    input:
+      name: Inputs
+      description: Form controls
+      components: [TextField, TextArea, Select, Checkbox, Toggle, Form]
+    display:
+      name: Display
+      description: Content and data display
+      components: [Heading, Text, Table, Badge, Lozenge]
+    feedback:
+      name: Feedback
+      description: Loading and messages
+      components: [Spinner, SectionMessage]
+    overlay:
+      name: Overlays
+      description: Dialogs
+      components: [Modal]
+    layout:
+      name: Layout
+      description: Layout primitives
+      components: [Stack, Inline, Tabs]
+
+  components:
+    Button:
+      name: Button
+      description: Forge UI Kit button
+      category: action
+      sdkBinding:
+        sdk: forge-ui-kit
+        export: Button
+      webStandardMapping:
+        htmlElement: button
+        ariaRole: button
+        semanticType: action
+    TextField:
+      name: TextField
+      description: Forge UI Kit text input
+      category: input
+      sdkBinding:
+        sdk: forge-ui-kit
+        export: TextField
+      webStandardMapping:
+        htmlElement: input
+        semanticType: input
+    Modal:
+      name: Modal
+      description: Forge UI Kit modal
+      category: overlay
+      sdkBinding:
+        sdk: forge-ui-kit
+        export: Modal
+      webStandardMapping:
+        htmlElement: dialog
+        ariaRole: dialog
+        semanticType: container
+
+policies:
+  componentRequirement:
+    level: recommended
+    scope: all
+    description: >
+      Forge UI Kit components are recommended for native Jira look; Custom UI
+      iframes may use other React stacks with @forge/bridge.
+  customComponents:
+    allowed: true
+
+extensionPoints:
+  - id: jira-issue-panel
+    name: Issue panel
+    type: panel
+    extensionType: codedComponents
+    description: >
+      Content panel on the issue view.
+      https://developer.atlassian.com/platform/forge/manifest-reference/modules/jira-issue-panel/
+  - id: jira-issue-glance
+    name: Issue glance
+    type: panel
+    extensionType: codedComponents
+    description: Collapsible glance on the issue view sidebar.
+  - id: jira-issue-action
+    name: Issue action
+    type: contextMenu
+    extensionType: codedComponents
+    description: Action in the issue ••• menu.
+  - id: jira-project-page
+    name: Project page
+    type: fullPage
+    extensionType: codedComponents
+    description: Full page under a Jira project.
+  - id: jira-admin-page
+    name: Admin page
+    type: fullPage
+    extensionType: codedComponents
+    description: App configuration under Jira admin.
+  - id: jira-custom-field-type
+    name: Custom field type
+    type: embedded
+    extensionType: codedComponents
+    description: Custom field rendered with Forge UI (embedded in issue create/view).

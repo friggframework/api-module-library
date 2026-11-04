@@ -1,0 +1,779 @@
+openapi: 3.0.3
+info:
+  title: Jira Cloud platform REST API (Frigg subset)
+  version: "3"
+  description: >-
+    Curated subset of the official Jira Cloud platform REST API v3. Every
+    operationId, path (relative to `/rest/api/3`), HTTP method, and OAuth classic
+    scope is taken from the vendor OpenAPI at
+    https://developer.atlassian.com/cloud/jira/platform/swagger-v3.v3.json
+
+    Server URL note: the vendor swagger lists `https://your-domain.atlassian.net`
+    with paths under `/rest/api/3/...` (Basic auth / Connect). For OAuth 2.0 (3LO)
+    apps Atlassian requires
+    `https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/...`
+    (see https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/
+    and the REST intro). This module targets 3LO, so `servers[0].url` is the
+    OAuth gateway and path items are the suffix after `/rest/api/3`.
+
+    `offline_access` is an Atlassian authorization-server scope for refresh
+    tokens (3LO docs); it is NOT listed in the Jira REST swagger OAuth2 scopes
+    and is therefore omitted from `components.securitySchemes` here.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3
+    description: >-
+      OAuth 2.0 (3LO) gateway equivalent of vendor
+      `https://your-domain.atlassian.net/rest/api/3`
+    variables:
+      cloudId:
+        default: "{cloudId}"
+        description: Site cloudId from GET https://api.atlassian.com/oauth/token/accessible-resources
+security:
+  - OAuth2: []
+tags:
+  - name: Auth
+  - name: Projects
+  - name: Issues
+  - name: Comments
+  - name: Users
+  - name: Webhooks
+paths:
+  /myself:
+    get:
+      tags: [Auth]
+      operationId: getCurrentUser
+      summary: Get current user
+      description: >-
+        Official swagger operationId getCurrentUser.
+        OAuth classic scope: read:jira-user.
+      parameters:
+        - in: query
+          name: expand
+          schema: { type: string }
+          description: >-
+            Comma-separated expands: groups, applicationRoles.
+      security:
+        - OAuth2: [read:jira-user]
+      responses:
+        "200":
+          description: User
+  /project/search:
+    get:
+      tags: [Projects]
+      operationId: searchProjects
+      summary: Get projects paginated
+      description: >-
+        Official swagger operationId searchProjects (prefer over deprecated
+        GET /project). OAuth classic scope: read:jira-work.
+      parameters:
+        - in: query
+          name: startAt
+          schema: { type: integer, format: int64, default: 0 }
+        - in: query
+          name: maxResults
+          schema: { type: integer, format: int32, default: 50, maximum: 100 }
+        - in: query
+          name: query
+          schema: { type: string }
+        - in: query
+          name: orderBy
+          schema: { type: string }
+        - in: query
+          name: id
+          schema:
+            type: array
+            items: { type: integer, format: int64 }
+        - in: query
+          name: keys
+          schema:
+            type: array
+            items: { type: string }
+        - in: query
+          name: typeKey
+          schema: { type: string }
+        - in: query
+          name: categoryId
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: action
+          schema: { type: string }
+        - in: query
+          name: expand
+          schema: { type: string }
+        - in: query
+          name: status
+          schema:
+            type: array
+            items: { type: string }
+        - in: query
+          name: properties
+          schema:
+            type: array
+            items: { type: string }
+        - in: query
+          name: propertyQuery
+          schema: { type: string }
+      security:
+        - OAuth2: [read:jira-work]
+      responses:
+        "200":
+          description: Page of projects
+  /project:
+    post:
+      tags: [Projects]
+      operationId: createProject
+      summary: Create project
+      description: >-
+        Official swagger operationId createProject.
+        OAuth classic scope: manage:jira-configuration.
+        Request body schema CreateProjectDetails — required: key, name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key, name]
+              properties:
+                key: { type: string }
+                name: { type: string }
+                projectTypeKey: { type: string }
+                projectTemplateKey: { type: string }
+                description: { type: string }
+                leadAccountId: { type: string }
+                url: { type: string }
+                assigneeType: { type: string }
+                avatarId: { type: integer, format: int64 }
+                categoryId: { type: integer, format: int64 }
+      security:
+        - OAuth2: [manage:jira-configuration]
+      responses:
+        "201":
+          description: Created project
+  /project/{projectIdOrKey}:
+    get:
+      tags: [Projects]
+      operationId: getProject
+      summary: Get project
+      description: >-
+        Official swagger operationId getProject.
+        OAuth classic scope: read:jira-work.
+      parameters:
+        - in: path
+          name: projectIdOrKey
+          required: true
+          schema: { type: string }
+        - in: query
+          name: expand
+          schema: { type: string }
+        - in: query
+          name: properties
+          schema:
+            type: array
+            items: { type: string }
+      security:
+        - OAuth2: [read:jira-work]
+      responses:
+        "200":
+          description: Project
+    put:
+      tags: [Projects]
+      operationId: updateProject
+      summary: Update project
+      description: >-
+        Official swagger operationId updateProject.
+        OAuth classic scope: manage:jira-project.
+        Request body schema UpdateProjectDetails.
+      parameters:
+        - in: path
+          name: projectIdOrKey
+          required: true
+          schema: { type: string }
+        - in: query
+          name: expand
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                key: { type: string }
+                name: { type: string }
+                description: { type: string }
+                leadAccountId: { type: string }
+                url: { type: string }
+                assigneeType: { type: string }
+                avatarId: { type: integer, format: int64 }
+                categoryId: { type: integer, format: int64 }
+      security:
+        - OAuth2: [manage:jira-project]
+      responses:
+        "200":
+          description: Updated project
+  /issue:
+    post:
+      tags: [Issues]
+      operationId: createIssue
+      summary: Create issue
+      description: >-
+        Official swagger operationId createIssue.
+        OAuth classic scope: write:jira-work.
+        Request body schema IssueUpdateDetails (fields / update / transition / …).
+      parameters:
+        - in: query
+          name: updateHistory
+          schema: { type: boolean }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fields: { type: object, additionalProperties: true }
+                update: { type: object, additionalProperties: true }
+                transition: { type: object }
+                properties:
+                  type: array
+                  items: { type: object }
+                historyMetadata: { type: object }
+      security:
+        - OAuth2: [write:jira-work]
+      responses:
+        "201":
+          description: Created issue
+  /issue/{issueIdOrKey}:
+    get:
+      tags: [Issues]
+      operationId: getIssue
+      summary: Get issue
+      description: >-
+        Official swagger operationId getIssue.
+        OAuth classic scope: read:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+        - in: query
+          name: fields
+          schema:
+            type: array
+            items: { type: string }
+        - in: query
+          name: fieldsByKeys
+          schema: { type: boolean }
+        - in: query
+          name: expand
+          schema: { type: string }
+        - in: query
+          name: properties
+          schema:
+            type: array
+            items: { type: string }
+        - in: query
+          name: updateHistory
+          schema: { type: boolean }
+        - in: query
+          name: failFast
+          schema: { type: boolean }
+      security:
+        - OAuth2: [read:jira-work]
+      responses:
+        "200":
+          description: Issue
+    put:
+      tags: [Issues]
+      operationId: editIssue
+      summary: Edit issue
+      description: >-
+        Official swagger operationId editIssue.
+        OAuth classic scope: write:jira-work.
+        Request body schema IssueUpdateDetails. Success 204 (or 200 when
+        returnIssue=true).
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+        - in: query
+          name: notifyUsers
+          schema: { type: boolean }
+        - in: query
+          name: overrideScreenSecurity
+          schema: { type: boolean }
+        - in: query
+          name: overrideEditableFlag
+          schema: { type: boolean }
+        - in: query
+          name: returnIssue
+          schema: { type: boolean }
+        - in: query
+          name: expand
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fields: { type: object, additionalProperties: true }
+                update: { type: object, additionalProperties: true }
+                transition: { type: object }
+                properties:
+                  type: array
+                  items: { type: object }
+                historyMetadata: { type: object }
+      security:
+        - OAuth2: [write:jira-work]
+      responses:
+        "204":
+          description: Updated
+        "200":
+          description: Updated issue when returnIssue=true
+    delete:
+      tags: [Issues]
+      operationId: deleteIssue
+      summary: Delete issue
+      description: >-
+        Official swagger operationId deleteIssue.
+        OAuth classic scope: write:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+        - in: query
+          name: deleteSubtasks
+          schema: { type: string }
+      security:
+        - OAuth2: [write:jira-work]
+      responses:
+        "204":
+          description: Deleted
+  /search/jql:
+    get:
+      tags: [Issues]
+      operationId: searchAndReconsileIssuesUsingJql
+      summary: Search for issues using JQL enhanced search (GET)
+      description: >-
+        Official swagger operationId searchAndReconsileIssuesUsingJql
+        (vendor spelling). Replaces deprecated GET /rest/api/3/search.
+        OAuth classic scope: read:jira-work. JQL must be a bounded query.
+      parameters:
+        - in: query
+          name: jql
+          schema: { type: string }
+        - in: query
+          name: nextPageToken
+          schema: { type: string }
+        - in: query
+          name: maxResults
+          schema: { type: integer, format: int32, default: 50 }
+        - in: query
+          name: fields
+          description: >-
+            List of fields to return (default id). Official schema type array of string.
+          schema:
+            type: array
+            items: { type: string, default: id }
+        - in: query
+          name: expand
+          schema: { type: string }
+        - in: query
+          name: properties
+          schema:
+            type: array
+            items: { type: string }
+        - in: query
+          name: fieldsByKeys
+          schema: { type: boolean }
+        - in: query
+          name: failFast
+          schema: { type: boolean }
+        - in: query
+          name: reconcileIssues
+          schema:
+            type: array
+            items: { type: integer, format: int64 }
+        - in: query
+          name: includeArchivedProjects
+          schema: { type: boolean }
+      security:
+        - OAuth2: [read:jira-work]
+      responses:
+        "200":
+          description: Search results
+  /issue/{issueIdOrKey}/comment:
+    get:
+      tags: [Comments]
+      operationId: getComments
+      summary: Get comments
+      description: >-
+        Official swagger operationId getComments.
+        OAuth classic scope: read:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+        - in: query
+          name: startAt
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: maxResults
+          schema: { type: integer, format: int32 }
+        - in: query
+          name: orderBy
+          schema: { type: string }
+        - in: query
+          name: expand
+          schema: { type: string }
+      security:
+        - OAuth2: [read:jira-work]
+      responses:
+        "200":
+          description: Page of comments
+    post:
+      tags: [Comments]
+      operationId: addComment
+      summary: Add comment
+      description: >-
+        Official swagger operationId addComment.
+        OAuth classic scope: write:jira-work.
+        Request body schema Comment (ADF body).
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+        - in: query
+          name: expand
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body:
+                  description: Comment text in Atlassian Document Format
+                visibility: { type: object }
+                properties:
+                  type: array
+                  items: { type: object }
+      security:
+        - OAuth2: [write:jira-work]
+      responses:
+        "201":
+          description: Created comment
+  /issue/{issueIdOrKey}/transitions:
+    get:
+      tags: [Issues]
+      operationId: getTransitions
+      summary: Get transitions
+      description: >-
+        Official swagger operationId getTransitions.
+        OAuth classic scope: read:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+        - in: query
+          name: expand
+          schema: { type: string }
+        - in: query
+          name: transitionId
+          schema: { type: string }
+        - in: query
+          name: skipRemoteOnlyCondition
+          schema: { type: boolean, default: false }
+        - in: query
+          name: includeUnavailableTransitions
+          schema: { type: boolean, default: false }
+        - in: query
+          name: sortByOpsBarAndStatus
+          schema: { type: boolean, default: false }
+      security:
+        - OAuth2: [read:jira-work]
+      responses:
+        "200":
+          description: Transitions of the issue
+    post:
+      tags: [Issues]
+      operationId: doTransition
+      summary: Transition issue
+      description: >-
+        Official swagger operationId doTransition.
+        Body schema IssueUpdateDetails — include `transition.id`.
+        OAuth classic scope: write:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transition:
+                  type: object
+                  properties:
+                    id: { type: string }
+                fields: { type: object, additionalProperties: true }
+                update: { type: object, additionalProperties: true }
+                historyMetadata: { type: object }
+                properties:
+                  type: array
+                  items: { type: object }
+      security:
+        - OAuth2: [write:jira-work]
+      responses:
+        "204":
+          description: Transition performed
+  /issue/{issueIdOrKey}/remotelink:
+    post:
+      tags: [Issues]
+      operationId: createOrUpdateRemoteIssueLink
+      summary: Create or update remote issue link
+      description: >-
+        Official swagger operationId createOrUpdateRemoteIssueLink.
+        Body schema RemoteIssueLinkRequest — required `object` with `title` and `url`.
+        OAuth classic scope: write:jira-work.
+      parameters:
+        - in: path
+          name: issueIdOrKey
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [object]
+              properties:
+                globalId: { type: string }
+                application: { type: object }
+                relationship: { type: string }
+                object:
+                  type: object
+                  required: [title, url]
+                  properties:
+                    url: { type: string }
+                    title: { type: string }
+                    summary: { type: string }
+                    icon: { type: object }
+                    status: { type: object }
+      security:
+        - OAuth2: [write:jira-work]
+      responses:
+        "200":
+          description: Updated remote link
+        "201":
+          description: Created remote link
+  /issuetype:
+    get:
+      tags: [Issues]
+      operationId: getIssueAllTypes
+      summary: Get all issue types for user
+      description: >-
+        Official swagger operationId getIssueAllTypes.
+        OAuth classic scope: read:jira-work.
+      security:
+        - OAuth2: [read:jira-work]
+      responses:
+        "200":
+          description: Array of issue types
+  /user/search:
+    get:
+      tags: [Users]
+      operationId: findUsers
+      summary: Find users
+      description: >-
+        Official swagger operationId findUsers.
+        OAuth classic scope: read:jira-user.
+      parameters:
+        - in: query
+          name: query
+          schema: { type: string }
+        - in: query
+          name: username
+          schema: { type: string }
+        - in: query
+          name: accountId
+          schema: { type: string, maxLength: 128 }
+        - in: query
+          name: startAt
+          schema: { type: integer, format: int32, default: 0 }
+        - in: query
+          name: maxResults
+          schema: { type: integer, format: int32, default: 50 }
+        - in: query
+          name: property
+          schema: { type: string }
+      security:
+        - OAuth2: [read:jira-user]
+      responses:
+        "200":
+          description: Array of users
+  /webhook:
+    get:
+      tags: [Webhooks]
+      operationId: getDynamicWebhooksForApp
+      summary: Get dynamic webhooks for app
+      description: >-
+        Official swagger operationId getDynamicWebhooksForApp.
+        OAuth classic scopes: read:jira-work, manage:jira-webhook.
+      parameters:
+        - in: query
+          name: startAt
+          schema: { type: integer, format: int64, default: 0 }
+        - in: query
+          name: maxResults
+          schema: { type: integer, format: int32, default: 100 }
+      security:
+        - OAuth2: [read:jira-work, manage:jira-webhook]
+      responses:
+        "200":
+          description: Page of webhooks
+    post:
+      tags: [Webhooks]
+      operationId: registerDynamicWebhooks
+      summary: Register dynamic webhooks
+      description: >-
+        Official swagger operationId registerDynamicWebhooks.
+        Body schema WebhookRegistrationDetails — required: url, webhooks.
+        Each webhook (WebhookDetails) requires events and jqlFilter.
+        OAuth classic scopes: read:jira-work, manage:jira-webhook.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, webhooks]
+              properties:
+                url: { type: string }
+                webhooks:
+                  type: array
+                  items:
+                    type: object
+                    required: [events, jqlFilter]
+                    properties:
+                      events:
+                        type: array
+                        items:
+                          type: string
+                          enum:
+                            - jira:issue_created
+                            - jira:issue_updated
+                            - jira:issue_deleted
+                            - comment_created
+                            - comment_updated
+                            - comment_deleted
+                            - issue_property_set
+                            - issue_property_deleted
+                            - sprint_created
+                            - sprint_updated
+                            - sprint_closed
+                            - sprint_deleted
+                            - sprint_started
+                            - jira:version_released
+                            - jira:version_unreleased
+                            - jira:version_created
+                            - jira:version_moved
+                            - jira:version_updated
+                            - jira:version_merged
+                            - jira:version_deleted
+                      jqlFilter: { type: string }
+                      fieldIdsFilter:
+                        type: array
+                        items: { type: string }
+                      issuePropertyKeysFilter:
+                        type: array
+                        items: { type: string }
+      security:
+        - OAuth2: [read:jira-work, manage:jira-webhook]
+      responses:
+        "200":
+          description: Registration result
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhookById
+      summary: Delete webhooks by ID
+      description: >-
+        Official swagger operationId deleteWebhookById.
+        Body schema ContainerForWebhookIDs — required: webhookIds.
+        OAuth classic scopes: read:jira-work, manage:jira-webhook.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhookIds]
+              properties:
+                webhookIds:
+                  type: array
+                  items: { type: integer, format: int64 }
+      security:
+        - OAuth2: [read:jira-work, manage:jira-webhook]
+      responses:
+        "202":
+          description: Accepted
+  /webhook/refresh:
+    put:
+      tags: [Webhooks]
+      operationId: refreshWebhooks
+      summary: Extend webhook life
+      description: >-
+        Official swagger operationId refreshWebhooks.
+        Body schema ContainerForWebhookIDs — required: webhookIds.
+        OAuth classic scopes: read:jira-work, manage:jira-webhook.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhookIds]
+              properties:
+                webhookIds:
+                  type: array
+                  items: { type: integer, format: int64 }
+      security:
+        - OAuth2: [read:jira-work, manage:jira-webhook]
+      responses:
+        "200":
+          description: Expiration date (WebhooksExpirationDate)
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Atlassian OAuth 2.0 (3LO) bearer token. Classic scopes below are from
+        the official Jira swagger. Refresh tokens require the separate
+        authorization-server scope offline_access (3LO docs; not in this swagger).
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.atlassian.com/authorize
+          tokenUrl: https://auth.atlassian.com/oauth/token
+          scopes:
+            read:jira-user: Read Jira user information
+            read:jira-work: Read Jira project and issue data
+            write:jira-work: Create and edit issues
+            manage:jira-webhook: Manage dynamic webhooks
+            manage:jira-project: Administer projects
+            manage:jira-configuration: Administer Jira

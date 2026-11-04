@@ -1,0 +1,15 @@
+{
+    "name": "jira",
+    "label": "Jira Cloud",
+    "productUrl": "https://www.atlassian.com/software/jira",
+    "apiDocs": "https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/",
+    "logoUrl": "https://friggframework.org/assets/img/jira-icon.jpeg",
+    "categories": ["Project Management", "Issue Tracking"],
+    "description": "Jira Cloud platform REST API v3 — issues, projects, users, comments, and OAuth dynamic webhooks",
+    "config": {
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

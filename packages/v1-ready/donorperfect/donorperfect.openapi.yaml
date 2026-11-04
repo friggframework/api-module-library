@@ -1,0 +1,287 @@
+openapi: 3.0.3
+info:
+  title: DonorPerfect Online XML API
+  version: "7.2"
+  description: >-
+    DonorPerfect Online (DPO, SofterWare) XML API surface covered by
+    `@friggframework/api-module-donorperfect`. Every call is a form-encoded
+    POST to `/xmlrequest.asp` with `action`, optional `params`, and `apikey`
+    in the body (no header auth). Official documentation is a PDF manual —
+    there is no vendor-published OpenAPI. This file is Left Hook's curated
+    subset: one `operationId` per `Api` method in `api.js`.
+
+    Sources:
+      - https://www.softerware.com/doclib/dp/manuals/dpo_sup_manual_xml_api_documentation.pdf
+      - https://www.donorperfect.com/factsheets/api-access-feature/
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://www.donorperfect.net/prod
+    description: DonorPerfect Online production XML API host
+security:
+  - ApiKeyAuth: []
+tags:
+  - name: Auth
+  - name: Donors
+  - name: Gifts
+  - name: Codes
+paths:
+  /xmlrequest.asp#testAuthRequest:
+    post:
+      tags: [Auth]
+      operationId: testAuthRequest
+      summary: Probe API key validity
+      description: >-
+        Issues `action=select top 1 donor_id from dp`. A bad key typically
+        returns HTTP 200 with `<field name='success' value='false' …/>`.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/XmlRequestBody'
+      responses:
+        "200":
+          description: XML result (may encode auth failure in the body)
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/XmlResult'
+  /xmlrequest.asp#listDonors:
+    post:
+      tags: [Donors]
+      operationId: listDonors
+      summary: List donors (dynamic SELECT)
+      description: >-
+        Dynamic SELECT over the `dp` table (vendor manual § SELECT Statements),
+        ordered by `donor_id`, capped at 500 rows. Optional `afterDonorId`
+        exclusive lower bound for pagination.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/XmlRequestBody'
+                - type: object
+                  properties:
+                    action:
+                      type: string
+                      description: e.g. `select top N donor_id, … from dp …`
+      responses:
+        "200":
+          description: XML result with donor records
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/XmlResult'
+  /xmlrequest.asp#findDonorByEmail:
+    post:
+      tags: [Donors]
+      operationId: findDonorByEmail
+      summary: Find donors by email
+      description: >-
+        `select donor_id, first_name, last_name from dp where email='…'`.
+        Email equality is case-insensitive under DPO's SQL Server collation.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/XmlRequestBody'
+      responses:
+        "200":
+          description: XML result with matching donors
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/XmlResult'
+  /xmlrequest.asp#findDonorByPhone:
+    post:
+      tags: [Donors]
+      operationId: findDonorByPhone
+      summary: Find donors by home or mobile phone
+      description: >-
+        Matches the last 10 digits of `home_phone` / `mobile_phone` after
+        stripping punctuation (DPO stores phones free-form).
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/XmlRequestBody'
+      responses:
+        "200":
+          description: XML result with matching donors
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/XmlResult'
+  /xmlrequest.asp#getDonorById:
+    post:
+      tags: [Donors]
+      operationId: getDonorById
+      summary: Get a donor by id
+      description: >-
+        Dynamic SELECT of dp_savedonor fields from `dp` where `donor_id=N`.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/XmlRequestBody'
+      responses:
+        "200":
+          description: XML result with one donor record (or empty)
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/XmlResult'
+  /xmlrequest.asp#saveDonor:
+    post:
+      tags: [Donors]
+      operationId: saveDonor
+      summary: Create or update a donor
+      description: >-
+        `action=dp_savedonor`. `@donor_id=0` creates (returns new id);
+        existing id updates (returns 0). Partial updates are not supported —
+        omitted fields are overwritten; this client re-reads then merges.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/XmlRequestBody'
+      responses:
+        "200":
+          description: XML result with created/updated donor id
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/XmlResult'
+  /xmlrequest.asp#saveGift:
+    post:
+      tags: [Gifts]
+      operationId: saveGift
+      summary: Create a gift
+      description: >-
+        `action=dp_savegift` with `@gift_id=0`. `@gift_date` must be
+        `MM/DD/YYYY`. This client is create-only (updates overwrite every
+        supplied field and would undo staff edits).
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/XmlRequestBody'
+      responses:
+        "200":
+          description: XML result with created gift id
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/XmlResult'
+  /xmlrequest.asp#listGiftsByDonorId:
+    post:
+      tags: [Gifts]
+      operationId: listGiftsByDonorId
+      summary: List gifts for a donor
+      description: >-
+        Documented procedure `action=dp_gifts&params=<donor_id>`. Returns the
+        predefined gift field set for that donor. Use a dynamic SELECT for
+        additional columns.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/XmlRequestBody'
+      responses:
+        "200":
+          description: XML result with gift records
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/XmlResult'
+  /xmlrequest.asp#findGiftsByReference:
+    post:
+      tags: [Gifts]
+      operationId: findGiftsByReference
+      summary: Find gifts by reference
+      description: >-
+        `select gift_id, donor_id, amount from dpgift where reference='…'`.
+        Blank references are not queried (would match gifts with no reference).
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/XmlRequestBody'
+      responses:
+        "200":
+          description: XML result with matching gifts
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/XmlResult'
+  /xmlrequest.asp#getCodes:
+    post:
+      tags: [Codes]
+      operationId: getCodes
+      summary: List DPCODES values for a field
+      description: >-
+        `select code, description from dpcodes where field_name='…'`. Pages
+        past the 500-row SELECT cap. Used to resolve STATE, COUNTRY,
+        GIFT_TYPE, etc. before save calls (save procedures do not validate).
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/XmlRequestBody'
+      responses:
+        "200":
+          description: XML result with code/description records
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/XmlResult'
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: query
+      name: apikey
+      description: >-
+        Sent in the form body as `apikey=` (not as an HTTP header). The
+        vendor manual also shows it as a query parameter on GET samples.
+        Keys must not be re-URL-encoded (they already contain %2f / %2b).
+  schemas:
+    XmlRequestBody:
+      type: object
+      required: [action, apikey]
+      properties:
+        action:
+          type: string
+          description: Procedure name or dynamic SELECT statement
+        params:
+          type: string
+          description: Named `@param=value` list or positional args
+        apikey:
+          type: string
+          description: DonorPerfect API key (byte-identical, not re-encoded)
+    XmlResult:
+      type: object
+      description: Parsed representation of the DPO `<result>` XML envelope
+      properties:
+        success:
+          type: boolean
+        reason:
+          type: string
+          nullable: true
+        records:
+          type: array
+          items:
+            type: object
+            additionalProperties: true

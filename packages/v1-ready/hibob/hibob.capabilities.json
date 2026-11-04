@@ -1,0 +1,275 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "hibob",
+  "label": "HiBob",
+  "package": "@friggframework/api-module-hibob",
+  "version": "1.0.0",
+  "auth": "basic",
+  "account": {
+    "description": "Service-user Basic Auth fields persisted on the credential/entity. company_id matches webhook companyId for tenant routing.",
+    "fields": [
+      { "name": "service_user_id", "type": "string" },
+      { "name": "service_user_token", "type": "string" },
+      {
+        "name": "company_id",
+        "type": "string",
+        "description": "Bob company id; entity externalId when known. Matches companyId on webhook payloads."
+      },
+      { "name": "baseUrl", "type": "string" }
+    ]
+  },
+  "objects": {
+    "person": {
+      "label": "Person / Employee",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "person.id" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "firstName", "type": "string", "tag": "person.firstName" },
+        { "name": "surname", "type": "string", "tag": "person.lastName" },
+        { "name": "displayName", "type": "string", "tag": "person.displayName" },
+        { "name": "companyId", "type": "string", "tag": "account.companyId", "readOnly": true },
+        { "name": "work.site", "type": "string", "tag": "person.site" },
+        { "name": "work.startDate", "type": "date", "tag": "person.startDate" },
+        { "name": "work.department", "type": "string", "tag": "person.department" },
+        { "name": "work.title", "type": "string", "tag": "person.title" }
+      ]
+    },
+    "employee_field": {
+      "label": "Employee field metadata",
+      "fields": [
+        { "name": "id", "type": "string", "readOnly": true, "tag": "field.id" },
+        { "name": "name", "type": "string", "tag": "field.name" },
+        { "name": "categoryId", "type": "string", "tag": "field.categoryId" },
+        { "name": "type", "type": "string", "tag": "field.type" }
+      ]
+    },
+    "named_list": {
+      "label": "Named list",
+      "fields": [
+        { "name": "name", "type": "string", "tag": "list.name" },
+        { "name": "values", "type": "json", "tag": "list.values" }
+      ]
+    },
+    "time_off_request": {
+      "label": "Time off request",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "timeoff.id" },
+        { "name": "employeeId", "type": "id", "tag": "person.id" },
+        { "name": "policyType", "type": "string", "tag": "timeoff.policyType" },
+        { "name": "status", "type": "string", "tag": "timeoff.status" },
+        { "name": "startDate", "type": "date", "tag": "timeoff.start" },
+        { "name": "endDate", "type": "date", "tag": "timeoff.end" }
+      ]
+    },
+    "time_off_balance": {
+      "label": "Time off balance",
+      "fields": [
+        { "name": "employeeId", "type": "id", "tag": "person.id" },
+        { "name": "policyType", "type": "string", "tag": "timeoff.policyType" },
+        { "name": "balance", "type": "number", "tag": "timeoff.balance" },
+        { "name": "date", "type": "date", "tag": "timeoff.asOf" }
+      ]
+    }
+  },
+  "events": {
+    "employee.created": {
+      "delivery": "webhook",
+      "object": "person",
+      "subscribe": "ui",
+      "description": "Fired when an employee is created (Bob webhooks v2; subscribe in Bob UI)."
+    },
+    "employee.updated": {
+      "delivery": "webhook",
+      "object": "person",
+      "subscribe": "ui",
+      "description": "Fired when employee fields are updated."
+    },
+    "employee.deleted": {
+      "delivery": "webhook",
+      "object": "person",
+      "subscribe": "ui",
+      "description": "Fired when an employee is deleted."
+    },
+    "employee.joined": {
+      "delivery": "webhook",
+      "object": "person",
+      "subscribe": "ui",
+      "description": "Lifecycle: employee joined (access granted)."
+    },
+    "employee.left": {
+      "delivery": "webhook",
+      "object": "person",
+      "subscribe": "ui",
+      "description": "Lifecycle: employee terminated / garden leave."
+    },
+    "timeoff.request.requested": {
+      "delivery": "webhook",
+      "object": "time_off_request",
+      "subscribe": "ui",
+      "description": "Fired when a time off request is submitted."
+    },
+    "timeoff.request.approved": {
+      "delivery": "webhook",
+      "object": "time_off_request",
+      "subscribe": "ui",
+      "description": "Fired when a time off request is approved."
+    },
+    "timeoff.request.cancelled": {
+      "delivery": "webhook",
+      "object": "time_off_request",
+      "subscribe": "ui",
+      "description": "Fired when a time off request is cancelled."
+    }
+  },
+  "webhook": {
+    "scope": "installation",
+    "topic": "employee.created",
+    "eventId": "{{body.data.employeeId}}",
+    "verify": "verifyWebhookSignature",
+    "note": "Customer webhooks are subscribed in the Bob UI (no public REST create/list/delete). HMAC-SHA512 over raw body; Bob-Signature header (Base64). Tenant key is body.companyId. Ping: {\"text\":\"Ping test\"} must return 200."
+  },
+  "capabilities": {
+    "person.list": {
+      "kind": "read",
+      "method": "searchPeople",
+      "input": {
+        "fields": { "type": "json" },
+        "filters": { "type": "json" },
+        "showInactive": { "type": "boolean" }
+      },
+      "output": "page<person>"
+    },
+    "person.get": {
+      "kind": "read",
+      "method": "getPerson",
+      "input": {
+        "identifier": { "type": "string", "required": true },
+        "fields": { "type": "json" }
+      },
+      "output": "person",
+      "args": ["identifier"]
+    },
+    "person.create": {
+      "kind": "write",
+      "method": "createPerson",
+      "input": {
+        "email": { "type": "string", "required": true },
+        "firstName": { "type": "string", "required": true },
+        "surname": { "type": "string", "required": true },
+        "work": { "type": "json", "required": true }
+      },
+      "output": "person"
+    },
+    "person.update": {
+      "kind": "write",
+      "method": "updatePerson",
+      "input": {
+        "identifier": { "type": "string", "required": true }
+      },
+      "output": "person",
+      "args": ["identifier"]
+    },
+    "person.profiles": {
+      "kind": "read",
+      "method": "listProfiles",
+      "input": {},
+      "output": "page<person>"
+    },
+    "employee_field.list": {
+      "kind": "read",
+      "method": "listEmployeeFields",
+      "input": {},
+      "output": "page<employee_field>"
+    },
+    "named_list.list": {
+      "kind": "read",
+      "method": "listNamedLists",
+      "input": {
+        "includeArchived": { "type": "boolean" }
+      },
+      "output": "page<named_list>"
+    },
+    "named_list.get": {
+      "kind": "read",
+      "method": "getNamedList",
+      "input": {
+        "listName": { "type": "string", "required": true }
+      },
+      "output": "named_list",
+      "args": ["listName"]
+    },
+    "time_off_request.list_changes": {
+      "kind": "read",
+      "method": "listTimeOffChanges",
+      "input": {
+        "since": { "type": "string", "required": true },
+        "to": { "type": "string" },
+        "includePending": { "type": "boolean" }
+      },
+      "output": "page<time_off_request>"
+    },
+    "time_off_request.get": {
+      "kind": "read",
+      "method": "getTimeOffRequest",
+      "input": {
+        "employeeId": { "type": "string", "required": true },
+        "requestId": { "type": "string", "required": true }
+      },
+      "output": "time_off_request",
+      "args": ["employeeId", "requestId"]
+    },
+    "time_off_request.create": {
+      "kind": "write",
+      "method": "createTimeOffRequest",
+      "input": {
+        "employeeId": { "type": "string", "required": true }
+      },
+      "output": "time_off_request",
+      "args": ["employeeId"]
+    },
+    "time_off_request.cancel": {
+      "kind": "write",
+      "method": "cancelTimeOffRequest",
+      "input": {
+        "employeeId": { "type": "string", "required": true },
+        "requestId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["employeeId", "requestId"]
+    },
+    "time_off_request.whos_out": {
+      "kind": "read",
+      "method": "listWhosOut",
+      "input": {
+        "from": { "type": "string" },
+        "to": { "type": "string" }
+      },
+      "output": "page<time_off_request>"
+    },
+    "time_off_request.out_today": {
+      "kind": "read",
+      "method": "listOutToday",
+      "input": {
+        "today": { "type": "string" }
+      },
+      "output": "page<time_off_request>"
+    },
+    "time_off_balance.get": {
+      "kind": "read",
+      "method": "getTimeOffBalance",
+      "input": {
+        "employeeId": { "type": "string", "required": true },
+        "policyType": { "type": "string", "required": true },
+        "date": { "type": "string", "required": true }
+      },
+      "output": "time_off_balance",
+      "args": ["employeeId"]
+    },
+    "time_off_policy.list_types": {
+      "kind": "read",
+      "method": "listPolicyTypes",
+      "input": {},
+      "output": "json"
+    }
+  }
+}

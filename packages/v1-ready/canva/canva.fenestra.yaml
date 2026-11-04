@@ -1,0 +1,146 @@
+# Fenestra Document: Canva Apps SDK
+#
+# Canva exposes in-editor UI extension points via the Canva Apps SDK
+# (coded React components + App UI Kit). Listed in Fenestra PLATFORMS.md
+# under Design & Creative Tools / Coded Components.
+#
+# Drafted from Canva's published Apps docs against Fenestra 0.1.0
+# (api-module-library branch claude/fenestra-spec-draft-Q367t).
+# The upstream example at specs/fenestra/examples/0.1.0/canva.fenestra.yaml
+# currently fails schema enum checks; this document is a lean, validating
+# subset for the surfaces relevant to Frigg.
+#
+# Note: @friggframework/api-module-canva implements the Connect REST API
+# (OAuth + designs/folders/assets). Apps SDK UI is a separate product surface
+# (in-editor apps) documented here for platform completeness.
+
+fenestra: "0.1.0"
+
+info:
+  title: Canva Apps SDK Ecosystem
+  version: "1.0.0"
+  description: |
+    Canva's Apps SDK provides React-based components and APIs for building
+    apps that run in iframes inside the Canva design editor.
+
+    - App UI Kit (`@canva/app-ui-kit`) is strongly recommended for public apps
+    - Design, asset, platform, and user packages expose host APIs
+    - Public apps are distributed via the Canva Apps Marketplace and reviewed
+
+    Connect REST integrations ("Outside Canva") use OAuth and do not embed
+    these UI surfaces; use the Apps SDK when building in-editor experiences.
+
+platform:
+  name: Canva
+  vendor: Canva Pty Ltd
+  documentation: https://www.canva.dev/docs/apps/
+  appMarketplace: https://www.canva.com/developers/apps/
+  designSystem: Canva Design System
+  designSystemUrl: https://www.canva.dev/docs/apps/app-ui-kit/
+
+sdks:
+  canva-app-ui-kit:
+    name: Canva App UI Kit
+    packageManager: npm
+    package: "@canva/app-ui-kit"
+    version: "^5.0.0"
+    repository: https://github.com/canva-sdks/canva-apps-sdk-starter-kit
+    documentation: https://www.canva.dev/docs/apps/app-ui-kit/
+    description: |
+      React component library that matches Canva's look and feel.
+      Recommended for public Apps Marketplace listings.
+    peerDependencies:
+      react: "^19.0.0"
+    exports:
+      Button:
+        type: component
+        description: Primary action button with variants
+        category: action
+      TextInput:
+        type: component
+        description: Single-line text input field
+        category: input
+      Rows:
+        type: component
+        description: Vertical stack layout container
+        category: layout
+      Columns:
+        type: component
+        description: Horizontal layout container
+        category: layout
+      AppUiProvider:
+        type: context
+        description: Context provider for theme and i18n support
+
+  canva-design:
+    name: Canva Design API
+    packageManager: npm
+    package: "@canva/design"
+    documentation: https://www.canva.dev/docs/apps/api/latest/design/
+    description: APIs for interacting with the user's open design
+    exports:
+      addNativeElement:
+        type: utility
+        description: Add a native element to the design
+      requestExport:
+        type: utility
+        description: Request an export of the current design
+
+  canva-asset:
+    name: Canva Asset API
+    packageManager: npm
+    package: "@canva/asset"
+    documentation: https://www.canva.dev/docs/apps/api/latest/asset/
+    description: Upload and manage assets from an in-editor app
+    exports:
+      upload:
+        type: utility
+        description: Upload an asset into the user's library
+
+extensionPoints:
+  - id: design-editor-sidebar
+    name: Design editor app sidebar
+    type: sidebar
+    extensionType: codedComponents
+    description: |
+      Primary surface for Canva Apps — a React app rendered in an iframe
+      beside the design canvas. Uses App UI Kit components and @canva/* host APIs.
+    documentation: https://www.canva.dev/docs/apps/
+    supportedComponents:
+      - Button
+      - TextInput
+      - Rows
+      - Columns
+
+  - id: design-editor-modal
+    name: Design editor modal
+    type: modal
+    extensionType: codedComponents
+    description: |
+      Modal dialogs opened from an in-editor Canva App for focused workflows
+      (e.g. confirmations, multi-step forms).
+    documentation: https://www.canva.dev/docs/apps/app-ui-kit/
+    supportedComponents:
+      - Button
+      - TextInput
+      - Rows
+
+policies:
+  componentRequirement:
+    level: recommended
+    description: |
+      App UI Kit components are strongly recommended for public marketplace apps
+      so the UI matches Canva's design system.
+  customComponents:
+    allowed: true
+    constraints:
+      - mustFollowDesignSystem
+      - mustPassAccessibilityAudit
+      - requiresReview
+  publishing:
+    publicApps:
+      componentRequirement: recommended
+      reviewRequired: true
+      documentation: https://www.canva.dev/docs/apps/submitting-apps/
+    privateApps:
+      componentRequirement: optional

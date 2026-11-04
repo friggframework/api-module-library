@@ -1,0 +1,395 @@
+openapi: 3.0.3
+info:
+  title: Segment Public API (Frigg curated subset)
+  version: "73.6.0"
+  description: >-
+    Curated subset of Segment's official Public API OpenAPI (v73.6.0) downloaded
+    from https://docs.segmentapis.com/ (Redoc "Download OpenAPI specification").
+    Covers exactly the Public API endpoints implemented by
+    @friggframework/api-module-segment in api.js. operationIds match the official
+    Segment operationIds and the Frigg Api method names 1:1.
+
+    Profile API (Unify) methods on the same Api class — getProfileTraits,
+    getProfileEvents, getProfileExternalIds, getAccountProfileTraits — use a
+    different host (https://profiles.segment.com/v1) and HTTP Basic auth, so they
+    are intentionally omitted from this Public API contract. See
+    https://www.twilio.com/docs/segment/unify/profile-api.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  license:
+    name: MIT
+servers:
+  - url: https://api.segmentapis.com
+    description: "Segment Public API (US). EU: https://eu1.api.segmentapis.com"
+security:
+  - BearerAuth: []
+tags:
+  - name: Workspaces
+  - name: Sources
+  - name: Destinations
+  - name: Warehouses
+  - name: TrackingPlans
+  - name: Functions
+  - name: Spaces
+paths:
+  /:
+    get:
+      tags: [Workspaces]
+      operationId: getWorkspace
+      summary: Get Workspace
+      description: >-
+        Official operationId: getWorkspace.
+        Returns the Workspace associated with the token.
+        Docs: https://docs.segmentapis.com/tag/Workspaces/
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      workspace:
+                        type: object
+                        required: [id, name, slug]
+                        properties:
+                          id: { type: string }
+                          name: { type: string }
+                          slug: { type: string }
+        "401":
+          description: Unauthorized
+        "429":
+          description: Too many requests
+
+  /sources:
+    get:
+      tags: [Sources]
+      operationId: listSources
+      summary: List Sources
+      description: >-
+        Official operationId: listSources.
+        Docs: https://docs.segmentapis.com/tag/Sources/
+      parameters:
+        - $ref: "#/components/parameters/PaginationCount"
+        - $ref: "#/components/parameters/PaginationCursor"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      sources:
+                        type: array
+                        items: { $ref: "#/components/schemas/Source" }
+                      pagination: { $ref: "#/components/schemas/Pagination" }
+
+  /sources/{sourceId}:
+    get:
+      tags: [Sources]
+      operationId: getSource
+      summary: Get Source
+      description: "Official operationId: getSource."
+      parameters:
+        - $ref: "#/components/parameters/SourceId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      source: { $ref: "#/components/schemas/Source" }
+        "404":
+          description: Not found
+
+  /sources/{sourceId}/connected-destinations:
+    get:
+      tags: [Sources]
+      operationId: listConnectedDestinationsFromSource
+      summary: List Connected Destinations from Source
+      description: "Official operationId: listConnectedDestinationsFromSource."
+      parameters:
+        - $ref: "#/components/parameters/SourceId"
+        - $ref: "#/components/parameters/PaginationCount"
+        - $ref: "#/components/parameters/PaginationCursor"
+      responses:
+        "200":
+          description: OK
+
+  /destinations:
+    get:
+      tags: [Destinations]
+      operationId: listDestinations
+      summary: List Destinations
+      description: "Official operationId: listDestinations."
+      parameters:
+        - $ref: "#/components/parameters/PaginationCount"
+        - $ref: "#/components/parameters/PaginationCursor"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      destinations:
+                        type: array
+                        items: { $ref: "#/components/schemas/Destination" }
+                      pagination: { $ref: "#/components/schemas/Pagination" }
+
+  /destinations/{destinationId}:
+    get:
+      tags: [Destinations]
+      operationId: getDestination
+      summary: Get Destination
+      description: "Official operationId: getDestination."
+      parameters:
+        - $ref: "#/components/parameters/DestinationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      destination: { $ref: "#/components/schemas/Destination" }
+
+  /destinations/{destinationId}/subscriptions:
+    get:
+      tags: [Destinations]
+      operationId: listSubscriptionsFromDestination
+      summary: List Subscriptions from Destination
+      description: >-
+        Official operationId: listSubscriptionsFromDestination (alpha).
+        Requires Destination Subscriptions feature. Used for Actions / webhook
+        subscription inventory.
+      parameters:
+        - $ref: "#/components/parameters/DestinationId"
+        - $ref: "#/components/parameters/PaginationCount"
+        - $ref: "#/components/parameters/PaginationCursor"
+      responses:
+        "200":
+          description: OK
+
+  /destinations/{destinationId}/subscriptions/{id}:
+    get:
+      tags: [Destinations]
+      operationId: getSubscriptionFromDestination
+      summary: Get Subscription from Destination
+      description: "Official operationId: getSubscriptionFromDestination (alpha)."
+      parameters:
+        - $ref: "#/components/parameters/DestinationId"
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+
+  /warehouses:
+    get:
+      tags: [Warehouses]
+      operationId: listWarehouses
+      summary: List Warehouses
+      description: "Official operationId: listWarehouses."
+      parameters:
+        - $ref: "#/components/parameters/PaginationCount"
+        - $ref: "#/components/parameters/PaginationCursor"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      warehouses:
+                        type: array
+                        items: { $ref: "#/components/schemas/Warehouse" }
+                      pagination: { $ref: "#/components/schemas/Pagination" }
+
+  /warehouses/{warehouseId}:
+    get:
+      tags: [Warehouses]
+      operationId: getWarehouse
+      summary: Get Warehouse
+      description: "Official operationId: getWarehouse."
+      parameters:
+        - $ref: "#/components/parameters/WarehouseId"
+      responses:
+        "200":
+          description: OK
+
+  /tracking-plans:
+    get:
+      tags: [TrackingPlans]
+      operationId: listTrackingPlans
+      summary: List Tracking Plans
+      description: >-
+        Official operationId: listTrackingPlans.
+        Requires Protocols feature.
+      parameters:
+        - $ref: "#/components/parameters/PaginationCount"
+        - $ref: "#/components/parameters/PaginationCursor"
+      responses:
+        "200":
+          description: OK
+
+  /tracking-plans/{trackingPlanId}:
+    get:
+      tags: [TrackingPlans]
+      operationId: getTrackingPlan
+      summary: Get Tracking Plan
+      description: "Official operationId: getTrackingPlan."
+      parameters:
+        - $ref: "#/components/parameters/TrackingPlanId"
+      responses:
+        "200":
+          description: OK
+
+  /functions:
+    get:
+      tags: [Functions]
+      operationId: listFunctions
+      summary: List Functions
+      description: "Official operationId: listFunctions."
+      parameters:
+        - $ref: "#/components/parameters/PaginationCount"
+        - $ref: "#/components/parameters/PaginationCursor"
+      responses:
+        "200":
+          description: OK
+
+  /functions/{functionId}:
+    get:
+      tags: [Functions]
+      operationId: getFunction
+      summary: Get Function
+      description: "Official operationId: getFunction."
+      parameters:
+        - $ref: "#/components/parameters/FunctionId"
+      responses:
+        "200":
+          description: OK
+
+  /spaces:
+    get:
+      tags: [Spaces]
+      operationId: listSpaces
+      summary: List Spaces
+      description: >-
+        Official operationId: listSpaces.
+        Useful for discovering Unify space ids used by the Profile API.
+      parameters:
+        - $ref: "#/components/parameters/PaginationCount"
+        - $ref: "#/components/parameters/PaginationCursor"
+      responses:
+        "200":
+          description: OK
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        Segment Public API workspace token.
+        Header: Authorization: Bearer <token>
+        Official scheme name in vendor OpenAPI: token.
+  parameters:
+    SourceId:
+      in: path
+      name: sourceId
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 255 }
+    DestinationId:
+      in: path
+      name: destinationId
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 255 }
+    WarehouseId:
+      in: path
+      name: warehouseId
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 255 }
+    TrackingPlanId:
+      in: path
+      name: trackingPlanId
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 255 }
+    FunctionId:
+      in: path
+      name: functionId
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 255 }
+    PaginationCount:
+      in: query
+      name: pagination.count
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 1000 }
+      description: >-
+        Page size. Official PaginationInput.count; serialized as pagination.count
+        per docs.segmentapis.com examples.
+    PaginationCursor:
+      in: query
+      name: pagination.cursor
+      required: false
+      schema: { type: string }
+      description: Opaque cursor from PaginationOutput.
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        current: { type: string }
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        totalEntries: { type: integer }
+    Source:
+      type: object
+      properties:
+        id: { type: string }
+        slug: { type: string }
+        name: { type: string }
+        workspaceId: { type: string }
+        enabled: { type: boolean }
+        writeKeys:
+          type: array
+          items: { type: string }
+    Destination:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        enabled: { type: boolean }
+        sourceId: { type: string }
+    Warehouse:
+      type: object
+      properties:
+        id: { type: string }
+        workspaceId: { type: string }
+        enabled: { type: boolean }

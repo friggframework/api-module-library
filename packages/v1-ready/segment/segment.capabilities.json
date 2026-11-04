@@ -1,0 +1,332 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "segment",
+  "label": "Segment",
+  "package": "@friggframework/api-module-segment",
+  "version": "1.0.0",
+  "auth": {
+    "type": "apiKey",
+    "scheme": "bearer",
+    "testAuthRequest": "getWorkspace",
+    "scopesDocumentedAt": "https://docs.segmentapis.com/tag/Authentication/",
+    "notes": [
+      "Public API: workspace Bearer token (Settings → Access Management → Tokens).",
+      "Profile API: optional per-space token via HTTP Basic (Unify → API access) + space_id."
+    ]
+  },
+  "source": {
+    "officialPublicApiDocs": "https://docs.segmentapis.com/",
+    "officialPublicApiOpenApiVersion": "73.6.0",
+    "officialProfileApiDocs": "https://www.twilio.com/docs/segment/unify/profile-api",
+    "notes": [
+      "Demand-source CDP module. READ-first Public API surface plus inbound Webhooks (Actions) handling.",
+      "Profile API methods are on Api but omitted from segment.openapi.yaml because they use a different host and auth scheme."
+    ]
+  },
+  "objects": {
+    "workspace": {
+      "label": "Workspace",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier", "externalId"], "readOnly": true },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "slug", "type": "string", "tags": ["identifier", "display"] }
+      ],
+      "operations": {
+        "get": { "method": "getWorkspace", "officialOperationId": "getWorkspace" }
+      }
+    },
+    "source": {
+      "label": "Source",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "slug", "type": "string", "tags": ["identifier", "display"] },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "workspaceId", "type": "string", "tags": ["relation"] },
+        { "name": "enabled", "type": "boolean", "tags": ["status"] },
+        { "name": "writeKeys", "type": "string[]", "tags": ["secret"] }
+      ],
+      "operations": {
+        "list": { "method": "listSources", "officialOperationId": "listSources" },
+        "get": { "method": "getSource", "officialOperationId": "getSource" }
+      }
+    },
+    "destination": {
+      "label": "Destination",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "enabled", "type": "boolean", "tags": ["status"] }
+      ],
+      "operations": {
+        "list": { "method": "listDestinations", "officialOperationId": "listDestinations" },
+        "get": { "method": "getDestination", "officialOperationId": "getDestination" }
+      }
+    },
+    "warehouse": {
+      "label": "Warehouse",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "workspaceId", "type": "string", "tags": ["relation"] },
+        { "name": "enabled", "type": "boolean", "tags": ["status"] }
+      ],
+      "operations": {
+        "list": { "method": "listWarehouses", "officialOperationId": "listWarehouses" },
+        "get": { "method": "getWarehouse", "officialOperationId": "getWarehouse" }
+      }
+    },
+    "trackingPlan": {
+      "label": "Tracking Plan",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "slug", "type": "string", "tags": ["identifier"] }
+      ],
+      "operations": {
+        "list": { "method": "listTrackingPlans", "officialOperationId": "listTrackingPlans" },
+        "get": { "method": "getTrackingPlan", "officialOperationId": "getTrackingPlan" }
+      }
+    },
+    "destinationSubscription": {
+      "label": "Destination subscription",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "name", "type": "string", "tags": ["display"] },
+        { "name": "destinationId", "type": "string", "tags": ["relation"] },
+        { "name": "enabled", "type": "boolean", "tags": ["status"] },
+        { "name": "trigger", "type": "string", "tags": [] }
+      ],
+      "operations": {
+        "list": {
+          "method": "listSubscriptionsFromDestination",
+          "officialOperationId": "listSubscriptionsFromDestination"
+        },
+        "get": {
+          "method": "getSubscriptionFromDestination",
+          "officialOperationId": "getSubscriptionFromDestination"
+        }
+      }
+    },
+    "function": {
+      "label": "Function",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true },
+        { "name": "resourceType", "type": "string", "tags": [] }
+      ],
+      "operations": {
+        "list": { "method": "listFunctions", "officialOperationId": "listFunctions" },
+        "get": { "method": "getFunction", "officialOperationId": "getFunction" }
+      }
+    },
+    "space": {
+      "label": "Unify Space",
+      "fields": [
+        { "name": "id", "type": "string", "tags": ["identifier"], "readOnly": true }
+      ],
+      "operations": {
+        "list": { "method": "listSpaces", "officialOperationId": "listSpaces" }
+      }
+    },
+    "userProfile": {
+      "label": "Unify user profile",
+      "fields": [
+        { "name": "traits", "type": "json", "tags": ["pii"] },
+        { "name": "external_ids", "type": "json", "tags": ["identifier"] },
+        { "name": "events", "type": "json", "tags": [] }
+      ],
+      "operations": {
+        "getTraits": { "method": "getProfileTraits" },
+        "getEvents": { "method": "getProfileEvents" },
+        "getExternalIds": { "method": "getProfileExternalIds" }
+      }
+    },
+    "accountProfile": {
+      "label": "Unify account (group) profile",
+      "fields": [
+        { "name": "traits", "type": "json", "tags": [] }
+      ],
+      "operations": {
+        "getTraits": { "method": "getAccountProfileTraits" }
+      }
+    }
+  },
+  "capabilities": {
+    "workspace.get": {
+      "kind": "read",
+      "method": "getWorkspace",
+      "officialOperationId": "getWorkspace",
+      "output": "workspace"
+    },
+    "source.list": {
+      "kind": "read",
+      "method": "listSources",
+      "officialOperationId": "listSources",
+      "output": "source"
+    },
+    "source.get": {
+      "kind": "read",
+      "method": "getSource",
+      "officialOperationId": "getSource",
+      "input": { "sourceId": { "type": "string", "required": true } },
+      "output": "source"
+    },
+    "source.listConnectedDestinations": {
+      "kind": "read",
+      "method": "listConnectedDestinationsFromSource",
+      "officialOperationId": "listConnectedDestinationsFromSource",
+      "input": { "sourceId": { "type": "string", "required": true } },
+      "output": "destination"
+    },
+    "destination.list": {
+      "kind": "read",
+      "method": "listDestinations",
+      "officialOperationId": "listDestinations",
+      "output": "destination"
+    },
+    "destination.get": {
+      "kind": "read",
+      "method": "getDestination",
+      "officialOperationId": "getDestination",
+      "input": { "destinationId": { "type": "string", "required": true } },
+      "output": "destination"
+    },
+    "destinationSubscription.list": {
+      "kind": "read",
+      "method": "listSubscriptionsFromDestination",
+      "officialOperationId": "listSubscriptionsFromDestination",
+      "input": { "destinationId": { "type": "string", "required": true } },
+      "output": "destinationSubscription"
+    },
+    "destinationSubscription.get": {
+      "kind": "read",
+      "method": "getSubscriptionFromDestination",
+      "officialOperationId": "getSubscriptionFromDestination",
+      "input": {
+        "destinationId": { "type": "string", "required": true },
+        "id": { "type": "string", "required": true }
+      },
+      "output": "destinationSubscription"
+    },
+    "warehouse.list": {
+      "kind": "read",
+      "method": "listWarehouses",
+      "officialOperationId": "listWarehouses",
+      "output": "warehouse"
+    },
+    "warehouse.get": {
+      "kind": "read",
+      "method": "getWarehouse",
+      "officialOperationId": "getWarehouse",
+      "input": { "warehouseId": { "type": "string", "required": true } },
+      "output": "warehouse"
+    },
+    "trackingPlan.list": {
+      "kind": "read",
+      "method": "listTrackingPlans",
+      "officialOperationId": "listTrackingPlans",
+      "output": "trackingPlan"
+    },
+    "trackingPlan.get": {
+      "kind": "read",
+      "method": "getTrackingPlan",
+      "officialOperationId": "getTrackingPlan",
+      "input": { "trackingPlanId": { "type": "string", "required": true } },
+      "output": "trackingPlan"
+    },
+    "function.list": {
+      "kind": "read",
+      "method": "listFunctions",
+      "officialOperationId": "listFunctions",
+      "output": "function"
+    },
+    "function.get": {
+      "kind": "read",
+      "method": "getFunction",
+      "officialOperationId": "getFunction",
+      "input": { "functionId": { "type": "string", "required": true } },
+      "output": "function"
+    },
+    "space.list": {
+      "kind": "read",
+      "method": "listSpaces",
+      "officialOperationId": "listSpaces",
+      "output": "space"
+    },
+    "profile.traits.get": {
+      "kind": "read",
+      "method": "getProfileTraits",
+      "input": { "externalId": { "type": "string", "required": true } },
+      "output": "userProfile"
+    },
+    "profile.events.get": {
+      "kind": "read",
+      "method": "getProfileEvents",
+      "input": { "externalId": { "type": "string", "required": true } },
+      "output": "userProfile"
+    },
+    "profile.externalIds.get": {
+      "kind": "read",
+      "method": "getProfileExternalIds",
+      "input": { "externalId": { "type": "string", "required": true } },
+      "output": "userProfile"
+    },
+    "accountProfile.traits.get": {
+      "kind": "read",
+      "method": "getAccountProfileTraits",
+      "input": { "externalId": { "type": "string", "required": true } },
+      "output": "accountProfile"
+    }
+  },
+  "events": {
+    "segment.track": {
+      "delivery": "webhook",
+      "match": "type=track",
+      "status": "supported-inbound",
+      "apiMethod": null,
+      "notes": "Inbound via Webhooks (Actions) destination or Destination Function POST to extensions/webhooks."
+    },
+    "segment.identify": {
+      "delivery": "webhook",
+      "match": "type=identify",
+      "status": "supported-inbound",
+      "apiMethod": null
+    },
+    "segment.group": {
+      "delivery": "webhook",
+      "match": "type=group",
+      "status": "supported-inbound",
+      "apiMethod": null
+    }
+  },
+  "webhook": {
+    "verify": "extensions/webhooks/signature-verifier.verifySegmentSignature",
+    "route": "POST /webhooks",
+    "docs": "https://www.twilio.com/docs/segment/connections/destinations/catalog/actions-webhook"
+  },
+  "skipped": [
+    {
+      "draftMethod": "createSource",
+      "officialOperationId": "createSource",
+      "reason": "READ-first scope for this demand-source module; create/update/delete deferred."
+    },
+    {
+      "draftMethod": "createDestination",
+      "officialOperationId": "createDestination",
+      "reason": "READ-first scope; inbound webhooks use Webhooks (Actions) configured in the Segment UI / Destination Functions."
+    },
+    {
+      "draftMethod": "createDestinationSubscription",
+      "officialOperationId": "createDestinationSubscription",
+      "reason": "Alpha write endpoint deferred; list/get covered for inventory."
+    },
+    {
+      "draftMethod": "createWarehouse",
+      "officialOperationId": "createWarehouse",
+      "reason": "READ-first scope."
+    },
+    {
+      "draftMethod": "createTrackingPlan",
+      "officialOperationId": "createTrackingPlan",
+      "reason": "READ-first scope; Protocols writes deferred."
+    }
+  ]
+}

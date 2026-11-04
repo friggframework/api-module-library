@@ -1,0 +1,13 @@
+{
+  "name": "box",
+  "label": "Box",
+  "productUrl": "https://www.box.com",
+  "apiDocs": "https://developer.box.com",
+  "logoUrl": "https://friggframework.org/assets/img/box-icon.png",
+  "categories": [
+    "Content Management",
+    "File Storage",
+    "Collaboration"
+  ],
+  "description": "Box is a content cloud platform for secure file storage, sharing, and collaboration"
+}

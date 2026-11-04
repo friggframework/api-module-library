@@ -1,0 +1,555 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "box",
+  "label": "Box",
+  "package": "@friggframework/api-module-box",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Box user identity from GET /users/me.",
+    "fields": [
+      {
+        "name": "user_id",
+        "type": "string",
+        "description": "Box user id used as entity externalId."
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "type", "type": "string", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "login", "type": "email", "tag": "contact.email" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "modified_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "language", "type": "string" },
+        { "name": "timezone", "type": "string" },
+        { "name": "space_amount", "type": "integer", "readOnly": true },
+        { "name": "space_used", "type": "integer", "readOnly": true },
+        { "name": "max_upload_size", "type": "integer", "readOnly": true },
+        { "name": "status", "type": "string" },
+        { "name": "job_title", "type": "string" },
+        { "name": "phone", "type": "phone", "tag": "contact.phone" },
+        { "name": "address", "type": "string" },
+        { "name": "avatar_url", "type": "string", "readOnly": true }
+      ]
+    },
+    "folder": {
+      "label": "Folder",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "type", "type": "string", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "file.name" },
+        { "name": "description", "type": "text" },
+        { "name": "size", "type": "integer", "readOnly": true },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "modified_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "created_by", "type": "json", "readOnly": true },
+        { "name": "modified_by", "type": "json", "readOnly": true },
+        { "name": "owned_by", "type": "json", "tag": "record.owner", "readOnly": true },
+        { "name": "parent", "type": "json" },
+        { "name": "path_collection", "type": "json", "readOnly": true },
+        { "name": "shared_link", "type": "json" },
+        { "name": "item_status", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "modified_at",
+        "list": {
+          "capability": "folder.items.list",
+          "limit": "limit",
+          "cursor": "offset",
+          "items": "entries",
+          "next": "offset"
+        },
+        "get": {
+          "capability": "folder.get",
+          "id": "folderId"
+        },
+        "create": {
+          "capability": "folder.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "folder.update",
+          "id": "folderId",
+          "body": "data"
+        }
+      }
+    },
+    "file": {
+      "label": "File",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "type", "type": "string", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "file.name" },
+        { "name": "description", "type": "text" },
+        { "name": "size", "type": "integer", "tag": "file.size", "readOnly": true },
+        { "name": "sha1", "type": "string", "readOnly": true },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "modified_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "content_created_at", "type": "datetime", "readOnly": true },
+        { "name": "content_modified_at", "type": "datetime", "readOnly": true },
+        { "name": "created_by", "type": "json", "readOnly": true },
+        { "name": "modified_by", "type": "json", "readOnly": true },
+        { "name": "owned_by", "type": "json", "tag": "record.owner", "readOnly": true },
+        { "name": "parent", "type": "json" },
+        { "name": "path_collection", "type": "json", "readOnly": true },
+        { "name": "shared_link", "type": "json" },
+        { "name": "item_status", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "modified_at",
+        "get": {
+          "capability": "file.get",
+          "id": "fileId"
+        },
+        "create": {
+          "capability": "file.upload",
+          "body": "attributes"
+        },
+        "update": {
+          "capability": "file.update",
+          "id": "fileId",
+          "body": "data"
+        }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "type", "type": "string", "readOnly": true },
+        { "name": "target", "type": "json" },
+        { "name": "address", "type": "string" },
+        { "name": "triggers", "type": "json" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "created_by", "type": "json", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "webhook.list",
+          "cursor": "marker",
+          "limit": "limit",
+          "items": "entries",
+          "next": "next_marker"
+        },
+        "get": {
+          "capability": "webhook.get",
+          "id": "webhookId"
+        },
+        "create": {
+          "capability": "webhook.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "webhook.update",
+          "id": "webhookId",
+          "body": "data"
+        }
+      }
+    }
+  },
+  "webhook": {
+    "scope": "app",
+    "topic": "{{body.trigger}}",
+    "eventId": "{{body.id}}",
+    "account": "{{body.created_by.id}}",
+    "verify": "verifyWebhookSignature",
+    "note": "Box V2 signs body+BOX-DELIVERY-TIMESTAMP with HMAC-SHA256 into BOX-SIGNATURE-PRIMARY/SECONDARY (10 minute skew). Entity externalId is the Box user id from GET /users/me, matched via created_by.id."
+  },
+  "events": {
+    "FILE.UPLOADED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FILE.UPLOADED on a file or folder target."
+    },
+    "FILE.DOWNLOADED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FILE.DOWNLOADED."
+    },
+    "FILE.PREVIEWED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FILE.PREVIEWED."
+    },
+    "FILE.TRASHED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FILE.TRASHED."
+    },
+    "FILE.DELETED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FILE.DELETED."
+    },
+    "FILE.RESTORED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FILE.RESTORED."
+    },
+    "FILE.COPIED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FILE.COPIED."
+    },
+    "FILE.MOVED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FILE.MOVED."
+    },
+    "FILE.LOCKED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FILE.LOCKED."
+    },
+    "FILE.UNLOCKED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FILE.UNLOCKED."
+    },
+    "FILE.RENAMED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FILE.RENAMED."
+    },
+    "COMMENT.CREATED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger COMMENT.CREATED."
+    },
+    "COMMENT.UPDATED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger COMMENT.UPDATED."
+    },
+    "COMMENT.DELETED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger COMMENT.DELETED."
+    },
+    "TASK_ASSIGNMENT.CREATED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger TASK_ASSIGNMENT.CREATED."
+    },
+    "TASK_ASSIGNMENT.UPDATED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger TASK_ASSIGNMENT.UPDATED."
+    },
+    "METADATA_INSTANCE.CREATED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger METADATA_INSTANCE.CREATED."
+    },
+    "METADATA_INSTANCE.UPDATED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger METADATA_INSTANCE.UPDATED."
+    },
+    "METADATA_INSTANCE.DELETED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger METADATA_INSTANCE.DELETED."
+    },
+    "FOLDER.CREATED": {
+      "delivery": "webhook",
+      "object": "folder",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FOLDER.CREATED."
+    },
+    "FOLDER.RENAMED": {
+      "delivery": "webhook",
+      "object": "folder",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FOLDER.RENAMED."
+    },
+    "FOLDER.DOWNLOADED": {
+      "delivery": "webhook",
+      "object": "folder",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FOLDER.DOWNLOADED."
+    },
+    "FOLDER.RESTORED": {
+      "delivery": "webhook",
+      "object": "folder",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FOLDER.RESTORED."
+    },
+    "FOLDER.DELETED": {
+      "delivery": "webhook",
+      "object": "folder",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FOLDER.DELETED."
+    },
+    "FOLDER.COPIED": {
+      "delivery": "webhook",
+      "object": "folder",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FOLDER.COPIED."
+    },
+    "FOLDER.MOVED": {
+      "delivery": "webhook",
+      "object": "folder",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FOLDER.MOVED."
+    },
+    "FOLDER.TRASHED": {
+      "delivery": "webhook",
+      "object": "folder",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger FOLDER.TRASHED."
+    },
+    "WEBHOOK.DELETED": {
+      "delivery": "webhook",
+      "object": "webhook",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger WEBHOOK.DELETED."
+    },
+    "COLLABORATION.CREATED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger COLLABORATION.CREATED."
+    },
+    "COLLABORATION.ACCEPTED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger COLLABORATION.ACCEPTED."
+    },
+    "COLLABORATION.REJECTED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger COLLABORATION.REJECTED."
+    },
+    "COLLABORATION.REMOVED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger COLLABORATION.REMOVED."
+    },
+    "COLLABORATION.UPDATED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger COLLABORATION.UPDATED."
+    },
+    "SHARED_LINK.DELETED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger SHARED_LINK.DELETED."
+    },
+    "SHARED_LINK.CREATED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger SHARED_LINK.CREATED."
+    },
+    "SHARED_LINK.UPDATED": {
+      "delivery": "webhook",
+      "object": "file",
+      "subscribe": "webhook.create",
+      "description": "Box V2 webhook trigger SHARED_LINK.UPDATED."
+    }
+  },
+  "capabilities": {
+    "user.me.get": {
+      "kind": "read",
+      "method": "getCurrentUser",
+      "input": {
+        "fields": { "type": "string" }
+      },
+      "output": "user"
+    },
+    "folder.get": {
+      "kind": "read",
+      "method": "getFolder",
+      "args": ["folderId", "params"],
+      "input": {
+        "folderId": { "type": "string" },
+        "fields": { "type": "string" }
+      },
+      "output": "folder"
+    },
+    "folder.items.list": {
+      "kind": "read",
+      "method": "listFolderItems",
+      "args": ["folderId", "params"],
+      "input": {
+        "folderId": { "type": "string" },
+        "limit": { "type": "integer" },
+        "offset": { "type": "integer" },
+        "marker": { "type": "string" },
+        "usemarker": { "type": "boolean" }
+      },
+      "output": "page<file|folder>"
+    },
+    "folder.create": {
+      "kind": "write",
+      "method": "createFolder",
+      "args": ["data"],
+      "input": {
+        "name": { "type": "string" },
+        "parent": { "type": "json" }
+      },
+      "output": "folder"
+    },
+    "folder.update": {
+      "kind": "write",
+      "method": "updateFolder",
+      "args": ["folderId", "data", "params"],
+      "input": {
+        "folderId": { "type": "string" },
+        "data": { "type": "json" }
+      },
+      "output": "folder"
+    },
+    "folder.delete": {
+      "kind": "delete",
+      "method": "deleteFolder",
+      "args": ["folderId", "params"],
+      "input": {
+        "folderId": { "type": "string" },
+        "recursive": { "type": "boolean" }
+      }
+    },
+    "file.get": {
+      "kind": "read",
+      "method": "getFile",
+      "args": ["fileId", "params"],
+      "input": {
+        "fileId": { "type": "string" },
+        "fields": { "type": "string" }
+      },
+      "output": "file"
+    },
+    "file.update": {
+      "kind": "write",
+      "method": "updateFile",
+      "args": ["fileId", "data", "params"],
+      "input": {
+        "fileId": { "type": "string" },
+        "data": { "type": "json" }
+      },
+      "output": "file"
+    },
+    "file.delete": {
+      "kind": "delete",
+      "method": "deleteFile",
+      "args": ["fileId", "params"],
+      "input": {
+        "fileId": { "type": "string" }
+      }
+    },
+    "file.download": {
+      "kind": "read",
+      "method": "downloadFile",
+      "args": ["fileId", "params"],
+      "input": {
+        "fileId": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "file.upload": {
+      "kind": "write",
+      "method": "uploadFile",
+      "args": ["args"],
+      "input": {
+        "attributes": { "type": "json" },
+        "file": { "type": "string" },
+        "filename": { "type": "string" },
+        "contentType": { "type": "string" }
+      },
+      "output": "file"
+    },
+    "content.search": {
+      "kind": "search",
+      "method": "searchContent",
+      "input": {
+        "query": { "type": "string" },
+        "scope": { "type": "string" },
+        "limit": { "type": "integer" },
+        "offset": { "type": "integer" },
+        "type": { "type": "string" },
+        "ancestor_folder_ids": { "type": "string" }
+      },
+      "output": "page<file|folder>"
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "input": {
+        "marker": { "type": "string" },
+        "limit": { "type": "integer" }
+      },
+      "output": "page<webhook>"
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "args": ["webhookId"],
+      "input": {
+        "webhookId": { "type": "string" }
+      },
+      "output": "webhook"
+    },
+    "webhook.create": {
+      "kind": "subscribe",
+      "method": "createWebhook",
+      "args": ["data"],
+      "input": {
+        "target": { "type": "json" },
+        "address": { "type": "string" },
+        "triggers": { "type": "json" }
+      },
+      "output": "webhook"
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhook",
+      "args": ["webhookId", "data"],
+      "input": {
+        "webhookId": { "type": "string" },
+        "data": { "type": "json" }
+      },
+      "output": "webhook"
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhook",
+      "args": ["webhookId"],
+      "input": {
+        "webhookId": { "type": "string" }
+      }
+    }
+  }
+}

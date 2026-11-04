@@ -1,0 +1,372 @@
+openapi: 3.0.2
+info:
+  title: Box Platform API (subset)
+  version: "1.0.0"
+  description: >-
+    Curated subset of Box's official OpenAPI
+    (https://github.com/box/box-openapi/blob/main/openapi.json) covering
+    current-user identity, folders, files (including upload/download), search,
+    and webhook CRUD. operationIds are camelCase aliases of Box's snake_case
+    operationIds so they match the hand-written Api methods 1:1. Paths, methods,
+    parameters, and scopes are taken from the official spec — nothing invented.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.box.com/2.0
+    description: Box Platform API server.
+security:
+  - oauth2: []
+tags:
+  - name: Users
+  - name: Folders
+  - name: Files
+  - name: Search
+  - name: Webhooks
+paths:
+  /users/me:
+    get:
+      tags: [Users]
+      operationId: getCurrentUser
+      summary: Get current user
+      description: Official operationId get_users_me.
+      parameters:
+        - in: query
+          name: fields
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+
+  /folders:
+    post:
+      tags: [Folders]
+      operationId: createFolder
+      summary: Create folder
+      description: Official operationId post_folders. Scope root_readwrite.
+      parameters:
+        - in: query
+          name: fields
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created
+
+  /folders/{folder_id}:
+    get:
+      tags: [Folders]
+      operationId: getFolder
+      summary: Get folder information
+      description: Official operationId get_folders_id. Root folder id is "0".
+      parameters:
+        - in: path
+          name: folder_id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: fields
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [Folders]
+      operationId: updateFolder
+      summary: Update folder
+      description: Official operationId put_folders_id.
+      parameters:
+        - in: path
+          name: folder_id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: fields
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+    delete:
+      tags: [Folders]
+      operationId: deleteFolder
+      summary: Delete folder
+      description: Official operationId delete_folders_id.
+      parameters:
+        - in: path
+          name: folder_id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: recursive
+          schema: { type: boolean }
+      responses:
+        "204":
+          description: No content
+
+  /folders/{folder_id}/items:
+    get:
+      tags: [Folders]
+      operationId: listFolderItems
+      summary: List items in folder
+      description: Official operationId get_folders_id_items.
+      parameters:
+        - in: path
+          name: folder_id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: fields
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+        - in: query
+          name: marker
+          schema: { type: string }
+        - in: query
+          name: usemarker
+          schema: { type: boolean }
+        - in: query
+          name: sort
+          schema: { type: string }
+        - in: query
+          name: direction
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+
+  /files/{file_id}:
+    get:
+      tags: [Files]
+      operationId: getFile
+      summary: Get file information
+      description: Official operationId get_files_id.
+      parameters:
+        - in: path
+          name: file_id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: fields
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [Files]
+      operationId: updateFile
+      summary: Update file
+      description: Official operationId put_files_id.
+      parameters:
+        - in: path
+          name: file_id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: fields
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+    delete:
+      tags: [Files]
+      operationId: deleteFile
+      summary: Delete file
+      description: Official operationId delete_files_id.
+      parameters:
+        - in: path
+          name: file_id
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: No content
+
+  /files/{file_id}/content:
+    get:
+      tags: [Files]
+      operationId: downloadFile
+      summary: Download file
+      description: Official operationId get_files_id_content. Returns a redirect.
+      parameters:
+        - in: path
+          name: file_id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: version
+          schema: { type: string }
+      responses:
+        "302":
+          description: Redirect to binary content
+
+  /files/content:
+    post:
+      tags: [Files]
+      operationId: uploadFile
+      summary: Upload file
+      description: >-
+        Official operationId post_files_content. Multipart upload to
+        https://upload.box.com/api/2.0 (Box OpenAPI per-operation server).
+        The curated servers[0] remains api.box.com/2.0 for spec-sync with
+        Api.baseUrl; the client routes this call to uploadBaseUrl.
+      parameters:
+        - in: query
+          name: fields
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [attributes, file]
+              properties:
+                attributes:
+                  type: string
+                  description: JSON string with name and parent.id
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Created
+
+  /search:
+    get:
+      tags: [Search]
+      operationId: searchContent
+      summary: Search for content
+      description: Official operationId get_search.
+      parameters:
+        - in: query
+          name: query
+          schema: { type: string }
+        - in: query
+          name: scope
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: ancestor_folder_ids
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List all webhooks
+      description: Official operationId get_webhooks. Scope manage_webhook.
+      parameters:
+        - in: query
+          name: marker
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Success
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create webhook
+      description: Official operationId post_webhooks. Scope manage_webhook.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201":
+          description: Created
+
+  /webhooks/{webhook_id}:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Get webhook
+      description: Official operationId get_webhooks_id.
+      parameters:
+        - in: path
+          name: webhook_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update webhook
+      description: Official operationId put_webhooks_id.
+      parameters:
+        - in: path
+          name: webhook_id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Remove webhook
+      description: Official operationId delete_webhooks_id.
+      parameters:
+        - in: path
+          name: webhook_id
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: No content
+
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      description: >-
+        Box OAuth 2.0 authorization code. Authorize on account.box.com;
+        exchange code at api.box.com/oauth2/token (form-urlencoded).
+      flows:
+        authorizationCode:
+          authorizationUrl: https://account.box.com/api/oauth2/authorize
+          tokenUrl: https://api.box.com/oauth2/token
+          scopes:
+            root_readonly: Read all files and folders stored in Box
+            root_readwrite: Read and write all files and folders stored in Box
+            manage_webhook: Manage webhooks

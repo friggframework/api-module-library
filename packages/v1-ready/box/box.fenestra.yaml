@@ -1,0 +1,115 @@
+# Fenestra Document: Box UI Elements
+#
+# Box exposes pre-built UI Elements (Content Explorer, Picker, Preview,
+# Sidebar, Uploader) that embed Box content UX into third-party apps.
+# Documented at https://developer.box.com/guides/embed/ui-elements/
+#
+# Drafted against Fenestra 0.1.0
+# (api-module-library branch claude/fenestra-spec-draft-Q367t).
+# Box is not yet listed in specs/fenestra/PLATFORMS.md; this draft covers the
+# published UI Elements surface. The `@friggframework/api-module-box` package
+# itself implements the Platform REST API (OAuth + files/folders/webhooks),
+# not the browser UI Elements SDK.
+
+fenestra: "0.1.0"
+
+info:
+  title: Box UI Elements
+  version: "1.0.0"
+  description: |
+    Box UI Elements are pre-built UI components that embed elements of the
+    Box web application into third-party apps. They are available as React
+    components and framework-agnostic JavaScript libraries.
+
+    Available elements (per Box docs):
+    - Content Explorer — browse/search files and folders
+    - Content Picker — select files or folders
+    - Content Preview — interactive viewers for documents, images, audio, video
+    - Content Sidebar — file metadata and activity feed
+    - Content Uploader — select or drag-and-drop uploads
+
+    Content Open With is deprecated for new customers (as of 2021-12-21).
+
+platform:
+  name: Box
+  vendor: Box, Inc.
+  documentation: https://developer.box.com/guides/embed/ui-elements/
+  appMarketplace: https://app.box.com/services
+
+sdks:
+  ui-elements:
+    name: Box UI Elements
+    packageManager: npm
+    package: box-ui-elements
+    platform: web
+    documentation: https://developer.box.com/guides/embed/ui-elements/
+    description: |
+      React and vanilla JS components that require a Box access token
+      (downscoped recommended) and the target file/folder id.
+    exports:
+      ContentExplorer:
+        type: component
+        description: Browse and search Box files/folders
+      ContentPicker:
+        type: component
+        description: Select files or folders from Box
+      ContentPreview:
+        type: component
+        description: Preview documents, images, audio, and video
+      ContentSidebar:
+        type: component
+        description: Metadata and activity feed sidebar
+      ContentUploader:
+        type: component
+        description: Upload files via select or drag-and-drop
+
+extensionPoints:
+  - id: content-explorer
+    name: Content Explorer
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Embed a Box folder browser/search UI in a host web application.
+    documentation: https://developer.box.com/guides/embed/ui-elements/explorer/
+    supportedComponents:
+      - ContentExplorer
+
+  - id: content-picker
+    name: Content Picker
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Embed a file/folder picker that returns selected item ids to the host.
+    documentation: https://developer.box.com/guides/embed/ui-elements/picker/
+    supportedComponents:
+      - ContentPicker
+
+  - id: content-preview
+    name: Content Preview
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Embed interactive viewers for Box-stored content.
+    documentation: https://developer.box.com/guides/embed/ui-elements/preview/
+    supportedComponents:
+      - ContentPreview
+
+  - id: content-uploader
+    name: Content Uploader
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Embed an uploader that writes into a chosen Box folder.
+    documentation: https://developer.box.com/guides/embed/ui-elements/uploader/
+    supportedComponents:
+      - ContentUploader
+
+  - id: content-sidebar
+    name: Content Sidebar
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Embed metadata and activity information for a Box file.
+    documentation: https://developer.box.com/guides/embed/ui-elements/sidebar/
+    supportedComponents:
+      - ContentSidebar

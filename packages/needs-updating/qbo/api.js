@@ -3,6 +3,16 @@ const moment = require('moment');
 const fetch = require('node-fetch');
 const OAuthClient = require('intuit-oauth');
 
+/**
+ * QBO Accounting API `minorversion` query parameter.
+ * Verified from Intuit's official minor-versions changelog (highest listed
+ * version is 75; versions 1–74 discontinued 2025-08-01, default is 75):
+ * https://developer.intuit.com/app/developer/qbo/docs/learn/explore-the-quickbooks-online-api/minor-versions
+ */
+const DEFAULT_MINOR_VERSION = 75;
+const MINOR_VERSIONS_DOCS_URL =
+    'https://developer.intuit.com/app/developer/qbo/docs/learn/explore-the-quickbooks-online-api/minor-versions';
+
 const oauthClient = new OAuthClient({
     clientId: process.env.QBO_OAUTH_KEY,
     clientSecret: process.env.QBO_OAUTH_SECRET,
@@ -22,6 +32,11 @@ class QuickBooksPromise {
         this.realmId = get(params, 'realmId');
         this.environment = get(params, 'environment');
         this.refreshTokenFunction = get(params, 'refreshTokenFunction');
+        // Single pin: DEFAULT_MINOR_VERSION on every Accounting request
+        // (node-quickbooks appends this.minorversion as the minorversion query param).
+        this.minorversion = Number(
+            get(params, 'minorversion', null) || DEFAULT_MINOR_VERSION
+        );
         this.qbo = new QuickBooks(
             this.key,
             this.secret,
@@ -30,7 +45,7 @@ class QuickBooksPromise {
             this.realmId,
             this.environment == 'sandbox', // use the sandbox?
             true, // enable debugging?
-            null, // set minorversion, or null for the latest version
+            this.minorversion,
             '2.0', // oAuth version
             this.refreshToken
         );
@@ -87,6 +102,9 @@ class Api extends OAuth2Requester {
 
         super(params);
         this.realmId = get(params, 'realmId', null);
+        this.minorversion = Number(
+            get(params, 'minorversion', null) || DEFAULT_MINOR_VERSION
+        );
         this.qbo = null;
 
         if (this.isAuthenticated()) {
@@ -112,6 +130,7 @@ class Api extends OAuth2Requester {
             environment: oauthClient.environment,
             refreshToken: this.refreshToken,
             refreshTokenFunction: this.refreshAccessToken.bind(this),
+            minorversion: this.minorversion,
         });
     }
 
@@ -264,4 +283,9 @@ class Api extends OAuth2Requester {
     }
 }
 
-module.exports = {Api};
+module.exports = {
+    Api,
+    QuickBooksPromise,
+    DEFAULT_MINOR_VERSION,
+    MINOR_VERSIONS_DOCS_URL,
+};

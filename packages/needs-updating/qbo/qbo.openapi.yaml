@@ -1,0 +1,51 @@
+openapi: 3.0.3
+info:
+  title: QuickBooks Online Accounting API (Frigg qbo module)
+  version: "0.10.0"
+  description: >-
+    OpenAPI surface for the legacy Frigg QBO module at packages/needs-updating/qbo.
+    Accounting requests are issued via node-quickbooks and always include the
+    `minorversion` query parameter. This module pins `minorversion=75`, verified
+    from
+    https://developer.intuit.com/app/developer/qbo/docs/learn/explore-the-quickbooks-online-api/minor-versions
+    (highest listed version; versions 1–74 discontinued 2025-08-01).
+externalDocs:
+  description: Intuit QuickBooks Online API minor versions
+  url: https://developer.intuit.com/app/developer/qbo/docs/learn/explore-the-quickbooks-online-api/minor-versions
+servers:
+  - url: https://quickbooks.api.intuit.com
+    description: Production Accounting API
+  - url: https://sandbox-quickbooks.api.intuit.com
+    description: Sandbox Accounting API
+paths:
+  /v3/company/{realmId}/companyinfo/{companyId}:
+    get:
+      operationId: getCompanyInfo
+      summary: Get company info for the connected realm
+      parameters:
+        - $ref: '#/components/parameters/realmId'
+        - name: companyId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/minorversion'
+      responses:
+        '200':
+          description: CompanyInfo entity
+components:
+  parameters:
+    realmId:
+      name: realmId
+      in: path
+      required: true
+      schema: { type: string }
+      description: QuickBooks company id from the OAuth callback.
+    minorversion:
+      name: minorversion
+      in: query
+      required: true
+      schema: { type: integer, minimum: 75, default: 75, enum: [75] }
+      description: >-
+        Accounting API minor version. Pinned to 75 (DEFAULT_MINOR_VERSION in
+        api.js), verified from
+        https://developer.intuit.com/app/developer/qbo/docs/learn/explore-the-quickbooks-online-api/minor-versions

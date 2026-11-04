@@ -1,0 +1,418 @@
+openapi: 3.0.0
+info:
+  title: Square Connect API (subset)
+  version: "1.0.0"
+  description: >-
+    Curated subset of Square's official Connect API OpenAPI
+    (https://github.com/square/connect-api-specification/blob/master/api.json)
+    covering merchants/locations, customers, payments, invoices, and webhook
+    subscriptions. operationIds are camelCase aliases of Square's PascalCase
+    operationIds so they match the hand-written Api methods 1:1. Paths, methods,
+    parameters, and scopes are taken from the official spec — nothing invented.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://connect.squareup.com
+    description: Square production Connect API host
+security:
+  - oauth2: []
+tags:
+  - name: Merchants
+  - name: Locations
+  - name: Customers
+  - name: Payments
+  - name: Invoices
+  - name: WebhookSubscriptions
+paths:
+  /v2/merchants:
+    get:
+      tags: [Merchants]
+      operationId: listMerchants
+      summary: ListMerchants
+      description: Official operationId ListMerchants. Scope MERCHANT_PROFILE_READ.
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Success
+  /v2/merchants/{merchant_id}:
+    get:
+      tags: [Merchants]
+      operationId: retrieveMerchant
+      summary: RetrieveMerchant
+      description: >-
+        Official operationId RetrieveMerchant. Pass merchant_id "me" for the
+        merchant accessible to the current token. Scope MERCHANT_PROFILE_READ.
+      parameters:
+        - in: path
+          name: merchant_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+  /v2/locations:
+    get:
+      tags: [Locations]
+      operationId: listLocations
+      summary: ListLocations
+      description: Official operationId ListLocations. Scope MERCHANT_PROFILE_READ.
+      responses:
+        "200":
+          description: Success
+    post:
+      tags: [Locations]
+      operationId: createLocation
+      summary: CreateLocation
+      description: Official operationId CreateLocation. Scope MERCHANT_PROFILE_WRITE.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+  /v2/locations/{location_id}:
+    get:
+      tags: [Locations]
+      operationId: retrieveLocation
+      summary: RetrieveLocation
+      description: Official operationId RetrieveLocation. Scope MERCHANT_PROFILE_READ.
+      parameters:
+        - in: path
+          name: location_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [Locations]
+      operationId: updateLocation
+      summary: UpdateLocation
+      description: Official operationId UpdateLocation. Scope MERCHANT_PROFILE_WRITE.
+      parameters:
+        - in: path
+          name: location_id
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+  /v2/customers:
+    get:
+      tags: [Customers]
+      operationId: listCustomers
+      summary: ListCustomers
+      description: Official operationId ListCustomers. Scope CUSTOMERS_READ.
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: sort_field
+          schema: { type: string }
+        - in: query
+          name: sort_order
+          schema: { type: string }
+        - in: query
+          name: count
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Success
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: CreateCustomer
+      description: Official operationId CreateCustomer. Scope CUSTOMERS_WRITE.
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+  /v2/customers/{customer_id}:
+    get:
+      tags: [Customers]
+      operationId: retrieveCustomer
+      summary: RetrieveCustomer
+      description: Official operationId RetrieveCustomer. Scope CUSTOMERS_READ.
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [Customers]
+      operationId: updateCustomer
+      summary: UpdateCustomer
+      description: Official operationId UpdateCustomer. Scope CUSTOMERS_WRITE.
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+  /v2/payments:
+    get:
+      tags: [Payments]
+      operationId: listPayments
+      summary: ListPayments
+      description: Official operationId ListPayments. Scope PAYMENTS_READ.
+      parameters:
+        - in: query
+          name: begin_time
+          schema: { type: string }
+        - in: query
+          name: end_time
+          schema: { type: string }
+        - in: query
+          name: sort_order
+          schema: { type: string }
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: location_id
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Success
+    post:
+      tags: [Payments]
+      operationId: createPayment
+      summary: CreatePayment
+      description: Official operationId CreatePayment. Scope PAYMENTS_WRITE.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+  /v2/payments/{payment_id}:
+    get:
+      tags: [Payments]
+      operationId: getPayment
+      summary: GetPayment
+      description: Official operationId GetPayment. Scope PAYMENTS_READ.
+      parameters:
+        - in: path
+          name: payment_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [Payments]
+      operationId: updatePayment
+      summary: UpdatePayment
+      description: Official operationId UpdatePayment. Scope PAYMENTS_WRITE.
+      parameters:
+        - in: path
+          name: payment_id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+  /v2/invoices:
+    get:
+      tags: [Invoices]
+      operationId: listInvoices
+      summary: ListInvoices
+      description: >-
+        Official operationId ListInvoices. location_id is required by Square.
+        Scope INVOICES_READ.
+      parameters:
+        - in: query
+          name: location_id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Success
+    post:
+      tags: [Invoices]
+      operationId: createInvoice
+      summary: CreateInvoice
+      description: Official operationId CreateInvoice. Scope INVOICES_WRITE.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+  /v2/invoices/{invoice_id}:
+    get:
+      tags: [Invoices]
+      operationId: getInvoice
+      summary: GetInvoice
+      description: Official operationId GetInvoice. Scope INVOICES_READ.
+      parameters:
+        - in: path
+          name: invoice_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [Invoices]
+      operationId: updateInvoice
+      summary: UpdateInvoice
+      description: Official operationId UpdateInvoice. Scope INVOICES_WRITE.
+      parameters:
+        - in: path
+          name: invoice_id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+  /v2/webhooks/subscriptions:
+    get:
+      tags: [WebhookSubscriptions]
+      operationId: listWebhookSubscriptions
+      summary: ListWebhookSubscriptions
+      description: Official operationId ListWebhookSubscriptions.
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: include_disabled
+          schema: { type: boolean }
+        - in: query
+          name: sort_order
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Success
+    post:
+      tags: [WebhookSubscriptions]
+      operationId: createWebhookSubscription
+      summary: CreateWebhookSubscription
+      description: Official operationId CreateWebhookSubscription.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+  /v2/webhooks/subscriptions/{subscription_id}:
+    get:
+      tags: [WebhookSubscriptions]
+      operationId: retrieveWebhookSubscription
+      summary: RetrieveWebhookSubscription
+      description: Official operationId RetrieveWebhookSubscription.
+      parameters:
+        - in: path
+          name: subscription_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    put:
+      tags: [WebhookSubscriptions]
+      operationId: updateWebhookSubscription
+      summary: UpdateWebhookSubscription
+      description: Official operationId UpdateWebhookSubscription.
+      parameters:
+        - in: path
+          name: subscription_id
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+    delete:
+      tags: [WebhookSubscriptions]
+      operationId: deleteWebhookSubscription
+      summary: DeleteWebhookSubscription
+      description: Official operationId DeleteWebhookSubscription.
+      parameters:
+        - in: path
+          name: subscription_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      x-additional-headers:
+        - name: Square-Version
+          description: Square Connect API versions
+          schema:
+            default: "2026-09-16"
+      flows:
+        authorizationCode:
+          authorizationUrl: https://connect.squareup.com/oauth2/authorize
+          tokenUrl: https://connect.squareup.com/oauth2/token
+          scopes:
+            MERCHANT_PROFILE_READ: Read merchant and location profile information.
+            MERCHANT_PROFILE_WRITE: Write merchant and location profile information.
+            CUSTOMERS_READ: Read customer information.
+            CUSTOMERS_WRITE: Write customer information.
+            PAYMENTS_READ: Read payment information.
+            PAYMENTS_WRITE: Write payment information.
+            INVOICES_READ: Read invoice information.
+            INVOICES_WRITE: Write invoice information.

@@ -1,0 +1,14 @@
+{
+    "name": "square",
+    "config": {
+        "oauth": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        },
+        "tokenHost": "https://connect.squareup.com",
+        "tokenPath": "/oauth2/token",
+        "authorizeHost": "https://connect.squareup.com",
+        "authorizePath": "/oauth2/authorize"
+    }
+}

@@ -1,0 +1,956 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "airwallex",
+  "label": "Airwallex",
+  "package": "@friggframework/api-module-airwallex",
+  "version": "1.0.0",
+  "auth": "api_key",
+  "account": {
+    "description": "Connected Airwallex account fields persisted from GET /api/v1/account.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "string",
+        "description": "Airwallex account id"
+      },
+      {
+        "name": "nickname",
+        "type": "string",
+        "description": "Account nickname when set"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "description": "Account status"
+      }
+    ]
+  },
+  "objects": {
+    "account": {
+      "label": "Account",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true,
+          "tag": "record.id"
+        },
+        {
+          "name": "nickname",
+          "type": "string",
+          "tag": "record.name"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "tag": "record.status"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ]
+    },
+    "balance": {
+      "label": "Wallet balance",
+      "fields": [
+        {
+          "name": "currency",
+          "type": "string",
+          "tag": "payment.currency"
+        },
+        {
+          "name": "available_amount",
+          "type": "number",
+          "tag": "payment.amount"
+        },
+        {
+          "name": "pending_amount",
+          "type": "number"
+        },
+        {
+          "name": "total_amount",
+          "type": "number"
+        },
+        {
+          "name": "account_type",
+          "type": "string"
+        }
+      ]
+    },
+    "financialTransaction": {
+      "label": "Financial transaction",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "tag": "payment.amount"
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "tag": "payment.currency"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "tag": "payment.status"
+        },
+        {
+          "name": "transaction_type",
+          "type": "string"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ]
+    },
+    "beneficiary": {
+      "label": "Beneficiary",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "nickname",
+          "type": "string",
+          "tag": "record.name"
+        },
+        {
+          "name": "entity_type",
+          "type": "string"
+        },
+        {
+          "name": "transfer_methods",
+          "type": "json"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "beneficiary.list",
+          "items": "items"
+        },
+        "get": {
+          "capability": "beneficiary.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "beneficiary.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "beneficiary.update",
+          "id": "id",
+          "body": "data"
+        }
+      }
+    },
+    "transfer": {
+      "label": "Transfer",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "tag": "payment.status"
+        },
+        {
+          "name": "transfer_currency",
+          "type": "string",
+          "tag": "payment.currency"
+        },
+        {
+          "name": "transfer_amount",
+          "type": "number",
+          "tag": "payment.amount"
+        },
+        {
+          "name": "beneficiary_id",
+          "type": "string"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "transfer.list",
+          "items": "items"
+        },
+        "get": {
+          "capability": "transfer.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "transfer.create",
+          "body": "data"
+        }
+      }
+    },
+    "customer": {
+      "label": "Payment Acceptance customer",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "first_name",
+          "type": "string",
+          "tag": "person.givenName"
+        },
+        {
+          "name": "last_name",
+          "type": "string",
+          "tag": "person.familyName"
+        },
+        {
+          "name": "phone_number",
+          "type": "phone",
+          "tag": "contact.phone"
+        },
+        {
+          "name": "merchant_customer_id",
+          "type": "string",
+          "tag": "record.externalId"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "customer.list",
+          "items": "items"
+        },
+        "get": {
+          "capability": "customer.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "customer.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "customer.update",
+          "id": "id",
+          "body": "data"
+        }
+      }
+    },
+    "paymentAttempt": {
+      "label": "Payment attempt",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "tag": "payment.amount"
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "tag": "payment.currency"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "tag": "payment.status"
+        },
+        {
+          "name": "payment_intent_id",
+          "type": "string"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ]
+    },
+    "paymentLink": {
+      "label": "Payment link",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "tag": "payment.amount"
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "tag": "payment.currency"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "tag": "payment.status"
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "readOnly": true
+        }
+      ]
+    },
+    "charge": {
+      "label": "Charge",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "tag": "payment.amount"
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "tag": "payment.currency"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "tag": "payment.status"
+        },
+        {
+          "name": "reference",
+          "type": "string"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ]
+    },
+    "card": {
+      "label": "Issuing card",
+      "fields": [
+        {
+          "name": "card_id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "card_status",
+          "type": "string",
+          "tag": "record.status"
+        },
+        {
+          "name": "nick_name",
+          "type": "string",
+          "tag": "record.name"
+        },
+        {
+          "name": "cardholder_id",
+          "type": "string"
+        },
+        {
+          "name": "brand",
+          "type": "string"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ]
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "url",
+          "type": "string"
+        },
+        {
+          "name": "version",
+          "type": "string"
+        },
+        {
+          "name": "events",
+          "type": "json"
+        },
+        {
+          "name": "secret",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ]
+    }
+  },
+  "webhook": {
+    "scope": "installation",
+    "topic": "{{body.name}}",
+    "eventId": "{{body.id}}",
+    "verify": "verifyWebhookSignature",
+    "status": "unimplemented",
+    "note": "Airwallex documents webhook subscription via /api/v1/webhooks; signature verification is not yet wrapped on this Api class."
+  },
+  "capabilities": {
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "input": {},
+      "output": "account"
+    },
+    "balance.listCurrent": {
+      "kind": "read",
+      "method": "listCurrentBalances",
+      "input": {
+        "account_type": {
+          "type": "string"
+        }
+      },
+      "output": "balance[]"
+    },
+    "balance.listHistory": {
+      "kind": "read",
+      "method": "listBalanceHistory",
+      "input": {
+        "currency": {
+          "type": "string"
+        },
+        "from_post_at": {
+          "type": "string"
+        },
+        "to_post_at": {
+          "type": "string"
+        },
+        "page_num": {
+          "type": "number"
+        },
+        "page_size": {
+          "type": "number"
+        }
+      },
+      "output": "page"
+    },
+    "financialTransaction.list": {
+      "kind": "read",
+      "method": "listFinancialTransactions",
+      "input": {
+        "currency": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "page_num": {
+          "type": "number"
+        },
+        "page_size": {
+          "type": "number"
+        }
+      },
+      "output": "page<financialTransaction>"
+    },
+    "financialTransaction.get": {
+      "kind": "read",
+      "method": "getFinancialTransaction",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "financialTransaction",
+      "args": [
+        "id"
+      ]
+    },
+    "beneficiary.list": {
+      "kind": "read",
+      "method": "listBeneficiaries",
+      "input": {
+        "page_num": {
+          "type": "number"
+        },
+        "page_size": {
+          "type": "number"
+        },
+        "nickname": {
+          "type": "string"
+        }
+      },
+      "output": "page<beneficiary>"
+    },
+    "beneficiary.get": {
+      "kind": "read",
+      "method": "getBeneficiary",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "beneficiary",
+      "args": [
+        "id"
+      ]
+    },
+    "beneficiary.create": {
+      "kind": "write",
+      "method": "createBeneficiary",
+      "input": {
+        "data": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "beneficiary",
+      "args": [
+        "data"
+      ]
+    },
+    "beneficiary.update": {
+      "kind": "write",
+      "method": "updateBeneficiary",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        },
+        "data": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "beneficiary",
+      "args": [
+        "id",
+        "data"
+      ]
+    },
+    "transfer.list": {
+      "kind": "read",
+      "method": "listTransfers",
+      "input": {
+        "status": {
+          "type": "string"
+        },
+        "page": {
+          "type": "string"
+        },
+        "page_size": {
+          "type": "number"
+        }
+      },
+      "output": "page<transfer>"
+    },
+    "transfer.get": {
+      "kind": "read",
+      "method": "getTransfer",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "transfer",
+      "args": [
+        "id"
+      ]
+    },
+    "transfer.create": {
+      "kind": "write",
+      "method": "createTransfer",
+      "input": {
+        "data": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "transfer",
+      "args": [
+        "data"
+      ]
+    },
+    "customer.list": {
+      "kind": "read",
+      "method": "listCustomers",
+      "input": {
+        "page_num": {
+          "type": "number"
+        },
+        "page_size": {
+          "type": "number"
+        },
+        "merchant_customer_id": {
+          "type": "string"
+        }
+      },
+      "output": "page<customer>"
+    },
+    "customer.get": {
+      "kind": "read",
+      "method": "getCustomer",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "customer",
+      "args": [
+        "id"
+      ]
+    },
+    "customer.create": {
+      "kind": "write",
+      "method": "createCustomer",
+      "input": {
+        "data": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "customer",
+      "args": [
+        "data"
+      ]
+    },
+    "customer.update": {
+      "kind": "write",
+      "method": "updateCustomer",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        },
+        "data": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "customer",
+      "args": [
+        "id",
+        "data"
+      ]
+    },
+    "paymentAttempt.list": {
+      "kind": "read",
+      "method": "listPaymentAttempts",
+      "input": {
+        "status": {
+          "type": "string"
+        },
+        "page_num": {
+          "type": "number"
+        },
+        "page_size": {
+          "type": "number"
+        }
+      },
+      "output": "page<paymentAttempt>"
+    },
+    "paymentAttempt.get": {
+      "kind": "read",
+      "method": "getPaymentAttempt",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "paymentAttempt",
+      "args": [
+        "id"
+      ]
+    },
+    "paymentLink.create": {
+      "kind": "write",
+      "method": "createPaymentLink",
+      "input": {
+        "data": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "paymentLink",
+      "args": [
+        "data"
+      ]
+    },
+    "paymentLink.get": {
+      "kind": "read",
+      "method": "getPaymentLink",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "paymentLink",
+      "args": [
+        "id"
+      ]
+    },
+    "paymentLink.notifyShopper": {
+      "kind": "write",
+      "method": "notifyPaymentLinkShopper",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        },
+        "data": {
+          "type": "object"
+        }
+      },
+      "output": "paymentLink",
+      "args": [
+        "id",
+        "data"
+      ]
+    },
+    "charge.list": {
+      "kind": "read",
+      "method": "listCharges",
+      "input": {
+        "status": {
+          "type": "string"
+        },
+        "page_num": {
+          "type": "number"
+        },
+        "page_size": {
+          "type": "number"
+        }
+      },
+      "output": "page<charge>"
+    },
+    "charge.get": {
+      "kind": "read",
+      "method": "getCharge",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "charge",
+      "args": [
+        "id"
+      ]
+    },
+    "card.list": {
+      "kind": "read",
+      "method": "listCards",
+      "input": {
+        "card_status": {
+          "type": "string"
+        },
+        "page_num": {
+          "type": "number"
+        },
+        "page_size": {
+          "type": "number"
+        }
+      },
+      "output": "page<card>"
+    },
+    "card.get": {
+      "kind": "read",
+      "method": "getCard",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "card",
+      "args": [
+        "id"
+      ]
+    },
+    "card.create": {
+      "kind": "write",
+      "method": "createCard",
+      "input": {
+        "data": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "card",
+      "args": [
+        "data"
+      ]
+    },
+    "card.listLimits": {
+      "kind": "read",
+      "method": "listCardLimits",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "json",
+      "args": [
+        "id"
+      ]
+    },
+    "cardholder.create": {
+      "kind": "write",
+      "method": "createCardholder",
+      "input": {
+        "data": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "json",
+      "args": [
+        "data"
+      ]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "input": {
+        "page": {
+          "type": "string"
+        },
+        "page_size": {
+          "type": "number"
+        }
+      },
+      "output": "page<webhook>"
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "webhook",
+      "args": [
+        "id"
+      ]
+    },
+    "webhook.create": {
+      "kind": "subscribe",
+      "method": "createWebhook",
+      "input": {
+        "url": {
+          "type": "string",
+          "required": true
+        },
+        "version": {
+          "type": "string",
+          "required": true
+        },
+        "events": {
+          "type": "array",
+          "required": true
+        },
+        "request_id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "webhook"
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhook",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        },
+        "data": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "webhook",
+      "args": [
+        "id",
+        "data"
+      ]
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhook",
+      "input": {
+        "id": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "output": "void",
+      "args": [
+        "id"
+      ]
+    }
+  }
+}

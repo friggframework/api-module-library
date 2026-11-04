@@ -1,0 +1,10 @@
+{
+    "name": "airwallex",
+    "label": "Airwallex",
+    "authType": "apiKey",
+    "productUrl": "https://www.airwallex.com",
+    "apiDocs": "https://www.airwallex.com/docs/api",
+    "logoUrl": "https://friggframework.org/assets/img/airwallex-icon.png",
+    "categories": ["Online Payments", "Treasury", "Issuing"],
+    "description": "Airwallex Client API — accounts, balances, transfers, payment acceptance, card issuing, and webhooks."
+}

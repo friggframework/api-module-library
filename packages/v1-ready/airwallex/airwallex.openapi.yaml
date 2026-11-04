@@ -1,0 +1,1336 @@
+openapi: 3.0.3
+info:
+  title: Airwallex Client API (Frigg curated subset)
+  version: 1.0.0
+  description: 'Curated subset of the official Airwallex Client API covering exactly the endpoints implemented
+    by @friggframework/api-module-airwallex. Source of truth for the hand-written client in api.js (one
+    method per operationId). Derived from https://github.com/airwallex/airwallex-openapi (Client API).
+    Full docs: https://www.airwallex.com/docs/api'
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+- url: https://api.airwallex.com
+  description: Production
+- url: https://api.sandbox.airwallex.com
+  description: Sandbox
+security:
+- BearerAuth: []
+tags:
+- name: Authentication
+- name: Account
+- name: Balances
+- name: Financial Transactions
+- name: Beneficiaries
+- name: Transfers
+- name: Customers
+- name: Payment Attempts
+- name: Payment Links
+- name: Charges
+- name: Issuing
+- name: Webhooks
+paths:
+  /api/v1/authentication/login:
+    post:
+      operationId: login
+      summary: Obtain Access Token
+      description: 'Obtain an access token with x-api-key and x-client-id (optional x-login-as). Returns
+        { token, expires_at }. Docs: https://www.airwallex.com/docs/api/authentication/api_access_token/login'
+      tags:
+      - Authentication > Authentication
+      parameters:
+      - name: x-api-key
+        in: header
+        required: true
+        schema:
+          type: string
+          default: 72c0a50d840626050145ccf72b733e32f31bb21323d493f9d00290b37676a138bcdf1d6415d9f08aad117450e23a4f4f
+        description: API key provided by Airwallex.
+      - name: x-client-id
+        in: header
+        required: true
+        schema:
+          type: string
+          default: 5f1vUssbSnq45temBX6CnB
+        description: Client unique identifier provided by Airwallex.
+      - name: x-login-as
+        in: header
+        required: false
+        schema:
+          type: string
+          default: acct_LTwYEh8EPa2yiA3dCoBEVA
+        description: Account unique identifier to be used for authentication.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+      security:
+      - ApiKeyLogin: []
+  /api/v1/account:
+    get:
+      operationId: getAccount
+      summary: Retrieve Account Details
+      description: Retrieve account details for your own Airwallex account.
+      tags:
+      - Embedded Finance > Accounts
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/balances/current:
+    get:
+      operationId: listCurrentBalances
+      summary: List all Current Balances
+      description: Get *available* and *pending* balances for every currency.
+      tags:
+      - Core Resources > Balances
+      parameters:
+      - name: account_type
+        in: query
+        required: false
+        schema:
+          type: string
+          default: cash
+        description: 'The type of account to query. Supported values: `cash`, `yield`, `credit`.'
+      - name: x-on-behalf-of
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Unique identifier of the connected sub account.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/balances/history:
+    get:
+      operationId: listBalanceHistory
+      summary: Retrieve the Balance History
+      description: Get balance history for an account based on the transaction currency. The response
+        contains records where each record represents a change to the balance. You can filter results
+        using the date range parameters, `from_post_at` and `to_post_at`, representing the time the balance
+        change occurred in your Wallet. The date range should be within 7 days when using `page_num` to
+        paginate through history. A…
+      tags:
+      - Core Resources > Balances
+      parameters:
+      - name: account_type
+        in: query
+        required: false
+        schema:
+          type: string
+          default: cash
+        description: 'The type of account to query. Supported values: `cash`, `yield`, `credit`.'
+      - name: currency
+        in: query
+        required: false
+        schema:
+          type: string
+        description: The transaction currency in 3-letter ISO-4217 format.
+      - name: from_post_at
+        in: query
+        required: false
+        schema:
+          type: string
+        description: The start date (inclusive) of the date range during which balance activity occurred
+          in your Wallet. Specify the date in ISO8601 format. If not specified, `from_post_at` defaults
+          to 7 days before `to_p
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: string
+        description: 'A bookmark for use in pagination to retrieve either the next page or the previous
+          page of results. You can fetch the value for this identifier from the response of the previous
+          API call.
+
+          To retrieve t'
+      - name: page_num
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+        description: The page number of the page to be retrieved. Page numbers range from 0 to a maximum
+          value of 10000.
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 100
+        description: A limit on the number of records to be returned on a page, between 10 and 2000. The
+          default is 100.
+      - name: request_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: request_id from clients for the transaction.
+      - name: to_post_at
+        in: query
+        required: false
+        schema:
+          type: string
+        description: The end date (exclusive) of the date range during which the balance activity occurred
+          in your Wallet. Specify the date in ISO8601 format. Defaults to today if neither this field
+          nor from_post_at are s
+      - name: x-on-behalf-of
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Unique identifier of the connected sub account.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/financial_transactions:
+    get:
+      operationId: listFinancialTransactions
+      summary: List all Financial Transactions
+      description: Get a list of financial transactions that contributed to the Airwallex account balance
+        from a specified creation date/time, with optional filters on end creation date/time, batch_id
+        and status.
+      tags:
+      - Finance > Financial Transactions
+      parameters:
+      - name: batch_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Batch unique identifier of the financial transaction.
+      - name: currency
+        in: query
+        required: false
+        schema:
+          type: string
+        description: The currency (3-letter ISO-4217 code) of the financial transaction.
+      - name: from_created_at
+        in: query
+        required: false
+        schema:
+          type: string
+        description: The start time of `created_at` in ISO8601 format (inclusive).
+      - name: page_num
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+        description: Page number, default is 0, max is 2000.
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 100
+        description: Number of results per page, default is 100, max is 1000.
+      - name: source_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: The source unique identifier of the transaction.
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+        description: 'Status of the financial transaction, one of: `PENDING`, `SETTLED`.'
+      - name: to_created_at
+        in: query
+        required: false
+        schema:
+          type: string
+        description: The end time of `created_at` in ISO8601 format (inclusive).
+      - name: x-on-behalf-of
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Unique identifier of the connected sub account.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/financial_transactions/{id}:
+    get:
+      operationId: getFinancialTransaction
+      summary: Retrieve a Financial Transaction
+      description: Get a specific financial transaction by an Airwallex financial transaction unique identifier.
+      tags:
+      - Finance > Financial Transactions
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Unique identifier of financial transaction.
+      - name: x-on-behalf-of
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Unique identifier of the connected sub account.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/beneficiaries:
+    get:
+      operationId: listBeneficiaries
+      summary: List all Beneficiaries
+      description: Get list of beneficiaries with optional filters on from date/time, to date/time, names
+        and entity type. Results are paginated, with default list limit of 50 results.
+      tags:
+      - Payouts > Beneficiaries
+      parameters:
+      - name: bank_account_number
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Filter on bank account number of beneficiary.
+      - name: company_name
+        in: query
+        required: false
+        schema:
+          type: string
+          default: Swift concrete services
+        description: Filter on company name of beneficiary.
+      - name: entity_type
+        in: query
+        required: false
+        schema:
+          type: string
+          default: COMPANY
+        description: Filter on entity type of COMPANY or PERSONAL.
+      - name: from_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+          default: '2017-04-01'
+        description: The start date of `created_at` in ISO8601 format (inclusive).
+      - name: name
+        in: query
+        required: false
+        schema:
+          type: string
+          default: Adam
+        description: Filter on name of beneficiary.
+      - name: nick_name
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Filter on nickname of beneficiary.
+      - name: page_num
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+        description: Page number, starts from 0.
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 100
+        description: Number of results per page. Default value is 100.
+      - name: sca_exemptible
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+        description: Filter on SCA exemptible beneficiaries.
+      - name: to_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+          default: 2030-01-01T00:00:00+0000
+        description: The end date of `created_at` in ISO8601 format (inclusive).
+      - name: type
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          default: BANK_ACCOUNT
+        description: Type of the beneficiary, indicating the type of account or method through which the
+          beneficiary receives funds, i.e., BANK_ACCOUNT, DIGITAL_WALLET, CARD, STABLECOIN_WALLET.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/beneficiaries/create:
+    post:
+      operationId: createBeneficiary
+      summary: Create a Beneficiary
+      description: Create a new beneficiary to be stored on the Airwallex platform.
+      tags:
+      - Payouts > Beneficiaries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body per Airwallex OpenAPI for this operation.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/beneficiaries/{id}:
+    get:
+      operationId: getBeneficiary
+      summary: Retrieve a Beneficiary
+      description: Get a specific beneficiary by specifying the Airwallex `id`.
+      tags:
+      - Payouts > Beneficiaries
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          default: 8365ea88-2946-4877-abe1-e02a1015288d
+        description: id of the beneficiary contact to retrieve.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/beneficiaries/{id}/update:
+    post:
+      operationId: updateBeneficiary
+      summary: Update an Existing Beneficiary
+      description: Edit an existing beneficiary stored on the Airwallex platform.
+      tags:
+      - Payouts > Beneficiaries
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          default: 8365ea88-2946-4877-abe1-e02a1015288d
+        description: id of the beneficiary contact to update.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body per Airwallex OpenAPI for this operation.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/transfers:
+    get:
+      operationId: listTransfers
+      summary: List all Transfers
+      description: Get list of transfers from a specified creation date/time, with optional filters on
+        end creation date/time, buy/sell currency and status. Alternatively, one or neither of the *from*
+        or *to* created_at request fields needs to be populated. In the event that neither or only the
+        to created_at fields are populated, then transfers 30 days in arrears of today or the *to* created_at
+        date will be returned…
+      tags:
+      - Payouts > Transfers
+      parameters:
+      - name: batch_transfer_id
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+          default: 55713d04-c569-4510-abb7-5b47d2423a84
+        description: Batch transfer unique identifier.
+      - name: beneficiary_id
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+          default: 55713d04-c569-4510-abb7-5b47d2423a84
+        description: Beneficiary unique identifier.
+      - name: from_created_at
+        in: query
+        required: false
+        schema:
+          type: string
+          default: '2022-12-01T20:00:00Z'
+        description: The start date of `created_at` in ISO8601 format (inclusive).
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: string
+        description: A bookmark for use in pagination to retrieve either the next page or the previous
+          page of results. You can fetch the value for this identifier from the response of the previous
+          API call. To retrieve t
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 2000
+        description: Number of results per page, defaultValue 2000.
+      - name: request_id
+        in: query
+        required: false
+        schema:
+          type: string
+          default: short_reference_id
+        description: Transfer `request_id`.
+      - name: short_reference_id
+        in: query
+        required: false
+        schema:
+          type: string
+          default: short_reference_id
+        description: Transfer `short_reference_id`.
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          default: PROCESSING
+        description: Status of the transfer.
+      - name: to_created_at
+        in: query
+        required: false
+        schema:
+          type: string
+          default: '2022-12-31T20:00:00Z'
+        description: The end date of `created_at` in ISO8601 format (inclusive).
+      - name: transfer_currency
+        in: query
+        required: false
+        schema:
+          type: string
+          default: USD
+        description: Transfer currency.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/transfers/create:
+    post:
+      operationId: createTransfer
+      summary: Create a Transfer
+      description: 'Create a new transfer to a beneficiary. The transfer can either include an underlying
+        conversion when the transfer currency varies from the source currency, or will not include a conversion
+        when the transfer currency and source currency match.
+
+
+        We have created a dynamic schema that will return required fields based on some key criteria that
+        we need to determine the destination of the transfer and…'
+      tags:
+      - Payouts > Transfers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body per Airwallex OpenAPI for this operation.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/transfers/{id}:
+    get:
+      operationId: getTransfer
+      summary: Retrieve a Transfer
+      description: Get a specific transfer by specifying the Airwallex `id`.
+      tags:
+      - Payouts > Transfers
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          default: d9af1614-a6a1-4d45-aae7-6858fc6d9ede
+        description: Unique identifier of the transfer to retrieve.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/pa/customers:
+    get:
+      operationId: listCustomers
+      summary: List all Customers
+      description: List all Customers.
+      tags:
+      - Payment Acceptance > Customers
+      parameters:
+      - name: from_created_at
+        in: query
+        required: false
+        schema:
+          type: string
+          default: '2021-03-01T03:52:34+00:00'
+        description: The start time of `created_at` in ISO8601 format. The timestamp must include an explicit
+          timezone (e.g. `Z` or `-04:00`).
+      - name: merchant_customer_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: The customer unique identifier on merchant side.
+      - name: page_num
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+        description: Page number starting from 0.
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 10
+        description: Number of Customers to be listed per page. Default value is 10. Maximum is 1000.
+          The value greater than the maximum will be capped to the maximum.
+      - name: to_created_at
+        in: query
+        required: false
+        schema:
+          type: string
+          default: '2017-04-01T03:52:34+00:00'
+        description: The end time of `created_at` in ISO8601 format. The timestamp must include an explicit
+          timezone (e.g. `Z` or `-04:00`).
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/pa/customers/create:
+    post:
+      operationId: createCustomer
+      summary: Create a Customer
+      description: Create a **Customer** object. We require the Customer unique identifier in the merchant's
+        system as a mandatory field.
+      tags:
+      - Payment Acceptance > Customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body per Airwallex OpenAPI for this operation.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/pa/customers/{id}:
+    get:
+      operationId: getCustomer
+      summary: Retrieve a Customer
+      description: Retrieve a Customer by unique identifier. This unique identifier is first returned
+        when creating a new Customer.
+      tags:
+      - Payment Acceptance > Customers
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          default: cus_ps8e0ZgQzd2QnCxVpzJrHD6KOVu
+        description: Customer unique identifier.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/pa/customers/{id}/update:
+    post:
+      operationId: updateCustomer
+      summary: Update a Customer
+      description: Update customer's personal information. Use the [Payment Methods API](/docs/api/payments/payment_methods/update)
+        to update details of the attached Payment Methods.
+      tags:
+      - Payment Acceptance > Customers
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          default: cus_ps8e0ZgQzd2QnCxVpzJrHD6KOVu
+        description: Customer unique identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body per Airwallex OpenAPI for this operation.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/pa/payment_attempts:
+    get:
+      operationId: listPaymentAttempts
+      summary: List all Payment Attempts
+      description: List all Payment Attempts. Specify a value for `payment_intent_id` to list the Payment
+        Attempts made on the Payment Intent. You may filter out the results further by `method` and/or
+        `status`.
+      tags:
+      - Payment Acceptance > Payment Attempts
+      parameters:
+      - name: currency
+        in: query
+        required: false
+        schema:
+          type: string
+          default: USD
+        description: Payment Attempt currency.
+      - name: from_created_at
+        in: query
+        required: false
+        schema:
+          type: string
+          default: '2021-05-01T03:52:34+00:00'
+        description: The start time of `created_at` in ISO8601 format. The timestamp must include an explicit
+          timezone (e.g. `Z` or `-04:00`).
+      - name: page_num
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+        description: Page number starting from 0.
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 10
+        description: Number of Payment Attempts to be listed per page. Default value is 10. Maximum is
+          1000. The value greater than the maximum will be capped to the maximum.
+      - name: payment_intent_id
+        in: query
+        required: false
+        schema:
+          type: string
+          default: int_e65tkXCSzJrsMpTrzoFrjaau53
+        description: Payment Intent unique identifier of the attempt.
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          default: AUTHORIZED
+        description: Payment Attempt status.
+      - name: to_created_at
+        in: query
+        required: false
+        schema:
+          type: string
+          default: '2017-04-01T03:52:34+00:00'
+        description: The end time of `created_at` in ISO8601 format. The timestamp must include an explicit
+          timezone (e.g. `Z` or `-04:00`).
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/pa/payment_attempts/{id}:
+    get:
+      operationId: getPaymentAttempt
+      summary: Retrieve a Payment Attempt
+      tags:
+      - Payment Acceptance > Payment Attempts
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          default: att_tHambObszjrtrCbazat45Im1F0
+        description: Payment Attempt unique identifier.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/pa/payment_links/create:
+    post:
+      operationId: createPaymentLink
+      summary: Create a Payment Link
+      description: Create a new payment link.
+      tags:
+      - Payment Acceptance > Payment Links
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body per Airwallex OpenAPI for this operation.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/pa/payment_links/{id}:
+    get:
+      operationId: getPaymentLink
+      summary: Retrieve a Payment Link
+      description: Retrieve information about an existing payment link.
+      tags:
+      - Payment Acceptance > Payment Links
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          default: 475dc845-bc7c-47eb-b2b0-52782b9d078d
+        description: Payment link unique identifier.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/pa/payment_links/{id}/notify_shopper:
+    post:
+      operationId: notifyPaymentLinkShopper
+      summary: Send a Payment Link
+      description: Send an email notification to shopper with a payment link.
+      tags:
+      - Payment Acceptance > Payment Links
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          default: 475dc845-bc7c-47eb-b2b0-52782b9d078d
+        description: Payment link unique identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body per Airwallex OpenAPI for this operation.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/charges:
+    get:
+      operationId: listCharges
+      summary: List all Charges
+      description: Get a list of charges created by your Airwallex account. The charges returned will
+        be sorted by creation time.
+      tags:
+      - Embedded Finance > Charges
+      parameters:
+      - name: currency
+        in: query
+        required: false
+        schema:
+          type: string
+          default: USD
+        description: Currency (3-letter ISO-4217 code).
+      - name: from_created_at
+        in: query
+        required: false
+        schema:
+          type: string
+          default: '2017-04-01'
+        description: The start date of `created_at` in ISO8601 format (inclusive).
+      - name: page_num
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+        description: Page number, starts from 0.
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 100
+        description: Number of results per page. Default value is 100, minimum 10, maximum 2000.
+      - name: request_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Charge `request_id`.
+      - name: source
+        in: query
+        required: false
+        schema:
+          type: string
+          default: 7f687fe6-dcf4-4462-92fa-80335301d9d2
+        description: Airwallex account unique identifier.
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          default: NEW
+        description: 'Status of the charge, one of: `NEW`, `PENDING`, `SETTLED`,`SUSPENDED`, `FAILED`.'
+      - name: to_created_at
+        in: query
+        required: false
+        schema:
+          type: string
+          default: 2017-04-01T03:52:34+0000
+        description: The end date of `created_at` in ISO8601 format (inclusive).
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/charges/{id}:
+    get:
+      operationId: getCharge
+      summary: Retrieve a Charge
+      description: Get the details of a charge that has previously been created. Supply the unique charge
+        identifier that was returned at the time your created a new charge and Airwallex will return details
+        of the corresponding charge.
+      tags:
+      - Embedded Finance > Charges
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          default: d9af1614-a6a1-4d45-aae7-6858fc6d9ede
+        description: Unique identifier of the charge to retrieve.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/issuing/cards:
+    get:
+      operationId: listCards
+      summary: List all Cards
+      description: Get cards issued under an account. Will default to a 30 day period unless both *to*
+        and *from* created_at request fields are populated.
+      tags:
+      - Issuing > Cards
+      parameters:
+      - name: card_status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - PENDING
+          - FAILED
+          - INACTIVE
+          - ACTIVE
+          - LOST
+          - STOLEN
+          - CLOSED
+          - BLOCKED
+          - EXPIRED
+          - UNKNOWN
+          default: PENDING
+        description: "Current card status  \nOne of `PENDING`, `FAILED`, `INACTIVE`, `ACTIVE`, `LOST`,\
+          \ `STOLEN`, `CLOSED`, `BLOCKED`, `EXPIRED`."
+      - name: cardholder_id
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+          default: 7f0216e7-0348-4a36-9871-d1ba82c13410
+        description: The id of the cardholder for the card, if it is an employee card.
+      - name: from_created_at
+        in: query
+        required: false
+        schema:
+          type: string
+          default: 2018-10-01T00:00:00+0000
+        description: Created_from_date in ISO8601 format (inclusive).
+      - name: from_updated_at
+        in: query
+        required: false
+        schema:
+          type: string
+          default: 2023-12-30T00:00:00+0000
+        description: Updated_from_date in ISO8601 format (inclusive).
+      - name: nick_name
+        in: query
+        required: false
+        schema:
+          type: string
+          default: Travel
+        description: Will be used to return cards whose nickname exactly matches the value of this field.
+      - name: page_num
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+        description: Page number, starts from 0.
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 100
+        description: Number of results per page, between 10 and 200. The default is 100.
+      - name: to_created_at
+        in: query
+        required: false
+        schema:
+          type: string
+          default: 2018-10-31T00:00:00+0000
+        description: Created_to_date in ISO8601 format (inclusive).
+      - name: to_updated_at
+        in: query
+        required: false
+        schema:
+          type: string
+          default: 2023-12-31T00:00:00+0000
+        description: Updated_to_date in ISO8601 format (inclusive).
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/issuing/cards/create:
+    post:
+      operationId: createCard
+      summary: Create a Card
+      description: The card object is the actual resource associated with the card issued out by Airwallex.
+        It holds details such as linked account, embossed name (for physical cards), shipping method and
+        information (for physical cards), card based spend controls (eg. transaction limits, blocked merchant
+        category codes etc.). The card object also determines who the card is for (ie for clients or their
+        customers/emp…
+      tags:
+      - Issuing > Cards
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body per Airwallex OpenAPI for this operation.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/issuing/cards/{id}:
+    get:
+      operationId: getCard
+      summary: Retrieve a Card
+      description: Retrieve Card details.
+      tags:
+      - Issuing > Cards
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          default: 6c2dc266-09ad-4235-b61a-767c7cd6d6ea
+        description: Unique Identifier for the card.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/issuing/cards/{id}/limits:
+    get:
+      operationId: listCardLimits
+      summary: List all Card Remaining Limits
+      description: Retrieve remaining limits of a card.
+      tags:
+      - Issuing > Cards
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique Identifier for the card.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/issuing/cardholders/create:
+    post:
+      operationId: createCardholder
+      summary: Create a Cardholder
+      description: "Cardholders are an authorized representative of your business. Two types of cardholder\
+        \ are permissible, Individual and Delegate.  \n`INDIVIDUAL`: A cardholder who is associated with\
+        \ a named individual that is a representative of your business. Can be associated with a personalized\
+        \ or non-personalized card.  \n`DELEGATE`: A cardholder who may be assigned to non-personalized\
+        \ cards only and acts as an…"
+      tags:
+      - Issuing > Cardholders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body per Airwallex OpenAPI for this operation.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/webhooks:
+    get:
+      operationId: listWebhooks
+      summary: List all Webhooks
+      description: Retrieves a list of Webhooks.
+      tags:
+      - Webhooks > Webhooks
+      parameters:
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+        description: Number of Webhooks per page. Defaults to 20.
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: string
+        description: A bookmark for use in pagination to retrieve either the next page or the previous
+          page of results. You can fetch the value for this identifier from the response of the previous
+          API call. To retrieve t
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/webhooks/create:
+    post:
+      operationId: createWebhook
+      summary: Create a Webhook
+      description: Creates a new Webhook and subscribes to a list of webhook events from Airwallex.
+      tags:
+      - Webhooks > Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body per Airwallex OpenAPI for this operation.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/webhooks/{id}:
+    get:
+      operationId: getWebhook
+      summary: Retrieve a Webhook
+      description: Retrieves the details of a Webhook.
+      tags:
+      - Webhooks > Webhooks
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Unique identifier of the Webhook object.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/webhooks/{id}/update:
+    post:
+      operationId: updateWebhook
+      summary: Update a Webhook
+      description: Updates the attributes of an existing Webhook. Only updates to `url` are currently
+        supported.
+      tags:
+      - Webhooks > Webhooks
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Unique identifier of the Webhook object.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body per Airwallex OpenAPI for this operation.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+  /api/v1/webhooks/{id}/delete:
+    post:
+      operationId: deleteWebhook
+      summary: Delete a Webhook
+      description: Deletes a Webhook. A deleted webhook will no longer receive webhook events of any Airwallex
+        organisations or accounts.
+      tags:
+      - Webhooks > Webhooks
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Unique identifier of the Webhook object.
+      responses:
+        '200':
+          description: Success
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'Obtain a token via POST /api/v1/authentication/login with x-api-key and x-client-id
+        headers. Pass Authorization: Bearer {{token}}. Tokens expire after ~30 minutes; see expires_at.'
+    ApiKeyLogin:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Used only on /api/v1/authentication/login together with x-client-id.

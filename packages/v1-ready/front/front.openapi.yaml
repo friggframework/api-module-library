@@ -1,0 +1,491 @@
+openapi: 3.0.3
+info:
+  title: Front Core API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Front is a shared-inbox / customer-communication platform. This file is Left Hook's
+    curated subset of Front's official Core API OpenAPI
+    (https://github.com/frontapp/front-api-specs/blob/main/core-api/core-api.json), covering
+    exactly the endpoints `@friggframework/api-module-front` implements in api.js. It is the
+    source of truth the hand-written client mirrors 1:1 (one method per operationId).
+    Docs: https://dev.frontapp.com/reference/introduction
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api2.frontapp.com
+    description: Front Core API
+security:
+  - BearerAuth: []
+tags:
+  - name: Identity
+  - name: Conversations
+  - name: Contacts
+  - name: Channels
+  - name: Teammates
+  - name: Inboxes
+  - name: Tags
+  - name: Events
+  - name: Messages
+  - name: Comments
+paths:
+  /me:
+    get:
+      tags: [Identity]
+      operationId: getMe
+      summary: API token / company details
+      description: >-
+        Returns the company identity for the token (`id` like `cmp_…`, `name`).
+        Official operationId in Front's OpenAPI: `api-token-details`.
+      responses:
+        "200":
+          description: Company identity
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, name]
+                properties:
+                  id: { type: string, example: cmp_k30 }
+                  name: { type: string }
+
+  /conversations:
+    get:
+      tags: [Conversations]
+      operationId: listConversations
+      summary: List conversations
+      description: "Required scope `conversations:read`."
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page_token"
+        - in: query
+          name: q
+          schema: { type: string }
+          description: Search / filter object (serialized as q[…]).
+        - in: query
+          name: sort_by
+          schema: { type: string }
+        - in: query
+          name: sort_order
+          schema: { type: string, enum: [asc, desc] }
+      responses:
+        "200":
+          description: Paginated conversations
+    post:
+      tags: [Conversations]
+      operationId: createConversation
+      summary: Create a discussion conversation
+      description: "Required scope `conversations:write`."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, subject]
+              properties:
+                type: { type: string, example: discussion }
+                subject: { type: string }
+                inbox_id: { type: string }
+                teammate_ids:
+                  type: array
+                  items: { type: string }
+                comment: { type: string }
+                description: { type: string }
+      responses:
+        "201":
+          description: Created conversation
+
+  /conversations/{conversation_id}:
+    get:
+      tags: [Conversations]
+      operationId: getConversation
+      summary: Fetch a conversation
+      description: "Required scope `conversations:read`. Official op: `get-conversation-by-id`."
+      parameters:
+        - $ref: "#/components/parameters/conversation_id"
+      responses:
+        "200":
+          description: Conversation
+    patch:
+      tags: [Conversations]
+      operationId: updateConversation
+      summary: Update a conversation
+      description: "Required scope `conversations:write`."
+      parameters:
+        - $ref: "#/components/parameters/conversation_id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assignee_id: { type: string }
+                inbox_id: { type: string }
+                status: { type: string }
+                status_id: { type: string }
+                tag_ids:
+                  type: array
+                  items: { type: string }
+                description: { type: string }
+      responses:
+        "200":
+          description: Updated conversation
+
+  /conversations/{conversation_id}/messages:
+    get:
+      tags: [Messages]
+      operationId: listConversationMessages
+      summary: List messages in a conversation
+      parameters:
+        - $ref: "#/components/parameters/conversation_id"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page_token"
+      responses:
+        "200":
+          description: Paginated messages
+
+  /conversations/{conversation_id}/comments:
+    get:
+      tags: [Comments]
+      operationId: listConversationComments
+      summary: List comments on a conversation
+      parameters:
+        - $ref: "#/components/parameters/conversation_id"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page_token"
+      responses:
+        "200":
+          description: Paginated comments
+    post:
+      tags: [Comments]
+      operationId: addComment
+      summary: Add a comment to a conversation
+      parameters:
+        - $ref: "#/components/parameters/conversation_id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                author_id: { type: string }
+                body: { type: string }
+      responses:
+        "201":
+          description: Created comment
+
+  /messages/{message_id}:
+    get:
+      tags: [Messages]
+      operationId: getMessage
+      summary: Fetch a message
+      parameters:
+        - in: path
+          name: message_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Message
+
+  /contacts:
+    get:
+      tags: [Contacts]
+      operationId: listContacts
+      summary: List contacts
+      description: "Required scope `contacts:read`."
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page_token"
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: sort_by
+          schema: { type: string }
+        - in: query
+          name: sort_order
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated contacts
+    post:
+      tags: [Contacts]
+      operationId: createContact
+      summary: Create a contact
+      description: "Required scope `contacts:write`. `handles` is required."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [handles]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                handles:
+                  type: array
+                  items:
+                    type: object
+                    required: [handle, source]
+                    properties:
+                      handle: { type: string }
+                      source: { type: string, example: email }
+      responses:
+        "201":
+          description: Created contact
+
+  /contacts/{contact_id}:
+    get:
+      tags: [Contacts]
+      operationId: getContact
+      summary: Fetch a contact
+      description: "Required scope `contacts:read`."
+      parameters:
+        - $ref: "#/components/parameters/contact_id"
+      responses:
+        "200":
+          description: Contact
+    patch:
+      tags: [Contacts]
+      operationId: updateContact
+      summary: Update a contact
+      description: >-
+        Required scope `contacts:write`. Success response is HTTP 204 No Content
+        (official op: `update-a-contact`).
+      parameters:
+        - $ref: "#/components/parameters/contact_id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+      responses:
+        "204":
+          description: Updated (no body)
+    delete:
+      tags: [Contacts]
+      operationId: deleteContact
+      summary: Delete a contact
+      description: "Required scope `contacts:delete`. Official op: `delete-a-contact`."
+      parameters:
+        - $ref: "#/components/parameters/contact_id"
+      responses:
+        "204":
+          description: Deleted
+
+  /channels:
+    get:
+      tags: [Channels]
+      operationId: listChannels
+      summary: List channels
+      description: "Required scope `channels:read`."
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page_token"
+      responses:
+        "200":
+          description: Paginated channels
+
+  /channels/{channel_id}:
+    get:
+      tags: [Channels]
+      operationId: getChannel
+      summary: Fetch a channel
+      parameters:
+        - in: path
+          name: channel_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Channel
+
+  /teammates:
+    get:
+      tags: [Teammates]
+      operationId: listTeammates
+      summary: List teammates
+      description: "Required scope `teammates:read`."
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page_token"
+      responses:
+        "200":
+          description: Paginated teammates
+
+  /teammates/{teammate_id}:
+    get:
+      tags: [Teammates]
+      operationId: getTeammate
+      summary: Fetch a teammate
+      parameters:
+        - in: path
+          name: teammate_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Teammate
+
+  /inboxes:
+    get:
+      tags: [Inboxes]
+      operationId: listInboxes
+      summary: List inboxes
+      description: "Required scope `inboxes:read`."
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page_token"
+      responses:
+        "200":
+          description: Paginated inboxes
+
+  /inboxes/{inbox_id}:
+    get:
+      tags: [Inboxes]
+      operationId: getInbox
+      summary: Fetch an inbox
+      parameters:
+        - in: path
+          name: inbox_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Inbox
+
+  /tags:
+    get:
+      tags: [Tags]
+      operationId: listTags
+      summary: List tags
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page_token"
+      responses:
+        "200":
+          description: Paginated tags
+    post:
+      tags: [Tags]
+      operationId: createTag
+      summary: Create a tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                highlight: { type: string }
+      responses:
+        "201":
+          description: Created tag
+
+  /tags/{tag_id}:
+    get:
+      tags: [Tags]
+      operationId: getTag
+      summary: Fetch a tag
+      parameters:
+        - $ref: "#/components/parameters/tag_id"
+      responses:
+        "200":
+          description: Tag
+    patch:
+      tags: [Tags]
+      operationId: updateTag
+      summary: Update a tag
+      description: "Official op: `update-a-tag`."
+      parameters:
+        - $ref: "#/components/parameters/tag_id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                highlight: { type: string }
+      responses:
+        "200":
+          description: Updated tag
+
+  /events:
+    get:
+      tags: [Events]
+      operationId: listEvents
+      summary: List events
+      description: >-
+        Activity feed. Use to reconcile gaps when application webhooks miss
+        deliveries (https://dev.frontapp.com/docs/application-webhooks).
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page_token"
+        - in: query
+          name: q
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated events
+
+  /events/{event_id}:
+    get:
+      tags: [Events]
+      operationId: getEvent
+      summary: Fetch an event
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Event
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        OAuth access token or API token. Sent as `Authorization: Bearer <token>`.
+        Official Front OpenAPI names this scheme `http`.
+  parameters:
+    limit:
+      in: query
+      name: limit
+      schema: { type: integer }
+    page_token:
+      in: query
+      name: page_token
+      schema: { type: string }
+    conversation_id:
+      in: path
+      name: conversation_id
+      required: true
+      schema: { type: string }
+    contact_id:
+      in: path
+      name: contact_id
+      required: true
+      schema: { type: string }
+    tag_id:
+      in: path
+      name: tag_id
+      required: true
+      schema: { type: string }

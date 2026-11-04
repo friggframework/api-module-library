@@ -1,0 +1,13 @@
+{
+  "name": "front",
+  "label": "Front",
+  "productUrl": "https://front.com",
+  "apiDocs": "https://dev.frontapp.com",
+  "logoUrl": "https://friggframework.org/assets/img/front-icon.jpeg",
+  "categories": [
+    "Email",
+    "Team Communication",
+    "Customer Support"
+  ],
+  "description": "Front shared inbox and customer communication platform"
+}

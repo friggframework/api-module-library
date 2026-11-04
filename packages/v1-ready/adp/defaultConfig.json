@@ -1,0 +1,10 @@
+{
+    "name": "adp",
+    "config": {
+        "oauth": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

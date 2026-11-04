@@ -1,0 +1,190 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "adp",
+  "label": "ADP Workforce Now",
+  "package": "@friggframework/api-module-adp",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "OAuth2 client-credentials + mTLS fields persisted on the credential.",
+    "fields": [
+      { "name": "client_id", "type": "string", "description": "ADP Data Connector OAuth client_id; also the entity externalId." },
+      { "name": "client_secret", "type": "string" },
+      { "name": "access_token", "type": "string" },
+      { "name": "ssl_cert", "type": "string", "description": "PEM X.509 client certificate." },
+      { "name": "ssl_key", "type": "string", "description": "PEM private key for mutual TLS." },
+      { "name": "ssl_passphrase", "type": "string" }
+    ]
+  },
+  "objects": {
+    "worker": {
+      "label": "Worker",
+      "fields": [
+        { "name": "associateOID", "type": "id", "readOnly": true, "tag": "person.id" },
+        { "name": "workerID.idValue", "type": "string", "tag": "person.employeeNumber" },
+        { "name": "person.legalName.givenName", "type": "string", "tag": "person.firstName" },
+        { "name": "person.legalName.familyName1", "type": "string", "tag": "person.lastName" },
+        { "name": "person.legalName.formattedName", "type": "string", "tag": "person.displayName" },
+        { "name": "person.birthDate", "type": "string", "tag": "person.birthDate" },
+        { "name": "person.legalAddress", "type": "json", "tag": "address.legal" },
+        { "name": "person.communication", "type": "json", "tag": "person.communication" },
+        { "name": "workerDates", "type": "json", "tag": "employment.dates" },
+        { "name": "workerStatus", "type": "json", "tag": "person.status" },
+        { "name": "workAssignments", "type": "json", "tag": "employment.assignments" }
+      ]
+    },
+    "worker_demographic": {
+      "label": "Worker demographic",
+      "fields": [
+        { "name": "associateOID", "type": "id", "readOnly": true, "tag": "person.id" },
+        { "name": "person.legalName", "type": "json", "tag": "person.legalName" },
+        { "name": "workAssignments", "type": "json", "tag": "employment.assignments" }
+      ]
+    },
+    "event_notification": {
+      "label": "Event notification message",
+      "fields": [
+        { "name": "eventID", "type": "id", "readOnly": true },
+        { "name": "eventNameCode.codeValue", "type": "string", "tag": "event.name" },
+        { "name": "recordDateTime", "type": "datetime", "tag": "event.recordedAt" },
+        { "name": "creationDateTime", "type": "datetime", "tag": "event.createdAt" },
+        { "name": "links", "type": "json", "tag": "event.callbackLinks" }
+      ]
+    },
+    "codelist": {
+      "label": "Validation table codelist",
+      "fields": [
+        { "name": "codeValue", "type": "string", "tag": "codelist.code" },
+        { "name": "shortName", "type": "string", "tag": "codelist.label" }
+      ]
+    }
+  },
+  "events": {
+    "worker.hire": {
+      "delivery": "poll",
+      "object": "worker",
+      "subscribe": "event_notification.list",
+      "description": "Queued when a worker is hired. Subscribe via Partner Self Service / API Central (eventNotify.subscribe scope); consume with listEventNotificationMessages."
+    },
+    "worker.legal-name.change": {
+      "delivery": "poll",
+      "object": "worker",
+      "subscribe": "event_notification.list",
+      "description": "Queued when a worker legal name changes."
+    }
+  },
+  "capabilities": {
+    "worker.list": {
+      "kind": "read",
+      "method": "listWorkers",
+      "input": {
+        "$top": { "type": "integer" },
+        "$skip": { "type": "integer" },
+        "$filter": { "type": "string" },
+        "$select": { "type": "string" },
+        "count": { "type": "boolean" },
+        "asOfDate": { "type": "string" }
+      },
+      "output": "page<worker>"
+    },
+    "worker.get": {
+      "kind": "read",
+      "method": "getWorker",
+      "input": {
+        "associateOid": { "type": "string", "required": true }
+      },
+      "output": "worker",
+      "args": ["associateOid"]
+    },
+    "worker.meta": {
+      "kind": "read",
+      "method": "getWorkersMeta",
+      "input": {},
+      "output": "meta"
+    },
+    "worker.read": {
+      "kind": "read",
+      "method": "readWorker",
+      "input": {
+        "events": { "type": "array", "required": true }
+      },
+      "output": "worker"
+    },
+    "worker.hire": {
+      "kind": "write",
+      "method": "hireWorker",
+      "input": {
+        "events": { "type": "array", "required": true }
+      },
+      "output": "event"
+    },
+    "worker.legal_name.change": {
+      "kind": "write",
+      "method": "changeWorkerLegalName",
+      "input": {
+        "events": { "type": "array", "required": true }
+      },
+      "output": "event"
+    },
+    "worker.base_remuneration.change": {
+      "kind": "write",
+      "method": "changeWorkerBaseRemuneration",
+      "input": {
+        "events": { "type": "array", "required": true }
+      },
+      "output": "event"
+    },
+    "worker_demographic.list": {
+      "kind": "read",
+      "method": "listWorkerDemographics",
+      "input": {
+        "$top": { "type": "integer" },
+        "$skip": { "type": "integer" },
+        "$filter": { "type": "string" }
+      },
+      "output": "page<worker_demographic>"
+    },
+    "worker_demographic.get": {
+      "kind": "read",
+      "method": "getWorkerDemographic",
+      "input": {
+        "associateOid": { "type": "string", "required": true }
+      },
+      "output": "worker_demographic",
+      "args": ["associateOid"]
+    },
+    "event_notification.list": {
+      "kind": "read",
+      "method": "listEventNotificationMessages",
+      "input": {},
+      "output": "page<event_notification>"
+    },
+    "event_notification.get": {
+      "kind": "read",
+      "method": "getEventNotificationDetails",
+      "input": {
+        "callbackUri": { "type": "string", "required": true }
+      },
+      "output": "event_notification",
+      "args": ["callbackUri"]
+    },
+    "event_notification.delete": {
+      "kind": "delete",
+      "method": "deleteEventNotificationMessage",
+      "input": {
+        "eventId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["eventId"]
+    },
+    "codelist.get": {
+      "kind": "read",
+      "method": "getCodelist",
+      "input": {
+        "tableName": { "type": "string", "required": true }
+      },
+      "output": "codelist",
+      "args": ["tableName"]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+    "name": "neon",
+    "config": {
+        "apiKey": true,
+        "basic": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

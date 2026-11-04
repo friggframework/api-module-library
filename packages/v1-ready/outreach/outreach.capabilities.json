@@ -1,0 +1,381 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "outreach",
+  "label": "Outreach",
+  "package": "@friggframework/api-module-outreach",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected Outreach organization. Derived from GET /api/v2 (see getApiRoot); exact field names are an open question.",
+    "fields": [
+      {
+        "name": "orgGuid",
+        "type": "string",
+        "description": "Outreach organization GUID when present on the root API response"
+      }
+    ]
+  },
+  "objects": {
+    "account": {
+      "label": "Account",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "attributes.name", "type": "string", "tag": "organization.name" },
+        { "name": "attributes.domain", "type": "string", "tag": "organization.domain" },
+        { "name": "attributes.websiteUrl", "type": "string", "tag": "organization.url" },
+        { "name": "attributes.industry", "type": "string" },
+        { "name": "attributes.description", "type": "text" },
+        { "name": "attributes.customId", "type": "string", "tag": "record.externalId" },
+        { "name": "attributes.numberOfEmployees", "type": "number" },
+        { "name": "attributes.named", "type": "boolean" },
+        { "name": "attributes.createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "attributes.updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "relationships.owner.data.id", "type": "string", "tag": "record.owner" }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "attributes.updatedAt",
+        "list": {
+          "capability": "account.list",
+          "cursor": "page[after]",
+          "limit": "page[size]",
+          "items": "data",
+          "next": "links.next"
+        },
+        "get": { "capability": "account.get", "id": "id" },
+        "create": { "capability": "account.create", "body": "account" },
+        "update": { "capability": "account.update", "id": "id", "body": "account" }
+      }
+    },
+    "prospect": {
+      "label": "Prospect",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "attributes.firstName", "type": "string", "tag": "person.givenName" },
+        { "name": "attributes.lastName", "type": "string", "tag": "person.familyName" },
+        { "name": "attributes.name", "type": "string", "tag": "person.fullName" },
+        { "name": "attributes.emails[0]", "type": "email", "tag": "contact.email" },
+        { "name": "attributes.title", "type": "string", "tag": "person.jobTitle" },
+        { "name": "attributes.company", "type": "string", "tag": "organization.name" },
+        { "name": "attributes.mobilePhones[0]", "type": "phone", "tag": "contact.phone" },
+        { "name": "attributes.homePhones[0]", "type": "phone", "tag": "contact.phone" },
+        { "name": "attributes.externalId", "type": "string", "tag": "record.externalId" },
+        { "name": "attributes.optedOut", "type": "boolean" },
+        { "name": "attributes.createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "attributes.updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "relationships.account.data.id", "type": "string" },
+        { "name": "relationships.owner.data.id", "type": "string", "tag": "record.owner" }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "attributes.updatedAt",
+        "list": {
+          "capability": "prospect.list",
+          "cursor": "page[after]",
+          "limit": "page[size]",
+          "items": "data",
+          "next": "links.next"
+        },
+        "get": { "capability": "prospect.get", "id": "id" },
+        "create": { "capability": "prospect.create", "body": "prospect" },
+        "update": { "capability": "prospect.update", "id": "id", "body": "prospect" }
+      }
+    },
+    "task": {
+      "label": "Task",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        {
+          "name": "attributes.action",
+          "type": "enum",
+          "values": ["action_item", "call", "email", "in_person"]
+        },
+        {
+          "name": "attributes.state",
+          "type": "enum",
+          "values": ["pending", "incomplete", "complete"]
+        },
+        { "name": "attributes.dueAt", "type": "datetime", "tag": "task.dueAt" },
+        { "name": "attributes.note", "type": "text" },
+        { "name": "attributes.completed", "type": "boolean" },
+        { "name": "attributes.completedAt", "type": "datetime", "readOnly": true },
+        { "name": "attributes.taskType", "type": "string", "readOnly": true },
+        { "name": "attributes.createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "attributes.updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "relationships.owner.data.id", "type": "string", "tag": "record.owner" },
+        { "name": "relationships.prospect.data.id", "type": "string" },
+        { "name": "relationships.account.data.id", "type": "string" },
+        { "name": "relationships.subject.data.id", "type": "string" },
+        { "name": "relationships.subject.data.type", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "attributes.updatedAt",
+        "list": {
+          "capability": "task.list",
+          "cursor": "page[after]",
+          "limit": "page[size]",
+          "items": "data",
+          "next": "links.next"
+        },
+        "get": { "capability": "task.get", "id": "id" },
+        "create": { "capability": "task.create", "body": "task" },
+        "update": { "capability": "task.update", "id": "id", "body": "task" }
+      }
+    },
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "attributes.email", "type": "email", "tag": "contact.email", "readOnly": true },
+        { "name": "attributes.firstName", "type": "string", "tag": "person.givenName" },
+        { "name": "attributes.lastName", "type": "string", "tag": "person.familyName" },
+        { "name": "attributes.name", "type": "string", "tag": "person.fullName" },
+        { "name": "attributes.userGuid", "type": "string", "readOnly": true },
+        { "name": "attributes.title", "type": "string", "tag": "person.jobTitle" },
+        { "name": "attributes.locked", "type": "boolean", "readOnly": true }
+      ]
+    }
+  },
+  "events": {
+    "prospect.created": {
+      "delivery": "webhook",
+      "object": "prospect",
+      "subscribe": "webhook.create",
+      "payload": {
+        "data": {
+          "type": "prospect",
+          "id": 1,
+          "attributes": { "firstName": "Sally" }
+        },
+        "meta": {
+          "deliveredAt": "2017-01-01T00:00:01Z",
+          "eventName": "prospect.created"
+        }
+      },
+      "record": "data",
+      "idPath": "data.id",
+      "match": "prospect.created"
+    },
+    "prospect.updated": {
+      "delivery": "webhook",
+      "object": "prospect",
+      "subscribe": "webhook.create",
+      "payload": {
+        "data": {
+          "type": "prospect",
+          "id": 1,
+          "attributes": { "firstName": "Sally" }
+        },
+        "meta": {
+          "deliveredAt": "2017-01-01T00:00:01Z",
+          "eventName": "prospect.updated"
+        }
+      },
+      "record": "data",
+      "idPath": "data.id",
+      "match": "prospect.updated"
+    },
+    "account.created": {
+      "delivery": "webhook",
+      "object": "account",
+      "subscribe": "webhook.create",
+      "payload": {
+        "data": {
+          "type": "account",
+          "id": 1,
+          "attributes": { "name": "Acme" }
+        },
+        "meta": {
+          "deliveredAt": "2017-01-01T00:00:01Z",
+          "eventName": "account.created"
+        }
+      },
+      "record": "data",
+      "idPath": "data.id",
+      "match": "account.created"
+    },
+    "task.completed": {
+      "delivery": "webhook",
+      "object": "task",
+      "subscribe": "webhook.create",
+      "payload": {
+        "data": {
+          "type": "task",
+          "id": 1,
+          "attributes": {
+            "completed": true,
+            "state": "completed"
+          }
+        },
+        "meta": {
+          "deliveredAt": "2017-01-01T00:00:01Z",
+          "eventName": "task.completed"
+        }
+      },
+      "record": "data",
+      "idPath": "data.id",
+      "match": "task.completed"
+    }
+  },
+  "webhook": {
+    "scope": "installation",
+    "topic": "{{body.meta.eventName}}",
+    "eventId": [
+      "{{body.meta.eventName}}:{{body.data.type}}:{{body.data.id}}:{{body.meta.deliveredAt}}"
+    ],
+    "verify": "verifyWebhookSignature",
+    "note": "Outreach signs deliveries with Outreach-Webhook-Signature = HMAC-SHA256-hex(secret, raw body) when attributes.secret is set on the webhook. Official payload samples do not include an org id — multi-tenant resolve should use a per-install webhook URL (path param) or stored secret mapping."
+  },
+  "capabilities": {
+    "account.list": {
+      "kind": "read",
+      "method": "listAccounts",
+      "output": "account[]"
+    },
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "input": { "id": { "type": "integer", "required": true } },
+      "output": "account",
+      "args": ["id"]
+    },
+    "account.create": {
+      "kind": "write",
+      "method": "createAccount",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "account",
+      "args": ["data"]
+    },
+    "account.update": {
+      "kind": "write",
+      "method": "updateAccount",
+      "input": {
+        "id": { "type": "integer", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "account",
+      "args": ["id", "data"]
+    },
+    "prospect.list": {
+      "kind": "read",
+      "method": "listProspects",
+      "output": "prospect[]"
+    },
+    "prospect.get": {
+      "kind": "read",
+      "method": "getProspect",
+      "input": { "id": { "type": "integer", "required": true } },
+      "output": "prospect",
+      "args": ["id"]
+    },
+    "prospect.create": {
+      "kind": "write",
+      "method": "createProspect",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "prospect",
+      "args": ["data"]
+    },
+    "prospect.update": {
+      "kind": "write",
+      "method": "updateProspect",
+      "input": {
+        "id": { "type": "integer", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "prospect",
+      "args": ["id", "data"]
+    },
+    "task.list": {
+      "kind": "read",
+      "method": "listTasks",
+      "output": "task[]"
+    },
+    "task.get": {
+      "kind": "read",
+      "method": "getTask",
+      "input": { "id": { "type": "integer", "required": true } },
+      "output": "task",
+      "args": ["id"]
+    },
+    "task.create": {
+      "kind": "write",
+      "method": "createTask",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "task",
+      "args": ["data"]
+    },
+    "task.update": {
+      "kind": "write",
+      "method": "updateTask",
+      "input": {
+        "id": { "type": "integer", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "task",
+      "args": ["id", "data"]
+    },
+    "user.list": {
+      "kind": "read",
+      "method": "listUsers",
+      "output": "user[]"
+    },
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": { "id": { "type": "integer", "required": true } },
+      "output": "user",
+      "args": ["id"]
+    },
+    "identity.root": {
+      "kind": "read",
+      "method": "getApiRoot",
+      "output": "object"
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "output": "object[]"
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhook",
+      "input": { "data": { "type": "object", "required": true } },
+      "args": ["data"]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhook",
+      "input": { "id": { "type": "integer", "required": true } },
+      "args": ["id"]
+    },
+    "webhook.cleanup": {
+      "kind": "write",
+      "method": "cleanupWebhook",
+      "input": { "cleanupToken": { "type": "string", "required": true } },
+      "args": ["cleanupToken"]
+    },
+    "webhook.verify": {
+      "kind": "action",
+      "method": "verifyWebhookSignature",
+      "input": {
+        "headers": { "type": "object" },
+        "body": { "type": "object" },
+        "rawBody": { "type": "string" },
+        "secret": { "type": "string" }
+      }
+    }
+  },
+  "ui": {
+    "placements": [
+      "shell",
+      "prospect.tab",
+      "account.tab",
+      "opportunity.tab",
+      "prospect.tile",
+      "account.tile"
+    ],
+    "renderer": "iframe",
+    "note": "See outreach.fenestra.yaml for the web-widget extension surface."
+  }
+}

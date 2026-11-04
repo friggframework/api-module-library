@@ -1,0 +1,16 @@
+{
+    "name": "microsoft-outlook",
+    "label": "Microsoft Outlook",
+    "productUrl": "https://www.microsoft.com/microsoft-365/outlook",
+    "apiDocs": "https://learn.microsoft.com/en-us/graph/api/resources/mail-api-overview",
+    "logoUrl": "https://friggframework.org/assets/img/microsoft-outlook-icon.png",
+    "categories": ["Email", "Calendar", "Productivity"],
+    "description": "Microsoft Outlook via Microsoft Graph — messages, mail folders, calendars, events, and change-notification subscriptions",
+    "config": {
+        "oauth": true,
+        "batch": {
+            "concurrency": 4,
+            "delay": 250
+        }
+    }
+}

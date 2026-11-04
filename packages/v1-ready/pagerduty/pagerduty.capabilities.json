@@ -1,0 +1,394 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "pagerduty",
+  "label": "PagerDuty",
+  "package": "@friggframework/api-module-pagerduty",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected PagerDuty account identity from OAuth id_token and/or GET /users/me.",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "string",
+        "description": "PagerDuty account_id claim from the OAuth id_token when present."
+      },
+      {
+        "name": "subdomain",
+        "type": "string",
+        "description": "Account subdomain (e.g. acme from https://acme.pagerduty.com)."
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.name" },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "role", "type": "string" },
+        { "name": "job_title", "type": "string" },
+        { "name": "time_zone", "type": "string" },
+        { "name": "description", "type": "text" },
+        { "name": "html_url", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "summary", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "user.list",
+          "limit": "limit",
+          "cursor": "offset",
+          "items": "users",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "user.get",
+          "id": "userId"
+        },
+        "create": {
+          "capability": "user.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "user.update",
+          "id": "userId",
+          "body": "data"
+        }
+      }
+    },
+    "incident": {
+      "label": "Incident",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "incident_number", "type": "integer", "tag": "record.displayId", "readOnly": true },
+        { "name": "title", "type": "string", "tag": "incident.title" },
+        { "name": "status", "type": "string", "tag": "incident.status" },
+        { "name": "urgency", "type": "string", "tag": "incident.urgency" },
+        { "name": "incident_key", "type": "string" },
+        { "name": "service.id", "type": "string", "tag": "record.parentId" },
+        { "name": "html_url", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "resolved_at", "type": "datetime", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "incident.list",
+          "limit": "limit",
+          "cursor": "offset",
+          "items": "incidents",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "incident.get",
+          "id": "incidentId"
+        },
+        "create": {
+          "capability": "incident.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "incident.update",
+          "id": "incidentId",
+          "body": "data"
+        }
+      }
+    },
+    "service": {
+      "label": "Service",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "service.name" },
+        { "name": "description", "type": "text" },
+        { "name": "status", "type": "string", "tag": "service.status", "readOnly": true },
+        { "name": "escalation_policy.id", "type": "string" },
+        { "name": "html_url", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "last_incident_timestamp", "type": "datetime", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "service.list",
+          "limit": "limit",
+          "cursor": "offset",
+          "items": "services",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "service.get",
+          "id": "serviceId"
+        },
+        "create": {
+          "capability": "service.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "service.update",
+          "id": "serviceId",
+          "body": "data"
+        }
+      }
+    },
+    "webhookSubscription": {
+      "label": "Webhook subscription",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "type", "type": "string", "readOnly": true },
+        { "name": "active", "type": "boolean" },
+        { "name": "description", "type": "text" },
+        { "name": "delivery_method.url", "type": "string" },
+        { "name": "delivery_method.secret", "type": "string", "readOnly": true },
+        { "name": "events", "type": "json" },
+        { "name": "filter.type", "type": "string" },
+        { "name": "filter.id", "type": "string" }
+      ]
+    }
+  },
+  "events": {
+    "incident.triggered": {
+      "delivery": "webhook",
+      "object": "incident",
+      "subscribe": "webhookSubscription.create",
+      "description": "V3 webhook event_type incident.triggered.",
+      "match": "incident.triggered",
+      "idPath": "event.data.id"
+    },
+    "incident.acknowledged": {
+      "delivery": "webhook",
+      "object": "incident",
+      "subscribe": "webhookSubscription.create",
+      "description": "V3 webhook event_type incident.acknowledged.",
+      "match": "incident.acknowledged",
+      "idPath": "event.data.id"
+    },
+    "incident.resolved": {
+      "delivery": "webhook",
+      "object": "incident",
+      "subscribe": "webhookSubscription.create",
+      "description": "V3 webhook event_type incident.resolved.",
+      "match": "incident.resolved",
+      "idPath": "event.data.id"
+    },
+    "service.updated": {
+      "delivery": "webhook",
+      "object": "service",
+      "subscribe": "webhookSubscription.create",
+      "description": "V3 webhook event_type service.updated.",
+      "match": "service.updated",
+      "idPath": "event.data.id"
+    }
+  },
+  "webhook": {
+    "scope": "installation",
+    "topic": "{{body.event.event_type}}",
+    "eventId": "{{body.event.id}}",
+    "account": "{{body.event.data.html_url}}",
+    "verify": "verifyWebhookSignature",
+    "note": "V3 webhooks are created via POST /webhook_subscriptions. Verify HMAC-SHA256 of the raw body against X-PagerDuty-Signature (v1=hex) using delivery_method.secret from the create response. Docs: https://developer.pagerduty.com/docs/verifying-signatures"
+  },
+  "capabilities": {
+    "account.get": {
+      "kind": "read",
+      "method": "getCurrentUser",
+      "input": {
+        "include": { "type": "array" }
+      },
+      "output": "user"
+    },
+    "user.list": {
+      "kind": "read",
+      "method": "listUsers",
+      "input": {
+        "limit": { "type": "integer" },
+        "offset": { "type": "integer" },
+        "total": { "type": "boolean" },
+        "query": { "type": "string" },
+        "team_ids": { "type": "array" },
+        "include": { "type": "array" }
+      },
+      "output": "page<user>"
+    },
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": {
+        "userId": { "type": "string", "required": true },
+        "include": { "type": "array" }
+      },
+      "output": "user",
+      "args": ["userId"]
+    },
+    "user.create": {
+      "kind": "write",
+      "method": "createUser",
+      "input": {
+        "data": { "type": "object", "required": true },
+        "from": { "type": "string", "required": true }
+      },
+      "output": "user",
+      "args": ["data"]
+    },
+    "user.update": {
+      "kind": "write",
+      "method": "updateUser",
+      "input": {
+        "userId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "user",
+      "args": ["userId", "data"]
+    },
+    "incident.list": {
+      "kind": "read",
+      "method": "listIncidents",
+      "input": {
+        "limit": { "type": "integer" },
+        "offset": { "type": "integer" },
+        "total": { "type": "boolean" },
+        "statuses": { "type": "array" },
+        "service_ids": { "type": "array" },
+        "team_ids": { "type": "array" },
+        "user_ids": { "type": "array" },
+        "urgencies": { "type": "array" },
+        "incident_key": { "type": "string" },
+        "date_range": { "type": "string" },
+        "sort_by": { "type": "array" },
+        "include": { "type": "array" },
+        "since": { "type": "string" },
+        "until": { "type": "string" },
+        "time_zone": { "type": "string" }
+      },
+      "output": "page<incident>"
+    },
+    "incident.get": {
+      "kind": "read",
+      "method": "getIncident",
+      "input": {
+        "incidentId": { "type": "string", "required": true },
+        "include": { "type": "array" }
+      },
+      "output": "incident",
+      "args": ["incidentId"]
+    },
+    "incident.create": {
+      "kind": "write",
+      "method": "createIncident",
+      "input": {
+        "data": { "type": "object", "required": true },
+        "from": { "type": "string", "required": true }
+      },
+      "output": "incident",
+      "args": ["data"]
+    },
+    "incident.update": {
+      "kind": "write",
+      "method": "updateIncident",
+      "input": {
+        "incidentId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true },
+        "from": { "type": "string", "required": true }
+      },
+      "output": "incident",
+      "args": ["incidentId", "data"]
+    },
+    "service.list": {
+      "kind": "read",
+      "method": "listServices",
+      "input": {
+        "limit": { "type": "integer" },
+        "offset": { "type": "integer" },
+        "total": { "type": "boolean" },
+        "query": { "type": "string" },
+        "team_ids": { "type": "array" },
+        "include": { "type": "array" },
+        "time_zone": { "type": "string" },
+        "sort_by": { "type": "string" },
+        "name": { "type": "string" }
+      },
+      "output": "page<service>"
+    },
+    "service.get": {
+      "kind": "read",
+      "method": "getService",
+      "input": {
+        "serviceId": { "type": "string", "required": true },
+        "include": { "type": "array" }
+      },
+      "output": "service",
+      "args": ["serviceId"]
+    },
+    "service.create": {
+      "kind": "write",
+      "method": "createService",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "service",
+      "args": ["data"]
+    },
+    "service.update": {
+      "kind": "write",
+      "method": "updateService",
+      "input": {
+        "serviceId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "service",
+      "args": ["serviceId", "data"]
+    },
+    "webhookSubscription.list": {
+      "kind": "read",
+      "method": "listWebhookSubscriptions",
+      "input": {
+        "limit": { "type": "integer" },
+        "offset": { "type": "integer" },
+        "total": { "type": "boolean" },
+        "filter_type": { "type": "string" },
+        "filter_id": { "type": "string" }
+      },
+      "output": "page<webhookSubscription>"
+    },
+    "webhookSubscription.get": {
+      "kind": "read",
+      "method": "getWebhookSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "output": "webhookSubscription",
+      "args": ["subscriptionId"]
+    },
+    "webhookSubscription.create": {
+      "kind": "subscribe",
+      "method": "createWebhookSubscription",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "webhookSubscription",
+      "args": ["data"]
+    },
+    "webhookSubscription.update": {
+      "kind": "write",
+      "method": "updateWebhookSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "webhookSubscription",
+      "args": ["subscriptionId", "data"]
+    },
+    "webhookSubscription.delete": {
+      "kind": "write",
+      "method": "deleteWebhookSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["subscriptionId"]
+    }
+  }
+}

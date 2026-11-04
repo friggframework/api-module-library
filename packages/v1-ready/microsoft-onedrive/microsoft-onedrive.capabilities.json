@@ -1,0 +1,321 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "microsoft-onedrive",
+  "label": "Microsoft OneDrive",
+  "package": "@friggframework/api-module-microsoft-onedrive",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Microsoft account — signed-in user id from GET /me (OneDrive is per-user).",
+    "fields": [
+      {
+        "name": "externalId",
+        "type": "string",
+        "description": "User id from GET /me used as entity externalId."
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "displayName", "type": "string", "tag": "person.displayName" },
+        { "name": "userPrincipalName", "type": "string", "tag": "contact.email" },
+        { "name": "mail", "type": "email", "tag": "contact.email" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": {
+          "capability": "user.get"
+        }
+      }
+    },
+    "drive": {
+      "label": "Drive",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.name" },
+        { "name": "driveType", "type": "string", "readOnly": true },
+        { "name": "webUrl", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "owner", "type": "json", "tag": "record.owner", "readOnly": true },
+        { "name": "quota", "type": "json", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "drive.listMine",
+          "items": "value"
+        },
+        "get": {
+          "capability": "drive.get",
+          "id": "driveId"
+        }
+      }
+    },
+    "driveItem": {
+      "label": "Drive item",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "file.name" },
+        { "name": "size", "type": "integer", "tag": "file.size", "readOnly": true },
+        { "name": "webUrl", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "createdDateTime", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "lastModifiedDateTime", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "parentReference.driveId", "type": "string", "readOnly": true },
+        { "name": "file.mimeType", "type": "string", "readOnly": true },
+        { "name": "folder.childCount", "type": "integer", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "lastModifiedDateTime",
+        "list": {
+          "capability": "driveItem.listChildren",
+          "items": "value"
+        },
+        "get": {
+          "capability": "driveItem.get",
+          "id": "itemId"
+        },
+        "create": {
+          "capability": "driveItem.createFolder",
+          "body": "data"
+        },
+        "update": {
+          "capability": "driveItem.update",
+          "id": "itemId",
+          "body": "data"
+        }
+      }
+    },
+
+    "subscription": {
+      "label": "Change notification subscription",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "resource", "type": "string" },
+        { "name": "changeType", "type": "string" },
+        { "name": "notificationUrl", "type": "string" },
+        { "name": "expirationDateTime", "type": "datetime" },
+        { "name": "clientState", "type": "string" },
+        { "name": "applicationId", "type": "string", "readOnly": true },
+        { "name": "creatorId", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "subscription.list",
+          "items": "value"
+        },
+        "get": {
+          "capability": "subscription.get",
+          "id": "subscriptionId"
+        },
+        "create": {
+          "capability": "subscription.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "subscription.update",
+          "id": "subscriptionId",
+          "body": "data"
+        }
+      }
+    }
+  },
+  "events": {
+    "driveItem.updated": {
+      "delivery": "webhook",
+      "object": "driveItem",
+      "subscribe": "subscription.create",
+      "description": "Graph change notification for a OneDrive folder resource (e.g. /me/drive/root or /drives/{drive-id}/root). Notifications do not name changed items — use delta after receiving."
+    }
+  },
+  "capabilities": {
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": {},
+      "output": "user"
+    },
+    "drive.getMine": {
+      "kind": "read",
+      "method": "getMyDrive",
+      "input": {
+        "$select": { "type": "string" }
+      },
+      "output": "drive"
+    },
+    "drive.listMine": {
+      "kind": "read",
+      "method": "listMyDrives",
+      "input": {
+        "$select": { "type": "string" },
+        "$top": { "type": "integer" }
+      },
+      "output": "page<drive>"
+    },
+    "drive.get": {
+      "kind": "read",
+      "method": "getDrive",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "$select": { "type": "string" }
+      },
+      "output": "drive",
+      "args": ["driveId"]
+    },
+    "driveItem.listChildren": {
+      "kind": "read",
+      "method": "listDriveItemChildren",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "itemId": { "type": "string" },
+        "$top": { "type": "integer" },
+        "$select": { "type": "string" }
+      },
+      "output": "page<driveItem>",
+      "args": ["driveId", "itemId"]
+    },
+    "driveItem.get": {
+      "kind": "read",
+      "method": "getDriveItem",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "itemId": { "type": "string", "required": true }
+      },
+      "output": "driveItem",
+      "args": ["driveId", "itemId"]
+    },
+    "driveItem.createFolder": {
+      "kind": "write",
+      "method": "createFolder",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "parentId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true },
+        "conflictBehavior": { "type": "string" }
+      },
+      "output": "driveItem",
+      "args": ["driveId", "parentId", "data", "conflictBehavior"]
+    },
+    "driveItem.update": {
+      "kind": "write",
+      "method": "updateDriveItem",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "itemId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "driveItem",
+      "args": ["driveId", "itemId", "data"]
+    },
+    "driveItem.delete": {
+      "kind": "delete",
+      "method": "deleteDriveItem",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "itemId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["driveId", "itemId"]
+    },
+    "driveItem.uploadContent": {
+      "kind": "write",
+      "method": "uploadDriveItemContent",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "driveItemId": { "type": "string", "required": true },
+        "content": { "type": "string", "required": true }
+      },
+      "output": "driveItem",
+      "args": ["driveId", "driveItemId", "content"]
+    },
+    "driveItem.uploadByPath": {
+      "kind": "write",
+      "method": "uploadByPath",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "itemPath": { "type": "string", "required": true },
+        "content": { "type": "string", "required": true }
+      },
+      "output": "driveItem",
+      "args": ["driveId", "itemPath", "content"]
+    },
+    "driveItem.createUploadSession": {
+      "kind": "write",
+      "method": "createUploadSession",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "driveItemId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "uploadSession",
+      "args": ["driveId", "driveItemId", "data"]
+    },
+    "driveItem.createUploadSessionByPath": {
+      "kind": "write",
+      "method": "createUploadSessionByPath",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "itemPath": { "type": "string", "required": true },
+        "data": { "type": "object" }
+      },
+      "output": "uploadSession",
+      "args": ["driveId", "itemPath", "data"]
+    },
+    "driveItem.search": {
+      "kind": "read",
+      "method": "searchDriveItems",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "q": { "type": "string", "required": true }
+      },
+      "output": "page<driveItem>",
+      "args": ["driveId", "q"]
+    },
+    "subscription.list": {
+      "kind": "read",
+      "method": "listSubscriptions",
+      "input": {},
+      "output": "page<subscription>"
+    },
+    "subscription.get": {
+      "kind": "read",
+      "method": "getSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "output": "subscription",
+      "args": ["subscriptionId"]
+    },
+    "subscription.create": {
+      "kind": "subscribe",
+      "method": "createSubscription",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "subscription",
+      "args": ["data"]
+    },
+    "subscription.update": {
+      "kind": "write",
+      "method": "updateSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "subscription",
+      "args": ["subscriptionId", "data"]
+    },
+    "subscription.delete": {
+      "kind": "delete",
+      "method": "deleteSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["subscriptionId"]
+    }
+  }
+}

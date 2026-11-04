@@ -1,0 +1,523 @@
+openapi: 3.0.3
+info:
+  title: Notion API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Notion is a workspace for docs, databases, and collaboration. This file is
+    Left Hook's curated subset of the official Notion OpenAPI
+    (https://developers.notion.com/openapi.json), covering exactly the endpoints
+    the @friggframework/api-module-notion client in api.js implements. It is the
+    source of truth the hand-written client mirrors 1:1 (one method per
+    operationId). Official docs: https://developers.notion.com/reference/intro.
+    Pinned Notion-Version: 2026-03-11.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.notion.com
+    description: Notion public API
+security:
+  - bearerAuth: []
+tags:
+  - name: Users
+  - name: Pages
+  - name: Databases
+  - name: Data sources
+  - name: Blocks
+  - name: Search
+  - name: Comments
+paths:
+  /v1/users/me:
+    get:
+      tags: [Users]
+      operationId: getSelf
+      summary: Retrieve your token's bot user
+      description: >-
+        Official operationId `get-self`.
+        https://developers.notion.com/reference/get-self
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      responses:
+        "200":
+          description: Bot user object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List all users
+      description: >-
+        Official operationId `get-users`.
+        https://developers.notion.com/reference/get-users
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+        - in: query
+          name: start_cursor
+          schema: { type: string }
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        "200":
+          description: Paginated list of users
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/users/{user_id}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Retrieve a user
+      description: >-
+        Official operationId `get-user`.
+        https://developers.notion.com/reference/get-user
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+        - in: path
+          name: user_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: User object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/pages:
+    post:
+      tags: [Pages]
+      operationId: createPage
+      summary: Create a page
+      description: >-
+        Official operationId `post-page`.
+        https://developers.notion.com/reference/post-page
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [parent, properties]
+              properties:
+                parent: { type: object }
+                properties: { type: object }
+                children:
+                  type: array
+                  items: { type: object }
+                icon: { type: object }
+                cover: { type: object }
+      responses:
+        "200":
+          description: Page object
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/pages/{page_id}:
+    parameters:
+      - in: path
+        name: page_id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Pages]
+      operationId: retrievePage
+      summary: Retrieve a page
+      description: >-
+        Official operationId `retrieve-a-page`.
+        https://developers.notion.com/reference/retrieve-a-page
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      responses:
+        "200":
+          description: Page object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags: [Pages]
+      operationId: updatePage
+      summary: Update a page
+      description: >-
+        Official operationId `patch-page`.
+        https://developers.notion.com/reference/patch-page
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                properties: { type: object }
+                archived: { type: boolean }
+                in_trash: { type: boolean }
+                icon: { type: object }
+                cover: { type: object }
+      responses:
+        "200":
+          description: Page object
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/databases:
+    post:
+      tags: [Databases]
+      operationId: createDatabase
+      summary: Create a database
+      description: >-
+        Official operationId `create-database`.
+        https://developers.notion.com/reference/create-database
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [parent]
+              properties:
+                parent: { type: object }
+                title:
+                  type: array
+                  items: { type: object }
+                initial_data_source: { type: object }
+                icon: { type: object }
+                cover: { type: object }
+      responses:
+        "200":
+          description: Database object
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/databases/{database_id}:
+    parameters:
+      - in: path
+        name: database_id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Databases]
+      operationId: retrieveDatabase
+      summary: Retrieve a database
+      description: >-
+        Official operationId `retrieve-database`.
+        https://developers.notion.com/reference/retrieve-database
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      responses:
+        "200":
+          description: Database object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags: [Databases]
+      operationId: updateDatabase
+      summary: Update a database
+      description: >-
+        Official operationId `update-database`.
+        https://developers.notion.com/reference/update-database
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: array
+                  items: { type: object }
+                description:
+                  type: array
+                  items: { type: object }
+                icon: { type: object }
+                cover: { type: object }
+      responses:
+        "200":
+          description: Database object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/data_sources/{data_source_id}:
+    parameters:
+      - in: path
+        name: data_source_id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Data sources]
+      operationId: retrieveDataSource
+      summary: Retrieve a data source
+      description: >-
+        Official operationId `retrieve-a-data-source`.
+        https://developers.notion.com/reference/retrieve-a-data-source
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      responses:
+        "200":
+          description: Data source object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags: [Data sources]
+      operationId: updateDataSource
+      summary: Update a data source
+      description: >-
+        Official operationId `update-a-data-source`.
+        https://developers.notion.com/reference/update-a-data-source
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Data source object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/data_sources/{data_source_id}/query:
+    post:
+      tags: [Data sources]
+      operationId: queryDatabase
+      summary: Query a data source
+      description: >-
+        Official operationId `post-database-query` on
+        `/v1/data_sources/{data_source_id}/query` (Notion-Version 2025-09-03+).
+        The Frigg client method is named `queryDatabase` to match the capability
+        manifest; the path param is a data source id.
+        https://developers.notion.com/reference/query-a-data-source
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+        - in: path
+          name: data_source_id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filter: { type: object }
+                sorts:
+                  type: array
+                  items: { type: object }
+                start_cursor: { type: string }
+                page_size: { type: integer }
+      responses:
+        "200":
+          description: Paginated list of pages
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/blocks/{block_id}:
+    parameters:
+      - in: path
+        name: block_id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Blocks]
+      operationId: retrieveBlock
+      summary: Retrieve a block
+      description: >-
+        Official operationId `retrieve-a-block`.
+        https://developers.notion.com/reference/retrieve-a-block
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      responses:
+        "200":
+          description: Block object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags: [Blocks]
+      operationId: updateBlock
+      summary: Update a block
+      description: >-
+        Official operationId `update-a-block`.
+        https://developers.notion.com/reference/update-a-block
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Block object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [Blocks]
+      operationId: deleteBlock
+      summary: Delete a block
+      description: >-
+        Official operationId `delete-a-block`.
+        https://developers.notion.com/reference/delete-a-block
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      responses:
+        "200":
+          description: Deleted (archived) block object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/blocks/{block_id}/children:
+    parameters:
+      - in: path
+        name: block_id
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Blocks]
+      operationId: getBlockChildren
+      summary: Retrieve block children
+      description: >-
+        Official operationId `get-block-children`.
+        https://developers.notion.com/reference/get-block-children
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+        - in: query
+          name: start_cursor
+          schema: { type: string }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Paginated list of blocks
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags: [Blocks]
+      operationId: appendBlockChildren
+      summary: Append block children
+      description: >-
+        Official operationId `patch-block-children`.
+        https://developers.notion.com/reference/patch-block-children
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [children]
+              properties:
+                children:
+                  type: array
+                  items: { type: object }
+                after: { type: string }
+      responses:
+        "200":
+          description: Paginated list of created blocks
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/search:
+    post:
+      tags: [Search]
+      operationId: search
+      summary: Search by title
+      description: >-
+        Official operationId `post-search`. Also used by `searchDatabases`
+        (client helper that sets filter object=database).
+        https://developers.notion.com/reference/post-search
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query: { type: string }
+                filter: { type: object }
+                sort: { type: object }
+                start_cursor: { type: string }
+                page_size: { type: integer }
+      responses:
+        "200":
+          description: Paginated search results
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/comments:
+    get:
+      tags: [Comments]
+      operationId: listComments
+      summary: List comments
+      description: >-
+        Official operationId `list-comments`.
+        https://developers.notion.com/reference/list-comments
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+        - in: query
+          name: block_id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: start_cursor
+          schema: { type: string }
+        - in: query
+          name: page_size
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Paginated list of comments
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Comments]
+      operationId: createComment
+      summary: Create a comment
+      description: >-
+        Official operationId `create-a-comment`.
+        https://developers.notion.com/reference/create-a-comment
+      parameters:
+        - $ref: "#/components/parameters/NotionVersion"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Comment object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        OAuth access token or internal connection / PAT token. Sent as
+        `Authorization: Bearer <token>`.
+  parameters:
+    NotionVersion:
+      name: Notion-Version
+      in: header
+      required: true
+      schema:
+        type: string
+        enum: ["2026-03-11"]
+      description: >-
+        The API version to use. Latest documented version is 2026-03-11.
+        https://developers.notion.com/reference/versioning
+  responses:
+    BadRequest:
+      description: Invalid request body or parameters
+    Unauthorized:
+      description: Missing or invalid bearer token

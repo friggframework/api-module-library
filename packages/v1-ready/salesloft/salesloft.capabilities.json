@@ -1,0 +1,422 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "salesloft",
+  "label": "Salesloft",
+  "package": "@friggframework/api-module-salesloft",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "OAuth tokens persisted on the credential; team id is the entity externalId.",
+    "fields": [
+      {
+        "name": "access_token",
+        "type": "string",
+        "description": "OAuth access token (Bearer)."
+      },
+      {
+        "name": "refresh_token",
+        "type": "string",
+        "description": "OAuth refresh token (rotated on refresh)."
+      }
+    ]
+  },
+  "objects": {
+    "person": {
+      "label": "Person",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "email_address", "type": "email", "tag": "contact.email" },
+        { "name": "first_name", "type": "string", "tag": "person.givenName" },
+        { "name": "last_name", "type": "string", "tag": "person.familyName" },
+        { "name": "phone", "type": "phone", "tag": "contact.phone" },
+        { "name": "mobile_phone", "type": "phone" },
+        { "name": "title", "type": "string", "tag": "person.title" },
+        { "name": "person_company_name", "type": "string", "tag": "org.name" },
+        { "name": "account_id", "type": "string" },
+        { "name": "owner_id", "type": "string", "tag": "record.owner" },
+        { "name": "linkedin_url", "type": "string" },
+        { "name": "city", "type": "string" },
+        { "name": "state", "type": "string" },
+        { "name": "country", "type": "string" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "person.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "data",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "person.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "person.create",
+          "body": "person"
+        },
+        "update": {
+          "capability": "person.update",
+          "id": "id",
+          "body": "person"
+        }
+      }
+    },
+    "account": {
+      "label": "Account",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "org.name" },
+        { "name": "domain", "type": "string", "tag": "org.domain" },
+        { "name": "conversational_name", "type": "string" },
+        { "name": "description", "type": "text" },
+        { "name": "phone", "type": "phone" },
+        { "name": "website", "type": "string" },
+        { "name": "linkedin_url", "type": "string" },
+        { "name": "street", "type": "string" },
+        { "name": "city", "type": "string" },
+        { "name": "state", "type": "string" },
+        { "name": "postal_code", "type": "string" },
+        { "name": "country", "type": "string" },
+        { "name": "industry", "type": "string" },
+        { "name": "owner_id", "type": "string", "tag": "record.owner" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "account.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "data",
+          "paging": "page"
+        },
+        "get": {
+          "capability": "account.get",
+          "id": "id"
+        },
+        "create": {
+          "capability": "account.create",
+          "body": "account"
+        },
+        "update": {
+          "capability": "account.update",
+          "id": "id",
+          "body": "account"
+        }
+      }
+    },
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "guid", "type": "string", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "active", "type": "boolean" }
+      ]
+    },
+    "task": {
+      "label": "Task",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "subject", "type": "string", "required": true },
+        { "name": "description", "type": "text" },
+        { "name": "person_id", "type": "string" },
+        { "name": "user_id", "type": "string", "tag": "record.owner" },
+        { "name": "user_guid", "type": "string" },
+        { "name": "task_type", "type": "string" },
+        { "name": "due_date", "type": "date" },
+        { "name": "current_state", "type": "string" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ]
+    }
+  },
+  "events": {
+    "person.created": {
+      "delivery": "webhook",
+      "object": "person",
+      "subscribe": "webhook.create",
+      "description": "Salesloft event_type person_created. Payload is the person object.",
+      "payload": {
+        "id": 199954973,
+        "email_address": "dana.reyes@example.com",
+        "first_name": "Dana",
+        "last_name": "Reyes",
+        "phone": "+15125550142",
+        "account_id": 53457352,
+        "owner_id": 1
+      },
+      "idPath": "id"
+    },
+    "person.updated": {
+      "delivery": "webhook",
+      "object": "person",
+      "subscribe": "webhook.create",
+      "description": "Salesloft event_type person_updated.",
+      "payload": {
+        "id": 199954973,
+        "email_address": "dana.reyes@example.com",
+        "first_name": "Dana",
+        "last_name": "Reyes"
+      },
+      "idPath": "id"
+    },
+    "account.created": {
+      "delivery": "webhook",
+      "object": "account",
+      "subscribe": "webhook.create",
+      "description": "Salesloft event_type account_created.",
+      "payload": {
+        "id": 53457352,
+        "name": "Acme Corp",
+        "domain": "acme.example"
+      },
+      "idPath": "id"
+    },
+    "task.created": {
+      "delivery": "webhook",
+      "object": "task",
+      "subscribe": "webhook.create",
+      "description": "Salesloft event_type task_created.",
+      "payload": {
+        "id": 265615502,
+        "subject": "Follow up",
+        "person_id": 199954973
+      },
+      "idPath": "id"
+    }
+  },
+  "webhook": {
+    "scope": "installation",
+    "topic": "{{headers.x-salesloft-event}}",
+    "eventId": "{{body.id}}",
+    "verify": "verifyWebhookSignature",
+    "note": "HMAC-SHA1 of body with subscription callback_token; header x-salesloft-signature (hex). See delivery-headers docs."
+  },
+  "capabilities": {
+    "me.get": {
+      "kind": "read",
+      "method": "getMe",
+      "input": {},
+      "output": "user"
+    },
+    "team.get": {
+      "kind": "read",
+      "method": "getTeam",
+      "input": {},
+      "output": "team"
+    },
+    "person.list": {
+      "kind": "read",
+      "method": "listPeople",
+      "input": {
+        "page": { "type": "number" },
+        "per_page": { "type": "number" },
+        "account_id": { "type": "string" },
+        "email_addresses": { "type": "string" }
+      },
+      "output": "page<person>"
+    },
+    "person.get": {
+      "kind": "read",
+      "method": "getPerson",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "person",
+      "args": ["id"]
+    },
+    "person.create": {
+      "kind": "write",
+      "method": "createPerson",
+      "input": {
+        "person": { "type": "object", "required": true }
+      },
+      "output": "person",
+      "args": ["person"]
+    },
+    "person.update": {
+      "kind": "write",
+      "method": "updatePerson",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "person": { "type": "object", "required": true }
+      },
+      "output": "person",
+      "args": ["id", "person"]
+    },
+    "person.delete": {
+      "kind": "delete",
+      "method": "deletePerson",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "account.list": {
+      "kind": "read",
+      "method": "listAccounts",
+      "input": {
+        "page": { "type": "number" },
+        "per_page": { "type": "number" },
+        "domain": { "type": "string" },
+        "name": { "type": "string" }
+      },
+      "output": "page<account>"
+    },
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "account",
+      "args": ["id"]
+    },
+    "account.create": {
+      "kind": "write",
+      "method": "createAccount",
+      "input": {
+        "account": { "type": "object", "required": true }
+      },
+      "output": "account",
+      "args": ["account"]
+    },
+    "account.update": {
+      "kind": "write",
+      "method": "updateAccount",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "account": { "type": "object", "required": true }
+      },
+      "output": "account",
+      "args": ["id", "account"]
+    },
+    "account.delete": {
+      "kind": "delete",
+      "method": "deleteAccount",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "user.list": {
+      "kind": "read",
+      "method": "listUsers",
+      "input": {
+        "page": { "type": "number" },
+        "per_page": { "type": "number" }
+      },
+      "output": "page<user>"
+    },
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "user",
+      "args": ["id"]
+    },
+    "task.list": {
+      "kind": "read",
+      "method": "listTasks",
+      "input": {
+        "page": { "type": "number" },
+        "per_page": { "type": "number" }
+      },
+      "output": "page<task>"
+    },
+    "task.get": {
+      "kind": "read",
+      "method": "getTask",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "task",
+      "args": ["id"]
+    },
+    "task.create": {
+      "kind": "write",
+      "method": "createTask",
+      "input": {
+        "task": { "type": "object", "required": true }
+      },
+      "output": "task",
+      "args": ["task"]
+    },
+    "task.update": {
+      "kind": "write",
+      "method": "updateTask",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "task": { "type": "object", "required": true }
+      },
+      "output": "task",
+      "args": ["id", "task"]
+    },
+    "task.delete": {
+      "kind": "delete",
+      "method": "deleteTask",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "webhook.create": {
+      "kind": "subscribe",
+      "method": "createWebhookSubscription",
+      "input": {
+        "event_type": { "type": "string", "required": true },
+        "callback_url": { "type": "string", "required": true },
+        "callback_token": { "type": "string", "required": true }
+      },
+      "output": "webhook"
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhookSubscriptions",
+      "input": {
+        "enabled": { "type": "boolean" }
+      },
+      "output": "webhook[]"
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhookSubscription",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    }
+  },
+  "options": {
+    "user": {
+      "capability": "user.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id"
+    }
+  },
+  "ui": {
+    "placements": [
+      "person.smart_panel",
+      "account.smart_panel",
+      "full_page",
+      "email_template_editor",
+      "custom_steps"
+    ],
+    "renderer": "salesloft-frontend-integration"
+  }
+}

@@ -1,0 +1,148 @@
+# Fenestra Document: Gorgias HTTP Integrations & Sidebar Widgets
+#
+# Gorgias extends the helpdesk UI with declarative JSON widget templates
+# attached to HTTP integrations (or apps). Templates render in the ticket
+# or customer right-hand sidebar. There is no coded iframe SDK for custom
+# app UIs in the public developer docs — widgets are JSON templates whose
+# fields bind to paths in the HTTP integration response.
+#
+# Sources (official only):
+# - https://developers.gorgias.com/docs/create-integrations-and-widgets-programmatically
+# - https://developers.gorgias.com/reference/the-widget-object
+# - https://developers.gorgias.com/reference/create-widget
+# - https://www.gorgias.com/integrations (marketplace)
+#
+# Draft per specs/fenestra on branch claude/fenestra-spec-draft-Q367t.
+# PLATFORMS.md lists Gorgias under Customer Support as "JSON + Iframe".
+
+fenestra: "0.1.0"
+
+info:
+  title: Gorgias Sidebar Widgets UI Ecosystem
+  version: "1.0.0"
+  description: |
+    Gorgias helpdesk UI extensions for third-party apps are primarily
+    declarative JSON widget templates. An HTTP integration fetches JSON from
+    an external URL when ticket events fire; a widget template maps response
+    paths into the ticket or customer sidebar.
+
+    Documented template element types include recursive containers
+    (`wrapper`, `card`, `list`) and leaf fields (`text`, `boolean`, `date`,
+    etc.). Nested `widgets` arrays create sections.
+
+    Public App Store listings are managed via the Gorgias Developer Portal /
+    OAuth2 apps; sidebar data display for HTTP integrations uses the Widgets
+    REST API (`POST /api/widgets`).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+
+platform:
+  name: Gorgias
+  vendor: Gorgias, Inc.
+  documentation: https://developers.gorgias.com/
+  appMarketplace: https://www.gorgias.com/integrations
+  developerPortal: https://developers.gorgias.com/
+
+# No npm-packaged host UI SDK is documented for sidebar widgets; templates
+# are JSON managed through the REST API. Chat-widget JS (GorgiasChat) is a
+# separate storefront embedding surface and is out of scope for helpdesk
+# sidebar extensions.
+
+extensionPoints:
+  - id: ticket-sidebar
+    name: Ticket sidebar
+    type: sidebar
+    extensionType: jsonResponse
+    description: >
+      Right-hand sidebar on the ticket page. Widget `context` = `ticket`.
+      Templates are JSON objects created via POST /api/widgets.
+    supportedComponents:
+      - wrapper
+      - card
+      - list
+      - text
+      - boolean
+      - date
+  - id: customer-sidebar
+    name: Customer sidebar
+    type: sidebar
+    extensionType: jsonResponse
+    description: >
+      Right-hand sidebar on the customer page. Widget `context` = `customer`
+      (`user` is deprecated per Gorgias docs).
+    supportedComponents:
+      - wrapper
+      - card
+      - list
+      - text
+      - boolean
+      - date
+
+componentCatalog:
+  components:
+    wrapper:
+      name: wrapper
+      category: container
+      description: >
+        Top-level template container. Holds nested widget sections.
+      props:
+        type: { const: wrapper }
+        widgets: { type: array }
+    card:
+      name: card
+      category: container
+      description: >
+        Titled section / card. May set meta.displayCard and meta.link.
+      props:
+        type: { const: card }
+        title: { type: string }
+        path: { type: string }
+        meta: { type: object }
+        widgets: { type: array }
+    list:
+      name: list
+      category: container
+      description: >
+        Renders an array from the integration response at `path`. Nested
+        widgets describe each item. meta.limit / meta.orderBy optional.
+      props:
+        type: { const: list }
+        path: { type: string }
+        meta: { type: object }
+        widgets: { type: array }
+    text:
+      name: text
+      category: field
+      description: Text field bound to a JSON path in the integration response.
+      props:
+        type: { const: text }
+        title: { type: string }
+        path: { type: string }
+    boolean:
+      name: boolean
+      category: field
+      description: Boolean field (documented template type example).
+      props:
+        type: { const: boolean }
+        title: { type: string }
+        path: { type: string }
+    date:
+      name: date
+      category: field
+      description: Date field (documented template type example).
+      props:
+        type: { const: date }
+        title: { type: string }
+        path: { type: string }
+
+policies:
+  templateShape: |
+    Templates are recursive JSON objects:
+    { type, title?, path?, meta?, widgets?[] }.
+    Create via POST /api/widgets with required `template` and `type`
+    (usually `http`) and optional `integration_id` / `context`.
+  dataBinding: |
+    Leaf `path` values resolve against the JSON returned by the linked
+    HTTP integration. Gorgias variables such as {{ticket.customer.email}}
+    may be used in the integration URL/form.

@@ -1,0 +1,191 @@
+openapi: 3.0.3
+info:
+  title: Jobber Developer GraphQL API (Frigg curated subset)
+  version: "2025-04-16"
+  description: >-
+    Jobber exposes a single GraphQL endpoint. This OpenAPI document is Left Hook's
+    curated subset covering exactly the operations the
+    @friggframework/api-module-jobber client in api.js implements. Every
+    operationId maps 1:1 to an Api method. All operations are HTTP POSTs to the
+    server URL with a GraphQL `{ query, variables }` body; the path segments below
+    are logical operation names for OpenAPI/spec-sync, not REST resources.
+    Sources: https://developer.getjobber.com/docs/
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.getjobber.com/api/graphql
+    description: Jobber production GraphQL endpoint
+security:
+  - bearerAuth: []
+tags:
+  - name: Account
+  - name: Clients
+  - name: Jobs
+  - name: Quotes
+  - name: Invoices
+  - name: App
+paths:
+  /getAccount:
+    post:
+      tags: [Account]
+      operationId: getAccount
+      summary: Get the authorized Jobber account
+      description: >-
+        `query { account { id name } }`. Recommended by Jobber after token exchange.
+      responses:
+        "200":
+          description: GraphQL data.account
+  /listClients:
+    post:
+      tags: [Clients]
+      operationId: listClients
+      summary: List clients
+      description: "`clients(first:, after:)` Relay connection"
+      responses:
+        "200":
+          description: GraphQL data.clients
+  /getClient:
+    post:
+      tags: [Clients]
+      operationId: getClient
+      summary: Get a client by EncodedId
+      description: "`client(id: EncodedId!)`"
+      responses:
+        "200":
+          description: GraphQL data.client
+  /createClient:
+    post:
+      tags: [Clients]
+      operationId: createClient
+      summary: Create a client
+      description: "`clientCreate(input: ClientCreateInput!)`"
+      responses:
+        "200":
+          description: GraphQL data.clientCreate
+  /editClient:
+    post:
+      tags: [Clients]
+      operationId: editClient
+      summary: Edit a client
+      description: "`clientEdit(clientId:, input: ClientEditInput!)`"
+      responses:
+        "200":
+          description: GraphQL data.clientEdit
+  /listJobs:
+    post:
+      tags: [Jobs]
+      operationId: listJobs
+      summary: List jobs
+      description: "`jobs(first:, after:)`"
+      responses:
+        "200":
+          description: GraphQL data.jobs
+  /getJob:
+    post:
+      tags: [Jobs]
+      operationId: getJob
+      summary: Get a job by EncodedId
+      description: "`job(id: EncodedId!)`"
+      responses:
+        "200":
+          description: GraphQL data.job
+  /createJob:
+    post:
+      tags: [Jobs]
+      operationId: createJob
+      summary: Create a job
+      description: "`jobCreate(input: JobCreateAttributes!)`"
+      responses:
+        "200":
+          description: GraphQL data.jobCreate
+  /editJob:
+    post:
+      tags: [Jobs]
+      operationId: editJob
+      summary: Edit a job
+      description: "`jobEdit(jobId:, input: JobEditInput!)`"
+      responses:
+        "200":
+          description: GraphQL data.jobEdit
+  /listQuotes:
+    post:
+      tags: [Quotes]
+      operationId: listQuotes
+      summary: List quotes
+      description: "`quotes(first:, after:)`"
+      responses:
+        "200":
+          description: GraphQL data.quotes
+  /getQuote:
+    post:
+      tags: [Quotes]
+      operationId: getQuote
+      summary: Get a quote by EncodedId
+      description: "`quote(id: EncodedId!)`"
+      responses:
+        "200":
+          description: GraphQL data.quote
+  /createQuote:
+    post:
+      tags: [Quotes]
+      operationId: createQuote
+      summary: Create a quote
+      description: "`quoteCreate(input: QuoteCreateAttributes!)`"
+      responses:
+        "200":
+          description: GraphQL data.quoteCreate
+  /editQuote:
+    post:
+      tags: [Quotes]
+      operationId: editQuote
+      summary: Edit a quote
+      description: "`quoteEdit(quoteId:, input: QuoteEditAttributes!)`"
+      responses:
+        "200":
+          description: GraphQL data.quoteEdit
+  /listInvoices:
+    post:
+      tags: [Invoices]
+      operationId: listInvoices
+      summary: List invoices
+      description: "`invoices(first:, after:)`"
+      responses:
+        "200":
+          description: GraphQL data.invoices
+  /getInvoice:
+    post:
+      tags: [Invoices]
+      operationId: getInvoice
+      summary: Get an invoice by EncodedId
+      description: "`invoice(id: EncodedId!)`"
+      responses:
+        "200":
+          description: GraphQL data.invoice
+  /editInvoice:
+    post:
+      tags: [Invoices]
+      operationId: editInvoice
+      summary: Edit an invoice
+      description: "`invoiceEdit(invoiceId:, input: InvoiceEditInput!)`"
+      responses:
+        "200":
+          description: GraphQL data.invoiceEdit
+  /appDisconnect:
+    post:
+      tags: [App]
+      operationId: appDisconnect
+      summary: Disconnect the app from the Jobber account
+      description: "`mutation { appDisconnect { ... } }`"
+      responses:
+        "200":
+          description: GraphQL data.appDisconnect
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: OAuth 2.0 access token
+      description: >-
+        Obtained via Jobber OAuth 2.0 authorization-code grant.
+        Also send X-JOBBER-GRAPHQL-VERSION on every request.

@@ -1,0 +1,345 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "jobber",
+  "label": "Jobber",
+  "package": "@friggframework/api-module-jobber",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "objects": {
+    "account": {
+      "label": "Jobber account",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "org.name" }
+      ]
+    },
+    "client": {
+      "label": "Client",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "firstName", "type": "string", "tag": "person.firstName" },
+        { "name": "lastName", "type": "string", "tag": "person.lastName" },
+        { "name": "name", "type": "string", "tag": "person.name", "readOnly": true },
+        { "name": "companyName", "type": "string", "tag": "org.name" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "phone", "type": "string", "tag": "person.phone" },
+        { "name": "isCompany", "type": "boolean" },
+        { "name": "isLead", "type": "boolean" },
+        { "name": "isArchived", "type": "boolean", "readOnly": true },
+        { "name": "jobberWebUri", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updatedAt",
+        "get": { "capability": "client.get", "id": "id" },
+        "create": { "capability": "client.create" },
+        "update": { "capability": "client.update", "id": "clientId", "body": "input" }
+      }
+    },
+    "job": {
+      "label": "Job",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "jobNumber", "type": "number", "tag": "record.displayId", "readOnly": true },
+        { "name": "title", "type": "string", "tag": "job.title" },
+        { "name": "jobStatus", "type": "string", "tag": "job.status" },
+        { "name": "jobType", "type": "string" },
+        { "name": "total", "type": "number", "tag": "job.total" },
+        { "name": "startAt", "type": "datetime", "tag": "job.start" },
+        { "name": "endAt", "type": "datetime", "tag": "job.end" },
+        { "name": "completedAt", "type": "datetime", "tag": "job.completedAt" },
+        { "name": "instructions", "type": "text", "tag": "job.instructions" },
+        { "name": "client.id", "type": "string", "tag": "record.parentId" },
+        { "name": "jobberWebUri", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updatedAt",
+        "get": { "capability": "job.get", "id": "id" },
+        "create": { "capability": "job.create" },
+        "update": { "capability": "job.update", "id": "jobId", "body": "input" }
+      }
+    },
+    "quote": {
+      "label": "Quote",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "quoteNumber", "type": "string", "tag": "record.displayId", "readOnly": true },
+        { "name": "title", "type": "string", "tag": "quote.title" },
+        { "name": "quoteStatus", "type": "string", "tag": "quote.status" },
+        { "name": "message", "type": "text" },
+        { "name": "client.id", "type": "string", "tag": "record.parentId" },
+        { "name": "jobberWebUri", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updatedAt",
+        "get": { "capability": "quote.get", "id": "id" },
+        "create": { "capability": "quote.create" },
+        "update": { "capability": "quote.update", "id": "quoteId", "body": "input" }
+      }
+    },
+    "invoice": {
+      "label": "Invoice",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "invoiceNumber", "type": "string", "tag": "record.displayId", "readOnly": true },
+        { "name": "subject", "type": "string", "tag": "invoice.subject" },
+        { "name": "invoiceStatus", "type": "string", "tag": "invoice.status" },
+        { "name": "issuedDate", "type": "datetime", "tag": "invoice.issuedAt" },
+        { "name": "dueDate", "type": "datetime", "tag": "invoice.dueAt" },
+        { "name": "client.id", "type": "string", "tag": "record.parentId" },
+        { "name": "jobberWebUri", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updatedAt",
+        "get": { "capability": "invoice.get", "id": "id" },
+        "update": { "capability": "invoice.update", "id": "invoiceId", "body": "input" }
+      }
+    }
+  },
+  "events": {
+    "client.created": {
+      "delivery": "webhook",
+      "object": "client",
+      "description": "Developer Center topic CLIENT_CREATE. Payload identifies itemId; fetch via client.get.",
+      "payload": {
+        "data": {
+          "webHookEvent": {
+            "topic": "CLIENT_CREATE",
+            "appId": "3ef22a50-072d-430c-a78f-b7646657560b",
+            "accountId": "MQ==",
+            "itemId": "MQ==",
+            "occurredAt": "2026-07-16T16:31:31-06:00"
+          }
+        }
+      },
+      "idPath": "data.webHookEvent.itemId",
+      "match": "CLIENT_CREATE"
+    },
+    "job.completed": {
+      "delivery": "webhook",
+      "object": "job",
+      "description": "Developer Center topic JOB_COMPLETE (and related JOB_* topics).",
+      "payload": {
+        "data": {
+          "webHookEvent": {
+            "topic": "JOB_COMPLETE",
+            "appId": "3ef22a50-072d-430c-a78f-b7646657560b",
+            "accountId": "MQ==",
+            "itemId": "MQ==",
+            "occurredAt": "2026-07-16T16:31:31-06:00"
+          }
+        }
+      },
+      "idPath": "data.webHookEvent.itemId",
+      "match": "JOB_COMPLETE"
+    },
+    "quote.created": {
+      "delivery": "webhook",
+      "object": "quote",
+      "description": "Developer Center topic QUOTE_CREATE.",
+      "payload": {
+        "data": {
+          "webHookEvent": {
+            "topic": "QUOTE_CREATE",
+            "appId": "3ef22a50-072d-430c-a78f-b7646657560b",
+            "accountId": "MQ==",
+            "itemId": "MQ==",
+            "occurredAt": "2026-07-16T16:31:31-06:00"
+          }
+        }
+      },
+      "idPath": "data.webHookEvent.itemId",
+      "match": "QUOTE_CREATE"
+    },
+    "invoice.created": {
+      "delivery": "webhook",
+      "object": "invoice",
+      "description": "Developer Center topic INVOICE_CREATE.",
+      "payload": {
+        "data": {
+          "webHookEvent": {
+            "topic": "INVOICE_CREATE",
+            "appId": "3ef22a50-072d-430c-a78f-b7646657560b",
+            "accountId": "MQ==",
+            "itemId": "MQ==",
+            "occurredAt": "2026-07-16T16:31:31-06:00"
+          }
+        }
+      },
+      "idPath": "data.webHookEvent.itemId",
+      "match": "INVOICE_CREATE"
+    },
+    "app.disconnected": {
+      "delivery": "webhook",
+      "object": "account",
+      "description": "APP_DISCONNECT — required for marketplace apps. Invalidate stored tokens.",
+      "payload": {
+        "data": {
+          "webHookEvent": {
+            "topic": "APP_DISCONNECT",
+            "appId": "3ef22a50-072d-430c-a78f-b7646657560b",
+            "accountId": "MQ==",
+            "itemId": "MQ==",
+            "occurredAt": "2026-07-16T16:31:31-06:00"
+          }
+        }
+      },
+      "match": "APP_DISCONNECT"
+    }
+  },
+  "webhook": {
+    "scope": "app",
+    "topic": "{{body.data.webHookEvent.topic}}",
+    "eventId": "{{body.data.webHookEvent.topic}}:{{body.data.webHookEvent.itemId}}:{{body.data.webHookEvent.occurredAt}}",
+    "account": "{{body.data.webHookEvent.accountId}}",
+    "verify": "verifyWebhookSignature",
+    "note": "Webhooks are configured in the Jobber Developer Center (no GraphQL subscribe API). HMAC-SHA256 of the raw body with the OAuth client secret, base64 in X-Jobber-Hmac-SHA256. Respond within 1s; at-least-once delivery."
+  },
+  "capabilities": {
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "input": {},
+      "output": "account"
+    },
+    "client.list": {
+      "kind": "read",
+      "method": "listClients",
+      "input": {
+        "first": { "type": "number" },
+        "after": { "type": "string" }
+      },
+      "output": "page<client>"
+    },
+    "client.get": {
+      "kind": "read",
+      "method": "getClient",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "client",
+      "args": ["id"]
+    },
+    "client.create": {
+      "kind": "write",
+      "method": "createClient",
+      "input": { "input": { "type": "object", "required": true } },
+      "output": "client",
+      "args": ["input"]
+    },
+    "client.update": {
+      "kind": "write",
+      "method": "editClient",
+      "input": {
+        "clientId": { "type": "string", "required": true },
+        "input": { "type": "object", "required": true }
+      },
+      "output": "client",
+      "args": ["clientId", "input"]
+    },
+    "job.list": {
+      "kind": "read",
+      "method": "listJobs",
+      "input": {
+        "first": { "type": "number" },
+        "after": { "type": "string" }
+      },
+      "output": "page<job>"
+    },
+    "job.get": {
+      "kind": "read",
+      "method": "getJob",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "job",
+      "args": ["id"]
+    },
+    "job.create": {
+      "kind": "write",
+      "method": "createJob",
+      "input": { "input": { "type": "object", "required": true } },
+      "output": "job",
+      "args": ["input"]
+    },
+    "job.update": {
+      "kind": "write",
+      "method": "editJob",
+      "input": {
+        "jobId": { "type": "string", "required": true },
+        "input": { "type": "object", "required": true }
+      },
+      "output": "job",
+      "args": ["jobId", "input"]
+    },
+    "quote.list": {
+      "kind": "read",
+      "method": "listQuotes",
+      "input": {
+        "first": { "type": "number" },
+        "after": { "type": "string" }
+      },
+      "output": "page<quote>"
+    },
+    "quote.get": {
+      "kind": "read",
+      "method": "getQuote",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "quote",
+      "args": ["id"]
+    },
+    "quote.create": {
+      "kind": "write",
+      "method": "createQuote",
+      "input": { "input": { "type": "object", "required": true } },
+      "output": "quote",
+      "args": ["input"]
+    },
+    "quote.update": {
+      "kind": "write",
+      "method": "editQuote",
+      "input": {
+        "quoteId": { "type": "string", "required": true },
+        "input": { "type": "object", "required": true }
+      },
+      "output": "quote",
+      "args": ["quoteId", "input"]
+    },
+    "invoice.list": {
+      "kind": "read",
+      "method": "listInvoices",
+      "input": {
+        "first": { "type": "number" },
+        "after": { "type": "string" }
+      },
+      "output": "page<invoice>"
+    },
+    "invoice.get": {
+      "kind": "read",
+      "method": "getInvoice",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "invoice",
+      "args": ["id"]
+    },
+    "invoice.update": {
+      "kind": "write",
+      "method": "editInvoice",
+      "input": {
+        "invoiceId": { "type": "string", "required": true },
+        "input": { "type": "object", "required": true }
+      },
+      "output": "invoice",
+      "args": ["invoiceId", "input"]
+    },
+    "app.disconnect": {
+      "kind": "action",
+      "method": "appDisconnect",
+      "input": {},
+      "output": "appDisconnect"
+    }
+  }
+}

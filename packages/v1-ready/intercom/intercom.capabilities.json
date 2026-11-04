@@ -1,0 +1,312 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "intercom",
+  "label": "Intercom",
+  "package": "@friggframework/api-module-intercom",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Workspace identity from GET /me → app.id_code. Persisted as entity/credential externalId.",
+    "fields": [
+      {
+        "name": "workspaceId",
+        "type": "string",
+        "description": "Intercom workspace id_code from /me.app.id_code"
+      },
+      {
+        "name": "region",
+        "type": "string",
+        "description": "Workspace region (US / EU / AU) from /me.app.region"
+      }
+    ]
+  },
+  "objects": {
+    "contact": {
+      "label": "Contact",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "external_id", "type": "string", "tag": "record.externalId" },
+        { "name": "role", "type": "string" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "phone", "type": "string", "tag": "person.phone" },
+        { "name": "name", "type": "string", "tag": "person.displayName" },
+        { "name": "owner_id", "type": "string", "tag": "person.id" },
+        { "name": "created_at", "type": "number", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "number", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "custom_attributes", "type": "object" }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "contact.list",
+          "items": "data",
+          "paging": "cursor",
+          "note": "Official 2.17 ListContacts optional query: include_merge_history; response uses cursor_pages."
+        },
+        "get": { "capability": "contact.get", "id": "contactId" },
+        "create": { "capability": "contact.create", "body": "body" },
+        "update": { "capability": "contact.update", "id": "contactId", "body": "body" }
+      }
+    },
+    "conversation": {
+      "label": "Conversation",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "title", "type": "string", "tag": "record.displayName" },
+        { "name": "state", "type": "string" },
+        { "name": "open", "type": "boolean" },
+        { "name": "read", "type": "boolean" },
+        { "name": "priority", "type": "string" },
+        { "name": "admin_assignee_id", "type": "number", "tag": "person.id" },
+        { "name": "team_assignee_id", "type": "number" },
+        { "name": "created_at", "type": "number", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "number", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "conversation.list",
+          "cursor": "starting_after",
+          "limit": "per_page",
+          "items": "conversations",
+          "paging": "cursor"
+        },
+        "get": { "capability": "conversation.get", "id": "conversationId" },
+        "create": { "capability": "conversation.create", "body": "body" },
+        "update": { "capability": "conversation.update", "id": "conversationId", "body": "body" }
+      }
+    },
+    "admin": {
+      "label": "Admin",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "person.id" },
+        { "name": "name", "type": "string", "tag": "person.displayName" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "job_title", "type": "string" },
+        { "name": "away_mode_enabled", "type": "boolean" },
+        { "name": "has_inbox_seat", "type": "boolean" }
+      ]
+    },
+    "company": {
+      "label": "Company",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "company_id", "type": "string", "tag": "record.externalId" },
+        { "name": "name", "type": "string", "tag": "record.displayName" },
+        { "name": "website", "type": "string" },
+        { "name": "industry", "type": "string" },
+        { "name": "size", "type": "number" },
+        { "name": "created_at", "type": "number", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "number", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "company.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "data",
+          "paging": "page",
+          "note": "Official 2.17 listAllCompanies uses query page/per_page/order (POST /companies/list, empty body)."
+        },
+        "get": { "capability": "company.get", "id": "companyId" },
+        "create": { "capability": "company.createOrUpdate", "body": "body" }
+      }
+    },
+    "tag": {
+      "label": "Tag",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "name", "type": "string", "tag": "record.displayName" }
+      ]
+    }
+  },
+  "events": {
+    "conversation.user.created": {
+      "delivery": "webhook",
+      "object": "conversation",
+      "description": "A conversation was created by a user/lead/visitor.",
+      "match": "conversation.user.created"
+    },
+    "conversation.user.replied": {
+      "delivery": "webhook",
+      "object": "conversation",
+      "match": "conversation.user.replied"
+    },
+    "conversation.admin.replied": {
+      "delivery": "webhook",
+      "object": "conversation",
+      "match": "conversation.admin.replied"
+    },
+    "conversation.admin.closed": {
+      "delivery": "webhook",
+      "object": "conversation",
+      "match": "conversation.admin.closed"
+    },
+    "conversation.admin.assigned": {
+      "delivery": "webhook",
+      "object": "conversation",
+      "match": "conversation.admin.assigned"
+    },
+    "contact.created": {
+      "delivery": "webhook",
+      "object": "contact",
+      "match": "contact.created"
+    },
+    "contact.updated": {
+      "delivery": "webhook",
+      "object": "contact",
+      "match": "contact.user.updated"
+    },
+    "company.created": {
+      "delivery": "webhook",
+      "object": "company",
+      "match": "company.created"
+    }
+  },
+  "webhook": {
+    "scope": "app",
+    "topic": "{{body.topic}}",
+    "eventId": "{{body.app_id}}:{{body.topic}}:{{body.id}}",
+    "account": "{{body.app_id}}",
+    "verify": "verifyWebhookSignature",
+    "note": "Webhook subscriptions (HTTPS URL + topics) are configured in the Intercom Developer Hub for the app — not via REST CRUD in OpenAPI 2.17. Intercom signs the raw JSON body with HMAC-SHA1 using the app client_secret; header X-Hub-Signature is sha1=<hex>."
+  },
+  "capabilities": {
+    "identity.get": {
+      "kind": "read",
+      "method": "getMe",
+      "output": "account",
+      "args": []
+    },
+    "contact.list": {
+      "kind": "read",
+      "method": "listContacts",
+      "output": "page<contact>",
+      "args": ["$rest"]
+    },
+    "contact.get": {
+      "kind": "read",
+      "method": "getContact",
+      "input": { "contactId": { "type": "string", "required": true } },
+      "output": "contact",
+      "args": ["contactId"]
+    },
+    "contact.create": {
+      "kind": "write",
+      "method": "createContact",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "contact",
+      "args": ["body"]
+    },
+    "contact.update": {
+      "kind": "write",
+      "method": "updateContact",
+      "input": {
+        "contactId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "contact",
+      "args": ["contactId", "body"]
+    },
+    "conversation.list": {
+      "kind": "read",
+      "method": "listConversations",
+      "output": "page<conversation>",
+      "args": ["$rest"]
+    },
+    "conversation.get": {
+      "kind": "read",
+      "method": "getConversation",
+      "input": { "conversationId": { "type": "string", "required": true } },
+      "output": "conversation",
+      "args": ["conversationId"]
+    },
+    "conversation.create": {
+      "kind": "write",
+      "method": "createConversation",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "conversation",
+      "args": ["body"]
+    },
+    "conversation.update": {
+      "kind": "write",
+      "method": "updateConversation",
+      "input": {
+        "conversationId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "conversation",
+      "args": ["conversationId", "body"]
+    },
+    "conversation.reply": {
+      "kind": "write",
+      "method": "replyConversation",
+      "input": {
+        "conversationId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "conversation",
+      "args": ["conversationId", "body"]
+    },
+    "admin.list": {
+      "kind": "read",
+      "method": "listAdmins",
+      "output": "page<admin>",
+      "args": ["$rest"]
+    },
+    "admin.get": {
+      "kind": "read",
+      "method": "getAdmin",
+      "input": { "adminId": { "type": "string", "required": true } },
+      "output": "admin",
+      "args": ["adminId"]
+    },
+    "company.list": {
+      "kind": "read",
+      "method": "listCompanies",
+      "output": "page<company>",
+      "args": ["$rest"]
+    },
+    "company.get": {
+      "kind": "read",
+      "method": "getCompany",
+      "input": { "companyId": { "type": "string", "required": true } },
+      "output": "company",
+      "args": ["companyId"]
+    },
+    "company.createOrUpdate": {
+      "kind": "write",
+      "method": "createOrUpdateCompany",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "company",
+      "args": ["body"]
+    },
+    "tag.list": {
+      "kind": "read",
+      "method": "listTags",
+      "output": "page<tag>",
+      "args": ["$rest"]
+    },
+    "tag.get": {
+      "kind": "read",
+      "method": "getTag",
+      "input": { "tagId": { "type": "string", "required": true } },
+      "output": "tag",
+      "args": ["tagId"]
+    },
+    "tag.create": {
+      "kind": "write",
+      "method": "createTag",
+      "input": { "body": { "type": "object", "required": true } },
+      "output": "tag",
+      "args": ["body"]
+    }
+  },
+  "options": {
+    "note": "Webhook topic subscriptions are configured in the Developer Hub (not REST). Public marketplace apps require OAuth + Intercom app review for requested scopes. Private apps may use a workspace Access Token (same Bearer header). API version pinned to official OpenAPI 2.17 (newest stable under descriptions/)."
+  }
+}

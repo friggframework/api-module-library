@@ -1,0 +1,392 @@
+openapi: 3.0.3
+info:
+  title: Airtable Web API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    Airtable is a spreadsheet-database hybrid for collaborative apps. This file
+    is Left Hook's curated subset of the official Airtable Web API documented at
+    https://airtable.com/developers/web/api/introduction, covering exactly the
+    endpoints the @friggframework/api-module-airtable client in api.js implements.
+    It is the source of truth the hand-written client mirrors 1:1 (one method per
+    operationId). Airtable does not publish an official OpenAPI document; paths
+    and fields are taken from the official reference pages linked per operation.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.airtable.com/v0
+    description: Airtable Web API v0
+security:
+  - bearerAuth: []
+tags:
+  - name: Identity
+  - name: Bases
+  - name: Records
+  - name: Webhooks
+paths:
+  /meta/whoami:
+    get:
+      tags: [Identity]
+      operationId: getWhoami
+      summary: Get user info
+      description: >-
+        Returns the authenticated user's id. With `user.email:read`, also returns
+        email. OAuth tokens also return granted scopes.
+        https://airtable.com/developers/web/api/get-user-id-scopes
+      responses:
+        "200":
+          description: User id (and optional email/scopes)
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /meta/bases:
+    get:
+      tags: [Bases]
+      operationId: listBases
+      summary: List bases
+      description: >-
+        Lists bases the token can access (paginated).
+        Scope: schema.bases:read.
+        https://airtable.com/developers/web/api/list-bases
+      parameters:
+        - in: query
+          name: offset
+          schema: { type: string }
+      responses:
+        "200":
+          description: Page of bases
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /meta/bases/{baseId}/tables:
+    get:
+      tags: [Bases]
+      operationId: getBaseSchema
+      summary: Get base schema
+      description: >-
+        Returns the schema of all tables in a base.
+        Scope: schema.bases:read.
+        https://airtable.com/developers/web/api/get-base-schema
+      parameters:
+        - $ref: "#/components/parameters/baseId"
+        - in: query
+          name: include
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [visibleFieldIds]
+      responses:
+        "200":
+          description: Tables schema
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /{baseId}/{tableIdOrName}:
+    get:
+      tags: [Records]
+      operationId: listRecords
+      summary: List records
+      description: >-
+        Lists records in a table. Scope: data.records:read.
+        https://airtable.com/developers/web/api/list-records
+      parameters:
+        - $ref: "#/components/parameters/baseId"
+        - $ref: "#/components/parameters/tableIdOrName"
+        - in: query
+          name: pageSize
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: maxRecords
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: offset
+          schema: { type: string }
+        - in: query
+          name: view
+          schema: { type: string }
+        - in: query
+          name: filterByFormula
+          schema: { type: string }
+        - in: query
+          name: cellFormat
+          schema: { type: string, enum: [json, string] }
+        - in: query
+          name: returnFieldsByFieldId
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Paginated records
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Records]
+      operationId: createRecords
+      summary: Create records
+      description: >-
+        Creates one or more records. Scope: data.records:write.
+        https://airtable.com/developers/web/api/create-records
+      parameters:
+        - $ref: "#/components/parameters/baseId"
+        - $ref: "#/components/parameters/tableIdOrName"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created record(s)
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags: [Records]
+      operationId: updateRecords
+      summary: Update multiple records
+      description: >-
+        Updates or upserts multiple records. Scope: data.records:write.
+        https://airtable.com/developers/web/api/update-multiple-records
+      parameters:
+        - $ref: "#/components/parameters/baseId"
+        - $ref: "#/components/parameters/tableIdOrName"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated records
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /{baseId}/{tableIdOrName}/{recordId}:
+    get:
+      tags: [Records]
+      operationId: getRecord
+      summary: Get record
+      description: >-
+        Retrieves a single record. Scope: data.records:read.
+        https://airtable.com/developers/web/api/get-record
+      parameters:
+        - $ref: "#/components/parameters/baseId"
+        - $ref: "#/components/parameters/tableIdOrName"
+        - $ref: "#/components/parameters/recordId"
+        - in: query
+          name: cellFormat
+          schema: { type: string, enum: [json, string] }
+        - in: query
+          name: returnFieldsByFieldId
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Record
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags: [Records]
+      operationId: updateRecord
+      summary: Update record
+      description: >-
+        PATCH-updates a single record (only specified fields).
+        Scope: data.records:write.
+        https://airtable.com/developers/web/api/update-record
+      parameters:
+        - $ref: "#/components/parameters/baseId"
+        - $ref: "#/components/parameters/tableIdOrName"
+        - $ref: "#/components/parameters/recordId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fields]
+              properties:
+                fields: { type: object, additionalProperties: true }
+                typecast: { type: boolean }
+                returnFieldsByFieldId: { type: boolean }
+      responses:
+        "200":
+          description: Updated record
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [Records]
+      operationId: deleteRecord
+      summary: Delete record
+      description: >-
+        Deletes a single record. Scope: data.records:write.
+        https://airtable.com/developers/web/api/delete-record
+      parameters:
+        - $ref: "#/components/parameters/baseId"
+        - $ref: "#/components/parameters/tableIdOrName"
+        - $ref: "#/components/parameters/recordId"
+      responses:
+        "200":
+          description: Deleted record acknowledgment
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /bases/{baseId}/webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List webhooks
+      description: >-
+        Lists webhooks registered on a base. Scope: webhook:manage.
+        https://airtable.com/developers/web/api/list-webhooks
+      parameters:
+        - $ref: "#/components/parameters/baseId"
+      responses:
+        "200":
+          description: Webhook list
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a webhook
+      description: >-
+        Creates a webhook. Response includes macSecretBase64 once.
+        Scope: webhook:manage (+ data/schema scopes per dataTypes).
+        https://airtable.com/developers/web/api/create-a-webhook
+      parameters:
+        - $ref: "#/components/parameters/baseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [specification]
+              properties:
+                notificationUrl: { type: string, format: uri }
+                specification: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: Created webhook (includes macSecretBase64)
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /bases/{baseId}/webhooks/{webhookId}:
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook
+      description: >-
+        Deletes a webhook. Scope: webhook:manage.
+        https://airtable.com/developers/web/api/delete-a-webhook
+      parameters:
+        - $ref: "#/components/parameters/baseId"
+        - $ref: "#/components/parameters/webhookId"
+      responses:
+        "200":
+          description: Empty object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /bases/{baseId}/webhooks/{webhookId}/refresh:
+    post:
+      tags: [Webhooks]
+      operationId: refreshWebhook
+      summary: Refresh a webhook
+      description: >-
+        Extends an active webhook's life by 7 days. Scope: webhook:manage.
+        https://airtable.com/developers/web/api/refresh-a-webhook
+      parameters:
+        - $ref: "#/components/parameters/baseId"
+        - $ref: "#/components/parameters/webhookId"
+      responses:
+        "200":
+          description: New expirationTime
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /bases/{baseId}/webhooks/{webhookId}/payloads:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookPayloads
+      summary: List webhook payloads
+      description: >-
+        Enumerate update payloads after a notification ping. Also extends life.
+        https://airtable.com/developers/web/api/list-webhook-payloads
+      parameters:
+        - $ref: "#/components/parameters/baseId"
+        - $ref: "#/components/parameters/webhookId"
+        - in: query
+          name: cursor
+          schema: { type: number }
+        - in: query
+          name: limit
+          schema: { type: number, maximum: 50 }
+      responses:
+        "200":
+          description: Payload page
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /bases/{baseId}/webhooks/{webhookId}/enableNotifications:
+    post:
+      tags: [Webhooks]
+      operationId: toggleWebhookNotifications
+      summary: Enable or disable webhook notifications
+      description: >-
+        Toggles notification pings. Scope: webhook:manage.
+        https://airtable.com/developers/web/api/enable-disable-webhook-notifications
+      parameters:
+        - $ref: "#/components/parameters/baseId"
+        - $ref: "#/components/parameters/webhookId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enable]
+              properties:
+                enable: { type: boolean }
+      responses:
+        "200":
+          description: Empty object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: OAuth2 or personal access token
+      description: >-
+        Authorization: Bearer <token>. OAuth access tokens (recommended for
+        third-party integrations) or personal access tokens.
+        https://airtable.com/developers/web/api/authentication
+  parameters:
+    baseId:
+      in: path
+      name: baseId
+      required: true
+      schema: { type: string }
+    tableIdOrName:
+      in: path
+      name: tableIdOrName
+      required: true
+      schema: { type: string }
+    recordId:
+      in: path
+      name: recordId
+      required: true
+      schema: { type: string }
+    webhookId:
+      in: path
+      name: webhookId
+      required: true
+      schema: { type: string }
+  responses:
+    Unauthorized:
+      description: Missing or invalid bearer token

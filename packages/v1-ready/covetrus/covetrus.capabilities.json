@@ -1,0 +1,409 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "covetrus",
+  "label": "Covetrus",
+  "package": "@friggframework/api-module-covetrus",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected practice from GET /practice (and optional primary location from GET /locations).",
+    "fields": [
+      {
+        "name": "id",
+        "type": "id",
+        "description": "Practice id (entity externalId)"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "Practice display name"
+      },
+      {
+        "name": "phone",
+        "type": "phone",
+        "description": "Practice phone when returned by GET /practice"
+      }
+    ]
+  },
+  "objects": {
+    "practice": {
+      "label": "Practice",
+      "description": "Veterinary practice identity for the connected OAuth credential",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" },
+        { "name": "phone", "type": "phone", "tag": "contact.phone" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "practice.get", "id": "id" }
+      }
+    },
+    "location": {
+      "label": "Location",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "location.list",
+          "items": "data",
+          "paging": "offset",
+          "limit": "limit",
+          "cursor": "offset"
+        },
+        "get": { "capability": "location.get", "id": "id" }
+      }
+    },
+    "client": {
+      "label": "Client",
+      "description": "Pet owner / client of the practice",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "client.list",
+          "items": "data",
+          "paging": "offset",
+          "limit": "limit",
+          "cursor": "offset"
+        },
+        "get": { "capability": "client.get", "id": "id" },
+        "create": { "capability": "client.create", "body": "client" },
+        "update": { "capability": "client.update", "id": "id", "body": "client" }
+      }
+    },
+    "patient": {
+      "label": "Patient",
+      "description": "Animal / pet patient",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "patient.list",
+          "items": "data",
+          "paging": "offset",
+          "limit": "limit",
+          "cursor": "offset"
+        },
+        "get": { "capability": "patient.get", "id": "id" }
+      }
+    },
+    "appointment": {
+      "label": "Appointment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "appointment.list",
+          "items": "data",
+          "paging": "offset",
+          "limit": "limit",
+          "cursor": "offset"
+        },
+        "get": { "capability": "appointment.get", "id": "id" }
+      }
+    },
+    "invoice": {
+      "label": "Invoice",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "invoice.list",
+          "items": "data",
+          "paging": "offset",
+          "limit": "limit",
+          "cursor": "offset"
+        },
+        "get": { "capability": "invoice.get", "id": "id" }
+      }
+    },
+    "payment": {
+      "label": "Payment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "payment.list",
+          "items": "data",
+          "paging": "offset",
+          "limit": "limit",
+          "cursor": "offset"
+        },
+        "get": { "capability": "payment.get", "id": "id" },
+        "create": { "capability": "payment.create", "body": "payment" }
+      }
+    },
+    "reminder": {
+      "label": "Reminder",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "reminder.list",
+          "items": "data",
+          "paging": "offset",
+          "limit": "limit",
+          "cursor": "offset"
+        }
+      }
+    },
+    "medical_record": {
+      "label": "Medical record",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "medical_record.get", "id": "id" }
+      }
+    },
+    "staff": {
+      "label": "Staff",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "staff.list",
+          "items": "data",
+          "paging": "offset",
+          "limit": "limit",
+          "cursor": "offset"
+        },
+        "get": { "capability": "staff.get", "id": "id" }
+      }
+    },
+    "service": {
+      "label": "Service",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "service.list", "items": "data" }
+      }
+    },
+    "product": {
+      "label": "Product",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "product.list", "items": "data" }
+      }
+    }
+  },
+  "capabilities": {
+    "practice.get": {
+      "kind": "read",
+      "method": "getPractice",
+      "input": {},
+      "output": "practice"
+    },
+    "location.list": {
+      "kind": "list",
+      "method": "listLocations",
+      "output": "location[]",
+      "args": ["params"]
+    },
+    "location.get": {
+      "kind": "read",
+      "method": "getLocation",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "location",
+      "args": ["id"]
+    },
+    "client.list": {
+      "kind": "list",
+      "method": "listClients",
+      "output": "client[]",
+      "args": ["params"]
+    },
+    "client.get": {
+      "kind": "read",
+      "method": "getClient",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "client",
+      "args": ["id"]
+    },
+    "client.search": {
+      "kind": "list",
+      "method": "searchClients",
+      "output": "client[]",
+      "args": ["params"]
+    },
+    "client.create": {
+      "kind": "create",
+      "method": "createClient",
+      "input": { "client": { "type": "object", "required": true } },
+      "output": "client",
+      "args": ["body"]
+    },
+    "client.update": {
+      "kind": "update",
+      "method": "updateClient",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "client": { "type": "object", "required": true }
+      },
+      "output": "client",
+      "args": ["id", "body"]
+    },
+    "client.balance.get": {
+      "kind": "read",
+      "method": "getClientBalance",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "object",
+      "args": ["id"]
+    },
+    "client.ledger.get": {
+      "kind": "read",
+      "method": "getClientLedger",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "object",
+      "args": ["id", "params"]
+    },
+    "client.patients.list": {
+      "kind": "list",
+      "method": "listClientPatients",
+      "output": "patient[]",
+      "args": ["id", "params"]
+    },
+    "client.invoices.list": {
+      "kind": "list",
+      "method": "listClientInvoices",
+      "output": "invoice[]",
+      "args": ["id", "params"]
+    },
+    "patient.list": {
+      "kind": "list",
+      "method": "listPatients",
+      "output": "patient[]",
+      "args": ["params"]
+    },
+    "patient.get": {
+      "kind": "read",
+      "method": "getPatient",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "patient",
+      "args": ["id"]
+    },
+    "appointment.list": {
+      "kind": "list",
+      "method": "listAppointments",
+      "output": "appointment[]",
+      "args": ["params"]
+    },
+    "appointment.get": {
+      "kind": "read",
+      "method": "getAppointment",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "appointment",
+      "args": ["id"]
+    },
+    "invoice.list": {
+      "kind": "list",
+      "method": "listInvoices",
+      "output": "invoice[]",
+      "args": ["params"]
+    },
+    "invoice.get": {
+      "kind": "read",
+      "method": "getInvoice",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "invoice",
+      "args": ["id"]
+    },
+    "payment.list": {
+      "kind": "list",
+      "method": "listPayments",
+      "output": "payment[]",
+      "args": ["params"]
+    },
+    "payment.get": {
+      "kind": "read",
+      "method": "getPayment",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "payment",
+      "args": ["id"]
+    },
+    "payment.create": {
+      "kind": "create",
+      "method": "createPayment",
+      "input": { "payment": { "type": "object", "required": true } },
+      "output": "payment",
+      "args": ["body"]
+    },
+    "reminder.list": {
+      "kind": "list",
+      "method": "listReminders",
+      "output": "reminder[]",
+      "args": ["params"]
+    },
+    "reminder.patient.list": {
+      "kind": "list",
+      "method": "getPatientReminders",
+      "output": "reminder[]",
+      "args": ["id"]
+    },
+    "medical_record.list": {
+      "kind": "list",
+      "method": "listMedicalRecords",
+      "output": "medical_record[]",
+      "args": ["id", "params"]
+    },
+    "medical_record.get": {
+      "kind": "read",
+      "method": "getMedicalRecord",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "medical_record",
+      "args": ["id"]
+    },
+    "staff.list": {
+      "kind": "list",
+      "method": "listStaff",
+      "output": "staff[]",
+      "args": ["params"]
+    },
+    "staff.get": {
+      "kind": "read",
+      "method": "getStaff",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "staff",
+      "args": ["id"]
+    },
+    "service.list": {
+      "kind": "list",
+      "method": "listServices",
+      "output": "service[]",
+      "args": ["params"]
+    },
+    "product.list": {
+      "kind": "list",
+      "method": "listProducts",
+      "output": "product[]",
+      "args": ["params"]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+    "name": "personio",
+    "config": {
+        "oauth2": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

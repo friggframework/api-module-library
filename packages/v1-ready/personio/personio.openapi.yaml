@@ -1,0 +1,539 @@
+openapi: 3.0.3
+info:
+  title: Personio Public API (Frigg curated subset)
+  version: "2.0.0"
+  description: >-
+    Personio is an HRIS platform. This file is Left Hook's curated subset of the
+    official Personio v2 OpenAPI documents at https://developer.personio.de/openapi,
+    covering exactly the endpoints the @friggframework/api-module-personio client
+    in api.js implements. It is the source of truth the hand-written client
+    mirrors 1:1 (one method per operationId).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.personio.de
+    description: Personio public API
+security:
+  - BearerAuth: []
+tags:
+  - name: Authentication
+  - name: Persons
+  - name: Absences
+  - name: Attendances
+  - name: Webhooks
+paths:
+  /v2/auth/token:
+    post:
+      tags: [Authentication]
+      operationId: getToken
+      summary: Obtain Access Token
+      description: >-
+        OAuth 2.0 client credentials grant. Request must use
+        application/x-www-form-urlencoded. Token default TTL is 86400 seconds.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [grant_type, client_id, client_secret]
+              properties:
+                grant_type:
+                  type: string
+                  enum: [client_credentials]
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+                scope:
+                  type: string
+                  description: Optional space-delimited scopes.
+      responses:
+        "200":
+          description: Access token issued.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token: { type: string }
+                  token_type: { type: string, enum: [Bearer] }
+                  expires_in: { type: integer }
+                  scope: { type: string }
+
+  /v2/persons:
+    get:
+      tags: [Persons]
+      operationId: listPersons
+      summary: List persons
+      description: Requires personio:persons:read.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 50, default: 10 }
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: id
+          schema: { type: string }
+        - in: query
+          name: email
+          schema: { type: string }
+        - in: query
+          name: first_name
+          schema: { type: string }
+        - in: query
+          name: last_name
+          schema: { type: string }
+        - in: query
+          name: preferred_name
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string, enum: [ACTIVE, INACTIVE] }
+        - in: query
+          name: created_at
+          schema: { type: string, format: date-time }
+        - in: query
+          name: updated_at
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated list of persons (`_data`, `_meta.links`).
+    post:
+      tags: [Persons]
+      operationId: createPerson
+      summary: Create a person
+      description: Requires personio:persons:write. Creates Person + Employment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string, format: email }
+                first_name: { type: string }
+                last_name: { type: string }
+                preferred_name: { type: string }
+                gender:
+                  type: string
+                  enum: [UNSPECIFIED, MALE, FEMALE, DIVERSE]
+                employments:
+                  type: object
+      responses:
+        "201":
+          description: Person created.
+
+  /v2/persons/{id}:
+    get:
+      tags: [Persons]
+      operationId: getPerson
+      summary: Retrieve a person
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Person resource.
+    patch:
+      tags: [Persons]
+      operationId: updatePerson
+      summary: Update a person
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Person updated.
+    delete:
+      tags: [Persons]
+      operationId: deletePerson
+      summary: Delete a person
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Person deleted.
+
+  /v2/absence-periods:
+    get:
+      tags: [Absences]
+      operationId: listAbsencePeriods
+      summary: List absence periods
+      description: Requires personio:absences:read.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 100 }
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: id
+          schema: { type: string }
+        - in: query
+          name: person.id
+          schema: { type: string }
+        - in: query
+          name: absence_type.id
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated absence periods.
+    post:
+      tags: [Absences]
+      operationId: createAbsencePeriod
+      summary: Create an absence period
+      parameters:
+        - in: query
+          name: skip_approval
+          schema: { type: boolean, default: false }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person, starts_from, absence_type]
+              properties:
+                person:
+                  type: object
+                  properties:
+                    id: { type: string }
+                starts_from: { type: object }
+                ends_at: { type: object }
+                absence_type:
+                  type: object
+                  properties:
+                    id: { type: string }
+                comment: { type: string }
+      responses:
+        "201":
+          description: Absence period created.
+
+  /v2/absence-periods/{id}:
+    get:
+      tags: [Absences]
+      operationId: getAbsencePeriod
+      summary: Retrieve an absence period
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Absence period.
+    patch:
+      tags: [Absences]
+      operationId: updateAbsencePeriod
+      summary: Update an absence period
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: skip_approval
+          schema: { type: boolean, default: false }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Absence period updated.
+    delete:
+      tags: [Absences]
+      operationId: deleteAbsencePeriod
+      summary: Delete an absence period
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Absence period deleted.
+
+  /v2/absence-types:
+    get:
+      tags: [Absences]
+      operationId: listAbsenceTypes
+      summary: List absence types
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: cursor
+          schema: { type: string }
+      responses:
+        "200":
+          description: Absence types.
+
+  /v2/absence-types/{id}:
+    get:
+      tags: [Absences]
+      operationId: getAbsenceType
+      summary: Retrieve an absence type
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Absence type.
+
+  /v2/attendance-periods:
+    get:
+      tags: [Attendances]
+      operationId: listAttendancePeriods
+      summary: List attendance periods
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: person.id
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: start.date_time.gte
+          schema: { type: string, format: date-time }
+        - in: query
+          name: start.date_time.lte
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Attendance periods.
+    post:
+      tags: [Attendances]
+      operationId: createAttendancePeriod
+      summary: Create an attendance period
+      parameters:
+        - in: query
+          name: skip_approval
+          schema: { type: boolean, default: false }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person, type, start]
+              properties:
+                person:
+                  type: object
+                  properties:
+                    id: { type: string }
+                type:
+                  type: string
+                  enum: [WORK, BREAK]
+                start:
+                  type: object
+                  properties:
+                    date_time: { type: string }
+                end:
+                  type: object
+                  properties:
+                    date_time: { type: string }
+      responses:
+        "201":
+          description: Attendance period created.
+
+  /v2/attendance-periods/{id}:
+    get:
+      tags: [Attendances]
+      operationId: getAttendancePeriod
+      summary: Retrieve an attendance period
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Attendance period.
+    patch:
+      tags: [Attendances]
+      operationId: updateAttendancePeriod
+      summary: Update an attendance period
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: skip_approval
+          schema: { type: boolean, default: false }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Attendance period updated.
+    delete:
+      tags: [Attendances]
+      operationId: deleteAttendancePeriod
+      summary: Delete an attendance period
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Attendance period deleted.
+
+  /v2/webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List webhooks
+      description: Requires personio:webhooks:read.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: cursor
+          schema: { type: string }
+      responses:
+        "200":
+          description: Webhooks.
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a webhook
+      description: Requires personio:webhooks:write.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, status, enabled_events]
+              properties:
+                url:
+                  type: string
+                  format: uri
+                description: { type: string }
+                status:
+                  type: string
+                  enum: [ENABLED, DISABLED]
+                enabled_events:
+                  type: array
+                  items: { type: string }
+                auth_type:
+                  type: string
+                  enum: [NONE, TOKEN, CUSTOM]
+                token: { type: string }
+      responses:
+        "201":
+          description: Webhook created.
+
+  /v2/webhooks/{id}:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Get a webhook
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Webhook.
+    patch:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update a webhook
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Webhook updated.
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Webhook deleted.
+
+  /v2/webhooks/{id}/signing-secret:
+    post:
+      tags: [Webhooks]
+      operationId: rotateWebhookSigningSecret
+      summary: Rotate the webhook signing secret
+      description: >-
+        Returns the new active secret value once. Requires personio:webhooks:write.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                value: { type: string }
+      responses:
+        "200":
+          description: Signing secret rotated.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        Bearer token from POST /v2/auth/token (client_credentials). Sent as
+        Authorization: Bearer <access_token>.

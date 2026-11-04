@@ -1,0 +1,307 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "personio",
+  "label": "Personio",
+  "package": "@friggframework/api-module-personio",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "OAuth2 client-credentials fields persisted on the credential/entity.",
+    "fields": [
+      { "name": "client_id", "type": "string" },
+      { "name": "client_secret", "type": "string" },
+      { "name": "access_token", "type": "string" },
+      { "name": "company_id", "type": "string", "description": "Personio company id; also the entity externalId." },
+      { "name": "scope", "type": "string" }
+    ]
+  },
+  "objects": {
+    "person": {
+      "label": "Person",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "person.id" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "first_name", "type": "string", "tag": "person.firstName" },
+        { "name": "last_name", "type": "string", "tag": "person.lastName" },
+        { "name": "preferred_name", "type": "string", "tag": "person.preferredName" },
+        { "name": "gender", "type": "string" },
+        { "name": "status", "type": "string", "tag": "person.status", "readOnly": true },
+        { "name": "created_at", "type": "datetime", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "readOnly": true },
+        { "name": "custom_attributes", "type": "json" },
+        { "name": "employments", "type": "json", "readOnly": true }
+      ]
+    },
+    "absence_period": {
+      "label": "Absence period",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "absence.id" },
+        { "name": "person.id", "type": "id", "tag": "person.id" },
+        { "name": "absence_type.id", "type": "id", "tag": "absence.typeId" },
+        { "name": "starts_from", "type": "json", "tag": "absence.start" },
+        { "name": "ends_at", "type": "json", "tag": "absence.end" },
+        { "name": "comment", "type": "string" },
+        { "name": "status", "type": "string", "tag": "absence.status" }
+      ]
+    },
+    "attendance_period": {
+      "label": "Attendance period",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "attendance.id" },
+        { "name": "person.id", "type": "id", "tag": "person.id" },
+        { "name": "type", "type": "string", "tag": "attendance.type" },
+        { "name": "start", "type": "json", "tag": "attendance.start" },
+        { "name": "end", "type": "json", "tag": "attendance.end" },
+        { "name": "status", "type": "string", "tag": "attendance.status" }
+      ]
+    },
+    "webhook": {
+      "label": "Webhook subscription",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "url", "type": "string", "tag": "webhook.url" },
+        { "name": "status", "type": "string" },
+        { "name": "enabled_events", "type": "json", "tag": "webhook.events" },
+        { "name": "description", "type": "string" }
+      ]
+    }
+  },
+  "events": {
+    "person.created": {
+      "delivery": "webhook",
+      "object": "person",
+      "subscribe": "webhook.create",
+      "description": "Fired when a Person/Employee is created.",
+      "payload": {
+        "company_id": "27277",
+        "occurred_at": "2024-02-05T18:07:02.069Z",
+        "event_name": "person.created",
+        "payload": { "person": { "id": "343536" } },
+        "meta": {}
+      }
+    },
+    "person.updated": {
+      "delivery": "webhook",
+      "object": "person",
+      "subscribe": "webhook.create",
+      "description": "Fired when whitelisted person fields change."
+    },
+    "person.deleted": {
+      "delivery": "webhook",
+      "object": "person",
+      "subscribe": "webhook.create",
+      "description": "Fired when a Person is deleted."
+    },
+    "absence-period.created": {
+      "delivery": "webhook",
+      "object": "absence_period",
+      "subscribe": "webhook.create",
+      "description": "Fired when an absence period is created."
+    },
+    "attendance-period.created": {
+      "delivery": "webhook",
+      "object": "attendance_period",
+      "subscribe": "webhook.create",
+      "description": "Fired when an attendance period is created."
+    }
+  },
+  "webhook": {
+    "scope": "installation",
+    "topic": "person.created",
+    "eventId": "{{body.payload.person.id}}",
+    "verify": "verifyWebhookSignature",
+    "note": "HMAC-SHA256 over `{timestamp}.{raw_body}` with X-Personio-Webhook-Timestamp / X-Personio-Webhook-Signature. Tenant key is body.company_id."
+  },
+  "capabilities": {
+    "person.list": {
+      "kind": "read",
+      "method": "listPersons",
+      "input": {
+        "limit": { "type": "integer" },
+        "cursor": { "type": "string" },
+        "email": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "output": "page<person>"
+    },
+    "person.get": {
+      "kind": "read",
+      "method": "getPerson",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "person",
+      "args": ["id"]
+    },
+    "person.create": {
+      "kind": "write",
+      "method": "createPerson",
+      "input": {
+        "email": { "type": "string" },
+        "first_name": { "type": "string" },
+        "last_name": { "type": "string" }
+      },
+      "output": "person"
+    },
+    "person.update": {
+      "kind": "write",
+      "method": "updatePerson",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "first_name": { "type": "string" },
+        "last_name": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "output": "person",
+      "args": ["id", "$rest"]
+    },
+    "person.delete": {
+      "kind": "delete",
+      "method": "deletePerson",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "absence_period.list": {
+      "kind": "read",
+      "method": "listAbsencePeriods",
+      "input": {
+        "limit": { "type": "integer" },
+        "cursor": { "type": "string" },
+        "person.id": { "type": "string" }
+      },
+      "output": "page<absence_period>"
+    },
+    "absence_period.get": {
+      "kind": "read",
+      "method": "getAbsencePeriod",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "absence_period",
+      "args": ["id"]
+    },
+    "absence_period.create": {
+      "kind": "write",
+      "method": "createAbsencePeriod",
+      "input": {
+        "person": { "type": "object", "required": true },
+        "starts_from": { "type": "object", "required": true },
+        "absence_type": { "type": "object", "required": true },
+        "ends_at": { "type": "object" },
+        "comment": { "type": "string" }
+      },
+      "output": "absence_period"
+    },
+    "absence_period.update": {
+      "kind": "write",
+      "method": "updateAbsencePeriod",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "absence_period",
+      "args": ["id", "$rest"]
+    },
+    "absence_period.delete": {
+      "kind": "delete",
+      "method": "deleteAbsencePeriod",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "attendance_period.list": {
+      "kind": "read",
+      "method": "listAttendancePeriods",
+      "input": {
+        "limit": { "type": "integer" },
+        "cursor": { "type": "string" },
+        "person.id": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "output": "page<attendance_period>"
+    },
+    "attendance_period.get": {
+      "kind": "read",
+      "method": "getAttendancePeriod",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "attendance_period",
+      "args": ["id"]
+    },
+    "attendance_period.create": {
+      "kind": "write",
+      "method": "createAttendancePeriod",
+      "input": {
+        "person": { "type": "object", "required": true },
+        "type": { "type": "string", "required": true },
+        "start": { "type": "object", "required": true },
+        "end": { "type": "object" }
+      },
+      "output": "attendance_period"
+    },
+    "attendance_period.update": {
+      "kind": "write",
+      "method": "updateAttendancePeriod",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "attendance_period",
+      "args": ["id", "$rest"]
+    },
+    "attendance_period.delete": {
+      "kind": "delete",
+      "method": "deleteAttendancePeriod",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "webhook.create": {
+      "kind": "subscribe",
+      "method": "createWebhook",
+      "input": {
+        "url": { "type": "string", "required": true },
+        "status": { "type": "string", "required": true },
+        "enabled_events": { "type": "array", "required": true },
+        "description": { "type": "string" },
+        "auth_type": { "type": "string" },
+        "token": { "type": "string" }
+      },
+      "output": "webhook"
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "listWebhooks",
+      "input": {
+        "limit": { "type": "integer" },
+        "cursor": { "type": "string" }
+      },
+      "output": "page<webhook>"
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhook",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "webhook.rotate_secret": {
+      "kind": "write",
+      "method": "rotateWebhookSigningSecret",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "value": { "type": "string" }
+      },
+      "output": "signing_secret",
+      "args": ["id", "$rest"]
+    }
+  }
+}

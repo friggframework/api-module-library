@@ -1,0 +1,10 @@
+{
+    "name": "slack",
+    "config": {
+        "oauth": true,
+        "batch": {
+            "concurrency": 5,
+            "delay": 200
+        }
+    }
+}

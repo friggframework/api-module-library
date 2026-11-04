@@ -1,0 +1,560 @@
+openapi: 3.0.3
+info:
+  title: Slack Web API (Frigg subset)
+  version: "1.2.0"
+  description: >-
+    Curated OpenAPI subset of the Slack Web API covering exactly the endpoints
+    implemented by @friggframework/api-module-slack. Paths and parameters are
+    taken from Slack's official method docs (https://docs.slack.dev/reference/methods/)
+    and cross-checked against the official OpenAPI 2.0 document at
+    https://github.com/slackapi/slack-api-specs (web-api/slack_web_openapi_v2.json).
+    Every operationId is a method on Api in api.js.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Slack Web API
+    url: https://docs.slack.dev/apis/web-api
+servers:
+  - url: https://slack.com/api
+    description: Slack Web API
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Conversations
+  - name: Chat
+  - name: Users
+  - name: Files
+  - name: Events
+  - name: Views
+paths:
+  /auth.test:
+    post:
+      tags: [Auth]
+      operationId: authTest
+      summary: Checks authentication and identity
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/auth.test
+      responses:
+        "200":
+          description: Identity for the token (ok, team_id, user_id, …)
+  /auth.teams.list:
+    get:
+      tags: [Auth]
+      operationId: listTeams
+      summary: List workspaces an org-wide app is approved for
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/auth.teams.list
+      parameters:
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+        - in: query
+          name: include_icon
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: teams[] plus response_metadata.next_cursor
+  /conversations.list:
+    get:
+      tags: [Conversations]
+      operationId: listConversations
+      summary: List conversations the token can access
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/conversations.list
+      parameters:
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+        - in: query
+          name: exclude_archived
+          schema: { type: boolean }
+        - in: query
+          name: types
+          schema: { type: string }
+          description: "Comma-separated: public_channel, private_channel, mpim, im"
+        - in: query
+          name: team_id
+          schema: { type: string }
+      responses:
+        "200":
+          description: channels[] plus response_metadata
+  /conversations.info:
+    get:
+      tags: [Conversations]
+      operationId: getConversation
+      summary: Retrieve information about a conversation
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/conversations.info
+      parameters:
+        - $ref: "#/components/parameters/channel"
+        - in: query
+          name: include_locale
+          schema: { type: boolean }
+        - in: query
+          name: include_num_members
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: channel object
+  /conversations.create:
+    post:
+      tags: [Conversations]
+      operationId: createConversation
+      summary: Create a public or private channel
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/conversations.create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                is_private: { type: boolean }
+                team_id: { type: string }
+      responses:
+        "200":
+          description: Created channel
+  /conversations.invite:
+    post:
+      tags: [Conversations]
+      operationId: inviteToConversation
+      summary: Invite users to a conversation
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/conversations.invite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, users]
+              properties:
+                channel: { type: string }
+                users: { type: string, description: Comma-separated user IDs }
+                force: { type: boolean }
+      responses:
+        "200":
+          description: Updated channel
+  /conversations.history:
+    get:
+      tags: [Conversations]
+      operationId: getConversationHistory
+      summary: Fetch message history for a conversation
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/conversations.history
+      parameters:
+        - $ref: "#/components/parameters/channel"
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+        - in: query
+          name: latest
+          schema: { type: string }
+        - in: query
+          name: oldest
+          schema: { type: string }
+        - in: query
+          name: inclusive
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: messages[] plus has_more / response_metadata
+  /conversations.members:
+    get:
+      tags: [Conversations]
+      operationId: getConversationMembers
+      summary: List members of a conversation
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/conversations.members
+      parameters:
+        - $ref: "#/components/parameters/channel"
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: members[] (user IDs)
+  /conversations.rename:
+    post:
+      tags: [Conversations]
+      operationId: renameConversation
+      summary: Rename a conversation
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/conversations.rename
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, name]
+              properties:
+                channel: { type: string }
+                name: { type: string }
+      responses:
+        "200":
+          description: Renamed channel
+  /conversations.archive:
+    post:
+      tags: [Conversations]
+      operationId: archiveConversation
+      summary: Archive a conversation
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/conversations.archive
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel]
+              properties:
+                channel: { type: string }
+      responses:
+        "200":
+          description: ok
+  /chat.postMessage:
+    post:
+      tags: [Chat]
+      operationId: postMessage
+      summary: Sends a message to a channel
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/chat.postMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel]
+              properties:
+                channel: { type: string }
+                text: { type: string }
+                blocks: { type: array }
+                attachments: { type: array }
+                thread_ts: { type: string }
+                mrkdwn: { type: boolean }
+      responses:
+        "200":
+          description: Posted message (channel, ts, message)
+  /chat.update:
+    post:
+      tags: [Chat]
+      operationId: updateMessage
+      summary: Updates a message
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/chat.update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, ts]
+              properties:
+                channel: { type: string }
+                ts: { type: string }
+                text: { type: string }
+                blocks: { type: array }
+      responses:
+        "200":
+          description: Updated message
+  /chat.delete:
+    post:
+      tags: [Chat]
+      operationId: deleteMessage
+      summary: Deletes a message
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/chat.delete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, ts]
+              properties:
+                channel: { type: string }
+                ts: { type: string }
+      responses:
+        "200":
+          description: ok
+  /chat.postEphemeral:
+    post:
+      tags: [Chat]
+      operationId: postEphemeral
+      summary: Sends an ephemeral message to a user in a channel
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/chat.postEphemeral
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, user]
+              properties:
+                channel: { type: string }
+                user: { type: string }
+                text: { type: string }
+                blocks: { type: array }
+      responses:
+        "200":
+          description: message_ts
+  /chat.getPermalink:
+    get:
+      tags: [Chat]
+      operationId: getMessagePermalink
+      summary: Retrieve a permalink URL for a specific message
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/chat.getPermalink
+      parameters:
+        - $ref: "#/components/parameters/channel"
+        - in: query
+          name: message_ts
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: permalink
+  /users.list:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: Lists all users in a workspace
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/users.list
+      parameters:
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+        - in: query
+          name: include_locale
+          schema: { type: boolean }
+        - in: query
+          name: team_id
+          schema: { type: string }
+      responses:
+        "200":
+          description: members[]
+  /users.info:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Gets information about a user
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/users.info
+      parameters:
+        - in: query
+          name: user
+          required: true
+          schema: { type: string }
+        - in: query
+          name: include_locale
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: user object
+  /users.lookupByEmail:
+    get:
+      tags: [Users]
+      operationId: lookupUserByEmail
+      summary: Find a user with an email address
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/users.lookupByEmail
+      parameters:
+        - in: query
+          name: email
+          required: true
+          schema: { type: string, format: email }
+      responses:
+        "200":
+          description: user object
+  /users.profile.get:
+    get:
+      tags: [Users]
+      operationId: getUserProfile
+      summary: Retrieve a user's profile information
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/users.profile.get
+      parameters:
+        - in: query
+          name: user
+          schema: { type: string }
+        - in: query
+          name: include_labels
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: profile object
+  /files.list:
+    get:
+      tags: [Files]
+      operationId: listFiles
+      summary: List files for a team, channel, or user
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/files.list
+      parameters:
+        - in: query
+          name: user
+          schema: { type: string }
+        - in: query
+          name: channel
+          schema: { type: string }
+        - in: query
+          name: types
+          schema: { type: string }
+        - in: query
+          name: count
+          schema: { type: integer }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: ts_from
+          schema: { type: string }
+        - in: query
+          name: ts_to
+          schema: { type: string }
+      responses:
+        "200":
+          description: files[]
+  /files.info:
+    get:
+      tags: [Files]
+      operationId: getFile
+      summary: Gets information about a file
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/files.info
+      parameters:
+        - in: query
+          name: file
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: file object
+  /apps.event.authorizations.list:
+    get:
+      tags: [Events]
+      operationId: listEventAuthorizations
+      summary: Get installations that can see a given Events API event context
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/apps.event.authorizations.list
+      parameters:
+        - in: query
+          name: event_context
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: authorizations[]
+  /views.open:
+    post:
+      tags: [Views]
+      operationId: openView
+      summary: Open a view for a user (modal)
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/views.open
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [trigger_id, view]
+              properties:
+                trigger_id: { type: string }
+                view: { type: object }
+      responses:
+        "200":
+          description: view
+  /views.publish:
+    post:
+      tags: [Views]
+      operationId: publishView
+      summary: Publish a static view to the App Home
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/views.publish
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, view]
+              properties:
+                user_id: { type: string }
+                view: { type: object }
+                hash: { type: string }
+      responses:
+        "200":
+          description: view
+  /views.update:
+    post:
+      tags: [Views]
+      operationId: updateView
+      summary: Update an existing view
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/views.update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                view_id: { type: string }
+                external_id: { type: string }
+                view: { type: object }
+                hash: { type: string }
+      responses:
+        "200":
+          description: view
+  /views.push:
+    post:
+      tags: [Views]
+      operationId: pushView
+      summary: Push a new view onto the modal stack
+      externalDocs:
+        url: https://docs.slack.dev/reference/methods/views.push
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [trigger_id, view]
+              properties:
+                trigger_id: { type: string }
+                view: { type: object }
+      responses:
+        "200":
+          description: view
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        Bot (`xoxb-…`) or user (`xoxp-…`) token from oauth.v2.access, sent as
+        Authorization: Bearer <token>. See
+        https://docs.slack.dev/authentication/tokens
+  parameters:
+    channel:
+      in: query
+      name: channel
+      required: true
+      schema: { type: string }
+    cursor:
+      in: query
+      name: cursor
+      schema: { type: string }
+    limit:
+      in: query
+      name: limit
+      schema: { type: integer }

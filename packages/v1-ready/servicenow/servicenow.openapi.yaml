@@ -1,0 +1,557 @@
+openapi: 3.0.3
+info:
+  title: ServiceNow Table API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    ServiceNow REST Table API and Attachment API. Official references:
+    Table API — https://developer.servicenow.com/print_page.do?category=null&identifier=c_TableAPI&module=api&release=yokohama
+    Attachment API — https://developer.servicenow.com/print_page.do?category=null&identifier=c_AttachmentAPI&module=api&release=yokohama
+    OAuth — https://www.servicenow.com/docs/r/yokohama/platform-security/authentication/c_OAuthAuthorizationCodeFlow.html
+    OpenAPI may be exported per instance from REST API Explorer (no single public
+    static Table API OpenAPI URL). This file is Left Hook's curated subset covering
+    exactly the endpoints `@friggframework/api-module-servicenow` implements in
+    api.js (one method per operationId). Paths use `/api/now/table/{table}` and
+    `/api/now/attachment`. Host template: `https://{instance}.service-now.com`.
+    Auth: OAuth2 bearer (primary) or HTTP Basic (alternate).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://{instance}.service-now.com
+    description: ServiceNow instance host (official product hostname pattern)
+    variables:
+      instance:
+        default: example
+        description: Instance subdomain (dev12345 from https://dev12345.service-now.com)
+security:
+  - bearerAuth: []
+  - basicAuth: []
+tags:
+  - name: Incident
+  - name: ServiceCatalog
+  - name: Problem
+  - name: Change
+  - name: User
+  - name: Company
+  - name: CSM
+  - name: Attachment
+paths:
+  /api/now/table/incident:
+    get:
+      tags: [Incident]
+      operationId: listIncidents
+      summary: List incidents
+      description: >-
+        Official Table API GET /now/table/{tableName} with tableName=incident.
+        https://developer.servicenow.com/print_page.do?category=null&identifier=c_TableAPI&module=api&release=yokohama
+      parameters:
+        - $ref: '#/components/parameters/sysparm_query'
+        - $ref: '#/components/parameters/sysparm_limit'
+        - $ref: '#/components/parameters/sysparm_offset'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: List of incident records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableListResponse'
+    post:
+      tags: [Incident]
+      operationId: createIncident
+      summary: Create an incident
+      description: Official Table API POST /now/table/incident.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Created incident
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+
+  /api/now/table/incident/{sys_id}:
+    get:
+      tags: [Incident]
+      operationId: getIncident
+      summary: Get an incident
+      parameters:
+        - $ref: '#/components/parameters/sys_id'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: Incident record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+    patch:
+      tags: [Incident]
+      operationId: updateIncident
+      summary: Update an incident (partial)
+      parameters:
+        - $ref: '#/components/parameters/sys_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated incident
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+
+  /api/now/table/sc_request:
+    get:
+      tags: [ServiceCatalog]
+      operationId: listScRequests
+      summary: List service catalog requests
+      description: Table API GET with tableName=sc_request.
+      parameters:
+        - $ref: '#/components/parameters/sysparm_query'
+        - $ref: '#/components/parameters/sysparm_limit'
+        - $ref: '#/components/parameters/sysparm_offset'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: List of sc_request records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableListResponse'
+
+  /api/now/table/sc_request/{sys_id}:
+    get:
+      tags: [ServiceCatalog]
+      operationId: getScRequest
+      summary: Get a service catalog request
+      parameters:
+        - $ref: '#/components/parameters/sys_id'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: sc_request record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+
+  /api/now/table/sc_req_item:
+    get:
+      tags: [ServiceCatalog]
+      operationId: listScReqItems
+      summary: List requested items
+      description: Table API GET with tableName=sc_req_item.
+      parameters:
+        - $ref: '#/components/parameters/sysparm_query'
+        - $ref: '#/components/parameters/sysparm_limit'
+        - $ref: '#/components/parameters/sysparm_offset'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: List of sc_req_item records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableListResponse'
+
+  /api/now/table/sc_req_item/{sys_id}:
+    get:
+      tags: [ServiceCatalog]
+      operationId: getScReqItem
+      summary: Get a requested item
+      parameters:
+        - $ref: '#/components/parameters/sys_id'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: sc_req_item record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+
+  /api/now/table/problem:
+    get:
+      tags: [Problem]
+      operationId: listProblems
+      summary: List problems
+      description: Table API GET with tableName=problem.
+      parameters:
+        - $ref: '#/components/parameters/sysparm_query'
+        - $ref: '#/components/parameters/sysparm_limit'
+        - $ref: '#/components/parameters/sysparm_offset'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: List of problem records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableListResponse'
+
+  /api/now/table/problem/{sys_id}:
+    get:
+      tags: [Problem]
+      operationId: getProblem
+      summary: Get a problem
+      parameters:
+        - $ref: '#/components/parameters/sys_id'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: problem record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+
+  /api/now/table/change_request:
+    get:
+      tags: [Change]
+      operationId: listChangeRequests
+      summary: List change requests
+      description: Table API GET with tableName=change_request.
+      parameters:
+        - $ref: '#/components/parameters/sysparm_query'
+        - $ref: '#/components/parameters/sysparm_limit'
+        - $ref: '#/components/parameters/sysparm_offset'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: List of change_request records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableListResponse'
+
+  /api/now/table/change_request/{sys_id}:
+    get:
+      tags: [Change]
+      operationId: getChangeRequest
+      summary: Get a change request
+      parameters:
+        - $ref: '#/components/parameters/sys_id'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: change_request record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+
+  /api/now/table/sys_user:
+    get:
+      tags: [User]
+      operationId: listSysUsers
+      summary: List users
+      description: Table API GET with tableName=sys_user.
+      parameters:
+        - $ref: '#/components/parameters/sysparm_query'
+        - $ref: '#/components/parameters/sysparm_limit'
+        - $ref: '#/components/parameters/sysparm_offset'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: List of sys_user records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableListResponse'
+
+  /api/now/table/sys_user/{sys_id}:
+    get:
+      tags: [User]
+      operationId: getSysUser
+      summary: Get a user
+      parameters:
+        - $ref: '#/components/parameters/sys_id'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: sys_user record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+
+  /api/now/table/core_company:
+    get:
+      tags: [Company]
+      operationId: listCompanies
+      summary: List companies
+      description: Table API GET with tableName=core_company.
+      parameters:
+        - $ref: '#/components/parameters/sysparm_query'
+        - $ref: '#/components/parameters/sysparm_limit'
+        - $ref: '#/components/parameters/sysparm_offset'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: List of core_company records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableListResponse'
+
+  /api/now/table/core_company/{sys_id}:
+    get:
+      tags: [Company]
+      operationId: getCompany
+      summary: Get a company
+      parameters:
+        - $ref: '#/components/parameters/sys_id'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: core_company record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+
+  /api/now/table/customer_account:
+    get:
+      tags: [CSM]
+      operationId: listCustomerAccounts
+      summary: List CSM customer accounts
+      description: >-
+        Table API GET with tableName=customer_account (CSM B2B account;
+        extends core_company). Requires Customer Service plugin / roles.
+      parameters:
+        - $ref: '#/components/parameters/sysparm_query'
+        - $ref: '#/components/parameters/sysparm_limit'
+        - $ref: '#/components/parameters/sysparm_offset'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: List of customer_account records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableListResponse'
+
+  /api/now/table/customer_account/{sys_id}:
+    get:
+      tags: [CSM]
+      operationId: getCustomerAccount
+      summary: Get a CSM customer account
+      parameters:
+        - $ref: '#/components/parameters/sys_id'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: customer_account record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+
+  /api/now/table/sn_customerservice_case:
+    get:
+      tags: [CSM]
+      operationId: listCases
+      summary: List CSM cases
+      description: >-
+        Table API GET with tableName=sn_customerservice_case (official CSM case
+        table; not csm_case). Dedicated Case API also exists under
+        /api/sn_customerservice/case.
+      parameters:
+        - $ref: '#/components/parameters/sysparm_query'
+        - $ref: '#/components/parameters/sysparm_limit'
+        - $ref: '#/components/parameters/sysparm_offset'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: List of sn_customerservice_case records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableListResponse'
+    post:
+      tags: [CSM]
+      operationId: createCase
+      summary: Create a CSM case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Created case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+
+  /api/now/table/sn_customerservice_case/{sys_id}:
+    get:
+      tags: [CSM]
+      operationId: getCase
+      summary: Get a CSM case
+      parameters:
+        - $ref: '#/components/parameters/sys_id'
+        - $ref: '#/components/parameters/sysparm_fields'
+        - $ref: '#/components/parameters/sysparm_display_value'
+      responses:
+        "200":
+          description: sn_customerservice_case record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+    patch:
+      tags: [CSM]
+      operationId: updateCase
+      summary: Update a CSM case (partial)
+      parameters:
+        - $ref: '#/components/parameters/sys_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+
+  /api/now/attachment:
+    get:
+      tags: [Attachment]
+      operationId: listAttachments
+      summary: List attachment metadata
+      description: >-
+        Official Attachment API GET /now/attachment.
+        https://developer.servicenow.com/print_page.do?category=null&identifier=c_AttachmentAPI&module=api&release=yokohama
+      parameters:
+        - $ref: '#/components/parameters/sysparm_query'
+        - $ref: '#/components/parameters/sysparm_limit'
+        - $ref: '#/components/parameters/sysparm_offset'
+      responses:
+        "200":
+          description: List of attachment metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableListResponse'
+
+  /api/now/attachment/{sys_id}:
+    get:
+      tags: [Attachment]
+      operationId: getAttachment
+      summary: Get attachment metadata
+      description: >-
+        Official Attachment API GET /now/attachment/{sys_id}. File bytes are at
+        /now/attachment/{sys_id}/file (not wrapped by this module).
+      parameters:
+        - $ref: '#/components/parameters/sys_id'
+      responses:
+        "200":
+          description: Attachment metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRecordResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: 'OAuth 2.0 access token (Authorization: Bearer)'
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Instance username/password (alternate to OAuth)
+  parameters:
+    sys_id:
+      name: sys_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: sys_id of the record
+    sysparm_query:
+      name: sysparm_query
+      in: query
+      schema:
+        type: string
+      description: Encoded query string (mutually exclusive with name-value filters)
+    sysparm_limit:
+      name: sysparm_limit
+      in: query
+      schema:
+        type: integer
+      description: Maximum number of records (default 10000)
+    sysparm_offset:
+      name: sysparm_offset
+      in: query
+      schema:
+        type: integer
+      description: Starting record index (default 0)
+    sysparm_fields:
+      name: sysparm_fields
+      in: query
+      schema:
+        type: string
+      description: Comma-separated list of fields to return
+    sysparm_display_value:
+      name: sysparm_display_value
+      in: query
+      schema:
+        type: string
+        enum: ['true', 'false', 'all']
+      description: Return display values (true), actual values (false), or both (all)
+  schemas:
+    TableListResponse:
+      type: object
+      properties:
+        result:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    TableRecordResponse:
+      type: object
+      properties:
+        result:
+          type: object
+          additionalProperties: true

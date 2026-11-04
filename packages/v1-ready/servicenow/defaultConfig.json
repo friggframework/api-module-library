@@ -1,0 +1,9 @@
+{
+    "name": "servicenow",
+    "label": "ServiceNow",
+    "productUrl": "https://www.servicenow.com",
+    "apiDocs": "https://developer.servicenow.com/print_page.do?category=null&identifier=c_TableAPI&module=api&release=yokohama",
+    "logoUrl": "https://friggframework.org/assets/img/servicenow-icon.png",
+    "categories": ["ITSM", "Customer Service", "Support"],
+    "description": "ServiceNow Table API and ITSM REST APIs"
+}

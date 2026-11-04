@@ -1,0 +1,323 @@
+openapi: 3.0.3
+info:
+  title: Dropbox HTTP API (subset)
+  version: "1.0.0"
+  description: >-
+    Curated subset of Dropbox's official HTTP API (documented at
+    https://www.dropbox.com/developers/documentation/http/documentation and
+    specified in Stone at https://github.com/dropbox/dropbox-api-spec). Covers
+    OpenID userinfo + current-account identity, folder listing/metadata,
+    shared folders, create/delete/move/copy, content download/upload, and
+    search. Dropbox does not publish an OpenAPI document; this file is Left
+    Hook's hand-curated subset matching the @friggframework/api-module-dropbox
+    client 1:1 (one method per operationId). Paths and scopes are taken from
+    the official Stone routes — nothing invented.
+    Note: Dropbox webhooks are registered in the App Console (no HTTP CRUD);
+    signature verification is a local helper, not an OpenAPI operation.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.dropboxapi.com/2
+    description: Dropbox RPC API host (api.dropboxapi.com).
+security:
+  - oauth2: []
+tags:
+  - name: OpenID
+  - name: Users
+  - name: Files
+  - name: Sharing
+paths:
+  /openid/userinfo:
+    post:
+      tags: [OpenID]
+      operationId: getUserDetails
+      summary: OpenID userinfo
+      description: >-
+        Official route openid/userinfo (Stone; is_preview). Scope openid
+        (plus profile/email for name/email claims). `sub` is the Dropbox
+        account_id. Arg is empty UserInfoArgs — send JSON null as the body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              nullable: true
+      responses:
+        "200":
+          description: UserInfoResult
+
+  /users/get_current_account:
+    post:
+      tags: [Users]
+      operationId: getCurrentAccount
+      summary: Get current account
+      description: >-
+        Official route users/get_current_account. Scope account_info.read.
+        Arg is Void — send JSON null as the body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              nullable: true
+      responses:
+        "200":
+          description: FullAccount
+
+  /users/get_space_usage:
+    post:
+      tags: [Users]
+      operationId: getSpaceUsage
+      summary: Get space usage
+      description: >-
+        Official route users/get_space_usage. Scope account_info.read.
+        Arg is Void — send JSON null as the body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              nullable: true
+      responses:
+        "200":
+          description: SpaceUsage
+
+  /files/list_folder:
+    post:
+      tags: [Files]
+      operationId: listFolder
+      summary: List folder contents
+      description: >-
+        Official route files/list_folder. Scope files.metadata.read.
+        Body is ListFolderArg. Root path is "".
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: ListFolderResult
+
+  /files/list_folder/continue:
+    post:
+      tags: [Files]
+      operationId: listFolderContinue
+      summary: Continue listing a folder
+      description: >-
+        Official route files/list_folder/continue. Scope files.metadata.read.
+        Body is { cursor }.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: ListFolderResult
+
+  /sharing/list_folders:
+    post:
+      tags: [Sharing]
+      operationId: listSharedFolders
+      summary: List shared folders
+      description: >-
+        Official route sharing/list_folders. Scope sharing.read.
+        Body is ListFoldersArgs (optional); empty object lists accessible folders.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: ListFoldersResult
+
+  /sharing/list_folders/continue:
+    post:
+      tags: [Sharing]
+      operationId: listSharedFoldersContinue
+      summary: Continue listing shared folders
+      description: >-
+        Official route sharing/list_folders/continue. Scope sharing.read.
+        Body is { cursor }.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: ListFoldersResult
+
+  /files/get_metadata:
+    post:
+      tags: [Files]
+      operationId: getMetadata
+      summary: Get file or folder metadata
+      description: >-
+        Official route files/get_metadata. Scope files.metadata.read.
+        Body is GetMetadataArg. Metadata for the root folder is unsupported.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Metadata
+
+  /files/create_folder_v2:
+    post:
+      tags: [Files]
+      operationId: createFolderV2
+      summary: Create folder
+      description: >-
+        Official route files/create_folder:2 (URL create_folder_v2).
+        Scope files.content.write. Body is CreateFolderArg { path, autorename? }.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: CreateFolderResult
+
+  /files/delete_v2:
+    post:
+      tags: [Files]
+      operationId: deleteV2
+      summary: Delete file or folder
+      description: >-
+        Official route files/delete:2 (URL delete_v2).
+        Scope files.content.write. Body is DeleteArg { path }.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: DeleteResult
+
+  /files/move_v2:
+    post:
+      tags: [Files]
+      operationId: moveV2
+      summary: Move file or folder
+      description: >-
+        Official route files/move:2 (URL move_v2).
+        Scope files.content.write. Body is RelocationArg.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: RelocationResult
+
+  /files/copy_v2:
+    post:
+      tags: [Files]
+      operationId: copyV2
+      summary: Copy file or folder
+      description: >-
+        Official route files/copy:2 (URL copy_v2).
+        Scope files.content.write. Body is RelocationArg.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: RelocationResult
+
+  /files/search_v2:
+    post:
+      tags: [Files]
+      operationId: searchV2
+      summary: Search files and folders
+      description: >-
+        Official route files/search:2 (URL search_v2).
+        Scope files.metadata.read. Body is SearchV2Arg { query, options? }.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: SearchV2Result
+
+  /files/download:
+    post:
+      tags: [Files]
+      operationId: downloadFile
+      summary: Download a file
+      description: >-
+        Official route files/download. Scope files.content.read.
+        Hosted on content.dropboxapi.com (Api.contentBaseUrl); args travel in
+        the Dropbox-API-Arg header. Listed here so servers[0].url stays aligned
+        with Api.baseUrl while the client routes this call to contentBaseUrl.
+      parameters:
+        - in: header
+          name: Dropbox-API-Arg
+          required: true
+          schema: { type: string }
+          description: JSON-encoded DownloadArg (at least { path }).
+      responses:
+        "200":
+          description: File bytes; metadata in Dropbox-API-Result header
+
+  /files/upload:
+    post:
+      tags: [Files]
+      operationId: uploadFile
+      summary: Upload a file
+      description: >-
+        Official route files/upload. Scope files.content.write.
+        Hosted on content.dropboxapi.com (Api.contentBaseUrl); commit info
+        travels in Dropbox-API-Arg; body is raw octets.
+      parameters:
+        - in: header
+          name: Dropbox-API-Arg
+          required: true
+          schema: { type: string }
+          description: JSON-encoded UploadArg / CommitInfo (path required).
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: FileMetadata
+
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      description: >-
+        Dropbox OAuth 2.0 authorization code. Authorize on www.dropbox.com;
+        exchange code at api.dropboxapi.com/oauth2/token (form-urlencoded).
+        Request token_access_type=offline to receive a refresh_token.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://www.dropbox.com/oauth2/authorize
+          tokenUrl: https://api.dropboxapi.com/oauth2/token
+          scopes:
+            openid: OpenID Connect — enables /openid/userinfo (`sub` is account_id)
+            profile: OpenID profile claims (given_name, family_name, …)
+            email: OpenID email claims (email, email_verified)
+            account_info.read: View basic information about your Dropbox account such as your username, email address, and country
+            files.metadata.read: View information about your Dropbox files and folders
+            files.metadata.write: View and edit information about your Dropbox files and folders
+            files.content.read: View the content from your Dropbox files and folders
+            files.content.write: Edit content of your Dropbox files and folders
+            sharing.read: View shared folders and sharing metadata

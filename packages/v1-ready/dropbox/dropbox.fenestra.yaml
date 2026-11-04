@@ -1,0 +1,93 @@
+# Fenestra Document: Dropbox Chooser / Saver / Embedder
+#
+# Dropbox exposes pre-built Drop-ins (Chooser, Saver, Embedder) that embed
+# Dropbox file UX into third-party web apps via dropins.js.
+# Documented at:
+#   https://www.dropbox.com/developers/chooser
+#   https://www.dropbox.com/developers/saver
+#   https://www.dropbox.com/developers/embedder
+#
+# Drafted against Fenestra 0.1.0
+# (api-module-library branch claude/fenestra-spec-draft-Q367t).
+# Dropbox is not yet listed in specs/fenestra/PLATFORMS.md; this draft covers
+# the published Drop-ins surface. The `@friggframework/api-module-dropbox`
+# package itself implements the HTTP API (OAuth + files/folders/webhooks),
+# not the browser Drop-ins SDK.
+
+fenestra: "0.1.0"
+
+info:
+  title: Dropbox Chooser Saver Embedder
+  version: "1.0.0"
+  description: |
+    Dropbox Drop-ins are pre-built JavaScript components that embed Dropbox
+    file selection, save-to-Dropbox, and shared-link preview UX into host web
+    apps. They load from https://www.dropbox.com/static/api/2/dropins.js with
+    a data-app-key attribute.
+
+    Available components (per Dropbox docs):
+    - Chooser — select files from a user's Dropbox and return links/metadata
+    - Saver — save files from your app into a user's Dropbox
+    - Embedder — embed interactive previews of Dropbox shared links
+
+    Drop-ins do not require production approval for the scopes used by the
+    HTTP API; domain allowlisting is configured in the App Console.
+
+platform:
+  name: Dropbox
+  vendor: Dropbox, Inc.
+  documentation: https://www.dropbox.com/developers/chooser
+  appMarketplace: https://www.dropbox.com/app-integrations
+
+sdks:
+  dropins:
+    name: Dropbox Drop-ins
+    packageManager: npm
+    package: dropbox
+    platform: web
+    documentation: https://www.dropbox.com/developers/chooser
+    cdn: https://www.dropbox.com/static/api/2/dropins.js
+    cdnRequired: true
+    exports:
+      choose:
+        type: utility
+        description: Open the Chooser modal and return selected file links
+      save:
+        type: utility
+        description: Open the Saver modal to store files into Dropbox
+      embed:
+        type: utility
+        description: Embed a shared-link preview into a DOM element
+
+extensionPoints:
+  - id: chooser
+    name: Chooser
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Embed a Dropbox file picker that returns preview or direct links for
+      selected files without implementing OAuth file browsing yourself.
+      Docs: https://www.dropbox.com/developers/chooser
+    supportedComponents:
+      - choose
+
+  - id: saver
+    name: Saver
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Embed a save-to-Dropbox flow that writes app-hosted files into a
+      location the user chooses.
+      Docs: https://www.dropbox.com/developers/saver
+    supportedComponents:
+      - save
+
+  - id: embedder
+    name: Embedder
+    type: embedded
+    extensionType: embeddedSdk
+    description: |
+      Embed interactive previews of Dropbox shared links (files or folders).
+      Docs: https://www.dropbox.com/developers/embedder
+    supportedComponents:
+      - embed

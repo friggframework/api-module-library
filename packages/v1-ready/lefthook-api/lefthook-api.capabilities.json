@@ -1,0 +1,135 @@
+{
+  "$schema": "capability-manifest/v0.1",
+  "module": "lefthook-api",
+  "package": "@friggframework/api-module-lefthook-api",
+  "version": "1.0.0",
+  "auth": {
+    "type": "apiKey",
+    "notes": "API key sent as Authorization: Bearer <key>. Env: LEFTHOOK_API_KEY."
+  },
+  "objects": {
+    "company": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] }
+      ],
+      "operations": [
+        { "name": "listCompanies", "surface": "data-read", "method": "listCompanies" },
+        { "name": "getCompany", "surface": "data-read", "method": "getCompany" },
+        { "name": "createCompany", "surface": "data-write", "method": "createCompany" },
+        { "name": "updateCompany", "surface": "data-write", "method": "updateCompany" }
+      ]
+    },
+    "invoice": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] }
+      ],
+      "operations": [
+        { "name": "listInvoices", "surface": "data-read", "method": "listInvoices" },
+        { "name": "getInvoice", "surface": "data-read", "method": "getInvoice" },
+        { "name": "createInvoice", "surface": "data-write", "method": "createInvoice" },
+        { "name": "updateInvoice", "surface": "data-write", "method": "updateInvoice" },
+        { "name": "syncInvoiceFromXero", "surface": "data-write", "method": "syncInvoiceFromXero" }
+      ]
+    },
+    "deal": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] }
+      ],
+      "operations": [
+        { "name": "listDeals", "surface": "data-read", "method": "listDeals" },
+        { "name": "getDeal", "surface": "data-read", "method": "getDeal" },
+        { "name": "createDeal", "surface": "data-write", "method": "createDeal" },
+        { "name": "updateDeal", "surface": "data-write", "method": "updateDeal" },
+        { "name": "syncDealFromHubSpot", "surface": "data-write", "method": "syncDealFromHubSpot" }
+      ]
+    },
+    "milestone": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] }
+      ],
+      "operations": [
+        { "name": "listMilestones", "surface": "data-read", "method": "listMilestones" },
+        { "name": "getMilestone", "surface": "data-read", "method": "getMilestone" },
+        { "name": "createMilestone", "surface": "data-write", "method": "createMilestone" },
+        { "name": "updateMilestone", "surface": "data-write", "method": "updateMilestone" },
+        { "name": "syncMilestoneFromClickUp", "surface": "data-write", "method": "syncMilestoneFromClickUp" }
+      ]
+    },
+    "bank_account": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] }
+      ],
+      "operations": [
+        { "name": "listBankAccounts", "surface": "data-read", "method": "listBankAccounts" },
+        { "name": "getBankAccount", "surface": "data-read", "method": "getBankAccount" },
+        { "name": "syncBankAccountFromMercury", "surface": "data-write", "method": "syncBankAccountFromMercury" },
+        { "name": "createBalanceSnapshot", "surface": "data-write", "method": "createBalanceSnapshot" }
+      ]
+    },
+    "metrics": {
+      "fields": [],
+      "operations": [
+        { "name": "getAllMetrics", "surface": "data-read", "method": "getAllMetrics" },
+        { "name": "getDeliveryMetrics", "surface": "data-read", "method": "getDeliveryMetrics" },
+        { "name": "getGTMMetrics", "surface": "data-read", "method": "getGTMMetrics" },
+        { "name": "getFinanceMetrics", "surface": "data-read", "method": "getFinanceMetrics" }
+      ]
+    },
+    "snapshot": {
+      "fields": [],
+      "operations": [
+        { "name": "createDeliverySnapshot", "surface": "data-write", "method": "createDeliverySnapshot" },
+        { "name": "createGTMSnapshot", "surface": "data-write", "method": "createGTMSnapshot" },
+        { "name": "createFinanceSnapshot", "surface": "data-write", "method": "createFinanceSnapshot" }
+      ]
+    },
+    "sync_status": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] }
+      ],
+      "operations": [
+        { "name": "createSyncStatus", "surface": "data-write", "method": "createSyncStatus" },
+        { "name": "updateSyncStatus", "surface": "data-write", "method": "updateSyncStatus" }
+      ]
+    },
+    "change_request": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "status", "tags": ["read", "write"] },
+        { "name": "externalRef", "tags": ["read", "write"] }
+      ],
+      "operations": [
+        { "name": "listChangeRequests", "surface": "data-read", "method": "listChangeRequests" },
+        { "name": "getChangeRequest", "surface": "data-read", "method": "getChangeRequest" },
+        { "name": "createChangeRequest", "surface": "data-write", "method": "createChangeRequest" },
+        { "name": "updateChangeRequest", "surface": "data-write", "method": "updateChangeRequest" },
+        { "name": "submitChangeRequest", "surface": "action", "method": "submitChangeRequest" },
+        { "name": "approveChangeRequest", "surface": "action", "method": "approveChangeRequest" },
+        { "name": "rejectChangeRequest", "surface": "action", "method": "rejectChangeRequest" },
+        { "name": "withdrawChangeRequest", "surface": "action", "method": "withdrawChangeRequest" },
+        { "name": "markChangeRequestMerged", "surface": "action", "method": "markChangeRequestMerged" },
+        { "name": "registerChangeRequestWebhook", "surface": "webhook-source", "method": "registerChangeRequestWebhook" }
+      ]
+    },
+    "domain_model": {
+      "fields": [
+        { "name": "category", "tags": ["identity", "read"] },
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "path", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listDomainModelContent", "surface": "data-read", "method": "listDomainModelContent" },
+        { "name": "getDomainModelCategory", "surface": "data-read", "method": "getDomainModelCategory" },
+        { "name": "getDomainModelItem", "surface": "data-read", "method": "getDomainModelItem" },
+        { "name": "getDomainModelHistory", "surface": "data-read", "method": "getDomainModelHistory" },
+        { "name": "getDomainModelVersion", "surface": "data-read", "method": "getDomainModelVersion" }
+      ]
+    },
+    "auth": {
+      "fields": [],
+      "operations": [
+        { "name": "verifyAuth", "surface": "data-read", "method": "verifyAuth" }
+      ]
+    }
+  }
+}

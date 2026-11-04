@@ -1,0 +1,628 @@
+openapi: 3.0.3
+info:
+  title: Left Hook Core API
+  version: "1.0.0"
+  description: >-
+    Left Hook Core API at https://api.lefthook.com. Auth is an API key sent as
+    `Authorization: Bearer <key>`. There is no public OpenAPI or developer hub
+    for this host at authoring time; this curated document mirrors exactly the
+    endpoints implemented by `@friggframework/api-module-lefthook-api` (one
+    method per operationId), ported from Left Hook-owned module code cleared
+    for the api-module-library. Request/response field schemas are intentionally
+    minimal until an official internal API reference is published.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.lefthook.com
+    description: Left Hook Core API
+security:
+  - BearerAuth: []
+tags:
+  - name: Auth
+  - name: Companies
+  - name: Invoices
+  - name: Deals
+  - name: Milestones
+  - name: Bank Accounts
+  - name: Metrics
+  - name: Snapshots
+  - name: Sync Status
+  - name: Change Requests
+  - name: Domain Model
+paths:
+  /v1/auth/verify:
+    get:
+      tags: [Auth]
+      operationId: verifyAuth
+      summary: Verify API key
+      responses:
+        "200":
+          description: Key is valid
+  /v1/companies:
+    get:
+      tags: [Companies]
+      operationId: listCompanies
+      summary: List companies
+      responses:
+        "200":
+          description: Company list
+    post:
+      tags: [Companies]
+      operationId: createCompany
+      summary: Create a company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created company
+        "201":
+          description: Created company
+  /v1/companies/{id}:
+    get:
+      tags: [Companies]
+      operationId: getCompany
+      summary: Get a company
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Company
+    patch:
+      tags: [Companies]
+      operationId: updateCompany
+      summary: Update a company
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated company
+  /v1/invoices:
+    get:
+      tags: [Invoices]
+      operationId: listInvoices
+      summary: List invoices
+      responses:
+        "200":
+          description: Invoice list
+    post:
+      tags: [Invoices]
+      operationId: createInvoice
+      summary: Create an invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created invoice
+        "201":
+          description: Created invoice
+  /v1/invoices/{id}:
+    get:
+      tags: [Invoices]
+      operationId: getInvoice
+      summary: Get an invoice
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Invoice
+    patch:
+      tags: [Invoices]
+      operationId: updateInvoice
+      summary: Update an invoice
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated invoice
+  /v1/invoices/sync/xero:
+    put:
+      tags: [Invoices]
+      operationId: syncInvoiceFromXero
+      summary: Sync an invoice from Xero into Left Hook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Sync result
+  /v1/deals:
+    get:
+      tags: [Deals]
+      operationId: listDeals
+      summary: List deals
+      responses:
+        "200":
+          description: Deal list
+    post:
+      tags: [Deals]
+      operationId: createDeal
+      summary: Create a deal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created deal
+        "201":
+          description: Created deal
+  /v1/deals/{id}:
+    get:
+      tags: [Deals]
+      operationId: getDeal
+      summary: Get a deal
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Deal
+    patch:
+      tags: [Deals]
+      operationId: updateDeal
+      summary: Update a deal
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated deal
+  /v1/deals/sync/hubspot:
+    put:
+      tags: [Deals]
+      operationId: syncDealFromHubSpot
+      summary: Sync a deal from HubSpot into Left Hook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Sync result
+  /v1/milestones:
+    get:
+      tags: [Milestones]
+      operationId: listMilestones
+      summary: List project milestones
+      responses:
+        "200":
+          description: Milestone list
+    post:
+      tags: [Milestones]
+      operationId: createMilestone
+      summary: Create a milestone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created milestone
+        "201":
+          description: Created milestone
+  /v1/milestones/{id}:
+    get:
+      tags: [Milestones]
+      operationId: getMilestone
+      summary: Get a milestone
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Milestone
+    patch:
+      tags: [Milestones]
+      operationId: updateMilestone
+      summary: Update a milestone
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated milestone
+  /v1/milestones/sync/clickup:
+    put:
+      tags: [Milestones]
+      operationId: syncMilestoneFromClickUp
+      summary: Sync a milestone from ClickUp into Left Hook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Sync result
+  /v1/bank-accounts:
+    get:
+      tags: [Bank Accounts]
+      operationId: listBankAccounts
+      summary: List bank accounts
+      responses:
+        "200":
+          description: Bank account list
+  /v1/bank-accounts/{id}:
+    get:
+      tags: [Bank Accounts]
+      operationId: getBankAccount
+      summary: Get a bank account
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Bank account
+  /v1/bank-accounts/sync/mercury:
+    put:
+      tags: [Bank Accounts]
+      operationId: syncBankAccountFromMercury
+      summary: Sync a bank account from Mercury into Left Hook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Sync result
+  /v1/bank-balances:
+    post:
+      tags: [Bank Accounts]
+      operationId: createBalanceSnapshot
+      summary: Create a bank balance snapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created balance snapshot
+        "201":
+          description: Created balance snapshot
+  /v1/metrics:
+    get:
+      tags: [Metrics]
+      operationId: getAllMetrics
+      summary: Get all metrics
+      responses:
+        "200":
+          description: Metrics bundle
+  /v1/metrics/delivery:
+    get:
+      tags: [Metrics]
+      operationId: getDeliveryMetrics
+      summary: Get delivery metrics
+      responses:
+        "200":
+          description: Delivery metrics
+  /v1/metrics/gtm:
+    get:
+      tags: [Metrics]
+      operationId: getGTMMetrics
+      summary: Get GTM metrics
+      responses:
+        "200":
+          description: GTM metrics
+  /v1/metrics/finance:
+    get:
+      tags: [Metrics]
+      operationId: getFinanceMetrics
+      summary: Get finance metrics
+      responses:
+        "200":
+          description: Finance metrics
+  /v1/snapshots/delivery:
+    post:
+      tags: [Snapshots]
+      operationId: createDeliverySnapshot
+      summary: Create a delivery daily snapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created snapshot
+  /v1/snapshots/gtm:
+    post:
+      tags: [Snapshots]
+      operationId: createGTMSnapshot
+      summary: Create a GTM daily snapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created snapshot
+  /v1/snapshots/finance:
+    post:
+      tags: [Snapshots]
+      operationId: createFinanceSnapshot
+      summary: Create a finance daily snapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created snapshot
+  /v1/sync-status:
+    post:
+      tags: [Sync Status]
+      operationId: createSyncStatus
+      summary: Create a sync status record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created sync status
+  /v1/sync-status/{id}:
+    patch:
+      tags: [Sync Status]
+      operationId: updateSyncStatus
+      summary: Update a sync status record
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated sync status
+  /v1/domain-model/change-requests:
+    get:
+      tags: [Change Requests]
+      operationId: listChangeRequests
+      summary: List domain-model change requests
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: authorId
+          schema: { type: string }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: contentId
+          schema: { type: string }
+      responses:
+        "200":
+          description: Change request list
+    post:
+      tags: [Change Requests]
+      operationId: createChangeRequest
+      summary: Create a change request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Created change request
+  /v1/domain-model/change-requests/{id}:
+    get:
+      tags: [Change Requests]
+      operationId: getChangeRequest
+      summary: Get a change request
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Change request
+    patch:
+      tags: [Change Requests]
+      operationId: updateChangeRequest
+      summary: Update a draft change request
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated change request
+  /v1/domain-model/change-requests/{id}/submit:
+    post:
+      tags: [Change Requests]
+      operationId: submitChangeRequest
+      summary: Submit a change request for review
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                actor: { type: object }
+      responses:
+        "200":
+          description: Submitted
+  /v1/domain-model/change-requests/{id}/approve:
+    post:
+      tags: [Change Requests]
+      operationId: approveChangeRequest
+      summary: Approve a change request
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reviewer: { type: object }
+                comment: { type: string }
+      responses:
+        "200":
+          description: Approved
+  /v1/domain-model/change-requests/{id}/reject:
+    post:
+      tags: [Change Requests]
+      operationId: rejectChangeRequest
+      summary: Reject a change request
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reviewer: { type: object }
+                comment: { type: string }
+      responses:
+        "200":
+          description: Rejected
+  /v1/domain-model/change-requests/{id}/withdraw:
+    post:
+      tags: [Change Requests]
+      operationId: withdrawChangeRequest
+      summary: Withdraw a change request
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                actor: { type: object }
+      responses:
+        "200":
+          description: Withdrawn
+  /v1/domain-model/change-requests/{id}/merged:
+    post:
+      tags: [Change Requests]
+      operationId: markChangeRequestMerged
+      summary: Mark a change request as merged
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mergeCommit: { type: string }
+                externalRef: { type: string }
+      responses:
+        "200":
+          description: Marked merged
+  /v1/domain-model/change-requests/webhook:
+    post:
+      tags: [Change Requests]
+      operationId: registerChangeRequestWebhook
+      summary: Register a webhook for change-request events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, secret, events]
+              properties:
+                url: { type: string, format: uri }
+                secret: { type: string }
+                events:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          description: Webhook registered
+        "201":
+          description: Webhook registered
+  /v1/domain-model:
+    get:
+      tags: [Domain Model]
+      operationId: listDomainModelContent
+      summary: List domain-model content (also used with category/id query filters)
+      parameters:
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: id
+          schema: { type: string }
+      responses:
+        "200":
+          description: Domain-model content
+  /v1/domain-model/history:
+    get:
+      tags: [Domain Model]
+      operationId: getDomainModelHistory
+      summary: Get domain-model content history (optional sha for a version)
+      parameters:
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: path
+          schema: { type: string }
+        - in: query
+          name: sha
+          schema: { type: string }
+      responses:
+        "200":
+          description: History or version
+components:
+  parameters:
+    IdPath:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API key
+      description: API key sent as Authorization Bearer token

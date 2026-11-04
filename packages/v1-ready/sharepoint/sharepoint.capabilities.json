@@ -1,0 +1,418 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "microsoft-sharepoint",
+  "label": "Microsoft SharePoint",
+  "package": "@friggframework/api-module-microsoft-sharepoint",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Microsoft 365 tenant (organization id) or signed-in user id when no organization is available.",
+    "fields": [
+      {
+        "name": "externalId",
+        "type": "string",
+        "description": "Organization id from GET /organization, or user id from GET /me."
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "displayName", "type": "string", "tag": "person.displayName" },
+        { "name": "userPrincipalName", "type": "string", "tag": "contact.email" },
+        { "name": "mail", "type": "email", "tag": "contact.email" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": {
+          "capability": "user.get"
+        }
+      }
+    },
+    "site": {
+      "label": "Site",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.name" },
+        { "name": "displayName", "type": "string" },
+        { "name": "webUrl", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "description", "type": "text" },
+        { "name": "createdDateTime", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "lastModifiedDateTime", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "site.list",
+          "items": "value"
+        },
+        "get": {
+          "capability": "site.get",
+          "id": "siteId"
+        }
+      }
+    },
+    "drive": {
+      "label": "Drive",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.name" },
+        { "name": "driveType", "type": "string", "readOnly": true },
+        { "name": "webUrl", "type": "string", "tag": "record.url", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "drive.list",
+          "items": "value"
+        },
+        "get": {
+          "capability": "drive.get",
+          "id": "driveId"
+        }
+      }
+    },
+    "driveItem": {
+      "label": "Drive item",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "file.name" },
+        { "name": "size", "type": "integer", "readOnly": true },
+        { "name": "webUrl", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "createdDateTime", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "lastModifiedDateTime", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "parentReference.driveId", "type": "string", "readOnly": true },
+        { "name": "file.mimeType", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "driveItem.listChildren",
+          "items": "value"
+        },
+        "get": {
+          "capability": "driveItem.get",
+          "id": "itemId"
+        },
+        "create": {
+          "capability": "driveItem.uploadContent",
+          "body": "content"
+        },
+        "update": {
+          "capability": "driveItem.update",
+          "id": "itemId",
+          "body": "data"
+        }
+      }
+    },
+    "list": {
+      "label": "List",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.name" },
+        { "name": "displayName", "type": "string" },
+        { "name": "description", "type": "text" },
+        { "name": "webUrl", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "createdDateTime", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "lastModifiedDateTime", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "list.list",
+          "items": "value"
+        },
+        "get": {
+          "capability": "list.get",
+          "id": "listId"
+        }
+      }
+    },
+    "listItem": {
+      "label": "List item",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "fields.Title", "type": "string", "tag": "record.name" },
+        { "name": "createdDateTime", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "lastModifiedDateTime", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "webUrl", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "fields", "type": "json" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "listItem.list",
+          "items": "value"
+        },
+        "get": {
+          "capability": "listItem.get",
+          "id": "itemId"
+        },
+        "create": {
+          "capability": "listItem.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "listItem.updateFields",
+          "id": "itemId",
+          "body": "data"
+        }
+      }
+    },
+    "subscription": {
+      "label": "Change notification subscription",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "resource", "type": "string" },
+        { "name": "changeType", "type": "string" },
+        { "name": "notificationUrl", "type": "string" },
+        { "name": "expirationDateTime", "type": "datetime" },
+        { "name": "clientState", "type": "string" },
+        { "name": "applicationId", "type": "string", "readOnly": true },
+        { "name": "creatorId", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "subscription.list",
+          "items": "value"
+        },
+        "get": {
+          "capability": "subscription.get",
+          "id": "subscriptionId"
+        },
+        "create": {
+          "capability": "subscription.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "subscription.update",
+          "id": "subscriptionId",
+          "body": "data"
+        }
+      }
+    }
+  },
+  "events": {
+    "list.updated": {
+      "delivery": "webhook",
+      "object": "listItem",
+      "subscribe": "subscription.create",
+      "description": "Graph change notification for a SharePoint list resource (/sites/{site-id}/lists/{list-id})."
+    }
+  },
+  "capabilities": {
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": {},
+      "output": "user"
+    },
+    "organization.get": {
+      "kind": "read",
+      "method": "getOrganization",
+      "input": {},
+      "output": "organization"
+    },
+    "site.list": {
+      "kind": "read",
+      "method": "listSites",
+      "input": {
+        "search": { "type": "string" },
+        "$select": { "type": "string" },
+        "$top": { "type": "integer" }
+      },
+      "output": "page<site>"
+    },
+    "site.get": {
+      "kind": "read",
+      "method": "getSite",
+      "input": {
+        "siteId": { "type": "string", "required": true }
+      },
+      "output": "site",
+      "args": ["siteId"]
+    },
+    "drive.list": {
+      "kind": "read",
+      "method": "listDrives",
+      "input": {
+        "siteId": { "type": "string", "required": true }
+      },
+      "output": "page<drive>",
+      "args": ["siteId"]
+    },
+    "drive.get": {
+      "kind": "read",
+      "method": "getDrive",
+      "input": {
+        "driveId": { "type": "string", "required": true }
+      },
+      "output": "drive",
+      "args": ["driveId"]
+    },
+    "driveItem.listChildren": {
+      "kind": "read",
+      "method": "listDriveItemChildren",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "itemId": { "type": "string" }
+      },
+      "output": "page<driveItem>",
+      "args": ["driveId", "itemId"]
+    },
+    "driveItem.get": {
+      "kind": "read",
+      "method": "getDriveItem",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "itemId": { "type": "string", "required": true }
+      },
+      "output": "driveItem",
+      "args": ["driveId", "itemId"]
+    },
+    "driveItem.uploadContent": {
+      "kind": "write",
+      "method": "uploadDriveItemContent",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "parentId": { "type": "string", "required": true },
+        "filename": { "type": "string", "required": true },
+        "content": { "type": "string", "required": true }
+      },
+      "output": "driveItem",
+      "args": ["driveId", "parentId", "filename", "content"]
+    },
+    "driveItem.update": {
+      "kind": "write",
+      "method": "updateDriveItem",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "itemId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "driveItem",
+      "args": ["driveId", "itemId", "data"]
+    },
+    "driveItem.createUploadSession": {
+      "kind": "write",
+      "method": "createUploadSession",
+      "input": {
+        "driveId": { "type": "string", "required": true },
+        "parentId": { "type": "string", "required": true },
+        "filename": { "type": "string", "required": true },
+        "data": { "type": "object" }
+      },
+      "output": "uploadSession",
+      "args": ["driveId", "parentId", "filename", "data"]
+    },
+    "list.list": {
+      "kind": "read",
+      "method": "listLists",
+      "input": {
+        "siteId": { "type": "string", "required": true }
+      },
+      "output": "page<list>",
+      "args": ["siteId"]
+    },
+    "list.get": {
+      "kind": "read",
+      "method": "getList",
+      "input": {
+        "siteId": { "type": "string", "required": true },
+        "listId": { "type": "string", "required": true }
+      },
+      "output": "list",
+      "args": ["siteId", "listId"]
+    },
+    "listItem.list": {
+      "kind": "read",
+      "method": "listListItems",
+      "input": {
+        "siteId": { "type": "string", "required": true },
+        "listId": { "type": "string", "required": true }
+      },
+      "output": "page<listItem>",
+      "args": ["siteId", "listId"]
+    },
+    "listItem.get": {
+      "kind": "read",
+      "method": "getListItem",
+      "input": {
+        "siteId": { "type": "string", "required": true },
+        "listId": { "type": "string", "required": true },
+        "itemId": { "type": "string", "required": true }
+      },
+      "output": "listItem",
+      "args": ["siteId", "listId", "itemId"]
+    },
+    "listItem.create": {
+      "kind": "write",
+      "method": "createListItem",
+      "input": {
+        "siteId": { "type": "string", "required": true },
+        "listId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "listItem",
+      "args": ["siteId", "listId", "data"]
+    },
+    "listItem.updateFields": {
+      "kind": "write",
+      "method": "updateListItemFields",
+      "input": {
+        "siteId": { "type": "string", "required": true },
+        "listId": { "type": "string", "required": true },
+        "itemId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "listItem",
+      "args": ["siteId", "listId", "itemId", "data"]
+    },
+    "subscription.list": {
+      "kind": "read",
+      "method": "listSubscriptions",
+      "input": {},
+      "output": "page<subscription>"
+    },
+    "subscription.get": {
+      "kind": "read",
+      "method": "getSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "output": "subscription",
+      "args": ["subscriptionId"]
+    },
+    "subscription.create": {
+      "kind": "subscribe",
+      "method": "createSubscription",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "subscription",
+      "args": ["data"]
+    },
+    "subscription.update": {
+      "kind": "write",
+      "method": "updateSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "subscription",
+      "args": ["subscriptionId", "data"]
+    },
+    "subscription.delete": {
+      "kind": "delete",
+      "method": "deleteSubscription",
+      "input": {
+        "subscriptionId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["subscriptionId"]
+    }
+  }
+}

@@ -1,0 +1,269 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "namely",
+  "label": "Namely",
+  "package": "@friggframework/api-module-namely",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Bearer Personal Access Token (or OAuth access token) plus company subdomain persisted on the credential/entity.",
+    "fields": [
+      {
+        "name": "company",
+        "type": "string",
+        "description": "Namely tenant subdomain / permalink; also the entity externalId."
+      },
+      {
+        "name": "access_token",
+        "type": "string",
+        "description": "Personal Access Token or OAuth access token sent as Authorization: Bearer."
+      }
+    ]
+  },
+  "objects": {
+    "profile": {
+      "label": "Profile",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "person.id" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "personal_email", "type": "email", "tag": "person.personalEmail" },
+        { "name": "first_name", "type": "string", "tag": "person.firstName" },
+        { "name": "last_name", "type": "string", "tag": "person.lastName" },
+        { "name": "preferred_name", "type": "string", "tag": "person.preferredName" },
+        { "name": "full_name", "type": "string", "readOnly": true, "tag": "person.fullName" },
+        { "name": "user_status", "type": "string", "tag": "person.status" },
+        { "name": "employee_id", "type": "string", "tag": "person.employeeId" },
+        { "name": "start_date", "type": "string", "tag": "person.startDate" },
+        { "name": "departure_date", "type": "string", "tag": "person.departureDate" },
+        { "name": "job_title", "type": "json", "tag": "person.jobTitle" },
+        { "name": "reports_to", "type": "json", "tag": "person.manager" },
+        { "name": "created_at", "type": "integer", "readOnly": true },
+        { "name": "updated_at", "type": "integer", "readOnly": true }
+      ]
+    },
+    "group": {
+      "label": "Group",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "group.id" },
+        { "name": "title", "type": "string", "tag": "group.title" },
+        { "name": "type", "type": "string", "tag": "group.type" },
+        { "name": "is_team", "type": "boolean" },
+        { "name": "count", "type": "integer", "readOnly": true }
+      ]
+    },
+    "team": {
+      "label": "Team",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "team.id" },
+        { "name": "title", "type": "string", "tag": "team.title" }
+      ]
+    },
+    "job_title": {
+      "label": "Job title",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "jobTitle.id" },
+        { "name": "title", "type": "string", "tag": "jobTitle.title" },
+        { "name": "parent_id", "type": "id", "tag": "jobTier.id" }
+      ]
+    },
+    "job_tier": {
+      "label": "Job tier",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "jobTier.id" },
+        { "name": "title", "type": "string", "tag": "jobTier.title" },
+        { "name": "numerical_id", "type": "integer", "readOnly": true }
+      ]
+    },
+    "event": {
+      "label": "Home-feed event",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "event.id" },
+        { "name": "type", "type": "string", "tag": "event.type" },
+        { "name": "time", "type": "integer", "readOnly": true, "tag": "event.time" },
+        { "name": "content", "type": "string", "tag": "event.content" },
+        { "name": "href", "type": "string", "readOnly": true }
+      ]
+    },
+    "company": {
+      "label": "Company",
+      "fields": [
+        { "name": "name", "type": "string", "tag": "company.name" },
+        { "name": "permalink", "type": "string", "tag": "company.permalink" },
+        { "name": "logo_url", "type": "string" },
+        { "name": "background_url", "type": "string" }
+      ]
+    }
+  },
+  "events": {},
+  "capabilities": {
+    "company.get": {
+      "kind": "read",
+      "method": "getCompanyInfo",
+      "input": {},
+      "output": "company"
+    },
+    "profile.me": {
+      "kind": "read",
+      "method": "getCurrentProfile",
+      "input": {},
+      "output": "profile"
+    },
+    "profile.list": {
+      "kind": "read",
+      "method": "listProfiles",
+      "input": {
+        "page": { "type": "integer" },
+        "per_page": { "type": "integer" },
+        "filter[user_status]": { "type": "string" },
+        "filter[email]": { "type": "string" }
+      },
+      "output": "page<profile>"
+    },
+    "profile.get": {
+      "kind": "read",
+      "method": "getProfile",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "profile",
+      "args": ["id"]
+    },
+    "profile.create": {
+      "kind": "write",
+      "method": "createProfile",
+      "input": {
+        "profiles": { "type": "array", "required": true }
+      },
+      "output": "profile"
+    },
+    "profile.update": {
+      "kind": "write",
+      "method": "updateProfile",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "profiles": { "type": "array", "required": true }
+      },
+      "output": "profile",
+      "args": ["id", "$rest"]
+    },
+    "profile_field.list": {
+      "kind": "read",
+      "method": "listProfileFields",
+      "input": {},
+      "output": "page<profile_field>"
+    },
+    "group.list": {
+      "kind": "read",
+      "method": "listGroups",
+      "input": {},
+      "output": "page<group>"
+    },
+    "group.get": {
+      "kind": "read",
+      "method": "getGroup",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "group",
+      "args": ["id"]
+    },
+    "group_type.list": {
+      "kind": "read",
+      "method": "listGroupTypes",
+      "input": {},
+      "output": "page<group_type>"
+    },
+    "group_type.get": {
+      "kind": "read",
+      "method": "getGroupType",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "group_type",
+      "args": ["id"]
+    },
+    "team.list": {
+      "kind": "read",
+      "method": "listTeams",
+      "input": {},
+      "output": "page<team>"
+    },
+    "team.get": {
+      "kind": "read",
+      "method": "getTeam",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "team",
+      "args": ["id"]
+    },
+    "job_title.list": {
+      "kind": "read",
+      "method": "listJobTitles",
+      "input": {},
+      "output": "page<job_title>"
+    },
+    "job_title.get": {
+      "kind": "read",
+      "method": "getJobTitle",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "job_title",
+      "args": ["id"]
+    },
+    "job_title.create": {
+      "kind": "write",
+      "method": "createJobTitle",
+      "input": {
+        "job_titles": { "type": "array", "required": true }
+      },
+      "output": "job_title"
+    },
+    "job_title.update": {
+      "kind": "write",
+      "method": "updateJobTitle",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "job_title",
+      "args": ["id", "$rest"]
+    },
+    "job_tier.list": {
+      "kind": "read",
+      "method": "listJobTiers",
+      "input": {},
+      "output": "page<job_tier>"
+    },
+    "job_tier.get": {
+      "kind": "read",
+      "method": "getJobTier",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "job_tier",
+      "args": ["id"]
+    },
+    "event.list": {
+      "kind": "read",
+      "method": "listEvents",
+      "input": {
+        "limit": { "type": "integer" },
+        "filter[type]": { "type": "string" },
+        "after": { "type": "string" },
+        "order": { "type": "string" },
+        "profile_id": { "type": "string" }
+      },
+      "output": "page<event>"
+    },
+    "event.get": {
+      "kind": "read",
+      "method": "getEvent",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "event",
+      "args": ["id"]
+    }
+  }
+}

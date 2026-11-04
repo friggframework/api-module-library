@@ -1,0 +1,428 @@
+openapi: 3.0.3
+info:
+  title: Gainsight CS (NXT) REST API
+  version: "1.0.0"
+  description: >-
+    Curated OpenAPI subset for Gainsight Customer Success (NXT) REST APIs used by
+    @friggframework/api-module-gainsight. Gainsight does not publish an official
+    CS OpenAPI document; paths and auth are taken from support.gainsight.com
+    API and Developer Docs. One operationId per Api.js method.
+
+    Auth: Access Key header `accesskey` (Administration > Connectors 2.0 >
+    Gainsight API). Server URL is the tenant customer domain
+    (e.g. https://acme.gainsightcloud.com).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://example.gainsightcloud.com
+    description: Placeholder Gainsight customer domain (replace per tenant)
+security:
+  - AccessKeyAuth: []
+tags:
+  - name: Company
+  - name: People
+  - name: Users
+  - name: Metadata
+  - name: CustomObjects
+  - name: Cockpit
+  - name: Timeline
+paths:
+  /v1/data/objects/query/Company:
+    post:
+      tags: [Company]
+      operationId: queryCompanies
+      summary: Query Company records
+      description: >-
+        Read Company records matching select/where/orderBy/limit/offset.
+        Max 5000 records per call.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Query result
+  /v1/data/objects/Company:
+    post:
+      tags: [Company]
+      operationId: createCompanies
+      summary: Insert Company records
+      description: Insert up to 50 Company records per call.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Insert result
+    put:
+      tags: [Company]
+      operationId: updateCompanies
+      summary: Update Company records
+      description: Update records identified by the keys query parameter.
+      parameters:
+        - in: query
+          name: keys
+          required: true
+          schema: { type: string }
+          description: Comma-separated field names used as match keys.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Update result
+  /v1/data/objects/Company/{gsid}:
+    delete:
+      tags: [Company]
+      operationId: deleteCompany
+      summary: Delete a Company by GSID
+      parameters:
+        - in: path
+          name: gsid
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Delete result
+  /v1/peoplemgmt/v1.0/people:
+    get:
+      tags: [People]
+      operationId: getPersonByEmail
+      summary: Get Person by Email
+      parameters:
+        - in: query
+          name: Email
+          required: true
+          schema: { type: string, format: email }
+      responses:
+        "200":
+          description: Person + associations
+    put:
+      tags: [People]
+      operationId: upsertPeople
+      summary: Upsert People records
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Upsert result
+  /v1/peoplemgmt/v1.0/people/{gsid}:
+    get:
+      tags: [People]
+      operationId: getPersonByGsid
+      summary: Get Person by GSID
+      description: >-
+        Official docs list the path as /people/gsid (placeholder wording).
+        This curated path uses /people/{gsid}. Confirm against tenant before
+        production use.
+      parameters:
+        - in: path
+          name: gsid
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Person + associations
+  /v1/users/services/list:
+    post:
+      tags: [Users]
+      operationId: listUsers
+      summary: Fetch user details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: User list page
+  /v1/users/services:
+    post:
+      tags: [Users]
+      operationId: createUsers
+      summary: Create users
+      parameters:
+        - in: query
+          name: notify
+          schema: { type: boolean }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Create result
+    put:
+      tags: [Users]
+      operationId: updateUsers
+      summary: Update users
+      parameters:
+        - in: query
+          name: key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Update result
+  /v1/meta/services/objects/list:
+    get:
+      tags: [Metadata]
+      operationId: listObjects
+      summary: List metadata objects
+      parameters:
+        - in: query
+          name: po
+          schema: { type: string }
+        - in: query
+          name: em
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Object list
+  /v1/meta/services/objects/{objectName}/describe:
+    get:
+      tags: [Metadata]
+      operationId: describeObject
+      summary: Describe object fields (custom fields)
+      parameters:
+        - in: path
+          name: objectName
+          required: true
+          schema: { type: string }
+        - in: query
+          name: ic
+          schema: { type: boolean }
+        - in: query
+          name: cl
+          schema: { type: integer }
+        - in: query
+          name: idd
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Object describe
+  /v1/data/objects/query/{objectName}:
+    post:
+      tags: [CustomObjects]
+      operationId: queryCustomObject
+      summary: Query custom / scorecard object
+      description: >-
+        Used to read Scorecard / health data (no dedicated Scorecard API).
+        objectName is tenant-specific.
+      parameters:
+        - in: path
+          name: objectName
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Query result
+  /v1/data/objects/{objectName}:
+    post:
+      tags: [CustomObjects]
+      operationId: createCustomObjectRecords
+      summary: Insert custom object records
+      parameters:
+        - in: path
+          name: objectName
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Insert result
+    put:
+      tags: [CustomObjects]
+      operationId: updateCustomObjectRecords
+      summary: Update custom object records
+      parameters:
+        - in: path
+          name: objectName
+          required: true
+          schema: { type: string }
+        - in: query
+          name: keys
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Update result
+  /v1/data/objects/{objectName}/{gsid}:
+    delete:
+      tags: [CustomObjects]
+      operationId: deleteCustomObjectRecord
+      summary: Delete custom object record by GSID
+      parameters:
+        - in: path
+          name: objectName
+          required: true
+          schema: { type: string }
+        - in: path
+          name: gsid
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Delete result
+  /v2/cockpit/cta/list:
+    post:
+      tags: [Cockpit]
+      operationId: listCtas
+      summary: Fetch CTAs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: CTA list
+  /v2/cockpit/cta/:
+    post:
+      tags: [Cockpit]
+      operationId: createCta
+      summary: Create CTA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Create result
+    put:
+      tags: [Cockpit]
+      operationId: updateCta
+      summary: Update CTA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Update result
+  /v2/cockpit/task/list/{ctaGsid}:
+    get:
+      tags: [Cockpit]
+      operationId: listTasks
+      summary: Fetch tasks for a CTA
+      parameters:
+        - in: path
+          name: ctaGsid
+          required: true
+          schema: { type: string }
+        - in: query
+          name: pn
+          schema: { type: integer }
+        - in: query
+          name: ps
+          schema: { type: integer }
+        - in: query
+          name: includes
+          schema: { type: string }
+      responses:
+        "200":
+          description: Task list
+  /v2/cockpit/task:
+    post:
+      tags: [Cockpit]
+      operationId: createTask
+      summary: Create task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Create result
+    put:
+      tags: [Cockpit]
+      operationId: updateTask
+      summary: Update task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Update result
+  /v1/data/objects/query/activity_timeline:
+    post:
+      tags: [Timeline]
+      operationId: queryTimelineActivities
+      summary: Read timeline activities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Activity records
+  /v1/ant/es/activity/bulk:
+    post:
+      tags: [Timeline]
+      operationId: createTimelineActivities
+      summary: Bulk insert timeline activities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Bulk job accepted
+  /v1/ant/es/job/status/{jobId}:
+    get:
+      tags: [Timeline]
+      operationId: getTimelineJobStatus
+      summary: Get timeline bulk job status
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Job status
+components:
+  securitySchemes:
+    AccessKeyAuth:
+      type: apiKey
+      in: header
+      name: accesskey
+      description: >-
+        Gainsight REST API Access Key. Generated in Administration >
+        Connectors 2.0 > Gainsight API (Access_Key). Does not expire.

@@ -1,0 +1,32 @@
+{
+  "name": "@friggframework/api-module-procurement-express",
+  "version": "1.0.0",
+  "description": "ProcurementExpress (API v1) module that lets the Frigg Framework interact with purchase orders, invoices, suppliers, budgets, departments, products, tax rates, companies, and webhook subscriptions",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint:fix": "prettier --write --loglevel error . && eslint . --fix"
+  },
+  "keywords": [
+    "frigg",
+    "procurement-express",
+    "procurementexpress",
+    "api-module",
+    "purchase-orders",
+    "invoices"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^2.0.0-next.107"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-scheduler": "^3.1113.0",
+    "dotenv": "^16.0.3",
+    "jest": "^28.1.3",
+    "js-yaml": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

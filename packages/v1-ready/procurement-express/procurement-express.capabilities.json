@@ -1,0 +1,558 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "procurement-express",
+  "label": "ProcurementExpress",
+  "package": "@friggframework/api-module-procurement-express",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Values about the connected ProcurementExpress user/company from GET /currentuser.",
+    "fields": [
+      {
+        "name": "employer_id",
+        "type": "id",
+        "description": "Active employer / company id (also sent as app_company_id)"
+      },
+      {
+        "name": "email",
+        "type": "email",
+        "description": "Email of the authenticating user"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "Display name of the authenticating user"
+      }
+    ]
+  },
+  "objects": {
+    "current_user": {
+      "label": "Current User",
+      "description": "Authenticated PE user (identity)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "name", "type": "string", "tag": "person.fullName" },
+        { "name": "employer_id", "type": "id" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "current_user.get" },
+        "update": { "capability": "current_user.update", "body": "user" }
+      }
+    },
+    "company": {
+      "label": "Company",
+      "description": "Buyer organization / employer in ProcurementExpress",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "company.list",
+          "cursor": "page",
+          "paging": "offset"
+        },
+        "get": { "capability": "company.get", "id": "id" },
+        "create": { "capability": "company.create", "body": "company" }
+      }
+    },
+    "purchase_order": {
+      "label": "Purchase Order",
+      "description": "Primary procurement document",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "company_id", "type": "id" },
+        { "name": "supplier_id", "type": "id" },
+        { "name": "supplier_name", "type": "string", "tag": "organization.name" },
+        { "name": "status", "type": "string" },
+        { "name": "amount", "type": "string" },
+        { "name": "notes", "type": "text" },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "purchase_order.list",
+          "cursor": "page",
+          "paging": "offset"
+        },
+        "get": { "capability": "purchase_order.get", "id": "id" },
+        "create": {
+          "capability": "purchase_order.create",
+          "body": "purchase_order"
+        }
+      }
+    },
+    "invoice": {
+      "label": "Invoice",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "invoice_number", "type": "string" },
+        { "name": "supplier_id", "type": "id" },
+        { "name": "supplier_name", "type": "string" },
+        { "name": "status", "type": "string" },
+        { "name": "gross_amount", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "invoice.list",
+          "cursor": "page",
+          "paging": "offset"
+        },
+        "get": { "capability": "invoice.get", "id": "id" },
+        "create": { "capability": "invoice.create", "body": "invoice" },
+        "update": { "capability": "invoice.update", "id": "id", "body": "invoice" }
+      }
+    },
+    "supplier": {
+      "label": "Supplier",
+      "description": "Vendor organization",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "organization.name" },
+        { "name": "email", "type": "email", "tag": "contact.email" },
+        { "name": "phone_number", "type": "phone", "tag": "contact.phone" },
+        { "name": "address", "type": "string" },
+        { "name": "tax_number", "type": "string" },
+        { "name": "contact_person", "type": "string", "tag": "person.fullName" },
+        { "name": "archived", "type": "boolean" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "supplier.list",
+          "cursor": "page",
+          "paging": "offset"
+        },
+        "get": { "capability": "supplier.get", "id": "id" },
+        "create": { "capability": "supplier.create", "body": "supplier" },
+        "update": {
+          "capability": "supplier.update",
+          "id": "id",
+          "body": "supplier"
+        }
+      }
+    },
+    "department": {
+      "label": "Department",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "department.list",
+          "cursor": "page",
+          "paging": "offset"
+        },
+        "get": { "capability": "department.get", "id": "id" },
+        "create": { "capability": "department.create", "body": "department" },
+        "update": {
+          "capability": "department.update",
+          "id": "id",
+          "body": "department"
+        }
+      }
+    },
+    "budget": {
+      "label": "Budget",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" },
+        { "name": "amount", "type": "string" },
+        { "name": "currency_id", "type": "id" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "budget.list",
+          "cursor": "page",
+          "paging": "offset"
+        },
+        "get": { "capability": "budget.get", "id": "id" },
+        "create": { "capability": "budget.create", "body": "budget" },
+        "update": { "capability": "budget.update", "id": "id", "body": "budget" }
+      }
+    },
+    "product": {
+      "label": "Product",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" },
+        { "name": "supplier_id", "type": "id" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "product.list",
+          "cursor": "page",
+          "paging": "offset"
+        },
+        "get": { "capability": "product.get", "id": "id" },
+        "create": { "capability": "product.create", "body": "product" },
+        "update": { "capability": "product.update", "id": "id", "body": "product" }
+      }
+    },
+    "tax_rate": {
+      "label": "Tax Rate",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" },
+        { "name": "value", "type": "number" },
+        { "name": "tax_type", "type": "string" },
+        { "name": "archived", "type": "boolean" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "tax_rate.list" },
+        "get": { "capability": "tax_rate.get", "id": "id" },
+        "create": { "capability": "tax_rate.create", "body": "tax_rate" },
+        "update": {
+          "capability": "tax_rate.update",
+          "id": "id",
+          "body": "tax_rate"
+        }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "description": "Event subscription (new_po, po_approved, …)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" },
+        { "name": "url", "type": "string" },
+        { "name": "event_type", "type": "string" },
+        { "name": "archived", "type": "boolean" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": { "capability": "webhook.list" },
+        "get": { "capability": "webhook.get", "id": "id" },
+        "create": { "capability": "webhook.create", "body": "webhook" },
+        "update": { "capability": "webhook.update", "id": "id", "body": "webhook" }
+      }
+    }
+  },
+  "capabilities": {
+    "current_user.get": {
+      "kind": "read",
+      "method": "getCurrentUser",
+      "output": "current_user"
+    },
+    "current_user.update": {
+      "kind": "update",
+      "method": "updateCurrentUser",
+      "input": { "user": { "type": "object", "required": true } },
+      "output": "current_user",
+      "args": ["body"]
+    },
+    "company.list": {
+      "kind": "list",
+      "method": "listCompanies",
+      "output": "company[]",
+      "args": ["params"]
+    },
+    "company.get": {
+      "kind": "read",
+      "method": "getCompany",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "company",
+      "args": ["id"]
+    },
+    "company.create": {
+      "kind": "create",
+      "method": "createCompany",
+      "input": { "company": { "type": "object", "required": true } },
+      "output": "company",
+      "args": ["body"]
+    },
+    "purchase_order.list": {
+      "kind": "list",
+      "method": "listPurchaseOrders",
+      "output": "purchase_order[]",
+      "args": ["params"]
+    },
+    "purchase_order.get": {
+      "kind": "read",
+      "method": "getPurchaseOrder",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "purchase_order",
+      "args": ["id"]
+    },
+    "purchase_order.create": {
+      "kind": "create",
+      "method": "createPurchaseOrder",
+      "input": { "purchase_order": { "type": "object", "required": true } },
+      "output": "purchase_order",
+      "args": ["body"]
+    },
+    "purchase_order.approve": {
+      "kind": "action",
+      "method": "approvePurchaseOrder",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "token": { "type": "string", "required": true }
+      },
+      "args": ["id", "params"]
+    },
+    "purchase_order.reject": {
+      "kind": "action",
+      "method": "rejectPurchaseOrder",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "token": { "type": "string", "required": true }
+      },
+      "args": ["id", "params"]
+    },
+    "purchase_order.cancel": {
+      "kind": "action",
+      "method": "cancelPurchaseOrder",
+      "input": { "id": { "type": "string", "required": true } },
+      "args": ["id"]
+    },
+    "purchase_order.archive": {
+      "kind": "action",
+      "method": "archivePurchaseOrder",
+      "input": { "id": { "type": "string", "required": true } },
+      "args": ["id"]
+    },
+    "invoice.list": {
+      "kind": "list",
+      "method": "listInvoices",
+      "output": "invoice[]",
+      "args": ["params"]
+    },
+    "invoice.get": {
+      "kind": "read",
+      "method": "getInvoice",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "invoice",
+      "args": ["id"]
+    },
+    "invoice.create": {
+      "kind": "create",
+      "method": "createInvoice",
+      "input": { "invoice": { "type": "object", "required": true } },
+      "output": "invoice",
+      "args": ["body"]
+    },
+    "invoice.update": {
+      "kind": "update",
+      "method": "updateInvoice",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "invoice": { "type": "object", "required": true }
+      },
+      "output": "invoice",
+      "args": ["id", "body"]
+    },
+    "invoice.approve": {
+      "kind": "action",
+      "method": "approveInvoice",
+      "input": { "id": { "type": "string", "required": true } },
+      "args": ["id"]
+    },
+    "invoice.reject": {
+      "kind": "action",
+      "method": "rejectInvoice",
+      "input": { "id": { "type": "string", "required": true } },
+      "args": ["id", "body"]
+    },
+    "supplier.list": {
+      "kind": "list",
+      "method": "listSuppliers",
+      "output": "supplier[]",
+      "args": ["params"]
+    },
+    "supplier.get": {
+      "kind": "read",
+      "method": "getSupplier",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "supplier",
+      "args": ["id"]
+    },
+    "supplier.create": {
+      "kind": "create",
+      "method": "createSupplier",
+      "input": { "supplier": { "type": "object", "required": true } },
+      "output": "supplier",
+      "args": ["body"]
+    },
+    "supplier.update": {
+      "kind": "update",
+      "method": "updateSupplier",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "supplier": { "type": "object", "required": true }
+      },
+      "output": "supplier",
+      "args": ["id", "body"]
+    },
+    "department.list": {
+      "kind": "list",
+      "method": "listDepartments",
+      "output": "department[]",
+      "args": ["params"]
+    },
+    "department.get": {
+      "kind": "read",
+      "method": "getDepartment",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "department",
+      "args": ["id"]
+    },
+    "department.create": {
+      "kind": "create",
+      "method": "createDepartment",
+      "input": { "department": { "type": "object", "required": true } },
+      "output": "department",
+      "args": ["body"]
+    },
+    "department.update": {
+      "kind": "update",
+      "method": "updateDepartment",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "department": { "type": "object", "required": true }
+      },
+      "output": "department",
+      "args": ["id", "body"]
+    },
+    "budget.list": {
+      "kind": "list",
+      "method": "listBudgets",
+      "output": "budget[]",
+      "args": ["params"]
+    },
+    "budget.get": {
+      "kind": "read",
+      "method": "getBudget",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "budget",
+      "args": ["id"]
+    },
+    "budget.create": {
+      "kind": "create",
+      "method": "createBudget",
+      "input": { "budget": { "type": "object", "required": true } },
+      "output": "budget",
+      "args": ["body"]
+    },
+    "budget.update": {
+      "kind": "update",
+      "method": "updateBudget",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "budget": { "type": "object", "required": true }
+      },
+      "output": "budget",
+      "args": ["id", "body"]
+    },
+    "product.list": {
+      "kind": "list",
+      "method": "listProducts",
+      "output": "product[]",
+      "args": ["params"]
+    },
+    "product.get": {
+      "kind": "read",
+      "method": "getProduct",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "product",
+      "args": ["id"]
+    },
+    "product.create": {
+      "kind": "create",
+      "method": "createProduct",
+      "input": { "product": { "type": "object", "required": true } },
+      "output": "product",
+      "args": ["body"]
+    },
+    "product.update": {
+      "kind": "update",
+      "method": "updateProduct",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "product": { "type": "object", "required": true }
+      },
+      "output": "product",
+      "args": ["id", "body"]
+    },
+    "tax_rate.list": {
+      "kind": "list",
+      "method": "listTaxRates",
+      "output": "tax_rate[]",
+      "args": ["params"]
+    },
+    "tax_rate.get": {
+      "kind": "read",
+      "method": "getTaxRate",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "tax_rate",
+      "args": ["id"]
+    },
+    "tax_rate.create": {
+      "kind": "create",
+      "method": "createTaxRate",
+      "input": { "tax_rate": { "type": "object", "required": true } },
+      "output": "tax_rate",
+      "args": ["body"]
+    },
+    "tax_rate.update": {
+      "kind": "update",
+      "method": "updateTaxRate",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "tax_rate": { "type": "object", "required": true }
+      },
+      "output": "tax_rate",
+      "args": ["id", "body"]
+    },
+    "webhook.list": {
+      "kind": "list",
+      "method": "listWebhooks",
+      "output": "webhook[]"
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": { "id": { "type": "string", "required": true } },
+      "output": "webhook",
+      "args": ["id"]
+    },
+    "webhook.create": {
+      "kind": "create",
+      "method": "createWebhook",
+      "input": { "webhook": { "type": "object", "required": true } },
+      "output": "webhook",
+      "args": ["body"]
+    },
+    "webhook.update": {
+      "kind": "update",
+      "method": "updateWebhook",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "webhook": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["id", "body"]
+    }
+  }
+}

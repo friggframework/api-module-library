@@ -1,0 +1,131 @@
+# Fenestra Document: Front Plugin SDK
+#
+# Front plugins are iframe-hosted web apps that extend the Front UI via the
+# official @frontapp/plugin-sdk. Two placement types exist: sidebar plugins and
+# composer plugins. Docs: https://dev.frontapp.com/docs/plugin-overview
+#
+# Draft against fenestra 0.1.0 (api-module-library branch
+# claude/fenestra-spec-draft-Q367t). Front is listed as Tier-2 iframe in
+# specs/fenestra/PLATFORMS.md.
+
+fenestra: "0.1.0"
+
+info:
+  title: Front Plugin SDK UI Ecosystem
+  version: "1.0.0"
+  description: |
+    Front plugins are small web applications loaded in an iframe inside Front.
+    They communicate with the host via the Javascript Plugin SDK
+    (`@frontapp/plugin-sdk`), which streams Context updates (selected
+    conversations / drafts) and exposes host actions (add tag, create draft,
+    open URL, etc.).
+
+    Key characteristic: Apps run in iframes. The Plugin SDK is REQUIRED for
+    host communication. The optional Front UI Kit (`@frontapp/ui-kit`) provides
+    React components styled for Front but is not enforced.
+  contact:
+    name: Front Platform
+    url: https://dev.frontapp.com/
+
+platform:
+  name: Front
+  vendor: FrontApp, Inc.
+  documentation: https://dev.frontapp.com/docs/plugin-overview
+  appMarketplace: https://front.com/integrations
+  developerPortal: https://dev.frontapp.com/
+
+sdks:
+  plugin-sdk:
+    name: Front Plugin SDK
+    packageManager: npm
+    package: "@frontapp/plugin-sdk"
+    version: "^1.10.0"
+    documentation: https://dev.frontapp.com/reference/plugin-sdk-introduction
+    description: |
+      Official SDK for sidebar and composer plugins. Subscribe to
+      contextUpdates to receive Context objects, then call methods on the
+      context (e.g. list messages, add tag, open a URL).
+    exports:
+      Front:
+        type: utility
+        description: Default Plugin SDK singleton used to subscribe to context updates and invoke host APIs.
+      contextUpdates:
+        type: hook
+        description: |
+          Observable stream of Context updates as the teammate changes
+          selection. Context types for sidebar plugins: noConversation,
+          singleConversation, multiConversations. Composer plugin context:
+          messageComposer.
+      Context:
+        type: type
+        description: |
+          Partial Front UI state. Includes id, type, teammate, entryPoint,
+          plus conversation(s) or draft depending on type.
+
+  ui-kit:
+    name: Front UI Kit
+    packageManager: npm
+    package: "@frontapp/ui-kit"
+    version: "^0.23.0"
+    documentation: https://dev.frontapp.com/docs/front-ui-kit
+    description: |
+      Optional React component library styled for Front plugins. Recommended
+      for consistent UI; not required by the platform.
+    exports:
+      Button:
+        type: component
+        description: Primary action button
+      Input:
+        type: component
+        description: Text input field
+
+extensionPoints:
+  - id: sidebar-plugin
+    name: Sidebar plugin
+    type: sidebar
+    extensionType: iframe
+    description: |
+      Loads in the integrations sidebar (right-hand panel). Receives
+      noConversation / singleConversation / multiConversations context based on
+      the teammate's selection. Can also open from a contact phone Call button
+      or from a Front open-sidebar-plugin URL.
+      Entry points: SIDE_PANEL, URL, CONTACT_HANDLE, CONVERSATION_LINK_DROPDOWN,
+      MESSAGE_MORE_DROPDOWN.
+    supportedComponents:
+      - all
+    constraints:
+      responsive: true
+    context:
+      provides:
+        - noConversation
+        - singleConversation
+        - multiConversations
+        - teammate
+        - entryPoint
+      actions:
+        - addTag
+        - openUrl
+        - listMessages
+
+  - id: composer-plugin
+    name: Composer plugin
+    type: composer
+    extensionType: iframe
+    description: |
+      Loads as a modal from an icon in the message composer toolbar. Context
+      type is messageComposer with the selected conversation and current draft.
+      Entry point: COMPOSER_TOOLBAR. Plugin UI runs inside a Front-hosted iframe;
+      host APIs go through @frontapp/plugin-sdk only. Public App Store apps that
+      also call the Core API or receive application webhooks must use OAuth.
+    supportedComponents:
+      - all
+    context:
+      provides:
+        - messageComposer
+        - conversation
+        - draft
+        - teammate
+        - entryPoint
+      actions:
+        - updateDraft
+        - insertAttachment

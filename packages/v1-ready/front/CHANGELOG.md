@@ -1,3 +1,11 @@
+# v1.0.0
+
+#### 🚀 Enhancement
+
+- Upgrade to Frigg v2 API-module shape (`packages/v1-ready/front`): `Definition` + curated OpenAPI, capability manifest, Fenestra plugin draft, application-webhook extension, ADR-057 `support@1` conversation mapping (UNVALIDATED), and API-token alternate auth alongside OAuth 2.0. Drop Mongoose `manager.js` / models.
+
+---
+
 # v0.10.0 (Wed Mar 20 2024)
 
 :tada: This release contains work from new contributors! :tada:

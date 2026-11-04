@@ -1,0 +1,410 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "drchrono",
+  "label": "DrChrono",
+  "package": "@friggframework/api-module-drchrono",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "objects": {
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "username", "type": "string", "tag": "person.username" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "practice_group", "type": "string", "tag": "org.id" },
+        { "name": "is_doctor", "type": "boolean" },
+        { "name": "is_staff", "type": "boolean" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "user.getCurrent" }
+      }
+    },
+    "doctor": {
+      "label": "Doctor",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "first_name", "type": "string", "tag": "person.firstName" },
+        { "name": "last_name", "type": "string", "tag": "person.lastName" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "practice_group", "type": "string", "tag": "org.id" },
+        { "name": "practice_group_name", "type": "string", "tag": "org.name" },
+        { "name": "npi_number", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "doctor.get", "id": "doctorId" }
+      }
+    },
+    "patient": {
+      "label": "Patient",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "first_name", "type": "string", "tag": "person.firstName" },
+        { "name": "last_name", "type": "string", "tag": "person.lastName" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "cell_phone", "type": "string", "tag": "person.phone" },
+        { "name": "date_of_birth", "type": "date" },
+        { "name": "gender", "type": "string" },
+        { "name": "doctor", "type": "string", "tag": "record.ownerId" },
+        { "name": "chart_id", "type": "string", "tag": "record.displayId" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "patient.get", "id": "patientId" },
+        "create": { "capability": "patient.create" },
+        "update": { "capability": "patient.update", "id": "patientId", "body": "data" }
+      }
+    },
+    "appointment": {
+      "label": "Appointment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "doctor", "type": "string" },
+        { "name": "patient", "type": "string", "tag": "record.parentId" },
+        { "name": "office", "type": "string" },
+        { "name": "exam_room", "type": "number" },
+        { "name": "scheduled_time", "type": "datetime", "tag": "appointment.start" },
+        { "name": "duration", "type": "number" },
+        { "name": "reason", "type": "string" },
+        { "name": "billing_status", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "appointment.get", "id": "appointmentId" },
+        "create": { "capability": "appointment.create" },
+        "update": { "capability": "appointment.update", "id": "appointmentId", "body": "data" }
+      }
+    },
+    "office": {
+      "label": "Office",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "org.name" },
+        { "name": "address", "type": "string" },
+        { "name": "city", "type": "string" },
+        { "name": "state", "type": "string" },
+        { "name": "zip_code", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "office.get", "id": "officeId" }
+      }
+    },
+    "line_item": {
+      "label": "Line Item",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "patient", "type": "string", "tag": "record.parentId" },
+        { "name": "appointment", "type": "string" },
+        { "name": "code", "type": "string" },
+        { "name": "price", "type": "number" },
+        { "name": "service_date", "type": "date" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "lineItem.get", "id": "lineItemId" }
+      }
+    },
+    "patient_payment": {
+      "label": "Patient Payment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "patient", "type": "string", "tag": "record.parentId" },
+        { "name": "amount", "type": "number", "tag": "payment.amount" },
+        { "name": "payment_method", "type": "string" },
+        { "name": "posted_date", "type": "date" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "patientPayment.get", "id": "paymentId" },
+        "create": { "capability": "patientPayment.create" }
+      }
+    },
+    "insurance": {
+      "label": "Insurance",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string" },
+        { "name": "payer_id", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "insurance.get", "id": "insuranceId" }
+      }
+    }
+  },
+  "events": {
+    "PATIENT_CREATE": {
+      "delivery": "webhook",
+      "object": "patient",
+      "description": "DrChrono PATIENT_CREATE webhook event.",
+      "match": "PATIENT_CREATE"
+    },
+    "PATIENT_MODIFY": {
+      "delivery": "webhook",
+      "object": "patient",
+      "description": "DrChrono PATIENT_MODIFY webhook event.",
+      "match": "PATIENT_MODIFY"
+    },
+    "APPOINTMENT_CREATE": {
+      "delivery": "webhook",
+      "object": "appointment",
+      "description": "DrChrono APPOINTMENT_CREATE webhook event.",
+      "match": "APPOINTMENT_CREATE"
+    },
+    "APPOINTMENT_MODIFY": {
+      "delivery": "webhook",
+      "object": "appointment",
+      "description": "DrChrono APPOINTMENT_MODIFY webhook event.",
+      "match": "APPOINTMENT_MODIFY"
+    },
+    "APPOINTMENT_DELETE": {
+      "delivery": "webhook",
+      "object": "appointment",
+      "description": "DrChrono APPOINTMENT_DELETE webhook event.",
+      "match": "APPOINTMENT_DELETE"
+    },
+    "LINE_ITEM_CREATE": {
+      "delivery": "webhook",
+      "object": "line_item",
+      "description": "DrChrono LINE_ITEM_CREATE webhook event.",
+      "match": "LINE_ITEM_CREATE"
+    },
+    "LINE_ITEM_MODIFY": {
+      "delivery": "webhook",
+      "object": "line_item",
+      "description": "DrChrono LINE_ITEM_MODIFY webhook event.",
+      "match": "LINE_ITEM_MODIFY"
+    },
+    "LINE_ITEM_DELETE": {
+      "delivery": "webhook",
+      "object": "line_item",
+      "description": "DrChrono LINE_ITEM_DELETE webhook event.",
+      "match": "LINE_ITEM_DELETE"
+    }
+  },
+  "webhook": {
+    "extension": "extensions/webhooks",
+    "verify": "verifyWebhookSignature",
+    "challenge": "buildWebhookChallengeResponse",
+    "headers": {
+      "signature": "X-drchrono-signature",
+      "event": "X-drchrono-event",
+      "delivery": "X-drchrono-delivery"
+    },
+    "subscription": "ui",
+    "notes": "Subscriptions are configured in the DrChrono API application webhook UI; there is no public subscribe REST API."
+  },
+  "capabilities": {
+    "user.getCurrent": {
+      "kind": "read",
+      "method": "getCurrentUser",
+      "output": "user"
+    },
+    "doctor.list": {
+      "kind": "read",
+      "method": "listDoctors",
+      "input": {
+        "cursor": { "type": "string" },
+        "page_size": { "type": "number" }
+      },
+      "output": "page<doctor>"
+    },
+    "doctor.get": {
+      "kind": "read",
+      "method": "getDoctor",
+      "input": { "doctorId": { "type": "string", "required": true } },
+      "output": "doctor",
+      "args": ["doctorId"]
+    },
+    "patient.list": {
+      "kind": "read",
+      "method": "listPatients",
+      "input": {
+        "cursor": { "type": "string" },
+        "page_size": { "type": "number" },
+        "doctor": { "type": "number" },
+        "email": { "type": "string" }
+      },
+      "output": "page<patient>"
+    },
+    "patient.get": {
+      "kind": "read",
+      "method": "getPatient",
+      "input": { "patientId": { "type": "string", "required": true } },
+      "output": "patient",
+      "args": ["patientId"]
+    },
+    "patient.create": {
+      "kind": "write",
+      "method": "createPatient",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "patient",
+      "args": ["data"]
+    },
+    "patient.update": {
+      "kind": "write",
+      "method": "updatePatient",
+      "input": {
+        "patientId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "patient",
+      "args": ["patientId", "data"]
+    },
+    "appointment.list": {
+      "kind": "read",
+      "method": "listAppointments",
+      "input": {
+        "since": { "type": "string" },
+        "date": { "type": "string" },
+        "cursor": { "type": "string" },
+        "page_size": { "type": "number" }
+      },
+      "output": "page<appointment>"
+    },
+    "appointment.get": {
+      "kind": "read",
+      "method": "getAppointment",
+      "input": { "appointmentId": { "type": "string", "required": true } },
+      "output": "appointment",
+      "args": ["appointmentId"]
+    },
+    "appointment.create": {
+      "kind": "write",
+      "method": "createAppointment",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "appointment",
+      "args": ["data"]
+    },
+    "appointment.update": {
+      "kind": "write",
+      "method": "updateAppointment",
+      "input": {
+        "appointmentId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "appointment",
+      "args": ["appointmentId", "data"]
+    },
+    "office.list": {
+      "kind": "read",
+      "method": "listOffices",
+      "input": {
+        "cursor": { "type": "string" },
+        "page_size": { "type": "number" }
+      },
+      "output": "page<office>"
+    },
+    "office.get": {
+      "kind": "read",
+      "method": "getOffice",
+      "input": { "officeId": { "type": "string", "required": true } },
+      "output": "office",
+      "args": ["officeId"]
+    },
+    "lineItem.list": {
+      "kind": "read",
+      "method": "listLineItems",
+      "input": {
+        "cursor": { "type": "string" },
+        "page_size": { "type": "number" },
+        "patient": { "type": "number" }
+      },
+      "output": "page<line_item>"
+    },
+    "lineItem.get": {
+      "kind": "read",
+      "method": "getLineItem",
+      "input": { "lineItemId": { "type": "string", "required": true } },
+      "output": "line_item",
+      "args": ["lineItemId"]
+    },
+    "patientPayment.list": {
+      "kind": "read",
+      "method": "listPatientPayments",
+      "input": {
+        "cursor": { "type": "string" },
+        "page_size": { "type": "number" },
+        "patient": { "type": "number" }
+      },
+      "output": "page<patient_payment>"
+    },
+    "patientPayment.get": {
+      "kind": "read",
+      "method": "getPatientPayment",
+      "input": { "paymentId": { "type": "string", "required": true } },
+      "output": "patient_payment",
+      "args": ["paymentId"]
+    },
+    "patientPayment.create": {
+      "kind": "write",
+      "method": "createPatientPayment",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "patient_payment",
+      "args": ["data"]
+    },
+    "patientPaymentLog.list": {
+      "kind": "read",
+      "method": "listPatientPaymentLog",
+      "input": {
+        "cursor": { "type": "string" },
+        "page_size": { "type": "number" }
+      },
+      "output": "page<object>"
+    },
+    "billingProfile.list": {
+      "kind": "read",
+      "method": "listBillingProfiles",
+      "input": {
+        "cursor": { "type": "string" },
+        "page_size": { "type": "number" }
+      },
+      "output": "page<object>"
+    },
+    "insurance.list": {
+      "kind": "read",
+      "method": "listInsurances",
+      "input": {
+        "cursor": { "type": "string" },
+        "page_size": { "type": "number" }
+      },
+      "output": "page<insurance>"
+    },
+    "insurance.get": {
+      "kind": "read",
+      "method": "getInsurance",
+      "input": { "insuranceId": { "type": "string", "required": true } },
+      "output": "insurance",
+      "args": ["insuranceId"]
+    },
+    "transaction.list": {
+      "kind": "read",
+      "method": "listTransactions",
+      "input": {
+        "cursor": { "type": "string" },
+        "page_size": { "type": "number" }
+      },
+      "output": "page<object>"
+    },
+    "transaction.get": {
+      "kind": "read",
+      "method": "getTransaction",
+      "input": { "transactionId": { "type": "string", "required": true } },
+      "output": "object",
+      "args": ["transactionId"]
+    },
+    "iframe.create": {
+      "kind": "write",
+      "method": "createIframeIntegration",
+      "output": "object"
+    },
+    "iframe.delete": {
+      "kind": "write",
+      "method": "deleteIframeIntegration",
+      "output": "object"
+    }
+  }
+}

@@ -1,0 +1,94 @@
+# Fenestra Document: DrChrono iframe integration
+#
+# DrChrono exposes patient-chart and clinical-note iframe slots for API
+# applications. There is no host JS SDK comparable to ZAF/Front Plugin SDK —
+# the iframe receives JWT-signed query parameters and talks back through the
+# REST API. Draft against fenestra 0.1.0 (api-module-library branch
+# claude/fenestra-spec-draft-Q367t).
+#
+# Docs: https://app.drchrono.com/api-docs/v2/documentation (iframe integration)
+
+fenestra: "0.1.0"
+
+info:
+  title: DrChrono iframe UI Ecosystem
+  version: "1.0.0"
+  description: |
+    DrChrono API applications can render in iframes on the patient detail page
+    and/or the clinical note page. Placement URLs and heights are configured in
+    the API management UI (Patient iframe / Clinical note iframe sections) and
+    reviewed by DrChrono before approval.
+
+    Host communication: DrChrono appends doctor_id, patient_id, practice_id,
+    iat, and a JWT (HS256 with client_secret) as query parameters. Same-origin
+    policy prevents postMessage with the host; apps must use the REST API with
+    the authorizing doctor's token. Enable/disable per doctor via
+    POST/DELETE /api/iframe_integration.
+  contact:
+    name: DrChrono by EverHealth
+    url: https://app.drchrono.com/api-docs/v2/documentation
+
+platform:
+  name: DrChrono
+  vendor: EverHealth / DrChrono
+  documentation: https://app.drchrono.com/api-docs/v2/documentation
+  appMarketplace: https://www.drchrono.com/
+  developerPortal: https://app.drchrono.com/api-docs/v2/documentation
+
+sdks:
+  jsonwebtoken:
+    name: JSON Web Token (iframe query validation)
+    packageManager: npm
+    package: jsonwebtoken
+    version: "^9.0.0"
+    documentation: https://github.com/auth0/node-jsonwebtoken
+    description: |
+      DrChrono does not publish a host iframe SDK. Apps should validate the
+      `jwt` query parameter (HS256, key = OAuth client_secret) with a JWT
+      library such as jsonwebtoken, then trust claims from the token
+      (doctor_id, patient_id, practice_id, iat). Data access is via the OAuth
+      REST API, not a host bridge.
+    exports:
+      verify:
+        type: utility
+        description: Verify HS256 JWT signed with the API application's client_secret.
+      decode:
+        type: utility
+        description: Decode JWT claims without verification (not recommended in production).
+
+extensionPoints:
+  - id: patient-chart-iframe
+    name: Patient chart iframe
+    type: panel
+    extensionType: iframe
+    description: |
+      Left-nav iframe on the patient detail page (/patients/:id). Base URL and
+      height are configured under "Patient iframe" in API management. Enable per
+      doctor with POST /api/iframe_integration; disable with DELETE.
+    context:
+      provides:
+        - doctor_id
+        - patient_id
+        - practice_id
+        - iat
+        - jwt
+
+  - id: clinical-note-iframe
+    name: Clinical note iframe
+    type: panel
+    extensionType: iframe
+    description: |
+      Iframe on the clinical note edit page. Base URL and height are configured
+      under "Clinical note iframe" in API management.
+    context:
+      provides:
+        - doctor_id
+        - patient_id
+        - practice_id
+        - iat
+        - jwt
+        - appointment_id
+
+componentCatalog:
+  categories: {}
+  components: {}

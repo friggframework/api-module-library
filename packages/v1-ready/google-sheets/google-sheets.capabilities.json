@@ -1,0 +1,222 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "google-sheets",
+  "label": "Google Sheets",
+  "package": "@friggframework/api-module-google-sheets",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Google user identity from GET https://www.googleapis.com/oauth2/v2/userinfo.",
+    "fields": [
+      {
+        "name": "user_id",
+        "type": "string",
+        "description": "Google user id used as entity externalId."
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "email", "type": "email", "tag": "contact.email", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName", "readOnly": true },
+        { "name": "given_name", "type": "string", "readOnly": true },
+        { "name": "family_name", "type": "string", "readOnly": true },
+        { "name": "picture", "type": "string", "readOnly": true },
+        { "name": "locale", "type": "string", "readOnly": true },
+        { "name": "hd", "type": "string", "readOnly": true }
+      ]
+    },
+    "spreadsheet": {
+      "label": "Spreadsheet",
+      "fields": [
+        { "name": "spreadsheetId", "type": "id", "readOnly": true },
+        { "name": "spreadsheetUrl", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "properties.title", "type": "string", "tag": "file.name" },
+        { "name": "properties.locale", "type": "string" },
+        { "name": "properties.timeZone", "type": "string" },
+        { "name": "properties.autoRecalc", "type": "string" },
+        { "name": "sheets", "type": "json", "readOnly": true },
+        { "name": "namedRanges", "type": "json" },
+        { "name": "developerMetadata", "type": "json", "readOnly": true }
+      ],
+      "sync": {
+        "id": "spreadsheetId",
+        "get": {
+          "capability": "spreadsheet.get",
+          "id": "spreadsheetId"
+        },
+        "create": {
+          "capability": "spreadsheet.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "spreadsheet.batchUpdate",
+          "id": "spreadsheetId",
+          "body": "data"
+        }
+      }
+    },
+    "sheet": {
+      "label": "Sheet",
+      "fields": [
+        { "name": "properties.sheetId", "type": "id", "readOnly": true },
+        { "name": "properties.title", "type": "string", "tag": "file.name" },
+        { "name": "properties.index", "type": "integer" },
+        { "name": "properties.sheetType", "type": "string", "readOnly": true },
+        { "name": "properties.gridProperties", "type": "json" },
+        { "name": "properties.hidden", "type": "boolean" },
+        { "name": "properties.tabColor", "type": "json" }
+      ],
+      "sync": {
+        "id": "properties.sheetId",
+        "create": {
+          "capability": "sheet.copyTo",
+          "body": "data"
+        }
+      }
+    },
+    "valueRange": {
+      "label": "Value Range",
+      "fields": [
+        { "name": "range", "type": "string" },
+        { "name": "majorDimension", "type": "string" },
+        { "name": "values", "type": "json", "tag": "record.data" }
+      ],
+      "sync": {
+        "id": "range",
+        "get": {
+          "capability": "values.get",
+          "id": "range"
+        },
+        "update": {
+          "capability": "values.update",
+          "id": "range",
+          "body": "data"
+        },
+        "create": {
+          "capability": "values.append",
+          "body": "data"
+        }
+      }
+    }
+  },
+  "capabilities": {
+    "user.me.get": {
+      "kind": "read",
+      "method": "getUserDetails",
+      "output": "user"
+    },
+    "spreadsheet.create": {
+      "kind": "write",
+      "method": "createSpreadsheet",
+      "args": ["data"],
+      "input": {
+        "properties": { "type": "json" },
+        "sheets": { "type": "json" }
+      },
+      "output": "spreadsheet"
+    },
+    "spreadsheet.get": {
+      "kind": "read",
+      "method": "getSpreadsheet",
+      "args": ["spreadsheetId", "params"],
+      "input": {
+        "spreadsheetId": { "type": "string" },
+        "ranges": { "type": "json" },
+        "includeGridData": { "type": "boolean" },
+        "fields": { "type": "string" }
+      },
+      "output": "spreadsheet"
+    },
+    "spreadsheet.batchUpdate": {
+      "kind": "write",
+      "method": "batchUpdateSpreadsheet",
+      "args": ["spreadsheetId", "data"],
+      "input": {
+        "spreadsheetId": { "type": "string" },
+        "requests": { "type": "json" },
+        "includeSpreadsheetInResponse": { "type": "boolean" }
+      },
+      "output": "spreadsheet"
+    },
+    "values.get": {
+      "kind": "read",
+      "method": "getValues",
+      "args": ["spreadsheetId", "range", "params"],
+      "input": {
+        "spreadsheetId": { "type": "string" },
+        "range": { "type": "string" },
+        "majorDimension": { "type": "string" },
+        "valueRenderOption": { "type": "string" }
+      },
+      "output": "valueRange"
+    },
+    "values.update": {
+      "kind": "write",
+      "method": "updateValues",
+      "args": ["spreadsheetId", "range", "data", "params"],
+      "input": {
+        "spreadsheetId": { "type": "string" },
+        "range": { "type": "string" },
+        "valueInputOption": { "type": "string" },
+        "values": { "type": "json" }
+      },
+      "output": "valueRange"
+    },
+    "values.append": {
+      "kind": "write",
+      "method": "appendValues",
+      "args": ["spreadsheetId", "range", "data", "params"],
+      "input": {
+        "spreadsheetId": { "type": "string" },
+        "range": { "type": "string" },
+        "valueInputOption": { "type": "string" },
+        "values": { "type": "json" }
+      },
+      "output": "valueRange"
+    },
+    "values.clear": {
+      "kind": "delete",
+      "method": "clearValues",
+      "args": ["spreadsheetId", "range", "data"],
+      "input": {
+        "spreadsheetId": { "type": "string" },
+        "range": { "type": "string" }
+      }
+    },
+    "values.batchGet": {
+      "kind": "read",
+      "method": "batchGetValues",
+      "args": ["spreadsheetId", "params"],
+      "input": {
+        "spreadsheetId": { "type": "string" },
+        "ranges": { "type": "json" }
+      },
+      "output": "page<valueRange>"
+    },
+    "values.batchUpdate": {
+      "kind": "write",
+      "method": "batchUpdateValues",
+      "args": ["spreadsheetId", "data"],
+      "input": {
+        "spreadsheetId": { "type": "string" },
+        "valueInputOption": { "type": "string" },
+        "data": { "type": "json" }
+      }
+    },
+    "sheet.copyTo": {
+      "kind": "write",
+      "method": "copySheetTo",
+      "args": ["spreadsheetId", "sheetId", "data"],
+      "input": {
+        "spreadsheetId": { "type": "string" },
+        "sheetId": { "type": "integer" },
+        "destinationSpreadsheetId": { "type": "string" }
+      },
+      "output": "sheet"
+    }
+  }
+}

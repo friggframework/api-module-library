@@ -1,0 +1,342 @@
+openapi: 3.0.3
+info:
+  title: Google Sheets API v4 (subset)
+  version: "1.0.0"
+  description: >-
+    Curated subset of Google's Sheets API v4 covering spreadsheet create/get/
+    batchUpdate, values get/update/append/clear/batchGet/batchUpdate, and sheet
+    copyTo. Paths, methods, and parameters are taken from the official REST
+    reference and discovery document
+    (https://sheets.googleapis.com/$discovery/rest?version=v4) — nothing invented.
+    operationIds are camelCase aliases matching the hand-written Api methods 1:1.
+    Identity uses Google OAuth2 userinfo (outside this Sheets server) and is not
+    listed here.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Google Sheets API REST reference
+    url: https://developers.google.com/workspace/sheets/api/reference/rest
+servers:
+  - url: https://sheets.googleapis.com/v4
+    description: Google Sheets API v4
+security:
+  - oauth2: []
+tags:
+  - name: Spreadsheets
+  - name: Values
+  - name: Sheets
+paths:
+  /spreadsheets:
+    post:
+      tags: [Spreadsheets]
+      operationId: createSpreadsheet
+      summary: Create a spreadsheet
+      description: Discovery id sheets.spreadsheets.create.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Spreadsheet created
+
+  /spreadsheets/{spreadsheetId}:
+    get:
+      tags: [Spreadsheets]
+      operationId: getSpreadsheet
+      summary: Get a spreadsheet by ID
+      description: Discovery id sheets.spreadsheets.get.
+      parameters:
+        - in: path
+          name: spreadsheetId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: ranges
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+        - in: query
+          name: includeGridData
+          schema: { type: boolean }
+        - in: query
+          name: fields
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+
+  /spreadsheets/{spreadsheetId}:batchUpdate:
+    post:
+      tags: [Spreadsheets]
+      operationId: batchUpdateSpreadsheet
+      summary: Apply one or more updates to a spreadsheet
+      description: Discovery id sheets.spreadsheets.batchUpdate.
+      parameters:
+        - in: path
+          name: spreadsheetId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Success
+
+  /spreadsheets/{spreadsheetId}/values/{range}:
+    get:
+      tags: [Values]
+      operationId: getValues
+      summary: Get values from a range
+      description: Discovery id sheets.spreadsheets.values.get.
+      parameters:
+        - in: path
+          name: spreadsheetId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: range
+          required: true
+          schema: { type: string }
+          description: A1 notation range (URL-encoded in the path).
+        - in: query
+          name: majorDimension
+          schema:
+            type: string
+            enum: [DIMENSION_UNSPECIFIED, ROWS, COLUMNS]
+        - in: query
+          name: valueRenderOption
+          schema:
+            type: string
+            enum: [FORMATTED_VALUE, UNFORMATTED_VALUE, FORMULA]
+        - in: query
+          name: dateTimeRenderOption
+          schema:
+            type: string
+            enum: [SERIAL_NUMBER, FORMATTED_STRING]
+      responses:
+        "200":
+          description: ValueRange
+    put:
+      tags: [Values]
+      operationId: updateValues
+      summary: Update values in a range
+      description: >-
+        Discovery id sheets.spreadsheets.values.update.
+        Requires valueInputOption query parameter.
+      parameters:
+        - in: path
+          name: spreadsheetId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: range
+          required: true
+          schema: { type: string }
+        - in: query
+          name: valueInputOption
+          required: true
+          schema:
+            type: string
+            enum: [INPUT_VALUE_OPTION_UNSPECIFIED, RAW, USER_ENTERED]
+        - in: query
+          name: includeValuesInResponse
+          schema: { type: boolean }
+        - in: query
+          name: responseValueRenderOption
+          schema:
+            type: string
+            enum: [FORMATTED_VALUE, UNFORMATTED_VALUE, FORMULA]
+        - in: query
+          name: responseDateTimeRenderOption
+          schema:
+            type: string
+            enum: [SERIAL_NUMBER, FORMATTED_STRING]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: UpdateValuesResponse
+
+  /spreadsheets/{spreadsheetId}/values/{range}:append:
+    post:
+      tags: [Values]
+      operationId: appendValues
+      summary: Append values to a spreadsheet
+      description: >-
+        Discovery id sheets.spreadsheets.values.append.
+        Requires valueInputOption query parameter.
+      parameters:
+        - in: path
+          name: spreadsheetId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: range
+          required: true
+          schema: { type: string }
+        - in: query
+          name: valueInputOption
+          required: true
+          schema:
+            type: string
+            enum: [INPUT_VALUE_OPTION_UNSPECIFIED, RAW, USER_ENTERED]
+        - in: query
+          name: insertDataOption
+          schema:
+            type: string
+            enum: [OVERWRITE, INSERT_ROWS]
+        - in: query
+          name: includeValuesInResponse
+          schema: { type: boolean }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: AppendValuesResponse
+
+  /spreadsheets/{spreadsheetId}/values/{range}:clear:
+    post:
+      tags: [Values]
+      operationId: clearValues
+      summary: Clear values from a range
+      description: Discovery id sheets.spreadsheets.values.clear.
+      parameters:
+        - in: path
+          name: spreadsheetId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: range
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: ClearValuesResponse
+
+  /spreadsheets/{spreadsheetId}/values:batchGet:
+    get:
+      tags: [Values]
+      operationId: batchGetValues
+      summary: Get values from multiple ranges
+      description: Discovery id sheets.spreadsheets.values.batchGet.
+      parameters:
+        - in: path
+          name: spreadsheetId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: ranges
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+          description: Repeated `ranges` query keys.
+        - in: query
+          name: majorDimension
+          schema:
+            type: string
+            enum: [DIMENSION_UNSPECIFIED, ROWS, COLUMNS]
+        - in: query
+          name: valueRenderOption
+          schema:
+            type: string
+            enum: [FORMATTED_VALUE, UNFORMATTED_VALUE, FORMULA]
+        - in: query
+          name: dateTimeRenderOption
+          schema:
+            type: string
+            enum: [SERIAL_NUMBER, FORMATTED_STRING]
+      responses:
+        "200":
+          description: BatchGetValuesResponse
+
+  /spreadsheets/{spreadsheetId}/values:batchUpdate:
+    post:
+      tags: [Values]
+      operationId: batchUpdateValues
+      summary: Update values in multiple ranges
+      description: Discovery id sheets.spreadsheets.values.batchUpdate.
+      parameters:
+        - in: path
+          name: spreadsheetId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: BatchUpdateValuesResponse
+
+  /spreadsheets/{spreadsheetId}/sheets/{sheetId}:copyTo:
+    post:
+      tags: [Sheets]
+      operationId: copySheetTo
+      summary: Copy a sheet to another spreadsheet
+      description: Discovery id sheets.spreadsheets.sheets.copyTo.
+      parameters:
+        - in: path
+          name: spreadsheetId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: sheetId
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [destinationSpreadsheetId]
+              properties:
+                destinationSpreadsheetId:
+                  type: string
+      responses:
+        "200":
+          description: SheetProperties of the copied sheet
+
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      description: >-
+        Google OAuth 2.0 authorization code. Sheets scopes are documented at
+        https://developers.google.com/workspace/sheets/api/scopes. userinfo
+        scopes are required for getUserDetails identity (outside this server).
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts.google.com/o/oauth2/v2/auth
+          tokenUrl: https://oauth2.googleapis.com/token
+          scopes:
+            https://www.googleapis.com/auth/spreadsheets: >-
+              See, edit, create, and delete all your Google Sheets spreadsheets.
+            https://www.googleapis.com/auth/spreadsheets.readonly: >-
+              See all your Google Sheets spreadsheets.
+            https://www.googleapis.com/auth/drive.file: >-
+              See, edit, create, and delete only the specific Google Drive files
+              you use with this app.
+            https://www.googleapis.com/auth/userinfo.email: View your email address.
+            https://www.googleapis.com/auth/userinfo.profile: See your personal info.

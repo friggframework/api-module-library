@@ -6,6 +6,10 @@ export interface OAuth2RequesterOptions {
   access_token?: string;
   refresh_token?: string;
   companyDomain?: string;
+  /** HTTP basic-auth username configured on the Pipedrive webhook (see verifyWebhookSignature). */
+  webhookUsername?: string;
+  /** HTTP basic-auth password configured on the Pipedrive webhook. */
+  webhookPassword?: string;
 }
 
 // ==================== Nested Object Types ====================

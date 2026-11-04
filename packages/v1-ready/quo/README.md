@@ -98,3 +98,20 @@ Quo/phone data keys on **phone number**, not email. Call objects carry `particip
 ## License
 
 MIT
+
+## Webhook signature verification
+
+`Api#verifyWebhookSignature({ headers, body, rawBody, now })` supports both Quo schemes, chosen by the headers present:
+
+- Current (API version 2026-03-30, [docs](https://www.quo.com/docs/2026-03-30/webhooks-signature-validation)):
+  `webhook-id` / `webhook-timestamp` (s) / `webhook-signature` (`v1,<base64>`); base64 HMAC-SHA256 of
+  `${id}.${timestamp}.${raw body}`.
+- Legacy ([docs](https://support.quo.com/core-concepts/integrations/webhooks)): `openphone-signature: hmac;1;<ts>;<sig>`;
+  base64 HMAC-SHA256 of `${ts}.${payload}` (raw body, or its compact JSON form since those docs say to strip whitespace).
+
+The key is the base64-decoded signing secret (a `whsec_` prefix is removed); both schemes have a 5 minute tolerance.
+Never throws.
+
+- Secret: `params.webhookSecret` or `QUO_WEBHOOK_SECRET`. One secret per Api instance, so an installation with
+  old and new subscriptions needs the right secret per subscription.
+- Pass `rawBody`.

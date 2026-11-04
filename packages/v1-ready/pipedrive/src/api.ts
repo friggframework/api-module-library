@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "crypto";
 import { get, OAuth2Requester, RequestOptions } from "@friggframework/core";
 import {
   OAuth2RequesterOptions,
@@ -22,8 +23,30 @@ import {
   ListLeadsParams,
 } from "./types";
 
+/** Case-insensitive header lookup. */
+function whHeader(headers: unknown, name: string): string | undefined {
+  if (!headers || typeof headers !== "object") return undefined;
+  const want = name.toLowerCase();
+  for (const [key, value] of Object.entries(headers as Record<string, unknown>)) {
+    if (key.toLowerCase() === want) {
+      const v = Array.isArray(value) ? value[0] : value;
+      return typeof v === "string" ? v : undefined;
+    }
+  }
+  return undefined;
+}
+
+/** Constant-time string comparison that is safe for unequal lengths (compares fixed-size digests). */
+function whSafeEqual(a: string, b: string): boolean {
+  const x = createHash("sha256").update(a, "utf8").digest();
+  const y = createHash("sha256").update(b, "utf8").digest();
+  return timingSafeEqual(x, y);
+}
+
 export class Api extends OAuth2Requester {
   companyDomain: string | null;
+  webhookUsername: string | null;
+  webhookPassword: string | null;
   URLs: {
     activities: string;
     activityFields: string;
@@ -51,6 +74,8 @@ export class Api extends OAuth2Requester {
     super(params);
 
     this.companyDomain = get(params, "companyDomain", null);
+    this.webhookUsername = (params && params.webhookUsername) || null;
+    this.webhookPassword = (params && params.webhookPassword) || null;
 
     this.baseUrl = `${this.companyDomain}/api`;
 
@@ -553,5 +578,42 @@ export class Api extends OAuth2Requester {
       url: this.baseUrl + this.URLs.leadById(leadId),
     };
     return this._get(options);
+  }
+
+  /**
+   * Verify a Pipedrive webhook delivery.
+   *
+   * Pipedrive does not sign webhook bodies. Its only authentication is the optional HTTP Basic
+   * credentials you set on the webhook (http_auth_user / http_auth_password), which Pipedrive sends
+   * in the Authorization header of every request.
+   * Docs: https://pipedrive.readme.io/docs/guide-for-webhooks
+   *
+   * Create the webhook with those credentials (use HTTPS: Basic auth is only as private as the
+   * transport), configure the same pair here as `webhookUsername` / `webhookPassword` or
+   * PIPEDRIVE_WEBHOOK_USERNAME / PIPEDRIVE_WEBHOOK_PASSWORD. With nothing configured this returns
+   * false: an unauthenticated webhook cannot be told from a forgery. There is no timestamp, so no
+   * replay window; dedupe on `meta.id`. Never throws.
+   */
+  async verifyWebhookSignature({
+    headers,
+  }: {
+    headers?: Record<string, unknown>;
+    body?: unknown;
+    query?: unknown;
+    rawBody?: string | Buffer;
+  } = {}): Promise<boolean> {
+    try {
+      const user = this.webhookUsername || process.env.PIPEDRIVE_WEBHOOK_USERNAME;
+      const pass = this.webhookPassword || process.env.PIPEDRIVE_WEBHOOK_PASSWORD;
+      if (!user || !pass) return false;
+      const auth = whHeader(headers, "authorization");
+      if (!auth) return false;
+      const m = /^Basic\s+(.+)$/i.exec(auth.trim());
+      if (!m) return false;
+      const decoded = Buffer.from(m[1], "base64").toString("utf8");
+      return whSafeEqual(decoded, `${user}:${pass}`);
+    } catch (e) {
+      return false;
+    }
   }
 }

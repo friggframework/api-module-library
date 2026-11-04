@@ -8,9 +8,54 @@ const FormData = require('form-data');
 // - https://developers.asana.com/reference/users
 // - https://developers.asana.com/reference/workspaces
 
+const crypto = require('crypto');
+
+// ---- webhook signature helpers (used by verifyWebhookSignature) ------------
+function whHeader(headers, name) {
+    if (!headers || typeof headers !== 'object') return undefined;
+    const want = name.toLowerCase();
+    for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === want) {
+            const v = headers[key];
+            return Array.isArray(v) ? v[0] : v;
+        }
+    }
+    return undefined;
+}
+
+/** The bytes the vendor signed: rawBody when given, else the body (JSON-stringified if parsed). */
+function whPayload(rawBody, body) {
+    if (rawBody !== undefined && rawBody !== null) {
+        return Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody), 'utf8');
+    }
+    if (body === undefined || body === null) return Buffer.alloc(0);
+    if (Buffer.isBuffer(body)) return body;
+    if (typeof body === 'string') return Buffer.from(body, 'utf8');
+    return Buffer.from(JSON.stringify(body), 'utf8');
+}
+
+/** Constant-time string comparison; false (not a throw) when the lengths differ. */
+function whSafeEqual(a, b) {
+    const x = Buffer.from(String(a), 'utf8');
+    const y = Buffer.from(String(b), 'utf8');
+    return x.length === y.length && crypto.timingSafeEqual(x, y);
+}
+
+function whNowMs(now) {
+    if (now instanceof Date) return now.getTime();
+    return typeof now === 'number' ? now : Date.now();
+}
+
+function whHmac(key, parts, encoding) {
+    const h = crypto.createHmac('sha256', key);
+    for (const p of parts) h.update(p);
+    return h.digest(encoding);
+}
+
 class Api extends OAuth2Requester {
     constructor(params) {
         super(params);
+        this.webhookSecret = (params && params.webhookSecret) || null;
         // The majority of the properties for OAuth are default loaded by OAuth2Requester.
         // This includes the `client_id`, `client_secret`, `scopes`, and `redirect_uri`.
         this.baseUrl = 'https://app.asana.com/api/1.0';
@@ -406,6 +451,30 @@ class Api extends OAuth2Requester {
         return this._put(options);
     }
 
+
+    /**
+     * Verify an Asana webhook delivery (X-Hook-Signature).
+     * Docs: https://developers.asana.com/docs/webhooks-guide
+     *
+     * Hex HMAC-SHA256 of the raw request body, keyed with the X-Hook-Secret Asana sent during the
+     * handshake for THIS webhook (store it per installation and pass it as `webhookSecret`). Asana
+     * defines no timestamp, so there is no replay window here; dedupe on event ids instead. Heartbeat
+     * (empty-batch) deliveries are signed too. The guide does not state the digest encoding; hex is
+     * what Asana's reference servers use.
+     * Never throws; returns true only for a genuine delivery.
+     */
+    async verifyWebhookSignature({ headers, body, rawBody } = {}) {
+        try {
+            const secret = this.webhookSecret || process.env.ASANA_WEBHOOK_SECRET;
+            if (!secret) return false;
+            const signature = whHeader(headers, 'x-hook-signature');
+            if (!signature) return false;
+            const expected = whHmac(secret, [whPayload(rawBody, body)], 'hex');
+            return whSafeEqual(expected, String(signature).trim().toLowerCase());
+        } catch (e) {
+            return false;
+        }
+    }
 }
 
 module.exports = { Api };

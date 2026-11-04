@@ -9,9 +9,54 @@ const { get, ApiKeyRequester } = require('@friggframework/core');
  * Base URL: https://api.openphone.com/v1
  * Docs: https://www.quo.com/docs/api-reference/authentication
  */
+const crypto = require('crypto');
+
+// ---- webhook signature helpers (used by verifyWebhookSignature) ------------
+function whHeader(headers, name) {
+    if (!headers || typeof headers !== 'object') return undefined;
+    const want = name.toLowerCase();
+    for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === want) {
+            const v = headers[key];
+            return Array.isArray(v) ? v[0] : v;
+        }
+    }
+    return undefined;
+}
+
+/** The bytes the vendor signed: rawBody when given, else the body (JSON-stringified if parsed). */
+function whPayload(rawBody, body) {
+    if (rawBody !== undefined && rawBody !== null) {
+        return Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody), 'utf8');
+    }
+    if (body === undefined || body === null) return Buffer.alloc(0);
+    if (Buffer.isBuffer(body)) return body;
+    if (typeof body === 'string') return Buffer.from(body, 'utf8');
+    return Buffer.from(JSON.stringify(body), 'utf8');
+}
+
+/** Constant-time string comparison; false (not a throw) when the lengths differ. */
+function whSafeEqual(a, b) {
+    const x = Buffer.from(String(a), 'utf8');
+    const y = Buffer.from(String(b), 'utf8');
+    return x.length === y.length && crypto.timingSafeEqual(x, y);
+}
+
+function whNowMs(now) {
+    if (now instanceof Date) return now.getTime();
+    return typeof now === 'number' ? now : Date.now();
+}
+
+function whHmac(key, parts, encoding) {
+    const h = crypto.createHmac('sha256', key);
+    for (const p of parts) h.update(p);
+    return h.digest(encoding);
+}
+
 class Api extends ApiKeyRequester {
     constructor(params = {}) {
         super(params);
+        this.webhookSecret = (params && params.webhookSecret) || null;
 
         // Quo/OpenPhone uses the Authorization header with the raw key.
         this.api_key_name = 'Authorization';
@@ -192,6 +237,72 @@ class Api extends ApiKeyRequester {
 
     async deleteWebhook(id) {
         return this._delete({ url: this.baseUrl + this.URLs.webhookById(id) });
+    }
+
+    /**
+     * Verify a Quo (OpenPhone) webhook delivery. Two schemes exist, chosen by how the subscription was made:
+     *  - current (API version 2026-03-30, Standard Webhooks): webhook-id / webhook-timestamp (seconds) /
+     *    webhook-signature `v1,<base64>`; HMAC-SHA256 of `${id}.${timestamp}.${raw body}`.
+     *    Docs: https://www.quo.com/docs/2026-03-30/webhooks-signature-validation
+     *  - legacy: `openphone-signature: hmac;1;<timestamp>;<base64 sig>`; HMAC-SHA256 of
+     *    `${timestamp}.${payload}`. Docs: https://support.quo.com/core-concepts/integrations/webhooks
+     * Either way the key is the base64-decoded signing secret (any `whsec_` prefix removed) and the
+     * timestamp must be within 5 minutes. Legacy accepts the raw body or its compact re-serialisation
+     * (the legacy docs tell you to strip whitespace). Pass `rawBody`.
+     * Never throws; returns true only for a genuine delivery.
+     */
+    async verifyWebhookSignature({ headers, body, rawBody, now } = {}) {
+        try {
+            const secret = this.webhookSecret || process.env.QUO_WEBHOOK_SECRET;
+            if (!secret) return false;
+            const key = Buffer.from(String(secret).replace(/^whsec_/, ''), 'base64');
+            const payload = whPayload(rawBody, body);
+            const nowMs = whNowMs(now);
+
+            const header = whHeader(headers, 'webhook-signature');
+            if (header) {
+                const id = whHeader(headers, 'webhook-id');
+                const timestamp = whHeader(headers, 'webhook-timestamp');
+                if (!id || !timestamp) return false;
+                const ts = Number(timestamp);
+                if (!Number.isFinite(ts)) return false;
+                if (Math.abs(nowMs / 1000 - ts) > 300) return false;
+                const expected = whHmac(key, [`${id}.${timestamp}.`, payload], 'base64');
+                let ok = false;
+                for (const entry of String(header).split(' ')) {
+                    const i = entry.indexOf(',');
+                    if (i < 0 || entry.slice(0, i) !== 'v1') continue;
+                    if (whSafeEqual(expected, entry.slice(i + 1))) ok = true;
+                }
+                return ok;
+            }
+
+            const legacy = whHeader(headers, 'openphone-signature');
+            if (!legacy) return false;
+            const candidates = [payload];
+            try {
+                const compact = Buffer.from(JSON.stringify(JSON.parse(payload.toString('utf8'))), 'utf8');
+                if (!compact.equals(payload)) candidates.push(compact);
+            } catch (e) {
+                /* not JSON: raw only */
+            }
+            let ok = false;
+            for (const entry of String(legacy).split(',')) {
+                const parts = entry.trim().split(';');
+                if (parts.length !== 4 || parts[0] !== 'hmac' || parts[1] !== '1') continue;
+                const ts = Number(parts[2]);
+                if (!Number.isFinite(ts)) continue;
+                const tsMs = ts > 1e12 ? ts : ts * 1000; // milliseconds in practice; seconds tolerated
+                if (Math.abs(nowMs - tsMs) > 300000) continue;
+                for (const candidate of candidates) {
+                    const expected = whHmac(key, [`${parts[2]}.`, candidate], 'base64');
+                    if (whSafeEqual(expected, parts[3])) ok = true;
+                }
+            }
+            return ok;
+        } catch (e) {
+            return false;
+        }
     }
 }
 

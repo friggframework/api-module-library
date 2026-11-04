@@ -1,0 +1,470 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "clyde",
+  "label": "Clyde",
+  "package": "@friggframework/api-module-clyde",
+  "version": "1.0.0",
+  "auth": "basic",
+  "account": {
+    "description": "Clyde has no /me identity endpoint; entity/credential externalId is a sha256 fingerprint of the Client Key.",
+    "fields": [
+      {
+        "name": "clientKeyFingerprint",
+        "type": "string",
+        "description": "sha256(clientKey) used as the stable externalId"
+      }
+    ]
+  },
+  "objects": {
+    "product": {
+      "label": "Product",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "attributes.sku", "type": "string", "tag": "record.externalId", "required": true },
+        { "name": "attributes.name", "type": "string", "tag": "product.name", "required": true },
+        { "name": "attributes.type", "type": "string" },
+        { "name": "attributes.description", "type": "text" },
+        { "name": "attributes.manufacturer", "type": "string", "tag": "org.name" },
+        { "name": "attributes.barcode", "type": "string" },
+        { "name": "attributes.price", "type": "number", "tag": "commerce.price" },
+        { "name": "attributes.imageLink", "type": "string", "tag": "media.url" },
+        { "name": "attributes.oemWarrantyLength", "type": "integer" }
+      ],
+      "sync": {
+        "id": "attributes.sku",
+        "list": {
+          "capability": "product.list",
+          "cursor": "page",
+          "items": "data",
+          "next": "meta.totalPages"
+        },
+        "get": {
+          "capability": "product.get",
+          "id": "sku"
+        },
+        "create": {
+          "capability": "product.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "product.update",
+          "id": "sku",
+          "body": "data"
+        },
+        "delete": {
+          "capability": "product.delete",
+          "id": "sku"
+        }
+      }
+    },
+    "contract": {
+      "label": "Contract",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "attributes.sku", "type": "string", "tag": "record.externalId" },
+        { "name": "attributes.category", "type": "string" },
+        { "name": "attributes.term", "type": "integer" },
+        { "name": "attributes.type", "type": "string" },
+        { "name": "attributes.summary", "type": "text" },
+        { "name": "attributes.premium", "type": "number", "tag": "commerce.price" },
+        { "name": "attributes.recommendedPrice", "type": "number" },
+        { "name": "attributes.adh", "type": "boolean" },
+        { "name": "attributes.link", "type": "string", "tag": "media.url" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "contract.list",
+          "items": "data"
+        }
+      }
+    },
+    "order": {
+      "label": "Order",
+      "fields": [
+        { "name": "id", "type": "id", "tag": "record.externalId" },
+        { "name": "attributes.orderDate", "type": "datetime", "tag": "record.createdAt" },
+        { "name": "attributes.orderSource", "type": "string" },
+        { "name": "attributes.customer.email", "type": "email", "tag": "contact.email" },
+        { "name": "attributes.customer.phone", "type": "phone", "tag": "contact.phone" },
+        { "name": "attributes.customer.firstName", "type": "string", "tag": "person.givenName" },
+        { "name": "attributes.customer.lastName", "type": "string", "tag": "person.familyName" },
+        { "name": "attributes.customer.address1", "type": "string", "tag": "address.line1" },
+        { "name": "attributes.customer.city", "type": "string", "tag": "address.locality" },
+        { "name": "attributes.customer.province", "type": "string", "tag": "address.region" },
+        { "name": "attributes.customer.zip", "type": "string", "tag": "address.postalCode" },
+        { "name": "attributes.customer.country", "type": "string", "tag": "address.country" },
+        { "name": "attributes.merchantReference1", "type": "string" },
+        { "name": "attributes.merchantReference2", "type": "string" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "order.list",
+          "cursor": "page",
+          "items": "data",
+          "next": "meta.totalPages"
+        },
+        "get": {
+          "capability": "order.get",
+          "id": "orderId"
+        },
+        "create": {
+          "capability": "order.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "order.update",
+          "id": "orderId",
+          "body": "data"
+        },
+        "delete": {
+          "capability": "order.cancel",
+          "id": "orderId"
+        }
+      }
+    },
+    "contractSale": {
+      "label": "Contract Sale",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "attributes.productSku", "type": "string", "tag": "record.externalId" },
+        { "name": "attributes.contractSku", "type": "string" },
+        { "name": "attributes.productPrice", "type": "number", "tag": "commerce.price" },
+        { "name": "attributes.contractPrice", "type": "number" },
+        { "name": "attributes.lineItemId", "type": "string" },
+        { "name": "attributes.cancelled", "type": "boolean" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "contractSale.list",
+          "cursor": "page",
+          "items": "data",
+          "next": "meta.totalPages"
+        },
+        "get": {
+          "capability": "contractSale.get",
+          "id": "id"
+        },
+        "update": {
+          "capability": "contractSale.update",
+          "id": "id",
+          "body": "data"
+        },
+        "delete": {
+          "capability": "contractSale.cancel",
+          "id": "id"
+        }
+      }
+    },
+    "claim": {
+      "label": "Claim",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "attributes.status", "type": "string", "tag": "record.status" },
+        { "name": "attributes.createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "attributes.resolvedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "claim.list",
+          "cursor": "page",
+          "items": "data",
+          "next": "meta.totalPages"
+        },
+        "get": {
+          "capability": "claim.get",
+          "id": "claimId"
+        },
+        "create": {
+          "capability": "claim.create",
+          "body": "data"
+        }
+      }
+    },
+    "voucher": {
+      "label": "Voucher",
+      "fields": [
+        { "name": "attributes.code", "type": "string", "tag": "record.externalId", "required": true },
+        { "name": "type", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "attributes.code",
+        "list": {
+          "capability": "voucher.list",
+          "items": "data"
+        },
+        "get": {
+          "capability": "voucher.get",
+          "id": "code"
+        },
+        "create": {
+          "capability": "voucher.createBulk",
+          "body": "data"
+        },
+        "update": {
+          "capability": "voucher.update",
+          "id": "code",
+          "body": "data"
+        },
+        "delete": {
+          "capability": "voucher.delete",
+          "id": "code"
+        }
+      }
+    }
+  },
+  "events": {},
+  "capabilities": {
+    "product.list": {
+      "kind": "read",
+      "method": "getProducts",
+      "input": {
+        "sku": { "type": "string" },
+        "page": { "type": "integer" }
+      },
+      "output": "page<product>"
+    },
+    "product.get": {
+      "kind": "read",
+      "method": "getProduct",
+      "input": {
+        "sku": { "type": "string", "required": true }
+      },
+      "output": "product",
+      "args": ["sku"]
+    },
+    "product.create": {
+      "kind": "write",
+      "method": "createProduct",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "product",
+      "args": ["data"]
+    },
+    "product.update": {
+      "kind": "write",
+      "method": "updateProduct",
+      "input": {
+        "sku": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "product",
+      "args": ["sku", "data"]
+    },
+    "product.delete": {
+      "kind": "delete",
+      "method": "deleteProduct",
+      "input": {
+        "sku": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["sku"]
+    },
+    "product.createBulk": {
+      "kind": "write",
+      "method": "createProducts",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "page<product>",
+      "args": ["data"]
+    },
+    "product.listContracts": {
+      "kind": "read",
+      "method": "getContractsProduct",
+      "input": {
+        "sku": { "type": "string", "required": true },
+        "price": { "type": "number" }
+      },
+      "output": "page<contract>",
+      "args": ["sku"]
+    },
+    "contract.list": {
+      "kind": "read",
+      "method": "getContracts",
+      "input": {},
+      "output": "page<contract>"
+    },
+    "order.list": {
+      "kind": "read",
+      "method": "getOrders",
+      "input": {
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "createdAtMin": { "type": "string" },
+        "createdAtMax": { "type": "string" },
+        "page": { "type": "integer" }
+      },
+      "output": "page<order>"
+    },
+    "order.get": {
+      "kind": "read",
+      "method": "getOrderById",
+      "input": {
+        "orderId": { "type": "string", "required": true }
+      },
+      "output": "order",
+      "args": ["orderId"]
+    },
+    "order.create": {
+      "kind": "write",
+      "method": "createOrder",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "order",
+      "args": ["data"]
+    },
+    "order.update": {
+      "kind": "write",
+      "method": "updateOrder",
+      "input": {
+        "orderId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "order",
+      "args": ["orderId", "data"]
+    },
+    "order.cancel": {
+      "kind": "delete",
+      "method": "cancelOrder",
+      "input": {
+        "orderId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["orderId"]
+    },
+    "order.addHistoryEvent": {
+      "kind": "write",
+      "method": "addOrderHistoryEvent",
+      "input": {
+        "orderId": { "type": "string", "required": true },
+        "lineItemId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "order",
+      "args": ["orderId", "lineItemId", "data"]
+    },
+    "contractSale.list": {
+      "kind": "read",
+      "method": "getContractSales",
+      "input": {
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "page": { "type": "integer" },
+        "createdAtMin": { "type": "string" },
+        "createdAtMax": { "type": "string" },
+        "cancelled": { "type": "boolean" }
+      },
+      "output": "page<contractSale>"
+    },
+    "contractSale.get": {
+      "kind": "read",
+      "method": "getContractSaleById",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "contractSale",
+      "args": ["id"]
+    },
+    "contractSale.update": {
+      "kind": "write",
+      "method": "updateContractSale",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "contractSale",
+      "args": ["id", "data"]
+    },
+    "contractSale.cancel": {
+      "kind": "delete",
+      "method": "cancelContractSale",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id"]
+    },
+    "claim.list": {
+      "kind": "read",
+      "method": "getClaims",
+      "input": {
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "page": { "type": "integer" },
+        "status": { "type": "string" },
+        "createdAtMin": { "type": "string" },
+        "createdAtMax": { "type": "string" }
+      },
+      "output": "page<claim>"
+    },
+    "claim.get": {
+      "kind": "read",
+      "method": "getClaimById",
+      "input": {
+        "contractSaleId": { "type": "string", "required": true },
+        "claimId": { "type": "string", "required": true }
+      },
+      "output": "claim",
+      "args": ["contractSaleId", "claimId"]
+    },
+    "claim.create": {
+      "kind": "write",
+      "method": "createClaim",
+      "input": {
+        "contractSaleId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "claim",
+      "args": ["contractSaleId", "data"]
+    },
+    "voucher.list": {
+      "kind": "read",
+      "method": "getVouchers",
+      "input": {},
+      "output": "page<voucher>"
+    },
+    "voucher.get": {
+      "kind": "read",
+      "method": "getVoucher",
+      "input": {
+        "code": { "type": "string", "required": true }
+      },
+      "output": "voucher",
+      "args": ["code"]
+    },
+    "voucher.createBulk": {
+      "kind": "write",
+      "method": "createVouchers",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "page<voucher>",
+      "args": ["data"]
+    },
+    "voucher.update": {
+      "kind": "write",
+      "method": "updateVoucher",
+      "input": {
+        "code": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "voucher",
+      "args": ["code", "data"]
+    },
+    "voucher.delete": {
+      "kind": "delete",
+      "method": "deleteVoucher",
+      "input": {
+        "code": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["code"]
+    }
+  }
+}

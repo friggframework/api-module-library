@@ -1,0 +1,478 @@
+openapi: 3.0.3
+info:
+  title: Clyde Public API (subset)
+  version: "2.0.6"
+  description: >-
+    Clyde (joinclyde.com) is a product-protection / extended-warranty platform.
+    This is Left Hook's curated subset of Clyde's official REST API (v2.0.6),
+    authored from the OpenAPI fragments embedded in each reference page at
+    https://docs.joinclyde.com/reference/. It covers exactly the endpoints the
+    @friggframework/api-module-clyde client in api.js implements and is the
+    source of truth the hand-written client mirrors 1:1 (one method per
+    operationId). Official operationId `GetClaims` is normalized to camelCase
+    `getClaims` to match the client.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  termsOfService: http://joinclyde.com/terms
+externalDocs:
+  description: Clyde API documentation
+  url: https://docs.joinclyde.com
+servers:
+  - url: https://api.joinclyde.com
+    description: Clyde production API
+security:
+  - BasicAuth: []
+tags:
+  - name: Products
+  - name: Contracts
+  - name: Orders
+  - name: Contract Sales
+  - name: Claims
+  - name: Vouchers
+paths:
+  /products:
+    get:
+      tags: [Products]
+      operationId: getProducts
+      summary: Get Products
+      description: Fetch paginated products from your shop (25 per page).
+      parameters:
+        - in: query
+          name: sku
+          schema: { type: string }
+          description: Product SKU(s) to filter on.
+        - $ref: "#/components/parameters/Page"
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Products]
+      operationId: createProduct
+      summary: Create Product
+      description: Adds a new product to Clyde to be matched with contracts.
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiObject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /products/bulk:
+    post:
+      tags: [Products]
+      operationId: createProducts
+      summary: Create Products (Bulk)
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /products/{sku}:
+    parameters:
+      - $ref: "#/components/parameters/Sku"
+    get:
+      tags: [Products]
+      operationId: getProduct
+      summary: Get Product
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiObject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Products]
+      operationId: updateProduct
+      summary: Update Product
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiObject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Products]
+      operationId: deleteProduct
+      summary: Delete Product
+      responses:
+        "200": { $ref: "#/components/responses/Empty" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /products/{sku}/contracts:
+    parameters:
+      - $ref: "#/components/parameters/Sku"
+    get:
+      tags: [Products]
+      operationId: getContractsProduct
+      summary: Get Contracts for Product
+      description: Fetch all contracts matched to a product.
+      parameters:
+        - in: query
+          name: price
+          schema: { type: number }
+          description: Price at which the product is being sold.
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /contracts:
+    get:
+      tags: [Contracts]
+      operationId: getContracts
+      summary: Get Contracts
+      description: Fetch all contracts associated with your store.
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /orders:
+    get:
+      tags: [Orders]
+      operationId: getOrders
+      summary: Get Orders
+      description: >-
+        Retrieves orders by customer email, phone number, and/or range of dates.
+      parameters:
+        - $ref: "#/components/parameters/Email"
+        - $ref: "#/components/parameters/Phone"
+        - $ref: "#/components/parameters/CreatedAtMin"
+        - $ref: "#/components/parameters/CreatedAtMax"
+        - $ref: "#/components/parameters/Page"
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Orders]
+      operationId: createOrder
+      summary: Create Order
+      description: All contract sales are recorded within an order.
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiObject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /orders/{orderId}:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+    get:
+      tags: [Orders]
+      operationId: getOrderById
+      summary: Get Order by ID
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiObject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Orders]
+      operationId: updateOrder
+      summary: Update Order
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiObject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Orders]
+      operationId: cancelOrder
+      summary: Cancel Order
+      responses:
+        "200": { $ref: "#/components/responses/Empty" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /orders/{orderId}/lineItem/{lineItemId}:
+    parameters:
+      - $ref: "#/components/parameters/OrderId"
+      - $ref: "#/components/parameters/LineItemId"
+    put:
+      tags: [Orders]
+      operationId: addOrderHistoryEvent
+      summary: Add an Order History Event
+      description: >-
+        Update order status (Shipped, Delivered, Refunded, etc.) for a line item.
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiObject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /contract-sales:
+    get:
+      tags: [Contract Sales]
+      operationId: getContractSales
+      summary: Get Contract Sales
+      description: Retrieves paginated contract sale data.
+      parameters:
+        - $ref: "#/components/parameters/Email"
+        - $ref: "#/components/parameters/Phone"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/CreatedAtMin"
+        - $ref: "#/components/parameters/CreatedAtMax"
+        - in: query
+          name: cancelled
+          schema: { type: boolean }
+        - in: query
+          name: cancelledAtMin
+          schema: { type: string, format: date-time }
+        - in: query
+          name: cancelledAtMax
+          schema: { type: string, format: date-time }
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /contract-sales/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ContractSaleId"
+    get:
+      tags: [Contract Sales]
+      operationId: getContractSaleById
+      summary: Get Contract Sale by ID
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiObject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Contract Sales]
+      operationId: updateContractSale
+      summary: Update Contract Sale
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiObject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Contract Sales]
+      operationId: cancelContractSale
+      summary: Cancel Contract Sale
+      responses:
+        "200": { $ref: "#/components/responses/Empty" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /claims:
+    get:
+      tags: [Claims]
+      operationId: getClaims
+      summary: Get Claims
+      description: >-
+        Retrieves paginated claims data. Official OpenAPI operationId is
+        `GetClaims`; this curated subset uses camelCase `getClaims`.
+      parameters:
+        - $ref: "#/components/parameters/Email"
+        - $ref: "#/components/parameters/Phone"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/CreatedAtMin"
+        - $ref: "#/components/parameters/CreatedAtMax"
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: resolvedAtMin
+          schema: { type: string, format: date-time }
+        - in: query
+          name: resolvedAtMax
+          schema: { type: string, format: date-time }
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /contract-sales/{contractSaleId}/claims:
+    parameters:
+      - $ref: "#/components/parameters/ContractSaleIdPath"
+    post:
+      tags: [Claims]
+      operationId: createClaim
+      summary: Create Claim
+      description: Report a claim filed by a customer to Clyde.
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiObject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /contract-sales/{contractSaleId}/claims/{claimId}:
+    parameters:
+      - $ref: "#/components/parameters/ContractSaleIdPath"
+      - $ref: "#/components/parameters/ClaimId"
+    get:
+      tags: [Claims]
+      operationId: getClaimById
+      summary: Get Claim by ID
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiObject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /vouchers:
+    get:
+      tags: [Vouchers]
+      operationId: getVouchers
+      summary: Get Vouchers
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /vouchers/bulk:
+    post:
+      tags: [Vouchers]
+      operationId: createVouchers
+      summary: Create Vouchers (Bulk)
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /vouchers/{code}:
+    parameters:
+      - $ref: "#/components/parameters/VoucherCode"
+    get:
+      tags: [Vouchers]
+      operationId: getVoucher
+      summary: Get Voucher
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiObject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Vouchers]
+      operationId: updateVoucher
+      summary: Update Voucher
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema: { $ref: "#/components/schemas/JsonApiRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/JsonApiObject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Vouchers]
+      operationId: deleteVoucher
+      summary: Delete Voucher
+      responses:
+        "200": { $ref: "#/components/responses/Empty" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: >-
+        Clyde Client Key + Secret as Basic Base64(clientKey:secret). Also send
+        X-Auth-Timestamp (Unix seconds), X-Auth-Nonce, and
+        Content-Type: application/vnd.api+json on every request.
+        See https://docs.joinclyde.com/reference/authentication
+  parameters:
+    Page:
+      in: query
+      name: page
+      schema: { type: integer, minimum: 1, default: 1 }
+      description: Page number (25 items per page).
+    Sku:
+      in: path
+      name: sku
+      required: true
+      schema: { type: string }
+      description: Product SKU.
+    OrderId:
+      in: path
+      name: orderId
+      required: true
+      schema: { type: string }
+    LineItemId:
+      in: path
+      name: lineItemId
+      required: true
+      schema: { type: string }
+    ContractSaleId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+      description: Clyde-issued contract sale ID.
+    ContractSaleIdPath:
+      in: path
+      name: contractSaleId
+      required: true
+      schema: { type: string }
+    ClaimId:
+      in: path
+      name: claimId
+      required: true
+      schema: { type: string }
+    VoucherCode:
+      in: path
+      name: code
+      required: true
+      schema: { type: string }
+    Email:
+      in: query
+      name: email
+      schema: { type: string, format: email }
+    Phone:
+      in: query
+      name: phone
+      schema: { type: string }
+    CreatedAtMin:
+      in: query
+      name: createdAtMin
+      schema: { type: string, format: date-time }
+    CreatedAtMax:
+      in: query
+      name: createdAtMax
+      schema: { type: string, format: date-time }
+  schemas:
+    JsonApiRequest:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          description: JSON:API resource object (type + attributes, optional id).
+    JsonApiResource:
+      type: object
+      properties:
+        type: { type: string }
+        id: { type: string }
+        attributes: { type: object }
+  responses:
+    JsonApiList:
+      description: JSON:API list response
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items: { $ref: "#/components/schemas/JsonApiResource" }
+              meta:
+                type: object
+                properties:
+                  totalPages: { type: number }
+    JsonApiObject:
+      description: JSON:API single-resource response
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            properties:
+              data: { $ref: "#/components/schemas/JsonApiResource" }
+    Empty:
+      description: Empty or acknowledgement response
+    Unauthorized:
+      description: Missing or invalid Authorization / Clyde auth headers
+    NotFound:
+      description: Resource not found

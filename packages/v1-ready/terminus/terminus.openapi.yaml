@@ -1,0 +1,266 @@
+openapi: 3.0.3
+info:
+  title: Terminus Account Lists API
+  version: "2.0.0"
+  description: >-
+    Terminus (DemandScience ABM Platform) Account Lists API. The vendor publishes
+    the full OpenAPI on a login-gated Redocly portal at
+    https://developer.terminus.com/openapi/accountlists/. This file is Left Hook's
+    curated subset covering exactly the endpoints the
+    @friggframework/api-module-terminus client in api.js implements — verified
+    against the live host https://api.terminusplatform.com via the prior v1
+    module's integration tests. It is the source of truth the hand-written client
+    mirrors 1:1 (one method per operationId). Do not add operations that are not
+    verified.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.terminusplatform.com/accountLists/v2
+    description: Terminus Account Lists API v2
+security:
+  - BearerAuth: []
+tags:
+  - name: Folders
+  - name: Account Lists
+paths:
+  /folders:
+    get:
+      tags: [Folders]
+      operationId: listFolders
+      summary: List account-list folders
+      description: >-
+        Returns folders for the authenticated organization. Response includes
+        `folders[]` and `nextPageToken`. Verified against the live API; the
+        login-gated portal names this operation AccountListService_GetFolders.
+      responses:
+        "200":
+          description: Folder page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  folders:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Folder"
+                  nextPageToken:
+                    type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Folders]
+      operationId: createFolder
+      summary: Create a folder
+      description: >-
+        Creates a folder. Verified request body uses `folderName` and
+        `folderAccess` (e.g. PUBLIC).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [folderName, folderAccess]
+              properties:
+                folderName:
+                  type: string
+                folderAccess:
+                  type: string
+                  description: Access level (verified value includes PUBLIC).
+      responses:
+        "200":
+          description: Created folder
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  folderId:
+                    type: string
+                  displayName:
+                    type: string
+                  folderAccess:
+                    type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /accountLists:
+    get:
+      tags: [Account Lists]
+      operationId: listAccountLists
+      summary: List account lists
+      description: >-
+        Returns account lists for the authenticated organization. Response
+        includes `lists[]` and `nextPageToken`.
+      responses:
+        "200":
+          description: Account-list page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lists:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AccountList"
+                  nextPageToken:
+                    type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Account Lists]
+      operationId: createAccountList
+      summary: Create an account list
+      description: >-
+        Creates an account list in a folder. Verified request body uses
+        `listName` and `folderId`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [listName, folderId]
+              properties:
+                listName:
+                  type: string
+                folderId:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: Created account list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  listId:
+                    type: string
+                  listName:
+                    type: string
+                  folderId:
+                    type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /accountLists/{listId}/accounts/add:
+    post:
+      tags: [Account Lists]
+      operationId: addAccountsToList
+      summary: Add accounts to an account list
+      parameters:
+        - in: path
+          name: listId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accounts]
+              properties:
+                accounts:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/AccountRef"
+      responses:
+        "200":
+          description: Add result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  listId: { type: string }
+                  successfulAccounts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AccountRef"
+                  accountsNotFound:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AccountRef"
+                  addedAccounts: { type: integer }
+                  duplicateAccounts: { type: integer }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /accountLists/{listId}/accounts/remove:
+    post:
+      tags: [Account Lists]
+      operationId: removeAccountsFromList
+      summary: Remove accounts from an account list
+      parameters:
+        - in: path
+          name: listId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accounts]
+              properties:
+                accounts:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/AccountRef"
+      responses:
+        "200":
+          description: Remove result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  listId: { type: string }
+                  accounts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AccountRef"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+components:
+  securitySchemes:
+    BearerAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >-
+        API key sent as `Authorization: Bearer <api_key>`. Keys are issued by
+        a DemandScience / Terminus CSM or Onboarding Specialist (not self-served).
+  responses:
+    Unauthorized:
+      description: Authentication Invalid (anonymous live host returns HTTP 401).
+  schemas:
+    Folder:
+      type: object
+      properties:
+        uuid: { type: string, format: uuid }
+        name: { type: string }
+        orgUuid: { type: string, format: uuid }
+        folderAccess: { type: string }
+        createdMomentUtc: { type: string, format: date-time }
+    AccountList:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        displayName: { type: string }
+        createTime: { type: string, format: date-time }
+        estimatedAccountsCount: { type: string }
+        folderId: { type: string, format: uuid }
+    AccountRef:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          description: Account identifier (e.g. CRM account id).
+        name: { type: string }
+        crmOrgId: { type: string }
+        crmType: { type: string, description: "e.g. SALESFORCE" }

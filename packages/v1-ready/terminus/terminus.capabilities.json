@@ -1,0 +1,215 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "terminus",
+  "label": "Terminus",
+  "package": "@friggframework/api-module-terminus",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Values about the connected account. Identity is derived at auth time from the first folder's orgUuid (or an api_token fingerprint).",
+    "fields": [
+      {
+        "name": "orgUuid",
+        "type": "string",
+        "description": "Terminus organization UUID when available from listFolders"
+      }
+    ]
+  },
+  "objects": {
+    "folder": {
+      "label": "Folder",
+      "fields": [
+        {
+          "name": "uuid",
+          "type": "id",
+          "tag": "record.id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "orgUuid",
+          "type": "string",
+          "tag": "organization.id",
+          "readOnly": true
+        },
+        {
+          "name": "folderAccess",
+          "type": "string"
+        },
+        {
+          "name": "createdMomentUtc",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "uuid",
+        "list": {
+          "capability": "folder.list",
+          "items": "folders",
+          "cursor": "nextPageToken"
+        },
+        "create": {
+          "capability": "folder.create",
+          "body": "body"
+        }
+      }
+    },
+    "accountList": {
+      "label": "Account list",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "tag": "record.id",
+          "readOnly": true
+        },
+        {
+          "name": "displayName",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "folderId",
+          "type": "string"
+        },
+        {
+          "name": "createTime",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "estimatedAccountsCount",
+          "type": "string",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "accountList.list",
+          "items": "lists",
+          "cursor": "nextPageToken"
+        },
+        "create": {
+          "capability": "accountList.create",
+          "body": "body"
+        }
+      }
+    },
+    "account": {
+      "label": "Account (list member)",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "tag": "organization.id",
+          "required": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "organization.name"
+        },
+        {
+          "name": "crmOrgId",
+          "type": "string"
+        },
+        {
+          "name": "crmType",
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "capabilities": {
+    "folder.list": {
+      "kind": "read",
+      "method": "listFolders",
+      "input": {},
+      "output": "page<folder>",
+      "args": ["$rest"]
+    },
+    "folder.create": {
+      "kind": "write",
+      "method": "createFolder",
+      "input": {
+        "body": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "folder",
+      "args": ["body"]
+    },
+    "accountList.list": {
+      "kind": "read",
+      "method": "listAccountLists",
+      "input": {},
+      "output": "page<accountList>",
+      "args": ["$rest"]
+    },
+    "accountList.create": {
+      "kind": "write",
+      "method": "createAccountList",
+      "input": {
+        "body": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "accountList",
+      "args": ["body"]
+    },
+    "accountList.addAccounts": {
+      "kind": "write",
+      "method": "addAccountsToList",
+      "input": {
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "body": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "object",
+      "args": ["listId", "body"]
+    },
+    "accountList.removeAccounts": {
+      "kind": "write",
+      "method": "removeAccountsFromList",
+      "input": {
+        "listId": {
+          "type": "string",
+          "required": true
+        },
+        "body": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "output": "object",
+      "args": ["listId", "body"]
+    }
+  },
+  "options": {
+    "folder": {
+      "capability": "folder.list",
+      "label": "{{item.name}}",
+      "value": "$.item.uuid"
+    },
+    "accountList": {
+      "capability": "accountList.list",
+      "label": "{{item.displayName}}",
+      "value": "$.item.id"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@friggframework/api-module-totango",
+  "version": "1.0.0",
+  "description": "Totango (Customer Success / account health) REST API module for the Frigg Framework — accounts, users, health, tasks/CTAs via timeline, events, and definitions",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint:fix": "prettier --write --loglevel error . && eslint . --fix"
+  },
+  "keywords": [
+    "frigg",
+    "totango",
+    "api-module",
+    "customer-success",
+    "account-health"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^2.0.0-next.107"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-scheduler": "^3.1113.0",
+    "dotenv": "^16.0.3",
+    "jest": "^28.1.3",
+    "js-yaml": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

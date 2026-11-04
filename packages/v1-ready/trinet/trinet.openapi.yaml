@@ -1,0 +1,533 @@
+openapi: 3.0.3
+info:
+  title: TriNet HR Platform API (Frigg curated subset)
+  version: "1.0.0"
+  description: >-
+    TriNet HR Platform (formerly Zenefits Platform) REST API. Official docs live
+    at https://developers.zenefits.com/. This file is Left Hook's curated subset
+    covering exactly the endpoints the @friggframework/api-module-trinet client
+    in api.js implements. It is the source of truth the hand-written client
+    mirrors 1:1 (one method per operationId).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.trinet.com
+    description: TriNet HR Platform API
+security:
+  - BearerAuth: []
+tags:
+  - name: Identity
+  - name: Companies
+  - name: People
+  - name: Employments
+  - name: Departments
+  - name: Locations
+  - name: Platform
+  - name: Time Off
+paths:
+  /core/me:
+    get:
+      tags: [Identity]
+      operationId: getMe
+      summary: Current authorized user
+      description: >-
+        Returns scopes, expiry, and company/person refs for the access token.
+        Expand with `includes=company`.
+      parameters:
+        - in: query
+          name: includes
+          schema: { type: string }
+          description: Space-separated related fields to expand (e.g. company).
+      responses:
+        "200":
+          description: Me payload wrapped in TriNet meta response.
+
+  /core/companies:
+    get:
+      tags: [Companies]
+      operationId: listCompanies
+      summary: List companies
+      parameters:
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 100 }
+        - in: query
+          name: starting_after
+          schema: { type: string }
+        - in: query
+          name: ending_before
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated company list.
+
+  /core/companies/{id}:
+    get:
+      tags: [Companies]
+      operationId: getCompany
+      summary: Get a company
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+      responses:
+        "200":
+          description: Company object.
+
+  /core/people:
+    get:
+      tags: [People]
+      operationId: listPeople
+      summary: List people for the token's company
+      parameters:
+        - in: query
+          name: company
+          schema: { type: string }
+        - in: query
+          name: department
+          schema: { type: string }
+        - in: query
+          name: location
+          schema: { type: string }
+        - in: query
+          name: manager
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: first_name
+          schema: { type: string }
+        - in: query
+          name: last_name
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 100 }
+        - in: query
+          name: starting_after
+          schema: { type: string }
+        - in: query
+          name: ending_before
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated people list.
+
+  /core/people/{id}:
+    get:
+      tags: [People]
+      operationId: getPerson
+      summary: Get a person
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+      responses:
+        "200":
+          description: Person object.
+
+  /core/companies/{companyId}/people:
+    get:
+      tags: [People]
+      operationId: listCompanyPeople
+      summary: List people for a company
+      parameters:
+        - in: path
+          name: companyId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 100 }
+        - in: query
+          name: starting_after
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated people list for the company.
+
+  /core/employments:
+    get:
+      tags: [Employments]
+      operationId: listEmployments
+      summary: List employments
+      parameters:
+        - in: query
+          name: person
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 100 }
+        - in: query
+          name: starting_after
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated employment list.
+
+  /core/employments/{id}:
+    get:
+      tags: [Employments]
+      operationId: getEmployment
+      summary: Get an employment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+      responses:
+        "200":
+          description: Employment object.
+
+  /core/people/{personId}/employments:
+    get:
+      tags: [Employments]
+      operationId: listPersonEmployments
+      summary: List employments for a person
+      parameters:
+        - in: path
+          name: personId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated employments for the person.
+
+  /core/departments:
+    get:
+      tags: [Departments]
+      operationId: listDepartments
+      summary: List departments
+      parameters:
+        - in: query
+          name: company
+          schema: { type: string }
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 100 }
+        - in: query
+          name: starting_after
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated department list.
+
+  /core/departments/{id}:
+    get:
+      tags: [Departments]
+      operationId: getDepartment
+      summary: Get a department
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+      responses:
+        "200":
+          description: Department object.
+
+  /core/companies/{companyId}/departments:
+    get:
+      tags: [Departments]
+      operationId: listCompanyDepartments
+      summary: List departments for a company
+      parameters:
+        - in: path
+          name: companyId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated departments for the company.
+
+  /core/locations:
+    get:
+      tags: [Locations]
+      operationId: listLocations
+      summary: List locations
+      parameters:
+        - in: query
+          name: company
+          schema: { type: string }
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 100 }
+        - in: query
+          name: starting_after
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated location list.
+
+  /core/locations/{id}:
+    get:
+      tags: [Locations]
+      operationId: getLocation
+      summary: Get a location
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+      responses:
+        "200":
+          description: Location object.
+
+  /core/companies/{companyId}/locations:
+    get:
+      tags: [Locations]
+      operationId: listCompanyLocations
+      summary: List locations for a company
+      parameters:
+        - in: path
+          name: companyId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated locations for the company.
+
+  /platform/applications:
+    get:
+      tags: [Platform]
+      operationId: listApplications
+      summary: List applications
+      description: Requires the `platform` scope.
+      responses:
+        "200":
+          description: Paginated application list.
+
+  /platform/applications/{id}:
+    get:
+      tags: [Platform]
+      operationId: getApplication
+      summary: Get an application
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Application object.
+
+  /platform/company_installs:
+    get:
+      tags: [Platform]
+      operationId: listCompanyInstalls
+      summary: List company installations
+      parameters:
+        - in: query
+          name: company
+          schema: { type: string }
+        - in: query
+          name: application
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 100 }
+        - in: query
+          name: starting_after
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated company install list.
+
+  /platform/company_installs/{id}:
+    get:
+      tags: [Platform]
+      operationId: getCompanyInstall
+      summary: Get a company installation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+      responses:
+        "200":
+          description: Company install object.
+
+  /platform/company_installs/{id}/status_changes/:
+    post:
+      tags: [Platform]
+      operationId: setCompanyInstallStatus
+      summary: Set company installation status
+      description: >-
+        Updates installation lifecycle status (`ok`, `not_enrolled`, or
+        `enrolling`). Do not set `initializing`.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [ok, not_enrolled, enrolling]
+      responses:
+        "204":
+          description: Status updated.
+
+  /platform/person_subscriptions/{id}/status_changes/:
+    post:
+      tags: [Platform]
+      operationId: setPersonSubscriptionStatus
+      summary: Set person subscription status
+      description: >-
+        Updates subscription lifecycle status (`ok`, `not_enrolled`, or
+        `disabled`). Do not set `initializing`.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [ok, not_enrolled, disabled]
+      responses:
+        "204":
+          description: Status updated.
+
+  /time_off/vacation_requests:
+    get:
+      tags: [Time Off]
+      operationId: listVacationRequests
+      summary: List vacation requests
+      description: Requires `time_off.vacation_requests` scope.
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: vacation_type
+          schema: { type: string }
+        - in: query
+          name: person
+          schema: { type: string }
+        - in: query
+          name: creator
+          schema: { type: string }
+        - in: query
+          name: start_date
+          schema: { type: string, format: date }
+        - in: query
+          name: end_date
+          schema: { type: string, format: date }
+        - in: query
+          name: includes
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 100 }
+        - in: query
+          name: starting_after
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated vacation request list.
+
+  /time_off/vacation_requests/{id}:
+    get:
+      tags: [Time Off]
+      operationId: getVacationRequest
+      summary: Get a vacation request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includes
+          schema: { type: string }
+      responses:
+        "200":
+          description: Vacation request object.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Bearer
+      description: >-
+        OAuth 2.0 access token from https://secure.trinet.com/oauth2/token/.
+        Sent as `Authorization: Bearer <token>`.

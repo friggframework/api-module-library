@@ -1,0 +1,358 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "trinet",
+  "label": "TriNet",
+  "package": "@friggframework/api-module-trinet",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "OAuth2 authorization-code tokens persisted on the credential; entity externalId is the TriNet company id.",
+    "fields": [
+      { "name": "access_token", "type": "string" },
+      { "name": "refresh_token", "type": "string" },
+      { "name": "client_id", "type": "string" },
+      { "name": "client_secret", "type": "string" },
+      { "name": "scope", "type": "string" }
+    ]
+  },
+  "objects": {
+    "me": {
+      "label": "Authorized session",
+      "fields": [
+        { "name": "scopes", "type": "json", "readOnly": true },
+        { "name": "expires", "type": "datetime", "readOnly": true },
+        { "name": "uninstalled", "type": "boolean", "readOnly": true },
+        { "name": "company", "type": "json", "readOnly": true, "tag": "company.id" },
+        { "name": "person", "type": "json", "readOnly": true, "tag": "person.id" }
+      ]
+    },
+    "company": {
+      "label": "Company",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "company.id" },
+        { "name": "name", "type": "string", "tag": "company.name" },
+        { "name": "legal_name", "type": "string", "tag": "company.legalName" },
+        { "name": "ein", "type": "string", "tag": "company.ein" },
+        { "name": "logo_url", "type": "string" },
+        { "name": "legal_street1", "type": "string" },
+        { "name": "legal_city", "type": "string" },
+        { "name": "legal_state", "type": "string" },
+        { "name": "legal_zip", "type": "string" }
+      ]
+    },
+    "person": {
+      "label": "Person",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "person.id" },
+        { "name": "employee_number", "type": "string", "tag": "person.employeeNumber" },
+        { "name": "first_name", "type": "string", "tag": "person.firstName" },
+        { "name": "last_name", "type": "string", "tag": "person.lastName" },
+        { "name": "preferred_name", "type": "string", "tag": "person.preferredName" },
+        { "name": "work_email", "type": "email", "tag": "person.email" },
+        { "name": "personal_email", "type": "email" },
+        { "name": "status", "type": "string", "tag": "person.status" },
+        { "name": "title", "type": "string", "tag": "person.title" },
+        { "name": "department", "type": "json", "tag": "department.id" },
+        { "name": "location", "type": "json", "tag": "location.id" },
+        { "name": "manager", "type": "json", "tag": "person.managerId" }
+      ]
+    },
+    "employment": {
+      "label": "Employment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "employment.id" },
+        { "name": "person", "type": "json", "tag": "person.id" },
+        { "name": "hire_date", "type": "date", "tag": "employment.hireDate" },
+        { "name": "termination_date", "type": "date", "tag": "employment.terminationDate" },
+        { "name": "employment_type", "type": "string", "tag": "employment.type" },
+        { "name": "comp_type", "type": "string", "tag": "employment.compType" },
+        { "name": "annual_salary", "type": "string", "tag": "employment.annualSalary" },
+        { "name": "pay_rate", "type": "string", "tag": "employment.payRate" },
+        { "name": "is_active", "type": "boolean", "tag": "employment.isActive" }
+      ]
+    },
+    "department": {
+      "label": "Department",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "department.id" },
+        { "name": "name", "type": "string", "tag": "department.name" },
+        { "name": "company", "type": "json", "tag": "company.id" }
+      ]
+    },
+    "location": {
+      "label": "Location",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "location.id" },
+        { "name": "name", "type": "string", "tag": "location.name" },
+        { "name": "street1", "type": "string" },
+        { "name": "city", "type": "string", "tag": "location.city" },
+        { "name": "state", "type": "string", "tag": "location.state" },
+        { "name": "zip", "type": "string" },
+        { "name": "country", "type": "string" },
+        { "name": "company", "type": "json", "tag": "company.id" }
+      ]
+    },
+    "company_install": {
+      "label": "Company installation",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "install.id" },
+        { "name": "status", "type": "string", "tag": "install.status" },
+        { "name": "company", "type": "json", "tag": "company.id" },
+        { "name": "application", "type": "json" },
+        { "name": "fields", "type": "json" }
+      ]
+    },
+    "vacation_request": {
+      "label": "Vacation request",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "pto.id" },
+        { "name": "status", "type": "string", "tag": "pto.status" },
+        { "name": "start_date", "type": "date", "tag": "pto.start" },
+        { "name": "end_date", "type": "date", "tag": "pto.end" },
+        { "name": "hours", "type": "string", "tag": "pto.hours" },
+        { "name": "person", "type": "json", "tag": "person.id" },
+        { "name": "vacation_type", "type": "json", "tag": "pto.typeId" },
+        { "name": "reason", "type": "string" }
+      ]
+    }
+  },
+  "events": {
+    "people.did_create": {
+      "delivery": "webhook",
+      "object": "person",
+      "description": "Fired when a new person object is created. Webhook URLs are configured at app setup (no REST subscribe API)."
+    },
+    "people.did_change": {
+      "delivery": "webhook",
+      "object": "person",
+      "description": "Fired when a person object changes."
+    },
+    "employments.did_start": {
+      "delivery": "webhook",
+      "object": "employment",
+      "description": "Fired on a person's employment.hire_date."
+    },
+    "employments.did_terminate": {
+      "delivery": "webhook",
+      "object": "employment",
+      "description": "Fired on a person's employment.termination_date."
+    },
+    "companies.did_change": {
+      "delivery": "webhook",
+      "object": "company",
+      "description": "Fired when a company object changes."
+    },
+    "vacation_requests.did_create": {
+      "delivery": "webhook",
+      "object": "vacation_request",
+      "description": "Fired when a vacation request is created."
+    },
+    "flows.did_complete.hiring": {
+      "delivery": "webhook",
+      "object": "company_install",
+      "description": "Fired when an HR admin completes a hiring flow."
+    }
+  },
+  "webhook": {
+    "scope": "installation",
+    "topic": "people.did_create",
+    "eventId": "{{body.type}}",
+    "verify": "verifyWebhookSignature",
+    "note": "HMAC-SHA256 hex over raw body; Signature header. Shared secret is distinct from OAuth client secret. Tenant key is body.data.company.id. Subscriptions are configured in the TriNet developer dashboard, not via REST."
+  },
+  "capabilities": {
+    "me.get": {
+      "kind": "read",
+      "method": "getMe",
+      "input": {
+        "includes": { "type": "string" }
+      },
+      "output": "me"
+    },
+    "company.list": {
+      "kind": "read",
+      "method": "listCompanies",
+      "input": {
+        "name": { "type": "string" },
+        "limit": { "type": "integer" },
+        "starting_after": { "type": "string" }
+      },
+      "output": "page<company>"
+    },
+    "company.get": {
+      "kind": "read",
+      "method": "getCompany",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "company",
+      "args": ["id"]
+    },
+    "person.list": {
+      "kind": "read",
+      "method": "listPeople",
+      "input": {
+        "status": { "type": "string" },
+        "department": { "type": "string" },
+        "location": { "type": "string" },
+        "limit": { "type": "integer" },
+        "starting_after": { "type": "string" }
+      },
+      "output": "page<person>"
+    },
+    "person.get": {
+      "kind": "read",
+      "method": "getPerson",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "person",
+      "args": ["id"]
+    },
+    "person.list_by_company": {
+      "kind": "read",
+      "method": "listCompanyPeople",
+      "input": {
+        "companyId": { "type": "string", "required": true }
+      },
+      "output": "page<person>",
+      "args": ["companyId"]
+    },
+    "employment.list": {
+      "kind": "read",
+      "method": "listEmployments",
+      "input": {
+        "person": { "type": "string" },
+        "limit": { "type": "integer" }
+      },
+      "output": "page<employment>"
+    },
+    "employment.get": {
+      "kind": "read",
+      "method": "getEmployment",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "employment",
+      "args": ["id"]
+    },
+    "employment.list_by_person": {
+      "kind": "read",
+      "method": "listPersonEmployments",
+      "input": {
+        "personId": { "type": "string", "required": true }
+      },
+      "output": "page<employment>",
+      "args": ["personId"]
+    },
+    "department.list": {
+      "kind": "read",
+      "method": "listDepartments",
+      "input": {
+        "company": { "type": "string" },
+        "name": { "type": "string" }
+      },
+      "output": "page<department>"
+    },
+    "department.get": {
+      "kind": "read",
+      "method": "getDepartment",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "department",
+      "args": ["id"]
+    },
+    "location.list": {
+      "kind": "read",
+      "method": "listLocations",
+      "input": {
+        "company": { "type": "string" },
+        "name": { "type": "string" }
+      },
+      "output": "page<location>"
+    },
+    "location.get": {
+      "kind": "read",
+      "method": "getLocation",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "location",
+      "args": ["id"]
+    },
+    "application.list": {
+      "kind": "read",
+      "method": "listApplications",
+      "input": {},
+      "output": "page<application>"
+    },
+    "application.get": {
+      "kind": "read",
+      "method": "getApplication",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "application",
+      "args": ["id"]
+    },
+    "company_install.list": {
+      "kind": "read",
+      "method": "listCompanyInstalls",
+      "input": {
+        "status": { "type": "string" },
+        "company": { "type": "string" }
+      },
+      "output": "page<company_install>"
+    },
+    "company_install.get": {
+      "kind": "read",
+      "method": "getCompanyInstall",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "company_install",
+      "args": ["id"]
+    },
+    "company_install.set_status": {
+      "kind": "write",
+      "method": "setCompanyInstallStatus",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "status": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id", "$rest"]
+    },
+    "person_subscription.set_status": {
+      "kind": "write",
+      "method": "setPersonSubscriptionStatus",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "status": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["id", "$rest"]
+    },
+    "vacation_request.list": {
+      "kind": "read",
+      "method": "listVacationRequests",
+      "input": {
+        "status": { "type": "string" },
+        "person": { "type": "string" },
+        "start_date": { "type": "string" },
+        "end_date": { "type": "string" }
+      },
+      "output": "page<vacation_request>"
+    },
+    "vacation_request.get": {
+      "kind": "read",
+      "method": "getVacationRequest",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "vacation_request",
+      "args": ["id"]
+    }
+  }
+}

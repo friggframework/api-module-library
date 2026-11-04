@@ -1,0 +1,73 @@
+{
+  "$schema": "capability-manifest/v0.1",
+  "module": "google-analytics",
+  "label": "Google Analytics",
+  "package": "@friggframework/api-module-google-analytics",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "scheme": "bearer",
+    "testAuthRequest": "testAuth",
+    "authorizeUrl": "https://accounts.google.com/o/oauth2/v2/auth",
+    "tokenUrl": "https://oauth2.googleapis.com/token",
+    "scopesDocumentedAt": "https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/properties/runReport",
+    "defaultScopes": [
+      "https://www.googleapis.com/auth/analytics.readonly"
+    ],
+    "notes": [
+      "OAuth 2.0 authorization-code; access token sent as Authorization: Bearer.",
+      "Data API base: https://analyticsdata.googleapis.com/v1beta.",
+      "Identity uses Google oauth2/v2/userinfo (extra userinfo/openid scopes recommended).",
+      "No webhook subscription management on the Data API v1beta surface."
+    ]
+  },
+  "source": {
+    "officialDocs": "https://developers.google.com/analytics/devguides/reporting/data/v1/rest",
+    "discovery": "https://analyticsdata.googleapis.com/$discovery/rest?version=v1beta",
+    "notes": [
+      "Demand-source analytics module. Report-centric Data API — no CRUD business objects.",
+      "Curated OpenAPI: google-analytics.openapi.yaml (operationIds match Api methods 1:1)."
+    ]
+  },
+  "objects": {
+    "report": {
+      "label": "Report",
+      "fields": [
+        { "name": "dimensionHeaders", "tags": ["read"] },
+        { "name": "metricHeaders", "tags": ["read"] },
+        { "name": "rows", "tags": ["read"] },
+        { "name": "rowCount", "tags": ["read"] },
+        { "name": "totals", "tags": ["read"] },
+        { "name": "propertyQuota", "tags": ["read"] }
+      ],
+      "operations": [
+        {
+          "name": "runReport",
+          "surface": "data-read",
+          "method": "runReport"
+        },
+        {
+          "name": "batchRunReports",
+          "surface": "data-read",
+          "method": "batchRunReports"
+        }
+      ]
+    },
+    "metadata": {
+      "label": "Metadata",
+      "fields": [
+        { "name": "name", "tags": ["identifier", "read"] },
+        { "name": "dimensions", "tags": ["read"] },
+        { "name": "metrics", "tags": ["read"] },
+        { "name": "comparisons", "tags": ["read"] }
+      ],
+      "operations": [
+        {
+          "name": "getMetadata",
+          "surface": "data-read",
+          "method": "getMetadata"
+        }
+      ]
+    }
+  }
+}

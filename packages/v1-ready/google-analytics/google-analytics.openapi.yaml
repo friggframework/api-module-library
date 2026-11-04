@@ -1,0 +1,317 @@
+openapi: 3.0.3
+info:
+  title: Google Analytics Data API (v1beta)
+  version: "v1beta"
+  description: >-
+    Curated OpenAPI subset of the Google Analytics Data API v1beta covering
+    exactly the endpoints implemented by @friggframework/api-module-google-analytics
+    (one method per operationId). Written from Google's official REST reference
+    and discovery document — the cleared source module shipped no OpenAPI file.
+
+    Official sources:
+      https://developers.google.com/analytics/devguides/reporting/data/v1/rest
+      https://analyticsdata.googleapis.com/$discovery/rest?version=v1beta
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://analyticsdata.googleapis.com/v1beta
+    description: Google Analytics Data API v1beta
+security:
+  - OAuth2: []
+tags:
+  - name: Reports
+  - name: Metadata
+paths:
+  /properties/{propertyId}:runReport:
+    post:
+      tags: [Reports]
+      operationId: runReport
+      summary: Run a report
+      description: >-
+        Returns a customized report of Google Analytics event data for a
+        property. See
+        https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/properties/runReport
+      parameters:
+        - $ref: '#/components/parameters/PropertyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunReportRequest'
+      responses:
+        '200':
+          description: RunReportResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunReportResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /properties/{propertyId}:batchRunReports:
+    post:
+      tags: [Reports]
+      operationId: batchRunReports
+      summary: Batch run reports
+      description: >-
+        Returns multiple reports in a single batch (max 5 requests), all for
+        the same property. See
+        https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/properties/batchRunReports
+      parameters:
+        - $ref: '#/components/parameters/PropertyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requests]
+              properties:
+                requests:
+                  type: array
+                  maxItems: 5
+                  items:
+                    $ref: '#/components/schemas/RunReportRequest'
+      responses:
+        '200':
+          description: BatchRunReportsResponse
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reports:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RunReportResponse'
+                  kind:
+                    type: string
+                    description: Fixed string analyticsData#batchRunReports
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /properties/{propertyId}/metadata:
+    get:
+      tags: [Metadata]
+      operationId: getMetadata
+      summary: Get property metadata
+      description: >-
+        Returns metadata for dimensions and metrics available in reporting
+        methods. Set propertyId to `0` for universal (non-custom) metadata.
+        See
+        https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/properties/getMetadata
+      parameters:
+        - $ref: '#/components/parameters/PropertyId'
+      responses:
+        '200':
+          description: Metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Metadata'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Google OAuth 2.0. Authorize at
+        https://accounts.google.com/o/oauth2/v2/auth ; exchange at
+        https://oauth2.googleapis.com/token . Access token sent as
+        Authorization: Bearer.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts.google.com/o/oauth2/v2/auth
+          tokenUrl: https://oauth2.googleapis.com/token
+          scopes:
+            https://www.googleapis.com/auth/analytics.readonly: View your Google Analytics data
+            https://www.googleapis.com/auth/analytics: View and manage your Google Analytics data
+
+  parameters:
+    PropertyId:
+      name: propertyId
+      in: path
+      required: true
+      description: >-
+        Numeric Google Analytics property id (e.g. `1234`). Use `0` with
+        getMetadata for universal dimensions/metrics. The client also accepts
+        a `properties/{id}` resource name and normalizes it.
+      schema:
+        type: string
+
+  schemas:
+    RunReportRequest:
+      type: object
+      description: >-
+        Request body for runReport. Fields mirror the official RunReportRequest
+        resource; only commonly used fields are expanded here.
+      properties:
+        dimensions:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+        metrics:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              expression: { type: string }
+              invisible: { type: boolean }
+        dateRanges:
+          type: array
+          items:
+            type: object
+            properties:
+              startDate: { type: string }
+              endDate: { type: string }
+              name: { type: string }
+        dimensionFilter:
+          type: object
+          additionalProperties: true
+        metricFilter:
+          type: object
+          additionalProperties: true
+        offset:
+          type: string
+        limit:
+          type: string
+        metricAggregations:
+          type: array
+          items: { type: string }
+        orderBys:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        currencyCode:
+          type: string
+        cohortSpec:
+          type: object
+          additionalProperties: true
+        keepEmptyRows:
+          type: boolean
+        returnPropertyQuota:
+          type: boolean
+        comparisons:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    RunReportResponse:
+      type: object
+      properties:
+        dimensionHeaders:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+        metricHeaders:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              type: { type: string }
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/Row'
+        totals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Row'
+        maximums:
+          type: array
+          items:
+            $ref: '#/components/schemas/Row'
+        minimums:
+          type: array
+          items:
+            $ref: '#/components/schemas/Row'
+        rowCount:
+          type: integer
+        metadata:
+          type: object
+          additionalProperties: true
+        propertyQuota:
+          type: object
+          additionalProperties: true
+        kind:
+          type: string
+
+    Row:
+      type: object
+      properties:
+        dimensionValues:
+          type: array
+          items:
+            type: object
+            properties:
+              value: { type: string }
+              oneValue:
+                type: object
+                additionalProperties: true
+        metricValues:
+          type: array
+          items:
+            type: object
+            properties:
+              value: { type: string }
+              oneValue:
+                type: object
+                additionalProperties: true
+
+    Metadata:
+      type: object
+      properties:
+        name:
+          type: string
+        dimensions:
+          type: array
+          items:
+            type: object
+            properties:
+              apiName: { type: string }
+              uiName: { type: string }
+              description: { type: string }
+              deprecatedApiNames:
+                type: array
+                items: { type: string }
+              category: { type: string }
+        metrics:
+          type: array
+          items:
+            type: object
+            properties:
+              apiName: { type: string }
+              uiName: { type: string }
+              description: { type: string }
+              deprecatedApiNames:
+                type: array
+                items: { type: string }
+              type: { type: string }
+              expression: { type: string }
+              category: { type: string }
+        comparisons:
+          type: array
+          items:
+            type: object
+            properties:
+              apiName: { type: string }
+              uiName: { type: string }
+              description: { type: string }

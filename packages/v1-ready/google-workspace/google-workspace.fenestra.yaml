@@ -1,0 +1,93 @@
+# Fenestra Document: Google Workspace Add-ons (Drive + Calendar)
+#
+# Google Workspace exposes UI extension points via Workspace Add-ons that can
+# host Card Service UIs in Drive and Calendar (and other Workspace hosts).
+# Documented at:
+#   https://developers.google.com/workspace/add-ons/drive
+#   https://developers.google.com/workspace/add-ons/calendar
+#   https://developers.google.com/workspace/add-ons/concepts/workspace-addons
+#
+# Drafted against Fenestra 0.1.0
+# (api-module-library branch claude/fenestra-spec-draft-Q367t).
+# The `@friggframework/api-module-google-workspace` package itself implements
+# the Drive + Calendar REST APIs (OAuth + files/events), not the Add-ons SDK.
+
+fenestra: "0.1.0"
+
+info:
+  title: Google Workspace UI Extensions (Drive + Calendar)
+  version: "1.0.0"
+  description: |
+    Google Workspace Add-ons let developers extend Drive and Calendar with
+    card-based sidebars and contextual UIs that run inside those hosts.
+
+    Surfaces covered (per Google docs):
+    - Drive homepage / item selection contextual triggers
+    - Calendar homepage / event open / event update triggers
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+
+platform:
+  name: Google Workspace
+  vendor: Google LLC
+  documentation: https://developers.google.com/workspace/add-ons/concepts/workspace-addons
+  appMarketplace: https://workspace.google.com/marketplace
+
+sdks:
+  apps-script-card-service:
+    name: Google Apps Script Card Service
+    packageManager: npm
+    package: "@google/clasp"
+    platform: web
+    documentation: https://developers.google.com/apps-script/reference/card-service
+    description: |
+      Server-side Card Service used by Workspace Add-ons to render cards in
+      Drive and Calendar host surfaces. Authored in Apps Script; clasp is the
+      npm tooling commonly used to push projects.
+    exports:
+      CardService:
+        type: utility
+        description: Build card-based UIs for Workspace Add-ons
+
+extensionPoints:
+  - id: drive-homepage
+    name: Drive homepage trigger
+    type: card
+    extensionType: embeddedSdk
+    description: |
+      Workspace Add-on homepage that appears when Drive is open and no
+      specific contextual trigger applies.
+    documentation: https://developers.google.com/workspace/add-ons/drive
+    supportedComponents:
+      - CardService
+
+  - id: drive-item-selected
+    name: Drive items selected
+    type: card
+    extensionType: embeddedSdk
+    description: |
+      Contextual trigger when the user selects one or more Drive items.
+    documentation: https://developers.google.com/workspace/add-ons/drive
+    supportedComponents:
+      - CardService
+
+  - id: calendar-homepage
+    name: Calendar homepage trigger
+    type: card
+    extensionType: embeddedSdk
+    description: |
+      Workspace Add-on homepage when Calendar is open without a contextual event.
+    documentation: https://developers.google.com/workspace/add-ons/calendar
+    supportedComponents:
+      - CardService
+
+  - id: calendar-event-open
+    name: Calendar event open
+    type: card
+    extensionType: embeddedSdk
+    description: |
+      Contextual trigger when the user opens a Calendar event.
+    documentation: https://developers.google.com/workspace/add-ons/calendar
+    supportedComponents:
+      - CardService

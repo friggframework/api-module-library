@@ -26,6 +26,7 @@ jest.mock('jsforce', () => {
     };
 });
 
+const { RateLimitError } = require('@friggframework/core');
 const { Api } = require('../api');
 
 const baseParams = {
@@ -559,5 +560,298 @@ describe('Salesforce Api token refresh', () => {
         await refreshFn(api.conn, callback);
 
         expect(callback).toHaveBeenCalledWith(expect.any(Error));
+    });
+});
+
+describe('Salesforce Api rate limits', () => {
+    const ONE_HOUR_MS = 3_600_000;
+
+    const jsforceError = (errorCode, message) =>
+        Object.assign(new Error(message), { name: errorCode, errorCode });
+    const limitError = () =>
+        jsforceError('REQUEST_LIMIT_EXCEEDED', 'TotalRequests Limit exceeded.');
+    const invalidField = () =>
+        jsforceError('INVALID_FIELD', "No such column 'Nope__c' on Contact");
+    const rejectionOf = (promise) => promise.catch((error) => error);
+
+    const dataMethods = [
+        ['create', (api) => api.create('Contact', { LastName: 'Doe' })],
+        [
+            'update',
+            (api) => api.update('Contact', { Id: '003', LastName: 'D' }),
+        ],
+        ['upsert', (api) => api.upsert('Contact', { LastName: 'Doe' })],
+        ['list', (api) => api.list('Contact', ['003'])],
+        ['find', (api) => api.find('Contact', { LastName: 'Doe' })],
+        ['getGlobalMetadata', (api) => api.getGlobalMetadata()],
+        ['get', (api) => api.get('Contact', '003')],
+        ['delete', (api) => api.delete('Contact', '003')],
+    ];
+
+    let api;
+    let sobject;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        api = new Api({
+            ...baseParams,
+            delegate: { ...baseParams.delegate, name: 'salesforce' },
+        });
+        sobject = {
+            create: jest.fn(),
+            update: jest.fn(),
+            upsert: jest.fn(),
+            retrieve: jest.fn(),
+            find: jest.fn(),
+            del: jest.fn(),
+        };
+        api.conn.sobject = jest.fn(() => sobject);
+        api.conn.describeGlobal = jest.fn();
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+        jest.dontMock('@friggframework/core');
+        delete api.conn.sobject;
+        delete api.conn.describeGlobal;
+    });
+
+    describe('withLimits', () => {
+        const now = Date.parse('2026-09-28T12:00:00Z');
+
+        beforeEach(() => {
+            jest.spyOn(Date, 'now').mockReturnValue(now);
+        });
+
+        it('returns what the call returns', async () => {
+            const result = await api.withLimits(async () => ({ totalSize: 1 }));
+
+            expect(result).toEqual({ totalSize: 1 });
+        });
+
+        it('turns REQUEST_LIMIT_EXCEEDED into a RateLimitError for a daily limit', async () => {
+            const cause = limitError();
+
+            const error = await rejectionOf(
+                api.withLimits(() => Promise.reject(cause))
+            );
+
+            expect(error).toBeInstanceOf(RateLimitError);
+            expect(error).toMatchObject({
+                isRateLimited: true,
+                reason: 'daily',
+                source: 'static',
+                waitMs: ONE_HOUR_MS,
+                module: 'salesforce',
+            });
+            expect(error.cause).toBe(cause);
+            expect(error.retryAt).toEqual(new Date(now + ONE_HOUR_MS));
+        });
+
+        it('names the org instance in the error', async () => {
+            const error = await rejectionOf(
+                api.withLimits(() => Promise.reject(limitError()))
+            );
+
+            expect(error.url).toBe(api.conn.instanceUrl);
+        });
+
+        it.each([
+            ['INVALID_FIELD', invalidField],
+            [
+                'INSUFFICIENT_ACCESS',
+                () => jsforceError('INSUFFICIENT_ACCESS', 'No access'),
+            ],
+            ['no error code', () => new Error('socket hang up')],
+        ])('rethrows %s unchanged', async (_label, build) => {
+            const original = build();
+
+            const error = await rejectionOf(
+                api.withLimits(() => Promise.reject(original))
+            );
+
+            expect(error).toBe(original);
+        });
+
+        it('tells the delegate about the limit before it throws', async () => {
+            const notify = jest.fn().mockResolvedValue(undefined);
+            api._notifyRateLimited = notify;
+
+            const error = await rejectionOf(
+                api.withLimits(() => Promise.reject(limitError()))
+            );
+
+            expect(error).toBeInstanceOf(RateLimitError);
+            expect(notify).toHaveBeenCalledTimes(1);
+            expect(notify).toHaveBeenCalledWith(error);
+        });
+
+        it('does not tell the delegate about an error that is not a limit', async () => {
+            const notify = jest.fn().mockResolvedValue(undefined);
+            api._notifyRateLimited = notify;
+
+            await rejectionOf(
+                api.withLimits(() => Promise.reject(invalidField()))
+            );
+
+            expect(notify).not.toHaveBeenCalled();
+        });
+
+        it('still throws the RateLimitError on a core that cannot notify', async () => {
+            api._notifyRateLimited = undefined;
+
+            const error = await rejectionOf(
+                api.withLimits(() => Promise.reject(limitError()))
+            );
+
+            expect(error).toBeInstanceOf(RateLimitError);
+        });
+
+        it.each([
+            'ConcurrentPerOrgLongTxn Concurrent API Request Limit exceeded',
+            'Concurrent requests limit exceeded.',
+        ])(
+            'reports %j as a concurrency limit, which clears in seconds',
+            async (message) => {
+                const error = await rejectionOf(
+                    api.withLimits(() =>
+                        Promise.reject(
+                            jsforceError('REQUEST_LIMIT_EXCEEDED', message)
+                        )
+                    )
+                );
+
+                expect(error).toMatchObject({
+                    reason: 'concurrency',
+                    source: 'static',
+                    waitMs: 30_000,
+                });
+                expect(error.retryAt).toEqual(new Date(now + 30_000));
+            }
+        );
+
+        it('reports any other REQUEST_LIMIT_EXCEEDED message as a daily limit', async () => {
+            const error = await rejectionOf(
+                api.withLimits(() =>
+                    Promise.reject(
+                        jsforceError('REQUEST_LIMIT_EXCEEDED', 'Something new')
+                    )
+                )
+            );
+
+            expect(error).toMatchObject({
+                reason: 'daily',
+                waitMs: ONE_HOUR_MS,
+            });
+        });
+
+        it('links the concurrency reason to the Salesforce API request limits too', () => {
+            expect(Api.rateLimit.userHints.concurrency.links).toEqual(
+                Api.rateLimit.userHints.daily.links
+            );
+        });
+
+        it('rethrows the original error on a core without the rate-limit exports', async () => {
+            let OldCoreApi;
+            jest.isolateModules(() => {
+                jest.doMock('@friggframework/core', () => {
+                    const {
+                        RateLimitError: _error,
+                        classifyRateLimit: _classify,
+                        ...rest
+                    } = jest.requireActual('@friggframework/core');
+                    return rest;
+                });
+                OldCoreApi = require('../api').Api;
+            });
+            const oldApi = new OldCoreApi({
+                ...baseParams,
+                delegate: { ...baseParams.delegate, name: 'salesforce' },
+            });
+            const cause = limitError();
+
+            const error = await rejectionOf(
+                oldApi.withLimits(() => Promise.reject(cause))
+            );
+
+            expect(error).toBe(cause);
+        });
+
+        it('links the daily reason to the Salesforce API request limits', () => {
+            expect(Api.rateLimit.userHints.daily.links).toEqual([
+                {
+                    label: expect.any(String),
+                    url: 'https://developer.salesforce.com/docs/platform/salesforce-app-limits-cheatsheet/guide/salesforce-app-limits-platform-api.html',
+                },
+            ]);
+        });
+    });
+
+    describe('the data methods', () => {
+        it.each(dataMethods)(
+            '%s raises a RateLimitError when Salesforce reports REQUEST_LIMIT_EXCEEDED',
+            async (_name, invoke) => {
+                const cause = limitError();
+                Object.values(sobject).forEach((fn) =>
+                    fn.mockRejectedValue(cause)
+                );
+                api.conn.describeGlobal.mockRejectedValue(cause);
+
+                const error = await rejectionOf(invoke(api));
+
+                expect(error).toBeInstanceOf(RateLimitError);
+                expect(error.cause).toBe(cause);
+            }
+        );
+
+        it.each(dataMethods)(
+            '%s rethrows any other Salesforce error unchanged',
+            async (_name, invoke) => {
+                const original = invalidField();
+                Object.values(sobject).forEach((fn) =>
+                    fn.mockRejectedValue(original)
+                );
+                api.conn.describeGlobal.mockRejectedValue(original);
+
+                const error = await rejectionOf(invoke(api));
+
+                expect(error).toBe(original);
+            }
+        );
+
+        it('create passes its arguments to jsforce and returns the result', async () => {
+            sobject.create.mockResolvedValue({ id: '003', success: true });
+
+            const result = await api.create('Contact', { LastName: 'Doe' });
+
+            expect(api.conn.sobject).toHaveBeenCalledWith('Contact');
+            expect(sobject.create).toHaveBeenCalledWith({ LastName: 'Doe' });
+            expect(result).toEqual({ id: '003', success: true });
+        });
+
+        it('find passes its arguments to jsforce and returns the result', async () => {
+            sobject.find.mockResolvedValue([{ Id: '003' }]);
+
+            const result = await api.find(
+                'Contact',
+                { LastName: 'Doe' },
+                { Id: 1 },
+                { limit: 5 }
+            );
+
+            expect(sobject.find).toHaveBeenCalledWith(
+                { LastName: 'Doe' },
+                { Id: 1 },
+                { limit: 5 }
+            );
+            expect(result).toEqual([{ Id: '003' }]);
+        });
+    });
+
+    it('declares a rolling 24 hour limit per org', () => {
+        expect(Api.rateLimit).toMatchObject({
+            scope: 'entity',
+            windows: [{ name: 'daily', rollingMs: 86_400_000 }],
+        });
     });
 });

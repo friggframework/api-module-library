@@ -39,6 +39,54 @@ declare module '@friggframework/core' {
     headers?: Record<string, string>;
   }
 
+  export type RateLimitScope =
+    | "credential"
+    | "entity"
+    | "app"
+    | ((requester: OAuth2Requester) => string | number | null | undefined);
+
+  export type RateLimitSignal = {
+    status?: number;
+    headers?: { get(name: string): string | null } | object;
+    body?: unknown;
+  };
+
+  export type RateLimitWindow = {
+    name: string;
+    limit?: number;
+    perMs?: number;
+    rollingMs?: number;
+    resets?: { at: string; tz: string };
+  };
+
+  export type RateLimitHint = {
+    retryAt: Date;
+    waitMs: number;
+    reason: "burst" | "daily" | "monthly" | "concurrency" | "unknown";
+    policy?: string;
+    remaining?: number;
+    source: "header" | "body" | "static" | "backoff";
+  };
+
+  export type RateLimitPolicy = {
+    scope?: RateLimitScope;
+    windows?: RateLimitWindow[];
+    maxConcurrency?: number;
+    minRetryAfterMs?: number;
+    maxInProcessWaitMs?: number;
+    parsers?: Array<"retryAfter" | "resetHeaders" | "ietf">;
+    classify?(signal: RateLimitSignal):
+      | (Partial<Omit<RateLimitHint, "source">> & {
+          source?: "header" | "body" | "static";
+        })
+      | null
+      | undefined;
+    userHints?: Record<
+      string,
+      { links?: Array<{ label: string; url: string }> }
+    >;
+  };
+
   export class OAuth2Requester {
     access_token: string | null;
     refresh_token: string | null;

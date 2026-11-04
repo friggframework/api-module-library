@@ -1,0 +1,308 @@
+{
+  "schema": "capability-manifest/v0.1",
+  "module": "chargebee",
+  "package": "@friggframework/api-module-chargebee",
+  "version": "1.0.0",
+  "auth": {
+    "type": "http_basic",
+    "scheme": "basic",
+    "usernameField": "api_key",
+    "password": "",
+    "notes": "Chargebee HTTP Basic: API key as username, empty password. Scoped to site subdomain in the base URL https://{site}.chargebee.com/api/v2.",
+    "identityMethod": "site subdomain from auth form",
+    "entityKey": "site",
+    "credentialFields": ["api_key", "site"],
+    "docs": "https://apidocs.chargebee.com/docs/api/auth?prod_cat_ver=2"
+  },
+  "objects": {
+    "customer": {
+      "methods": [
+        "listCustomers",
+        "getCustomer",
+        "createCustomer",
+        "updateCustomer"
+      ],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "email", "tags": ["pii", "contact"] },
+        { "name": "first_name", "tags": ["pii", "contact"] },
+        { "name": "last_name", "tags": ["pii", "contact"] },
+        { "name": "company", "tags": ["display", "company"] },
+        { "name": "phone", "tags": ["pii", "contact"] },
+        { "name": "auto_collection", "tags": ["lifecycle"] },
+        { "name": "preferred_currency_code", "tags": ["money"] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] },
+        { "name": "business_entity_id", "tags": ["relation"] }
+      ]
+    },
+    "subscription": {
+      "methods": ["listSubscriptions", "getSubscription"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "customer_id", "tags": ["relation", "customer"] },
+        { "name": "status", "tags": ["lifecycle"] },
+        { "name": "currency_code", "tags": ["money"] },
+        { "name": "current_term_start", "tags": ["timestamp"] },
+        { "name": "current_term_end", "tags": ["timestamp"] },
+        { "name": "trial_start", "tags": ["timestamp"] },
+        { "name": "trial_end", "tags": ["timestamp"] },
+        { "name": "next_billing_at", "tags": ["timestamp"] },
+        { "name": "cancelled_at", "tags": ["timestamp"] },
+        { "name": "created_at", "tags": ["timestamp"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ]
+    },
+    "invoice": {
+      "methods": ["listInvoices", "getInvoice"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "customer_id", "tags": ["relation", "customer"] },
+        { "name": "subscription_id", "tags": ["relation", "subscription"] },
+        { "name": "status", "tags": ["lifecycle"] },
+        { "name": "currency_code", "tags": ["money"] },
+        { "name": "total", "tags": ["money"] },
+        { "name": "amount_due", "tags": ["money"] },
+        { "name": "amount_paid", "tags": ["money"] },
+        { "name": "date", "tags": ["timestamp"] },
+        { "name": "due_date", "tags": ["timestamp"] },
+        { "name": "paid_at", "tags": ["timestamp"] },
+        { "name": "recurring", "tags": ["lifecycle"] }
+      ]
+    },
+    "transaction": {
+      "methods": ["listTransactions", "getTransaction"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "customer_id", "tags": ["relation", "customer"] },
+        { "name": "subscription_id", "tags": ["relation", "subscription"] },
+        { "name": "type", "tags": ["enum"] },
+        { "name": "status", "tags": ["lifecycle"] },
+        { "name": "amount", "tags": ["money"] },
+        { "name": "currency_code", "tags": ["money"] },
+        { "name": "payment_method", "tags": ["enum"] },
+        { "name": "gateway", "tags": ["display"] },
+        { "name": "date", "tags": ["timestamp"] },
+        { "name": "settled_at", "tags": ["timestamp"] }
+      ]
+    },
+    "item": {
+      "methods": ["listItems", "getItem"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "name", "tags": ["display"] },
+        { "name": "external_name", "tags": ["display"] },
+        { "name": "type", "tags": ["enum"] },
+        { "name": "status", "tags": ["lifecycle"] },
+        { "name": "item_family_id", "tags": ["relation"] },
+        { "name": "enabled_for_checkout", "tags": ["lifecycle"] },
+        { "name": "updated_at", "tags": ["timestamp"] }
+      ]
+    },
+    "item_price": {
+      "methods": ["listItemPrices", "getItemPrice"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "item_id", "tags": ["relation", "item"] },
+        { "name": "name", "tags": ["display"] },
+        { "name": "pricing_model", "tags": ["enum"] },
+        { "name": "price", "tags": ["money"] },
+        { "name": "currency_code", "tags": ["money"] },
+        { "name": "period", "tags": ["lifecycle"] },
+        { "name": "period_unit", "tags": ["enum"] },
+        { "name": "status", "tags": ["lifecycle"] }
+      ]
+    },
+    "event": {
+      "methods": ["listEvents", "getEvent"],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "event_type", "tags": ["enum", "webhook"] },
+        { "name": "occurred_at", "tags": ["timestamp"] },
+        { "name": "source", "tags": ["enum"] },
+        { "name": "user", "tags": ["display"] },
+        { "name": "site_id", "tags": ["identifier", "account"] },
+        { "name": "content", "tags": ["freeform"] }
+      ]
+    },
+    "webhook_endpoint": {
+      "methods": [
+        "listWebhookEndpoints",
+        "getWebhookEndpoint",
+        "createWebhookEndpoint",
+        "updateWebhookEndpoint",
+        "deleteWebhookEndpoint"
+      ],
+      "fields": [
+        { "name": "id", "tags": ["identifier"] },
+        { "name": "name", "tags": ["display"] },
+        { "name": "url", "tags": ["url"] },
+        { "name": "disabled", "tags": ["lifecycle"] },
+        { "name": "primary_url", "tags": ["lifecycle"] },
+        { "name": "api_version", "tags": ["enum"] },
+        { "name": "enabled_events", "tags": ["enum", "webhook"] }
+      ]
+    }
+  },
+  "capabilities": {
+    "billing.customer.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listCustomers"
+      },
+      "spec": {
+        "kind": "openapi",
+        "ref": "./chargebee.openapi.yaml#/paths/~1customers/get"
+      }
+    },
+    "billing.customer.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getCustomer"
+      }
+    },
+    "billing.customer.create": {
+      "surface": "data-write",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.createCustomer"
+      }
+    },
+    "billing.customer.update": {
+      "surface": "data-write",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.updateCustomer"
+      }
+    },
+    "billing.subscription.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listSubscriptions"
+      }
+    },
+    "billing.subscription.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getSubscription"
+      }
+    },
+    "billing.invoice.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listInvoices"
+      }
+    },
+    "billing.invoice.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getInvoice"
+      }
+    },
+    "billing.transaction.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listTransactions"
+      }
+    },
+    "billing.transaction.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getTransaction"
+      }
+    },
+    "billing.item.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listItems"
+      }
+    },
+    "billing.item.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getItem"
+      }
+    },
+    "billing.item_price.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listItemPrices"
+      }
+    },
+    "billing.item_price.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getItemPrice"
+      }
+    },
+    "billing.event.list": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listEvents"
+      }
+    },
+    "billing.event.get": {
+      "surface": "data-read",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getEvent"
+      }
+    },
+    "billing.webhook_endpoint.list": {
+      "surface": "webhook-source",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.listWebhookEndpoints"
+      }
+    },
+    "billing.webhook_endpoint.get": {
+      "surface": "webhook-source",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.getWebhookEndpoint"
+      }
+    },
+    "billing.webhook_endpoint.create": {
+      "surface": "webhook-source",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.createWebhookEndpoint"
+      }
+    },
+    "billing.webhook_endpoint.update": {
+      "surface": "webhook-source",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.updateWebhookEndpoint"
+      }
+    },
+    "billing.webhook_endpoint.delete": {
+      "surface": "webhook-source",
+      "implementedBy": {
+        "kind": "api-class-method",
+        "ref": "Api.deleteWebhookEndpoint"
+      }
+    },
+    "billing.webhook.receive": {
+      "surface": "webhook-source",
+      "implementedBy": {
+        "kind": "extension",
+        "ref": "extensions.webhooks",
+        "extensionEvent": "CHARGEBEE_WEBHOOK"
+      }
+    }
+  }
+}

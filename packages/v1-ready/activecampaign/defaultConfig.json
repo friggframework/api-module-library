@@ -1,0 +1,20 @@
+{
+    "name": "activecampaign",
+    "label": "ActiveCampaign",
+    "productUrl": "https://www.activecampaign.com",
+    "apiDocs": "https://developers.activecampaign.com",
+    "logoUrl": "https://friggframework.org/assets/img/activecampaign-icon.jpeg",
+    "categories": [
+        "Marketing Automation",
+        "Email Marketing",
+        "CRM"
+    ],
+    "description": "ActiveCampaign gives you the email marketing, marketing automation, and CRM tools you need to create incredible customer experiences.",
+    "config": {
+        "apiKey": true,
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

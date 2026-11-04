@@ -1,0 +1,777 @@
+openapi: 3.0.3
+info:
+  title: ActiveCampaign API v3 (Frigg subset)
+  version: "3"
+  description: >-
+    Curated subset of ActiveCampaign's official API v3 covering the endpoints
+    implemented by @friggframework/api-module-activecampaign. Source of truth:
+    https://developers.activecampaign.com/ — never invent paths or fields.
+    The account-specific base URL comes from Settings → Developer; the
+    placeholder host below matches the client's default `baseUrl`.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://youraccountname.api-us1.com/api/3
+    description: >-
+      Account-specific ActiveCampaign API v3 base. Replace the host with the
+      API Access URL from Settings → Developer (docs do not guarantee api-us1.com
+      for every account).
+security:
+  - ApiTokenAuth: []
+tags:
+  - name: Users
+  - name: Contacts
+  - name: Accounts
+  - name: AccountContacts
+  - name: Tags
+  - name: ContactTags
+  - name: Webhooks
+  - name: Import
+paths:
+  /users/me:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Retrieve logged-in user
+      description: >-
+        Returns the user that owns the API key.
+        https://developers.activecampaign.com/reference/get-user-loggedin
+      responses:
+        "200":
+          description: Logged-in user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+
+  /contacts:
+    get:
+      tags: [Contacts]
+      operationId: listContacts
+      summary: List, search, and filter contacts
+      description: https://developers.activecampaign.com/reference/list-all-contacts
+      parameters:
+        - in: query
+          name: email
+          schema: { type: string, format: email }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: integer }
+        - in: query
+          name: listid
+          schema: { type: integer }
+        - in: query
+          name: tagid
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer, maximum: 100, default: 20 }
+        - in: query
+          name: offset
+          schema: { type: integer, default: 0 }
+        - in: query
+          name: id_greater
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Contact list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contacts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Contact"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+    post:
+      tags: [Contacts]
+      operationId: createContact
+      summary: Create a contact
+      description: https://developers.activecampaign.com/reference/create-a-new-contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contact]
+              properties:
+                contact:
+                  $ref: "#/components/schemas/ContactWrite"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contact:
+                    $ref: "#/components/schemas/Contact"
+
+  /contacts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Contacts]
+      operationId: getContact
+      summary: Retrieve a contact
+      description: https://developers.activecampaign.com/reference/get-contact
+      responses:
+        "200":
+          description: Contact
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contact:
+                    $ref: "#/components/schemas/Contact"
+    put:
+      tags: [Contacts]
+      operationId: updateContact
+      summary: Update a contact
+      description: https://developers.activecampaign.com/reference/update-a-contact-new
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contact]
+              properties:
+                contact:
+                  $ref: "#/components/schemas/ContactWrite"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contact:
+                    $ref: "#/components/schemas/Contact"
+    delete:
+      tags: [Contacts]
+      operationId: deleteContact
+      summary: Delete a contact
+      description: https://developers.activecampaign.com/reference/delete-contact
+      responses:
+        "200":
+          description: Deleted (empty object)
+
+  /import/bulk_import:
+    post:
+      tags: [Import]
+      operationId: bulkContactImport
+      summary: Bulk import contacts (async)
+      description: https://developers.activecampaign.com/reference/bulk-import-contacts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Import accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batchId:
+                    type: string
+
+  /accounts:
+    get:
+      tags: [Accounts]
+      operationId: listAccounts
+      summary: List all accounts
+      description: https://developers.activecampaign.com/reference/list-all-accounts
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: count_deals
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Account list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accounts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Account"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+    post:
+      tags: [Accounts]
+      operationId: createAccount
+      summary: Create an account
+      description: https://developers.activecampaign.com/reference/create-an-account-new
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [account]
+              properties:
+                account:
+                  $ref: "#/components/schemas/AccountWrite"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account:
+                    $ref: "#/components/schemas/Account"
+
+  /accounts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Accounts]
+      operationId: getAccount
+      summary: Retrieve an account
+      description: https://developers.activecampaign.com/reference/retrieve-an-account
+      responses:
+        "200":
+          description: Account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account:
+                    $ref: "#/components/schemas/Account"
+    put:
+      tags: [Accounts]
+      operationId: updateAccount
+      summary: Update an account
+      description: https://developers.activecampaign.com/reference/update-an-account-new
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [account]
+              properties:
+                account:
+                  $ref: "#/components/schemas/AccountWrite"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account:
+                    $ref: "#/components/schemas/Account"
+
+  /accounts/bulk_delete:
+    post:
+      tags: [Accounts]
+      operationId: bulkDeleteAccounts
+      summary: Bulk delete accounts
+      description: >-
+        https://developers.activecampaign.com/reference/bulk-delete-accounts
+        Query: ids[]=… (repeated). Single-account DELETE is not offered.
+      parameters:
+        - in: query
+          name: ids
+          description: Account ids to delete. Serialized as repeated `ids[]`.
+          schema:
+            type: array
+            items: { type: integer }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Deleted
+
+  /accountContacts:
+    get:
+      tags: [AccountContacts]
+      operationId: listAccountContacts
+      summary: List account–contact associations
+      description: https://developers.activecampaign.com/reference/list-all-associations-1
+      responses:
+        "200":
+          description: Associations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountContacts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AccountContact"
+    post:
+      tags: [AccountContacts]
+      operationId: createAccountContact
+      summary: Create an account–contact association
+      description: https://developers.activecampaign.com/reference/create-an-account-1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountContact]
+              properties:
+                accountContact:
+                  $ref: "#/components/schemas/AccountContactWrite"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountContact:
+                    $ref: "#/components/schemas/AccountContact"
+
+  /accountContacts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [AccountContacts]
+      operationId: getAccountContact
+      summary: Retrieve an association
+      description: https://developers.activecampaign.com/reference/retrieve-an-association
+      responses:
+        "200":
+          description: Association
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountContact:
+                    $ref: "#/components/schemas/AccountContact"
+    put:
+      tags: [AccountContacts]
+      operationId: updateAccountContact
+      summary: Update an association
+      description: https://developers.activecampaign.com/reference/update-an-association-1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountContact]
+              properties:
+                accountContact:
+                  $ref: "#/components/schemas/AccountContactWrite"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      tags: [AccountContacts]
+      operationId: deleteAccountContact
+      summary: Delete an association
+      description: https://developers.activecampaign.com/reference/delete-an-association-1
+      responses:
+        "200":
+          description: Deleted
+
+  /tags:
+    get:
+      tags: [Tags]
+      operationId: listTags
+      summary: List all tags
+      description: https://developers.activecampaign.com/reference/retrieve-all-tags
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [contact, template]
+            default: contact
+      responses:
+        "200":
+          description: Tags
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tags:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Tag"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+    post:
+      tags: [Tags]
+      operationId: createTag
+      summary: Create a tag
+      description: https://developers.activecampaign.com/reference/create-a-new-tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tag]
+              properties:
+                tag:
+                  $ref: "#/components/schemas/TagWrite"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tag:
+                    $ref: "#/components/schemas/Tag"
+
+  /tags/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    delete:
+      tags: [Tags]
+      operationId: deleteTag
+      summary: Delete a tag
+      description: https://developers.activecampaign.com/reference/delete-a-tag
+      responses:
+        "200":
+          description: Deleted
+
+  /contactTags:
+    post:
+      tags: [ContactTags]
+      operationId: createContactTag
+      summary: Add a tag to a contact
+      description: https://developers.activecampaign.com/reference/create-contact-tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contactTag]
+              properties:
+                contactTag:
+                  type: object
+                  required: [contact, tag]
+                  properties:
+                    contact:
+                      type: integer
+                      description: Contact id
+                    tag:
+                      type: integer
+                      description: Tag id (from GET /tags)
+      responses:
+        "201":
+          description: Created
+
+  /contactTags/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    delete:
+      tags: [ContactTags]
+      operationId: deleteContactTag
+      summary: Remove a tag from a contact
+      description: https://developers.activecampaign.com/reference/remove-a-contacts-tag
+      responses:
+        "200":
+          description: Deleted
+
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List all webhooks
+      description: https://developers.activecampaign.com/reference/get-a-list-of-webhooks
+      parameters:
+        - in: query
+          name: filters[name]
+          schema: { type: string }
+        - in: query
+          name: filters[url]
+          schema: { type: string }
+        - in: query
+          name: filters[listid]
+          schema: { type: string }
+      responses:
+        "200":
+          description: Webhooks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Webhook"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a webhook
+      description: https://developers.activecampaign.com/reference/create-webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhook]
+              properties:
+                webhook:
+                  $ref: "#/components/schemas/WebhookWrite"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhook:
+                    $ref: "#/components/schemas/Webhook"
+
+  /webhooks/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Retrieve a webhook
+      description: https://developers.activecampaign.com/reference/get-webhook
+      responses:
+        "200":
+          description: Webhook
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhook:
+                    $ref: "#/components/schemas/Webhook"
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update a webhook
+      description: https://developers.activecampaign.com/reference/update-webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webhook]
+              properties:
+                webhook:
+                  $ref: "#/components/schemas/WebhookWrite"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhook:
+                    $ref: "#/components/schemas/Webhook"
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook
+      description: https://developers.activecampaign.com/reference/delete-webhook
+      responses:
+        "200":
+          description: Deleted
+
+components:
+  securitySchemes:
+    ApiTokenAuth:
+      type: apiKey
+      in: header
+      name: Api-Token
+      description: >-
+        API Access Key from Settings → Developer.
+        https://developers.activecampaign.com/reference/authentication
+  parameters:
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    Meta:
+      type: object
+      properties:
+        total:
+          type: string
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        username: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+    Contact:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        firstName: { type: string }
+        lastName: { type: string }
+        phone: { type: string }
+        cdate: { type: string }
+        udate: { type: string }
+    ContactWrite:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        firstName: { type: string }
+        lastName: { type: string }
+        phone: { type: string }
+        fieldValues:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              value: {}
+        tags:
+          type: array
+          items: { type: string }
+    Account:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        accountUrl: { type: string }
+        createdTimestamp: { type: string }
+        updatedTimestamp: { type: string }
+    AccountWrite:
+      type: object
+      properties:
+        name: { type: string }
+        accountUrl: { type: string }
+        owner: { type: integer }
+        fields:
+          type: array
+          items:
+            type: object
+            properties:
+              customFieldId: { type: integer }
+              fieldValue: {}
+              fieldCurrency: { type: string }
+    AccountContact:
+      type: object
+      properties:
+        id: { type: string }
+        account: { type: integer }
+        contact: { type: integer }
+        jobTitle: { type: string }
+        createdTimestamp: { type: string }
+        updatedTimestamp: { type: string }
+    AccountContactWrite:
+      type: object
+      required: [account, contact]
+      properties:
+        account: { type: integer }
+        contact: { type: integer }
+        jobTitle: { type: string }
+    Tag:
+      type: object
+      properties:
+        id: { type: string }
+        tag: { type: string }
+        tagType:
+          type: string
+          enum: [contact, template]
+        description: { type: string }
+        cdate: { type: string }
+    TagWrite:
+      type: object
+      required: [tag, tagType]
+      properties:
+        tag: { type: string }
+        tagType:
+          type: string
+          enum: [contact, template]
+        description: { type: string }
+    Webhook:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        url: { type: string }
+        listid: { type: string }
+        cdate: { type: string }
+        events:
+          type: array
+          items: { type: string }
+        sources:
+          type: array
+          items: { type: string }
+        headers:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              value: { type: string }
+              is_signature: { type: boolean }
+    WebhookWrite:
+      type: object
+      required: [name, url, events, sources]
+      properties:
+        name: { type: string }
+        url: { type: string }
+        events:
+          type: array
+          items: { type: string }
+        sources:
+          type: array
+          items: { type: string }
+        listid: { type: integer }
+        headers:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              value: { type: string }
+              is_signature: { type: boolean }

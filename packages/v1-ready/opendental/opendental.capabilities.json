@@ -1,0 +1,478 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "opendental",
+  "label": "Open Dental",
+  "package": "@friggframework/api-module-opendental",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "objects": {
+    "preference": {
+      "label": "Preference",
+      "fields": [
+        { "name": "PrefNum", "type": "id", "readOnly": true },
+        { "name": "PrefName", "type": "string", "tag": "record.name" },
+        { "name": "ValueString", "type": "string" }
+      ],
+      "sync": {
+        "id": "PrefNum",
+        "list": { "capability": "preference.list" }
+      }
+    },
+    "clinic": {
+      "label": "Clinic",
+      "fields": [
+        { "name": "ClinicNum", "type": "id", "readOnly": true },
+        { "name": "Description", "type": "string", "tag": "org.name" },
+        { "name": "Abbr", "type": "string" },
+        { "name": "Phone", "type": "string", "tag": "org.phone" },
+        { "name": "Address", "type": "string" },
+        { "name": "City", "type": "string" },
+        { "name": "State", "type": "string" },
+        { "name": "Zip", "type": "string" }
+      ],
+      "sync": {
+        "id": "ClinicNum",
+        "list": { "capability": "clinic.list" }
+      }
+    },
+    "patient": {
+      "label": "Patient",
+      "fields": [
+        { "name": "PatNum", "type": "id", "readOnly": true },
+        { "name": "LName", "type": "string", "tag": "person.lastName" },
+        { "name": "FName", "type": "string", "tag": "person.firstName" },
+        { "name": "Email", "type": "email", "tag": "person.email" },
+        { "name": "WirelessPhone", "type": "string", "tag": "person.phone" },
+        { "name": "Birthdate", "type": "date" },
+        { "name": "PatStatus", "type": "string" },
+        { "name": "ClinicNum", "type": "integer" },
+        { "name": "EstBalance", "type": "number" }
+      ],
+      "sync": {
+        "id": "PatNum",
+        "list": { "capability": "patient.list" },
+        "get": { "capability": "patient.get", "id": "patNum" },
+        "create": { "capability": "patient.create" },
+        "update": { "capability": "patient.update", "id": "patNum", "body": "data" }
+      }
+    },
+    "appointment": {
+      "label": "Appointment",
+      "fields": [
+        { "name": "AptNum", "type": "id", "readOnly": true },
+        { "name": "PatNum", "type": "integer", "tag": "record.parentId" },
+        { "name": "AptStatus", "type": "string", "tag": "job.status" },
+        { "name": "AptDateTime", "type": "datetime", "tag": "job.start" },
+        { "name": "ProvNum", "type": "integer" },
+        { "name": "ClinicNum", "type": "integer" },
+        { "name": "Note", "type": "text" }
+      ],
+      "sync": {
+        "id": "AptNum",
+        "list": { "capability": "appointment.list" },
+        "get": { "capability": "appointment.get", "id": "aptNum" },
+        "create": { "capability": "appointment.create" },
+        "update": { "capability": "appointment.update", "id": "aptNum", "body": "data" }
+      }
+    },
+    "procedureLog": {
+      "label": "Procedure Log",
+      "fields": [
+        { "name": "ProcNum", "type": "id", "readOnly": true },
+        { "name": "PatNum", "type": "integer", "tag": "record.parentId" },
+        { "name": "ProcDate", "type": "date" },
+        { "name": "ProcStatus", "type": "string" },
+        { "name": "ProcFee", "type": "number" }
+      ],
+      "sync": {
+        "id": "ProcNum",
+        "list": { "capability": "procedureLog.list" },
+        "get": { "capability": "procedureLog.get", "id": "procNum" }
+      }
+    },
+    "statement": {
+      "label": "Statement",
+      "fields": [
+        { "name": "StatementNum", "type": "id", "readOnly": true },
+        { "name": "PatNum", "type": "integer", "tag": "record.parentId" },
+        { "name": "DateSent", "type": "date" },
+        { "name": "IsSent", "type": "boolean" },
+        { "name": "BalTotal", "type": "number" }
+      ],
+      "sync": {
+        "id": "StatementNum",
+        "list": { "capability": "statement.list" },
+        "get": { "capability": "statement.get", "id": "statementNum" }
+      }
+    },
+    "payment": {
+      "label": "Payment",
+      "fields": [
+        { "name": "PayNum", "type": "id", "readOnly": true },
+        { "name": "PatNum", "type": "integer", "tag": "record.parentId" },
+        { "name": "PayAmt", "type": "number", "tag": "payment.amount" },
+        { "name": "PayDate", "type": "date" },
+        { "name": "PayType", "type": "integer" },
+        { "name": "ClinicNum", "type": "integer" }
+      ],
+      "sync": {
+        "id": "PayNum",
+        "list": { "capability": "payment.list" },
+        "create": { "capability": "payment.create" },
+        "update": { "capability": "payment.update", "id": "payNum", "body": "data" }
+      }
+    },
+    "claim": {
+      "label": "Claim",
+      "fields": [
+        { "name": "ClaimNum", "type": "id", "readOnly": true },
+        { "name": "PatNum", "type": "integer", "tag": "record.parentId" },
+        { "name": "ClaimStatus", "type": "string" },
+        { "name": "ClaimType", "type": "string" },
+        { "name": "ClaimFee", "type": "number" },
+        { "name": "DateService", "type": "date" }
+      ],
+      "sync": {
+        "id": "ClaimNum",
+        "list": { "capability": "claim.list" },
+        "get": { "capability": "claim.get", "id": "claimNum" }
+      }
+    },
+    "insPlan": {
+      "label": "Insurance Plan",
+      "fields": [
+        { "name": "PlanNum", "type": "id", "readOnly": true },
+        { "name": "GroupName", "type": "string", "tag": "org.name" },
+        { "name": "GroupNum", "type": "string" },
+        { "name": "PlanType", "type": "string" },
+        { "name": "CarrierNum", "type": "integer" }
+      ],
+      "sync": {
+        "id": "PlanNum",
+        "list": { "capability": "insPlan.list" },
+        "get": { "capability": "insPlan.get", "id": "planNum" }
+      }
+    },
+    "subscription": {
+      "label": "API Event Subscription",
+      "fields": [
+        { "name": "SubscriptionNum", "type": "id", "readOnly": true },
+        { "name": "EndPointUrl", "type": "string" },
+        { "name": "Workstation", "type": "string" },
+        { "name": "WatchTable", "type": "string" },
+        { "name": "UiEventType", "type": "string" },
+        { "name": "PollingSeconds", "type": "integer" }
+      ],
+      "sync": {
+        "id": "SubscriptionNum",
+        "list": { "capability": "subscription.list" },
+        "create": { "capability": "subscription.create" },
+        "update": { "capability": "subscription.update", "id": "subscriptionNum", "body": "data" },
+        "delete": { "capability": "subscription.delete", "id": "subscriptionNum" }
+      }
+    }
+  },
+  "events": {
+    "WatchTable": {
+      "delivery": "webhook",
+      "object": "subscription",
+      "description": "Database table change event (Event-Type: WatchTable: {Table}). Body is an array of changed rows.",
+      "payload": {
+        "customerKey": "string",
+        "eventType": "string",
+        "workstation": "string",
+        "body": "array"
+      },
+      "match": "WatchTable"
+    },
+    "UiEventType": {
+      "delivery": "webhook",
+      "object": "subscription",
+      "description": "UI action event (Event-Type: UiEventType: {Type}). Body is a single object.",
+      "payload": {
+        "customerKey": "string",
+        "eventType": "string",
+        "workstation": "string",
+        "body": "object"
+      },
+      "match": "UiEventType"
+    }
+  },
+  "webhook": {
+    "scope": "customerKey",
+    "topic": "{{headers.Event-Type}}",
+    "eventId": "{{headers.Event-Type}}:{{headers.Workstation}}",
+    "account": "{{headers.Authorization}}",
+    "verify": "verifyOpenDentalEvent",
+    "note": "Subscriptions via POST /subscriptions. Inbound events send Customer API Key in Authorization (no HMAC). Docs: https://www.opendental.com/site/apievents.html"
+  },
+  "capabilities": {
+    "preference.list": {
+      "kind": "read",
+      "method": "listPreferences",
+      "input": {
+        "PrefName": { "type": "string" },
+        "Offset": { "type": "number" }
+      },
+      "output": "page<preference>"
+    },
+    "clinic.list": {
+      "kind": "read",
+      "method": "listClinics",
+      "input": { "Offset": { "type": "number" } },
+      "output": "page<clinic>"
+    },
+    "patient.list": {
+      "kind": "read",
+      "method": "listPatients",
+      "input": {
+        "LName": { "type": "string" },
+        "FName": { "type": "string" },
+        "Offset": { "type": "number" },
+        "Limit": { "type": "number" }
+      },
+      "output": "page<patient>"
+    },
+    "patient.listSimple": {
+      "kind": "read",
+      "method": "listPatientsSimple",
+      "input": {
+        "LName": { "type": "string" },
+        "FName": { "type": "string" },
+        "Offset": { "type": "number" }
+      },
+      "output": "page<patient>"
+    },
+    "patient.get": {
+      "kind": "read",
+      "method": "getPatient",
+      "input": { "patNum": { "type": "number", "required": true } },
+      "output": "patient",
+      "args": ["patNum"]
+    },
+    "patient.create": {
+      "kind": "write",
+      "method": "createPatient",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "patient",
+      "args": ["data"]
+    },
+    "patient.update": {
+      "kind": "write",
+      "method": "updatePatient",
+      "input": {
+        "patNum": { "type": "number", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "patient",
+      "args": ["patNum", "data"]
+    },
+    "patient.balances": {
+      "kind": "read",
+      "method": "getPatientBalances",
+      "input": { "patNum": { "type": "number", "required": true } },
+      "output": "object",
+      "args": ["patNum"]
+    },
+    "appointment.list": {
+      "kind": "read",
+      "method": "listAppointments",
+      "input": {
+        "PatNum": { "type": "number" },
+        "dateStart": { "type": "string" },
+        "dateEnd": { "type": "string" },
+        "ClinicNum": { "type": "number" },
+        "Offset": { "type": "number" }
+      },
+      "output": "page<appointment>"
+    },
+    "appointment.get": {
+      "kind": "read",
+      "method": "getAppointment",
+      "input": { "aptNum": { "type": "number", "required": true } },
+      "output": "appointment",
+      "args": ["aptNum"]
+    },
+    "appointment.create": {
+      "kind": "write",
+      "method": "createAppointment",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "appointment",
+      "args": ["data"]
+    },
+    "appointment.update": {
+      "kind": "write",
+      "method": "updateAppointment",
+      "input": {
+        "aptNum": { "type": "number", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "appointment",
+      "args": ["aptNum", "data"]
+    },
+    "procedureLog.list": {
+      "kind": "read",
+      "method": "listProcedureLogs",
+      "input": {
+        "PatNum": { "type": "number" },
+        "Offset": { "type": "number" }
+      },
+      "output": "page<procedureLog>"
+    },
+    "procedureLog.get": {
+      "kind": "read",
+      "method": "getProcedureLog",
+      "input": { "procNum": { "type": "number", "required": true } },
+      "output": "procedureLog",
+      "args": ["procNum"]
+    },
+    "statement.list": {
+      "kind": "read",
+      "method": "listStatements",
+      "input": {
+        "PatNum": { "type": "number" },
+        "Offset": { "type": "number" }
+      },
+      "output": "page<statement>"
+    },
+    "statement.get": {
+      "kind": "read",
+      "method": "getStatement",
+      "input": { "statementNum": { "type": "number", "required": true } },
+      "output": "statement",
+      "args": ["statementNum"]
+    },
+    "payment.list": {
+      "kind": "read",
+      "method": "listPayments",
+      "input": {
+        "PatNum": { "type": "number" },
+        "DateEntry": { "type": "string" },
+        "Offset": { "type": "number" }
+      },
+      "output": "page<payment>"
+    },
+    "payment.create": {
+      "kind": "write",
+      "method": "createPayment",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "payment",
+      "args": ["data"]
+    },
+    "payment.update": {
+      "kind": "write",
+      "method": "updatePayment",
+      "input": {
+        "payNum": { "type": "number", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "payment",
+      "args": ["payNum", "data"]
+    },
+    "aging.list": {
+      "kind": "read",
+      "method": "listAging",
+      "input": {
+        "DateAsOf": { "type": "string" },
+        "ClinicNum": { "type": "number" },
+        "Offset": { "type": "number" }
+      },
+      "output": "page<object>"
+    },
+    "claim.list": {
+      "kind": "read",
+      "method": "listClaims",
+      "input": {
+        "PatNum": { "type": "number" },
+        "ClaimStatus": { "type": "string" },
+        "Offset": { "type": "number" }
+      },
+      "output": "page<claim>"
+    },
+    "claim.get": {
+      "kind": "read",
+      "method": "getClaim",
+      "input": { "claimNum": { "type": "number", "required": true } },
+      "output": "claim",
+      "args": ["claimNum"]
+    },
+    "insPlan.list": {
+      "kind": "read",
+      "method": "listInsPlans",
+      "input": {
+        "PlanType": { "type": "string" },
+        "CarrierNum": { "type": "number" },
+        "Offset": { "type": "number" }
+      },
+      "output": "page<insPlan>"
+    },
+    "insPlan.get": {
+      "kind": "read",
+      "method": "getInsPlan",
+      "input": { "planNum": { "type": "number", "required": true } },
+      "output": "insPlan",
+      "args": ["planNum"]
+    },
+    "patPlan.list": {
+      "kind": "read",
+      "method": "listPatPlans",
+      "input": {
+        "PatNum": { "type": "number" },
+        "InsSubNum": { "type": "number" }
+      },
+      "output": "page<object>"
+    },
+    "feeSched.list": {
+      "kind": "read",
+      "method": "listFeeScheds",
+      "input": { "Offset": { "type": "number" } },
+      "output": "page<object>"
+    },
+    "fee.list": {
+      "kind": "read",
+      "method": "listFees",
+      "input": {
+        "FeeSched": { "type": "number" },
+        "CodeNum": { "type": "number" }
+      },
+      "output": "page<object>"
+    },
+    "fee.get": {
+      "kind": "read",
+      "method": "getFee",
+      "input": { "feeNum": { "type": "number", "required": true } },
+      "output": "object",
+      "args": ["feeNum"]
+    },
+    "subscription.list": {
+      "kind": "read",
+      "method": "listSubscriptions",
+      "input": {},
+      "output": "page<subscription>"
+    },
+    "subscription.create": {
+      "kind": "write",
+      "method": "createSubscription",
+      "input": { "data": { "type": "object", "required": true } },
+      "output": "subscription",
+      "args": ["data"]
+    },
+    "subscription.update": {
+      "kind": "write",
+      "method": "updateSubscription",
+      "input": {
+        "subscriptionNum": { "type": "number", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "subscription",
+      "args": ["subscriptionNum", "data"]
+    },
+    "subscription.delete": {
+      "kind": "write",
+      "method": "deleteSubscription",
+      "input": { "subscriptionNum": { "type": "number", "required": true } },
+      "output": "void",
+      "args": ["subscriptionNum"]
+    }
+  }
+}

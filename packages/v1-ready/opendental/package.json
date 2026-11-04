@@ -1,0 +1,34 @@
+{
+  "name": "@friggframework/api-module-opendental",
+  "version": "1.0.0",
+  "description": "Open Dental (API Service) module that lets the Frigg Framework interact with Open Dental patients, appointments, procedures, payments, claims, insurance, and API event subscriptions",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint:fix": "prettier --write --loglevel error . && eslint . --fix"
+  },
+  "keywords": [
+    "frigg",
+    "opendental",
+    "open-dental",
+    "api-module",
+    "dental",
+    "practice-management",
+    "patients",
+    "appointments"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@friggframework/core": "^2.0.0-next.107"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-scheduler": "^3.1113.0",
+    "dotenv": "^16.0.3",
+    "jest": "^28.1.3",
+    "js-yaml": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

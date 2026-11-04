@@ -1,0 +1,9 @@
+{
+    "name": "attentive",
+    "label": "Attentive",
+    "productUrl": "https://www.attentive.com",
+    "apiDocs": "https://docs.attentive.com",
+    "logoUrl": "https://friggframework.org/assets/img/attentive-icon.png",
+    "categories": ["SMS", "Messaging"],
+    "description": "Attentive Mobile SMS and email marketing platform"
+}

@@ -1,0 +1,389 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "attentive",
+  "label": "Attentive",
+  "package": "@friggframework/api-module-attentive",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Values about the connected Attentive company, derived from GET /me at auth time.",
+    "fields": [
+      {
+        "name": "companyId",
+        "type": "string",
+        "description": "Installer company ID from /me (entity externalId)"
+      },
+      {
+        "name": "companyName",
+        "type": "string",
+        "description": "Company display name from /me"
+      },
+      {
+        "name": "attentiveDomainName",
+        "type": "string",
+        "description": "Attentive domain (e.g. brand.attn.tv)"
+      }
+    ]
+  },
+  "objects": {
+    "subscriber": {
+      "label": "Subscriber",
+      "fields": [
+        {
+          "name": "user.phone",
+          "type": "phone",
+          "tag": "contact.phone"
+        },
+        {
+          "name": "user.email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "signUpSourceId",
+          "type": "string"
+        },
+        {
+          "name": "subscriptionType",
+          "type": "string"
+        },
+        {
+          "name": "locale.language",
+          "type": "string"
+        },
+        {
+          "name": "locale.country",
+          "type": "string",
+          "tag": "address.country"
+        }
+      ],
+      "sync": {
+        "id": "user.phone",
+        "get": {
+          "capability": "subscriber.getSubscriptions",
+          "id": "phone"
+        },
+        "create": {
+          "capability": "subscriber.subscribe",
+          "body": "body"
+        }
+      }
+    },
+    "customAttribute": {
+      "label": "Custom attribute",
+      "fields": [
+        {
+          "name": "user.phone",
+          "type": "phone",
+          "tag": "contact.phone"
+        },
+        {
+          "name": "user.email",
+          "type": "email",
+          "tag": "contact.email"
+        },
+        {
+          "name": "properties",
+          "type": "object"
+        }
+      ]
+    },
+    "catalogUpload": {
+      "label": "Product catalog upload",
+      "fields": [
+        {
+          "name": "uploadId",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "uploadUrl",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "expires",
+          "type": "datetime",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "uploadId",
+        "list": {
+          "capability": "catalogUpload.list",
+          "items": "$"
+        },
+        "get": {
+          "capability": "catalogUpload.get",
+          "id": "uploadId"
+        },
+        "create": {
+          "capability": "catalogUpload.create",
+          "body": "body"
+        }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "events",
+          "type": "array"
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "companyId",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "disabledAt",
+          "type": "datetime",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "webhook.list",
+          "items": "webhooks"
+        },
+        "create": {
+          "capability": "webhook.create",
+          "body": "body"
+        },
+        "update": {
+          "capability": "webhook.update",
+          "id": "webhookId",
+          "body": "body"
+        },
+        "delete": {
+          "capability": "webhook.delete",
+          "id": "webhookId"
+        }
+      }
+    }
+  },
+  "events": {
+    "sms.subscribed": {
+      "label": "SMS subscribed",
+      "description": "User subscribed to SMS"
+    },
+    "sms.sent": {
+      "label": "SMS sent",
+      "description": "Attentive sent an SMS"
+    },
+    "sms.message_link_click": {
+      "label": "SMS link click",
+      "description": "Subscriber clicked a link in an SMS"
+    },
+    "email.subscribed": {
+      "label": "Email subscribed"
+    },
+    "email.unsubscribed": {
+      "label": "Email unsubscribed"
+    },
+    "email.message_link_click": {
+      "label": "Email link click"
+    },
+    "email.opened": {
+      "label": "Email opened"
+    },
+    "custom_attribute.set": {
+      "label": "Custom attribute set"
+    }
+  },
+  "webhook": {
+    "verify": "verifyWebhookSignature",
+    "signatureHeader": "x-attentive-hmac-sha256",
+    "algorithm": "HMAC-SHA256-hex",
+    "topics": [
+      "sms.subscribed",
+      "sms.sent",
+      "sms.message_link_click",
+      "email.subscribed",
+      "email.unsubscribed",
+      "email.message_link_click",
+      "email.opened",
+      "custom_attribute.set"
+    ]
+  },
+  "capabilities": {
+    "identity.me": {
+      "kind": "read",
+      "method": "getMe",
+      "input": {},
+      "output": "account",
+      "args": []
+    },
+    "subscriber.subscribe": {
+      "kind": "write",
+      "method": "addSubscriptions",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "subscriber",
+      "args": ["body"]
+    },
+    "subscriber.getSubscriptions": {
+      "kind": "read",
+      "method": "getSubscriptions",
+      "input": {
+        "phone": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "output": "subscriber",
+      "args": ["$rest"]
+    },
+    "subscriber.unsubscribe": {
+      "kind": "write",
+      "method": "unsubscribeSubscriptions",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "subscriber",
+      "args": ["body"]
+    },
+    "customAttribute.set": {
+      "kind": "write",
+      "method": "postCustomAttributes",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "customAttribute",
+      "args": ["body"]
+    },
+    "customAttribute.get": {
+      "kind": "read",
+      "method": "getCustomAttributes",
+      "input": {
+        "phone": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "output": "customAttribute",
+      "args": ["$rest"]
+    },
+    "event.custom": {
+      "kind": "write",
+      "method": "postCustomEvents",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "event",
+      "args": ["body"]
+    },
+    "event.productView": {
+      "kind": "write",
+      "method": "postProductViewEvents",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "event",
+      "args": ["body"]
+    },
+    "event.addToCart": {
+      "kind": "write",
+      "method": "postAddToCartEvents",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "event",
+      "args": ["body"]
+    },
+    "event.purchase": {
+      "kind": "write",
+      "method": "postPurchaseEvents",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "event",
+      "args": ["body"]
+    },
+    "catalogUpload.create": {
+      "kind": "write",
+      "method": "postUpload",
+      "input": {
+        "body": { "type": "object" }
+      },
+      "output": "catalogUpload",
+      "args": ["body"]
+    },
+    "catalogUpload.list": {
+      "kind": "read",
+      "method": "getUploads",
+      "input": {},
+      "output": "catalogUpload[]",
+      "args": []
+    },
+    "catalogUpload.get": {
+      "kind": "read",
+      "method": "lookupUpload",
+      "input": {
+        "uploadId": { "type": "string", "required": true }
+      },
+      "output": "catalogUpload",
+      "args": ["uploadId"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "getWebhooks",
+      "input": {},
+      "output": "webhook[]",
+      "args": []
+    },
+    "webhook.create": {
+      "kind": "write",
+      "method": "createWebhook",
+      "input": {
+        "body": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["body"]
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhook",
+      "input": {
+        "webhookId": { "type": "string", "required": true },
+        "body": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["webhookId", "body"]
+    },
+    "webhook.delete": {
+      "kind": "write",
+      "method": "deleteWebhook",
+      "input": {
+        "webhookId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["webhookId"]
+    }
+  },
+  "options": {
+    "notes": [
+      "Private apps may authenticate with a Bearer API key instead of OAuth; pass the key as access_token.",
+      "Product-catalog file bytes are uploaded to the pre-signed S3 URL returned by postUpload — that PUT is outside this Api client.",
+      "Webhook signing keys come from the Attentive app Webhooks tab and are not returned by createWebhook."
+    ]
+  }
+}

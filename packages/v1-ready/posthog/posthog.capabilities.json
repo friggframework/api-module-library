@@ -1,0 +1,132 @@
+{
+  "$schema": "capability-manifest/v0.1",
+  "module": "posthog",
+  "package": "@friggframework/api-module-posthog",
+  "version": "1.0.0",
+  "auth": {
+    "type": "apiKey",
+    "notes": "Personal API key as Authorization: Bearer <key>. Credentials: api_key, project_id, optional host (default https://us.posthog.com; EU https://eu.posthog.com). Host must be https posthog.com with no userinfo or port. Scopes are selected when minting the personal API key (insight:*, person:*, query:read, user:read, hog_function:*, …)."
+  },
+  "objects": {
+    "user": {
+      "fields": [
+        { "name": "uuid", "tags": ["identity", "read"] },
+        { "name": "email", "tags": ["identity", "read"] },
+        { "name": "first_name", "tags": ["read"] },
+        { "name": "last_name", "tags": ["read"] },
+        { "name": "distinct_id", "tags": ["identity", "read"] }
+      ],
+      "operations": [
+        {
+          "name": "getCurrentUser",
+          "surface": "identity",
+          "method": "getCurrentUser"
+        }
+      ]
+    },
+    "insight": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "short_id", "tags": ["identity", "read"] },
+        { "name": "name", "tags": ["read", "write"] },
+        { "name": "description", "tags": ["read", "write"] },
+        { "name": "query", "tags": ["read", "write"] },
+        { "name": "favorited", "tags": ["read", "write"] },
+        { "name": "tags", "tags": ["read", "write"] }
+      ],
+      "operations": [
+        { "name": "listInsights", "surface": "data-read", "method": "listInsights" },
+        { "name": "getInsight", "surface": "data-read", "method": "getInsight" },
+        { "name": "createInsight", "surface": "data-write", "method": "createInsight" },
+        { "name": "updateInsight", "surface": "data-write", "method": "updateInsight" }
+      ]
+    },
+    "query": {
+      "fields": [
+        { "name": "kind", "tags": ["write"] },
+        { "name": "query", "tags": ["write"] },
+        { "name": "results", "tags": ["read"] }
+      ],
+      "operations": [
+        {
+          "name": "createQuery",
+          "surface": "data-read",
+          "method": "createQuery"
+        }
+      ]
+    },
+    "event": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "event", "tags": ["read"] },
+        { "name": "distinct_id", "tags": ["identity", "read"] },
+        { "name": "timestamp", "tags": ["read"] },
+        { "name": "properties", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listEvents", "surface": "data-read", "method": "listEvents" },
+        { "name": "getEvent", "surface": "data-read", "method": "getEvent" }
+      ]
+    },
+    "person": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "uuid", "tags": ["identity", "read"] },
+        { "name": "name", "tags": ["read", "write"] },
+        { "name": "distinct_ids", "tags": ["identity", "read"] },
+        { "name": "created_at", "tags": ["read"] },
+        { "name": "last_seen_at", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listPersons", "surface": "data-read", "method": "listPersons" },
+        { "name": "getPerson", "surface": "data-read", "method": "getPerson" },
+        { "name": "updatePerson", "surface": "data-write", "method": "updatePerson" }
+      ]
+    },
+    "hog_function": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "type", "tags": ["read", "write"] },
+        { "name": "name", "tags": ["read", "write"] },
+        { "name": "description", "tags": ["read", "write"] },
+        { "name": "enabled", "tags": ["read", "write"] },
+        { "name": "hog", "tags": ["read", "write"] }
+      ],
+      "operations": [
+        {
+          "name": "listHogFunctions",
+          "surface": "webhook-subscription",
+          "method": "listHogFunctions"
+        },
+        {
+          "name": "getHogFunction",
+          "surface": "webhook-subscription",
+          "method": "getHogFunction"
+        },
+        {
+          "name": "createHogFunction",
+          "surface": "webhook-subscription",
+          "method": "createHogFunction"
+        },
+        {
+          "name": "updateHogFunction",
+          "surface": "webhook-subscription",
+          "method": "updateHogFunction"
+        },
+        {
+          "name": "deleteHogFunction",
+          "surface": "webhook-subscription",
+          "method": "deleteHogFunction"
+        }
+      ]
+    }
+  },
+  "skipped": {
+    "notes": [
+      "Events list/get are deprecated by PostHog; prefer createQuery or batch exports for bulk use.",
+      "Person create is not offered on the Persons REST API — use Capture / SDKs.",
+      "Organization-scoped Projects CRUD, Cohorts, Feature Flags, Dashboards, Batch Exports, OAuth app flow, and public ingest (/i/v0/e) are out of this curated core set.",
+      "Inbound webhook receive (HubSpot-style extensions/webhooks) is not shipped — PostHog destinations push outbound via hog_functions; no inbound signature verification surface for this connector."
+    ]
+  }
+}

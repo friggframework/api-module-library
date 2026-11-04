@@ -1,0 +1,218 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "workday",
+  "label": "Workday",
+  "package": "@friggframework/api-module-workday",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "OAuth2 fields persisted on the credential/entity. Entity externalId is tenant_alias.",
+    "fields": [
+      { "name": "client_id", "type": "string" },
+      { "name": "client_secret", "type": "string" },
+      { "name": "access_token", "type": "string" },
+      { "name": "refresh_token", "type": "string" },
+      { "name": "tenant_alias", "type": "string", "description": "Workday tenant alias; Frigg entity externalId." },
+      { "name": "tenant_hostname", "type": "string", "description": "Required for integrations auth_mode." },
+      { "name": "auth_mode", "type": "string", "description": "extend | integrations" },
+      { "name": "scope", "type": "string" }
+    ]
+  },
+  "objects": {
+    "worker": {
+      "label": "Worker",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "person.id" },
+        { "name": "descriptor", "type": "string", "tag": "person.displayName" },
+        { "name": "primaryWorkEmail", "type": "email", "tag": "person.email" },
+        { "name": "primaryWorkPhone", "type": "string", "tag": "person.phone" },
+        { "name": "businessTitle", "type": "string", "tag": "person.title" },
+        { "name": "isManager", "type": "boolean" },
+        { "name": "dateOfBirth", "type": "date", "tag": "person.birthDate" },
+        { "name": "primaryWorkAddressText", "type": "string" },
+        { "name": "yearsOfService", "type": "string" },
+        { "name": "location", "type": "json", "tag": "person.location" },
+        { "name": "primarySupervisoryOrganization", "type": "json", "tag": "org.id" }
+      ]
+    },
+    "supervisory_organization": {
+      "label": "Supervisory organization",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "org.id" },
+        { "name": "descriptor", "type": "string", "tag": "org.name" },
+        { "name": "name", "type": "string", "tag": "org.name" },
+        { "name": "manager", "type": "json", "tag": "person.id" },
+        { "name": "workers", "type": "string", "readOnly": true }
+      ]
+    },
+    "job_change": {
+      "label": "Change Job event",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "descriptor", "type": "string" },
+        { "name": "date", "type": "date" },
+        { "name": "reason", "type": "json" },
+        { "name": "job", "type": "json" },
+        { "name": "location", "type": "json" },
+        { "name": "supervisoryOrganization", "type": "json", "tag": "org.id" },
+        { "name": "status", "type": "json" }
+      ]
+    },
+    "time_off": {
+      "label": "Time off / absence",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "absence.id" },
+        { "name": "worker.id", "type": "id", "tag": "person.id" },
+        { "name": "descriptor", "type": "string" },
+        { "name": "status", "type": "string", "tag": "absence.status" }
+      ]
+    },
+    "balance": {
+      "label": "Absence balance",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "descriptor", "type": "string" }
+      ]
+    }
+  },
+  "events": {},
+  "webhook": {
+    "note": "Workday does not expose a public REST webhook-subscription CRUD API comparable to Personio/HubSpot. Event delivery uses SOAP External Integrations / Integration Events configured in-tenant. No subscribe method is wired in this module."
+  },
+  "capabilities": {
+    "worker.list": {
+      "kind": "read",
+      "method": "listWorkers",
+      "input": {
+        "limit": { "type": "integer" },
+        "offset": { "type": "integer" },
+        "search": { "type": "string" },
+        "view": { "type": "string" }
+      },
+      "output": "page<worker>"
+    },
+    "worker.get": {
+      "kind": "read",
+      "method": "getWorker",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "view": { "type": "string" }
+      },
+      "output": "worker",
+      "args": ["id", "$rest"]
+    },
+    "supervisory_organization.list": {
+      "kind": "read",
+      "method": "listSupervisoryOrganizations",
+      "input": {
+        "limit": { "type": "integer" },
+        "offset": { "type": "integer" }
+      },
+      "output": "page<supervisory_organization>"
+    },
+    "supervisory_organization.get": {
+      "kind": "read",
+      "method": "getSupervisoryOrganization",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "supervisory_organization",
+      "args": ["id"]
+    },
+    "supervisory_organization.workers.list": {
+      "kind": "read",
+      "method": "listSupervisoryOrganizationWorkers",
+      "input": {
+        "id": { "type": "string", "required": true },
+        "limit": { "type": "integer" },
+        "offset": { "type": "integer" }
+      },
+      "output": "page<worker>",
+      "args": ["id", "$rest"]
+    },
+    "job_change.create": {
+      "kind": "write",
+      "method": "createJobChange",
+      "input": {
+        "workerId": { "type": "string", "required": true },
+        "date": { "type": "string", "required": true },
+        "reason": { "type": "object", "required": true }
+      },
+      "output": "job_change",
+      "args": ["workerId", "$rest"]
+    },
+    "job_change.submit": {
+      "kind": "write",
+      "method": "submitJobChange",
+      "input": {
+        "jobChangeId": { "type": "string", "required": true }
+      },
+      "output": "job_change",
+      "args": ["jobChangeId", "$rest"]
+    },
+    "time_off.eligible_types.list": {
+      "kind": "read",
+      "method": "listEligibleAbsenceTypes",
+      "input": {
+        "workerId": { "type": "string", "required": true }
+      },
+      "output": "page<object>",
+      "args": ["workerId", "$rest"]
+    },
+    "time_off.list": {
+      "kind": "read",
+      "method": "listTimeOffDetails",
+      "input": {
+        "workerId": { "type": "string", "required": true }
+      },
+      "output": "page<time_off>",
+      "args": ["workerId", "$rest"]
+    },
+    "time_off.get": {
+      "kind": "read",
+      "method": "getTimeOffDetail",
+      "input": {
+        "workerId": { "type": "string", "required": true },
+        "entryId": { "type": "string", "required": true }
+      },
+      "output": "time_off",
+      "args": ["workerId", "entryId"]
+    },
+    "time_off.create": {
+      "kind": "write",
+      "method": "requestTimeOff",
+      "input": {
+        "workerId": { "type": "string", "required": true }
+      },
+      "output": "time_off",
+      "args": ["workerId", "$rest"]
+    },
+    "leave_of_absence.list": {
+      "kind": "read",
+      "method": "listLeavesOfAbsence",
+      "input": {
+        "workerId": { "type": "string", "required": true }
+      },
+      "output": "page<object>",
+      "args": ["workerId", "$rest"]
+    },
+    "balance.list": {
+      "kind": "read",
+      "method": "listBalances",
+      "input": {
+        "limit": { "type": "integer" },
+        "offset": { "type": "integer" }
+      },
+      "output": "page<balance>"
+    },
+    "balance.get": {
+      "kind": "read",
+      "method": "getBalance",
+      "input": {
+        "id": { "type": "string", "required": true }
+      },
+      "output": "balance",
+      "args": ["id"]
+    }
+  }
+}

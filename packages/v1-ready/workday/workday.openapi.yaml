@@ -1,0 +1,448 @@
+openapi: 3.0.3
+info:
+  title: Workday HCM REST API (curated)
+  version: "1.0.0"
+  description: >-
+    Curated subset of Workday's official REST APIs covering the endpoints
+    implemented by @friggframework/api-module-workday. Paths and semantics are
+    taken from Workday Developer documentation and the REST Services Directory;
+    operationIds are camelCase names that match Api methods 1:1 (spec-sync).
+
+    Default server is the Workday Extend API Gateway Common v1 base
+    (https://api.workday.com/common/v1). Staffing and Absence Management paths
+    override the server to their service bases. Tenanted Integrations hosts use
+    https://{tenantHostname}/api/{service}/{version}/{tenant} instead.
+
+    Sources:
+      - https://developer.workday.com/documentation/GUID-85810465-bcfb-4fdf-a26d-55eaff3968a8-enHYPHENus
+      - https://developer.workday.com/documentation/dan1370797991225
+      - https://developer.workday.com/documentation/dan1370797989680
+      - https://developer.workday.com/documentation/uxy1596042655617
+      - https://community.workday.com/sites/default/files/file-hosting/restapi/
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.workday.com/common/v1
+    description: Workday Extend API Gateway — Common v1
+security:
+  - OAuth2: []
+tags:
+  - name: Workers
+  - name: Organizations
+  - name: Staffing
+  - name: Absence
+paths:
+  /workers:
+    get:
+      tags: [Workers]
+      operationId: listWorkers
+      summary: List workers
+      description: >-
+        Returns workers visible to the caller. Secured by Worker Data: Public
+        Worker Reports. Pagination via limit (default 20, max 100) and offset.
+        Optional search (name prefix, min 3 chars) and view
+        (workerSummary | workerProfile | timeOffSummary).
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - in: query
+          name: search
+          schema: { type: string }
+          description: Case-insensitive name prefix search (min 3 characters).
+        - in: query
+          name: view
+          schema:
+            type: string
+            enum: [workerSummary, workerProfile, timeOffSummary]
+      responses:
+        "200":
+          description: Worker collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerCollection'
+
+  /workers/{id}:
+    get:
+      tags: [Workers]
+      operationId: getWorker
+      summary: Get a worker
+      description: >-
+        Retrieve a worker by Workday ID (WID), reference id
+        (e.g. Employee_ID=21005), or the named entry `me`.
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - in: query
+          name: view
+          schema:
+            type: string
+            enum: [workerSummary, workerProfile, timeOffSummary]
+      responses:
+        "200":
+          description: Worker
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Worker'
+
+  /supervisoryOrganizations:
+    get:
+      tags: [Organizations]
+      operationId: listSupervisoryOrganizations
+      summary: List supervisory organizations
+      description: >-
+        Secured by Reports: Organization. Pagination via limit/offset.
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        "200":
+          description: Supervisory organization collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationCollection'
+
+  /supervisoryOrganizations/{id}:
+    get:
+      tags: [Organizations]
+      operationId: getSupervisoryOrganization
+      summary: Get a supervisory organization
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        "200":
+          description: Supervisory organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+
+  /supervisoryOrganizations/{id}/workers:
+    get:
+      tags: [Organizations]
+      operationId: listSupervisoryOrganizationWorkers
+      summary: List workers in a supervisory organization
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        "200":
+          description: Worker collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerCollection'
+
+  /workers/{id}/jobChanges:
+    servers:
+      - url: https://api.workday.com/staffing/v1
+        description: Workday Extend API Gateway — Staffing v1
+    post:
+      tags: [Staffing]
+      operationId: createJobChange
+      summary: Initiate a Change Job event
+      description: >-
+        Equivalent to Start on the Change Job task. Body requires at least
+        effective `date` and `reason.id`.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, reason]
+              properties:
+                date:
+                  type: string
+                  format: date
+                reason:
+                  $ref: '#/components/schemas/IdRef'
+                job:
+                  $ref: '#/components/schemas/IdRef'
+      responses:
+        "200":
+          description: Initiated Change Job event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobChange'
+
+  /jobChanges/{id}/submit:
+    servers:
+      - url: https://api.workday.com/staffing/v1
+        description: Workday Extend API Gateway — Staffing v1
+    post:
+      tags: [Staffing]
+      operationId: submitJobChange
+      summary: Submit a Change Job event
+      description: >-
+        Submits the Change Job business process. Empty body submits immediately;
+        Save for Later uses businessProcessParameters.action.id
+        d9e41a8c446c11de98360015c5e6daf6.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Submitted Change Job event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobChange'
+
+  /workers/{id}/eligibleAbsenceTypes:
+    servers:
+      - url: https://api.workday.com/absenceManagement/v5
+        description: Workday Extend API Gateway — Absence Management v5
+    get:
+      tags: [Absence]
+      operationId: listEligibleAbsenceTypes
+      summary: List eligible absence types for a worker
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        "200":
+          description: Eligible absence types
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collection'
+
+  /workers/{id}/timeOffDetails:
+    servers:
+      - url: https://api.workday.com/absenceManagement/v5
+    get:
+      tags: [Absence]
+      operationId: listTimeOffDetails
+      summary: List time-off details for a worker
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        "200":
+          description: Time-off details collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collection'
+
+  /workers/{id}/timeOffDetails/{entryId}:
+    servers:
+      - url: https://api.workday.com/absenceManagement/v5
+    get:
+      tags: [Absence]
+      operationId: getTimeOffDetail
+      summary: Get a time-off detail entry
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - in: path
+          name: entryId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Time-off detail
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /workers/{id}/requestTimeOff:
+    servers:
+      - url: https://api.workday.com/absenceManagement/v5
+    post:
+      tags: [Absence]
+      operationId: requestTimeOff
+      summary: Create a time-off request
+      description: >-
+        Creates a time-off request for the worker and initiates the business
+        process. Request body fields are tenant-configured; see Absence
+        Management REST service docs in the REST API Explorer.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Time-off request event
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /workers/{id}/leavesOfAbsence:
+    servers:
+      - url: https://api.workday.com/absenceManagement/v5
+    get:
+      tags: [Absence]
+      operationId: listLeavesOfAbsence
+      summary: List leaves of absence for a worker
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        "200":
+          description: Leaves of absence collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collection'
+
+  /balances:
+    servers:
+      - url: https://api.workday.com/absenceManagement/v5
+    get:
+      tags: [Absence]
+      operationId: listBalances
+      summary: List absence plan and leave balances
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        "200":
+          description: Balance collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collection'
+
+  /balances/{id}:
+    servers:
+      - url: https://api.workday.com/absenceManagement/v5
+    get:
+      tags: [Absence]
+      operationId: getBalance
+      summary: Get an absence / leave balance
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        "200":
+          description: Balance
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Workday Extend OAuth 2.0. Token endpoint uses Authorization: ID
+        base64(client_id:client_secret). Tenanted Integrations clients instead
+        use Basic auth against https://{host}/ccx/oauth2/{tenant}/token.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.api.workday.com/v1/authorize
+          tokenUrl: https://auth.api.workday.com/v1/token
+          scopes: {}
+        clientCredentials:
+          tokenUrl: https://auth.api.workday.com/v1/token
+          scopes: {}
+  parameters:
+    id:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+      description: Workday ID (WID), reference id, or `me` where supported.
+    limit:
+      in: query
+      name: limit
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    offset:
+      in: query
+      name: offset
+      schema: { type: integer, minimum: 0, default: 0 }
+  schemas:
+    IdRef:
+      type: object
+      properties:
+        id: { type: string }
+        descriptor: { type: string }
+        href: { type: string, format: uri }
+    Worker:
+      type: object
+      properties:
+        id: { type: string }
+        descriptor: { type: string }
+        href: { type: string, format: uri }
+        businessTitle: { type: string }
+        primaryWorkEmail: { type: string, format: email }
+        primaryWorkPhone: { type: string }
+        isManager: { type: boolean }
+        dateOfBirth: { type: string, format: date }
+        primaryWorkAddressText: { type: string }
+        yearsOfService: { type: string }
+        location: { $ref: '#/components/schemas/IdRef' }
+        primarySupervisoryOrganization:
+          $ref: '#/components/schemas/IdRef'
+      additionalProperties: true
+    WorkerCollection:
+      type: object
+      properties:
+        total: { type: integer }
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Worker' }
+    Organization:
+      type: object
+      properties:
+        id: { type: string }
+        descriptor: { type: string }
+        href: { type: string, format: uri }
+        name: { type: string }
+        workers: { type: string, format: uri }
+        manager: { $ref: '#/components/schemas/IdRef' }
+      additionalProperties: true
+    OrganizationCollection:
+      type: object
+      properties:
+        total: { type: integer }
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Organization' }
+    JobChange:
+      type: object
+      properties:
+        id: { type: string }
+        descriptor: { type: string }
+        date: { type: string, format: date }
+        reason: { $ref: '#/components/schemas/IdRef' }
+        job: { $ref: '#/components/schemas/IdRef' }
+        location: { $ref: '#/components/schemas/IdRef' }
+        supervisoryOrganization: { $ref: '#/components/schemas/IdRef' }
+        status: { $ref: '#/components/schemas/IdRef' }
+      additionalProperties: true
+    Collection:
+      type: object
+      properties:
+        total: { type: integer }
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true

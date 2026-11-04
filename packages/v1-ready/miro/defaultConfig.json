@@ -1,0 +1,15 @@
+{
+    "name": "miro",
+    "label": "Miro",
+    "productUrl": "https://miro.com",
+    "apiDocs": "https://developers.miro.com/reference/overview",
+    "logoUrl": "https://friggframework.org/assets/img/miro-icon.png",
+    "categories": ["Collaboration", "Whiteboard"],
+    "description": "Miro visual workspace — boards, sticky notes, items, and members via the REST API v2",
+    "config": {
+        "batch": {
+            "concurrency": 3,
+            "delay": 1000
+        }
+    }
+}

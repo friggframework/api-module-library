@@ -1,0 +1,170 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "ukg-pro",
+  "label": "UKG Pro",
+  "package": "@friggframework/api-module-ukg-pro",
+  "version": "1.0.0",
+  "auth": "basic",
+  "account": {
+    "description": "HCM Core REST Basic Auth fields persisted on the credential/entity.",
+    "fields": [
+      { "name": "username", "type": "string" },
+      { "name": "password", "type": "string" },
+      {
+        "name": "customer_api_key",
+        "type": "string",
+        "description": "US-Customer-Api-Key; also the entity externalId."
+      },
+      {
+        "name": "base_url",
+        "type": "string",
+        "description": "Tenant service origin, e.g. https://servicet.ultipro.com"
+      }
+    ]
+  },
+  "objects": {
+    "company": {
+      "label": "Company",
+      "fields": [
+        { "name": "companyID", "type": "id", "readOnly": true, "tag": "company.id" },
+        { "name": "companyCode", "type": "string", "tag": "company.code" },
+        { "name": "companyName", "type": "string", "tag": "company.name" },
+        { "name": "masterCompanyId", "type": "string", "readOnly": true },
+        { "name": "isMasterCompany", "type": "string", "readOnly": true },
+        { "name": "addressCity", "type": "string" },
+        { "name": "addressState", "type": "string" },
+        { "name": "addressCountry", "type": "string" }
+      ]
+    },
+    "person": {
+      "label": "Person details",
+      "fields": [
+        { "name": "personId", "type": "id", "readOnly": true, "tag": "person.id" },
+        { "name": "employeeId", "type": "id", "readOnly": true, "tag": "employee.id" },
+        { "name": "companyId", "type": "id", "tag": "company.id" },
+        { "name": "firstName", "type": "string", "tag": "person.firstName" },
+        { "name": "lastName", "type": "string", "tag": "person.lastName" },
+        { "name": "preferredName", "type": "string", "tag": "person.preferredName" },
+        { "name": "emailAddress", "type": "email", "tag": "person.email" },
+        { "name": "homePhone", "type": "string" },
+        { "name": "datetimeCreated", "type": "datetime", "readOnly": true },
+        { "name": "datetimeChanged", "type": "datetime", "readOnly": true }
+      ]
+    },
+    "employment": {
+      "label": "Employment details",
+      "fields": [
+        { "name": "employeeID", "type": "id", "readOnly": true, "tag": "employee.id" },
+        { "name": "companyID", "type": "id", "tag": "company.id" },
+        { "name": "employeeNumber", "type": "string", "tag": "employee.number" },
+        { "name": "jobTitle", "type": "string", "tag": "employment.jobTitle" },
+        { "name": "primaryJobCode", "type": "string" },
+        { "name": "employeeStatusCode", "type": "string", "tag": "employment.status" },
+        { "name": "originalHireDate", "type": "datetime", "tag": "employment.hireDate" },
+        { "name": "dateOfTermination", "type": "datetime" },
+        { "name": "supervisorID", "type": "string" },
+        { "name": "payGroup", "type": "string" }
+      ]
+    },
+    "compensation": {
+      "label": "Compensation details",
+      "fields": [
+        { "name": "employeeID", "type": "id", "readOnly": true, "tag": "employee.id" },
+        { "name": "companyID", "type": "id", "tag": "company.id" },
+        { "name": "annualSalary", "type": "number", "tag": "compensation.annualSalary" },
+        { "name": "hourlyPayRate", "type": "number" },
+        { "name": "currencyCode", "type": "string" },
+        { "name": "jobTitle", "type": "string" },
+        { "name": "payGroupCode", "type": "string" },
+        { "name": "salaryOrHourlyCode", "type": "string" }
+      ]
+    }
+  },
+  "capabilities": {
+    "company.list": {
+      "kind": "read",
+      "method": "listCompanyDetails",
+      "input": {
+        "companyId": { "type": "string" },
+        "page": { "type": "integer" },
+        "per_Page": { "type": "integer" }
+      },
+      "output": "page<company>"
+    },
+    "person.list": {
+      "kind": "read",
+      "method": "listPersonDetails",
+      "input": {
+        "companyId": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "lastName": { "type": "string" },
+        "emailAddress": { "type": "string" },
+        "page": { "type": "integer" },
+        "per_Page": { "type": "integer" }
+      },
+      "output": "page<person>"
+    },
+    "person.get": {
+      "kind": "read",
+      "method": "getPersonDetails",
+      "input": {
+        "companyId": { "type": "string", "required": true },
+        "employeeId": { "type": "string", "required": true }
+      },
+      "output": "person",
+      "args": ["companyId", "employeeId"]
+    },
+    "person.get_by_employee": {
+      "kind": "read",
+      "method": "getPersonDetailsByEmployeeId",
+      "input": {
+        "employeeId": { "type": "string", "required": true }
+      },
+      "output": "person",
+      "args": ["employeeId"]
+    },
+    "employment.list": {
+      "kind": "read",
+      "method": "listEmploymentDetails",
+      "input": {
+        "companyId": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "employeeNumber": { "type": "string" },
+        "page": { "type": "integer" },
+        "per_Page": { "type": "integer" }
+      },
+      "output": "page<employment>"
+    },
+    "employment.get": {
+      "kind": "read",
+      "method": "getEmploymentDetails",
+      "input": {
+        "companyId": { "type": "string", "required": true },
+        "employeeId": { "type": "string", "required": true }
+      },
+      "output": "employment",
+      "args": ["companyId", "employeeId"]
+    },
+    "compensation.list": {
+      "kind": "read",
+      "method": "listCompensationDetails",
+      "input": {
+        "companyId": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "page": { "type": "integer" },
+        "per_Page": { "type": "integer" }
+      },
+      "output": "page<compensation>"
+    },
+    "compensation.get": {
+      "kind": "read",
+      "method": "getCompensationDetails",
+      "input": {
+        "companyId": { "type": "string", "required": true },
+        "employeeId": { "type": "string", "required": true }
+      },
+      "output": "compensation",
+      "args": ["companyId", "employeeId"]
+    }
+  }
+}

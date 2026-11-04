@@ -1,0 +1,366 @@
+openapi: 3.0.3
+info:
+  title: UKG Pro HCM Core REST API (curated)
+  version: "1.0.0"
+  description: >-
+    UKG Pro HCM Core REST surface documented at
+    https://developer.ukg.com/hcm/reference/welcome-to-the-ukg-pro-api.
+    UKG publishes per-operation OpenAPI fragments on the Developer Hub; this
+    file is Left Hook's curated subset covering exactly the endpoints the
+    @friggframework/api-module-ukg-pro client in api.js implements. It is the
+    source of truth the hand-written client mirrors 1:1 (one method per
+    operationId).
+
+    Auth: HTTP Basic (web service account username:password) +
+    US-Customer-Api-Key header. Base URL is tenant-specific — see
+    https://developer.ukg.com/hcm/docs/web-service-account.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://servicet.ultipro.com
+    description: >-
+      Example UKG Pro HCM service host from the Web Service Account docs.
+      Override per tenant via Api baseUrl / UKG_PRO_BASE_URL.
+security:
+  - BasicAuth: []
+    CustomerApiKey: []
+tags:
+  - name: Company
+  - name: Person
+  - name: Employment
+  - name: Compensation
+paths:
+  /configuration/v1/company-details:
+    get:
+      tags: [Company]
+      operationId: listCompanyDetails
+      summary: Get company details
+      description: >-
+        Get all master company and component company details.
+        Permissions — View role for Company Configuration Integration.
+      parameters:
+        - $ref: '#/components/parameters/companyIdQuery'
+        - in: query
+          name: masterCompanyId
+          schema: { type: string }
+        - in: query
+          name: companyCode
+          schema: { type: string }
+        - in: query
+          name: isMasterCompany
+          schema: { type: string }
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompanyDetails'
+
+  /personnel/v1/person-details:
+    get:
+      tags: [Person]
+      operationId: listPersonDetails
+      summary: Get all person details
+      description: >-
+        List person details. Permissions — View role for Employee Person Details.
+      parameters:
+        - $ref: '#/components/parameters/companyIdQuery'
+        - $ref: '#/components/parameters/employeeIdQuery'
+        - in: query
+          name: lastName
+          schema: { type: string }
+        - in: query
+          name: emailAddress
+          schema: { type: string }
+        - in: query
+          name: addressState
+          schema: { type: string }
+        - in: query
+          name: addressCountry
+          schema: { type: string }
+        - in: query
+          name: dateTimeCreated
+          schema: { type: string }
+        - in: query
+          name: dateTimeChanged
+          schema: { type: string }
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmpPersonDetails'
+
+  /personnel/v1/person-details/{employeeId}:
+    get:
+      tags: [Person]
+      operationId: getPersonDetailsByEmployeeId
+      summary: Get person details by employee ID
+      description: >-
+        Retrieve person details by employee ID (see Version History —
+        Person Details by Employee).
+      parameters:
+        - in: path
+          name: employeeId
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmpPersonDetails'
+
+  /personnel/v1/companies/{companyId}/employees/{employeeId}/person-details:
+    get:
+      tags: [Person]
+      operationId: getPersonDetails
+      summary: Get person details by company and employee
+      parameters:
+        - $ref: '#/components/parameters/companyIdPath'
+        - $ref: '#/components/parameters/employeeIdPath'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmpPersonDetails'
+
+  /personnel/v1/employment-details:
+    get:
+      tags: [Employment]
+      operationId: listEmploymentDetails
+      summary: Retrieve employment details
+      description: >-
+        List employment records. Permissions — View role for Personnel Integration.
+      parameters:
+        - $ref: '#/components/parameters/companyIdQuery'
+        - $ref: '#/components/parameters/employeeIdQuery'
+        - in: query
+          name: primaryJobCode
+          schema: { type: string }
+        - in: query
+          name: jobTitle
+          schema: { type: string }
+        - in: query
+          name: employeeNumber
+          schema: { type: string }
+        - in: query
+          name: employeeStatusCode
+          schema: { type: string }
+        - in: query
+          name: supervisorID
+          schema: { type: string }
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmpEmploymentDetails'
+
+  /personnel/v1/companies/{companyId}/employees/{employeeId}/employment-details:
+    get:
+      tags: [Employment]
+      operationId: getEmploymentDetails
+      summary: Get employment details by company and employee
+      parameters:
+        - $ref: '#/components/parameters/companyIdPath'
+        - $ref: '#/components/parameters/employeeIdPath'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmpEmploymentDetails'
+
+  /personnel/v1/compensation-details:
+    get:
+      tags: [Compensation]
+      operationId: listCompensationDetails
+      summary: Get all compensation details
+      description: >-
+        List compensation records. Permissions — View role for Employee
+        Compensation Details.
+      parameters:
+        - $ref: '#/components/parameters/companyIdQuery'
+        - $ref: '#/components/parameters/employeeIdQuery'
+        - in: query
+          name: primaryJobCode
+          schema: { type: string }
+        - in: query
+          name: jobTitle
+          schema: { type: string }
+        - in: query
+          name: payGroupCode
+          schema: { type: string }
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmpCompensationDetails'
+
+  /personnel/v1/companies/{companyId}/employees/{employeeId}/compensation-details:
+    get:
+      tags: [Compensation]
+      operationId: getCompensationDetails
+      summary: Get compensation details by company and employee
+      parameters:
+        - $ref: '#/components/parameters/companyIdPath'
+        - $ref: '#/components/parameters/employeeIdPath'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmpCompensationDetails'
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: >-
+        Web service account username and password
+        (base64-encoded username:password).
+    CustomerApiKey:
+      type: apiKey
+      in: header
+      name: US-Customer-Api-Key
+      description: >-
+        Five-character Customer API Key unique to each Pro HR tenant
+        (System Configuration > Security > Web Services).
+  parameters:
+    companyIdPath:
+      in: path
+      name: companyId
+      required: true
+      schema: { type: string }
+    employeeIdPath:
+      in: path
+      name: employeeId
+      required: true
+      schema: { type: string }
+    companyIdQuery:
+      in: query
+      name: companyId
+      schema: { type: string }
+    employeeIdQuery:
+      in: query
+      name: employeeId
+      schema: { type: string }
+    page:
+      in: query
+      name: page
+      schema: { type: integer, minimum: 1 }
+    perPage:
+      in: query
+      name: per_Page
+      schema: { type: integer, minimum: 1 }
+  schemas:
+    CompanyDetails:
+      type: object
+      properties:
+        isMasterCompany: { type: string }
+        masterCompanyId: { type: string }
+        companyID: { type: string }
+        companyCode: { type: string }
+        companyName: { type: string }
+        addressLine1: { type: string }
+        addressCity: { type: string }
+        addressState: { type: string }
+        addressCountry: { type: string }
+        phoneNumber: { type: string }
+    EmpPersonDetails:
+      type: object
+      properties:
+        personId: { type: string, format: uuid }
+        employeeId: { type: string }
+        companyId: { type: string }
+        userName: { type: string }
+        firstName: { type: string }
+        middleName: { type: string }
+        lastName: { type: string }
+        preferredName: { type: string }
+        emailAddress: { type: string }
+        emailAddressAlternate: { type: string }
+        homePhone: { type: string }
+        addressLine1: { type: string }
+        addressCity: { type: string }
+        addressState: { type: string }
+        addressZipCode: { type: string }
+        addressCountry: { type: string }
+        dateOfBirth: { type: string, format: date-time }
+        gender: { type: string }
+        datetimeCreated: { type: string, format: date-time }
+        datetimeChanged: { type: string, format: date-time }
+    EmpEmploymentDetails:
+      type: object
+      properties:
+        companyID: { type: string }
+        companyCode: { type: string }
+        companyName: { type: string }
+        employeeID: { type: string }
+        employeeNumber: { type: string }
+        jobTitle: { type: string }
+        primaryJobCode: { type: string }
+        employeeStatusCode: { type: string }
+        employeeTypeCode: { type: string }
+        originalHireDate: { type: string, format: date-time }
+        lastHireDate: { type: string, format: date-time }
+        dateOfTermination: { type: string, format: date-time }
+        supervisorID: { type: string }
+        supervisorFirstName: { type: string }
+        supervisorLastName: { type: string }
+        payGroup: { type: string }
+        salaryOrHourly: { type: string }
+        dateTimeCreated: { type: string, format: date-time }
+        dateTimeChanged: { type: string, format: date-time }
+    EmpCompensationDetails:
+      type: object
+      properties:
+        employeeID: { type: string }
+        companyID: { type: string }
+        annualSalary: { type: number, format: double }
+        hourlyPayRate: { type: number, format: double }
+        currencyCode: { type: string }
+        jobTitle: { type: string }
+        primaryJobCode: { type: string }
+        payGroupCode: { type: string }
+        salaryOrHourlyCode: { type: string }
+        fullTimeOrPartTimeCode: { type: string }
+        dateInJob: { type: string, format: date-time }
+        dateLastPaid: { type: string, format: date-time }

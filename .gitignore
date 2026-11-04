@@ -25,3 +25,5 @@ yarn-error.log*
 .env
 .npmrc
 /.nx/
+/.module-docs/
+**/module-docs.bundle.json

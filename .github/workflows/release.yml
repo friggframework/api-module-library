@@ -6,7 +6,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
+    if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci') && !contains(github.event.head_commit.message, '[skip release]')"
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -21,6 +21,8 @@ jobs:
         node-version: 18
         cache: 'npm'
         registry-url: 'https://registry.npmjs.org'
+    - name: Check module documentation and examples
+      run: node --test tools/module-docs/*.test.cjs
     - name: Auto release
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -30,3 +32,45 @@ jobs:
       run: |
         npm ci
         npx auto shipit
+    - name: Save published module identities for separate delivery
+      if: success() && hashFiles('.module-docs/published.json') != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: module-docs-published
+        path: .module-docs/published.json
+        include-hidden-files: true
+        retention-days: 30
+
+  module-docs:
+    needs: release
+    if: vars.MODULE_DOCS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: module-docs-published
+          path: .module-docs
+      - uses: actions/create-github-app-token@v2
+        id: app
+        with:
+          app-id: ${{ vars.MODULE_DOCS_APP_ID }}
+          private-key: ${{ secrets.MODULE_DOCS_APP_PRIVATE_KEY }}
+          owner: friggframework
+          repositories: frigg
+      - name: Verify published packages and dispatch docs delivery
+        env:
+          MODULE_DOCS_TOKEN: ${{ steps.app.outputs.token }}
+        run: node tools/module-docs/deliver.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: module-docs-delivery
+          path: .module-docs/delivery.json
+          include-hidden-files: true
+          if-no-files-found: ignore

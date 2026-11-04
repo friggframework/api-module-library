@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "lint:fix": "prettier --write --loglevel error . && eslint . --fix",
-    "test": "jest"
+    "test": "jest",
+    "prepack": "node ../../../tools/module-docs/build.cjs ."
   },
   "author": "",
   "license": "MIT",
@@ -22,5 +23,18 @@
   },
   "dependencies": {
     "@friggframework/core": "^2.0.0-next.89"
-  }
+  },
+  "files": [
+    "api.js",
+    "definition.js",
+    "index.js",
+    "defaultConfig.json",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "extensions/",
+    "docs/",
+    "module-docs.json",
+    "module-docs.bundle.json"
+  ]
 }

@@ -4,6 +4,7 @@
   "description": "",
   "private": true,
   "scripts": {
+    "test:module-docs": "node --test tools/module-docs/*.test.cjs",
     "auto:info": "auto info",
     "test:all": "npm test --foreground-scripts --workspaces --if-present",
     "test:api-module-managers": "jest --testMatch='<rootDir>/api-module-library/**/manager.test.js' --globalSetup='<rootDir>/scripts/set-up-tests.js' --globalTeardown='<rootDir>/scripts/tear-down-tests.js' --watch",
@@ -39,6 +40,7 @@
     "versionBranches": true,
     "onlyPublishWithReleaseLabel": true,
     "plugins": [
+      "./tools/module-docs/auto-plugin.cjs",
       "npm",
       "all-contributors",
       "conventional-commits",

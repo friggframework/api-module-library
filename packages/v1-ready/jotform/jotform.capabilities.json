@@ -1,0 +1,419 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "jotform",
+  "label": "Jotform",
+  "package": "@friggframework/api-module-jotform",
+  "version": "1.0.0",
+  "auth": "apiKey",
+  "account": {
+    "description": "Identity from GET /user. Optional base_url selects US/EU/HIPAA/Enterprise host.",
+    "fields": [
+      {
+        "name": "base_url",
+        "type": "string",
+        "description": "API host (default https://api.jotform.com)"
+      },
+      {
+        "name": "username",
+        "type": "string",
+        "description": "Jotform username from GET /user (entity externalId)"
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User",
+      "fields": [
+        {
+          "name": "username",
+          "type": "string",
+          "tag": "person.id",
+          "readOnly": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "tag": "person.displayName"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "tag": "person.email"
+        },
+        {
+          "name": "account_type",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "readOnly": true
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        }
+      ]
+    },
+    "form": {
+      "label": "Form",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "tag": "record.id",
+          "readOnly": true
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "url",
+          "type": "string"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "description": "Total submission count",
+          "readOnly": true
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "form.list",
+          "cursor": "offset",
+          "limit": "limit",
+          "items": "content",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "form.get",
+          "id": "formId"
+        },
+        "create": {
+          "capability": "form.create",
+          "body": "fields"
+        }
+      }
+    },
+    "submission": {
+      "label": "Submission",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "tag": "record.id",
+          "readOnly": true
+        },
+        {
+          "name": "form_id",
+          "type": "string"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "tag": "record.createdAt",
+          "readOnly": true
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "tag": "record.updatedAt",
+          "readOnly": true
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "answers",
+          "type": "object",
+          "description": "Map of question id → answer payload"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated_at",
+        "list": {
+          "capability": "submission.listForForm",
+          "cursor": "offset",
+          "limit": "limit",
+          "items": "content",
+          "paging": "offset"
+        },
+        "get": {
+          "capability": "submission.get",
+          "id": "submissionId"
+        },
+        "create": {
+          "capability": "submission.create",
+          "body": "submission"
+        },
+        "update": {
+          "capability": "submission.update",
+          "id": "submissionId",
+          "body": "submission"
+        }
+      }
+    },
+    "webhook": {
+      "label": "Webhook",
+      "fields": [
+        {
+          "name": "id",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "required": true,
+          "description": "Destination URL (webhookURL on create)"
+        }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "webhook.listForForm",
+          "items": "content"
+        },
+        "create": {
+          "capability": "webhook.create",
+          "body": "webhookURL"
+        }
+      }
+    },
+    "question": {
+      "label": "Question",
+      "fields": [
+        {
+          "name": "qid",
+          "type": "id",
+          "readOnly": true
+        },
+        {
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "tag": "record.displayName"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "order",
+          "type": "string"
+        },
+        {
+          "name": "required",
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "events": {
+    "form_submission": {
+      "delivery": "webhook",
+      "object": "submission",
+      "description": "Jotform POSTs submission data to registered webhookURL when a form is submitted.",
+      "match": "form_submission"
+    }
+  },
+  "webhook": {
+    "scope": "form",
+    "topic": "form_submission",
+    "note": "Webhooks are registered per form via POST /form/{formID}/webhooks with webhookURL. Public docs do not document a platform-wide HMAC signature header for inbound verification; subscription CRUD is covered by Api methods. No Tier-3 extensions/webhooks/ receiver is shipped in this module."
+  },
+  "capabilities": {
+    "user.get": {
+      "kind": "read",
+      "method": "getUser",
+      "input": {},
+      "output": "user",
+      "args": []
+    },
+    "form.list": {
+      "kind": "list",
+      "method": "listForms",
+      "input": {
+        "offset": { "type": "number" },
+        "limit": { "type": "number" },
+        "filter": { "type": "object" },
+        "orderby": { "type": "string" },
+        "direction": { "type": "string" }
+      },
+      "output": "form[]",
+      "args": ["$rest"]
+    },
+    "form.get": {
+      "kind": "read",
+      "method": "getForm",
+      "input": {
+        "formId": { "type": "string", "required": true }
+      },
+      "output": "form",
+      "args": ["formId"]
+    },
+    "form.create": {
+      "kind": "create",
+      "method": "createForm",
+      "input": {
+        "fields": { "type": "object", "required": true }
+      },
+      "output": "form",
+      "args": ["fields"]
+    },
+    "form.delete": {
+      "kind": "delete",
+      "method": "deleteForm",
+      "input": {
+        "formId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["formId"]
+    },
+    "form.updateProperties": {
+      "kind": "update",
+      "method": "updateFormProperties",
+      "input": {
+        "formId": { "type": "string", "required": true },
+        "properties": { "type": "object", "required": true }
+      },
+      "output": "form",
+      "args": ["formId", "properties"]
+    },
+    "question.listForForm": {
+      "kind": "list",
+      "method": "listFormQuestions",
+      "input": {
+        "formId": { "type": "string", "required": true }
+      },
+      "output": "question[]",
+      "args": ["formId"]
+    },
+    "submission.listForForm": {
+      "kind": "list",
+      "method": "listFormSubmissions",
+      "input": {
+        "formId": { "type": "string", "required": true },
+        "offset": { "type": "number" },
+        "limit": { "type": "number" },
+        "filter": { "type": "object" },
+        "orderby": { "type": "string" },
+        "direction": { "type": "string" }
+      },
+      "output": "submission[]",
+      "args": ["formId", "$rest"]
+    },
+    "submission.listForUser": {
+      "kind": "list",
+      "method": "listUserSubmissions",
+      "input": {
+        "offset": { "type": "number" },
+        "limit": { "type": "number" },
+        "filter": { "type": "object" },
+        "orderby": { "type": "string" },
+        "direction": { "type": "string" }
+      },
+      "output": "submission[]",
+      "args": ["$rest"]
+    },
+    "submission.get": {
+      "kind": "read",
+      "method": "getSubmission",
+      "input": {
+        "submissionId": { "type": "string", "required": true }
+      },
+      "output": "submission",
+      "args": ["submissionId"]
+    },
+    "submission.create": {
+      "kind": "create",
+      "method": "createFormSubmission",
+      "input": {
+        "formId": { "type": "string", "required": true },
+        "submission": { "type": "object", "required": true }
+      },
+      "output": "submission",
+      "args": ["formId", "submission"]
+    },
+    "submission.update": {
+      "kind": "update",
+      "method": "updateSubmission",
+      "input": {
+        "submissionId": { "type": "string", "required": true },
+        "submission": { "type": "object", "required": true }
+      },
+      "output": "submission",
+      "args": ["submissionId", "submission"]
+    },
+    "submission.delete": {
+      "kind": "delete",
+      "method": "deleteSubmission",
+      "input": {
+        "submissionId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["submissionId"]
+    },
+    "webhook.listForForm": {
+      "kind": "list",
+      "method": "listFormWebhooks",
+      "input": {
+        "formId": { "type": "string", "required": true }
+      },
+      "output": "webhook[]",
+      "args": ["formId"]
+    },
+    "webhook.create": {
+      "kind": "subscribe",
+      "method": "createFormWebhook",
+      "input": {
+        "formId": { "type": "string", "required": true },
+        "webhookURL": { "type": "string", "required": true }
+      },
+      "output": "webhook",
+      "args": ["formId", "webhookURL"]
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteFormWebhook",
+      "input": {
+        "formId": { "type": "string", "required": true },
+        "webhookId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["formId", "webhookId"]
+    }
+  },
+  "options": {
+    "note": "No Fenestra file — Jotform is not listed as a UI-extension host in specs/fenestra/PLATFORMS.md on claude/fenestra-spec-draft-Q367t. Partner approval is not required for API-key access; users generate keys under My Account → API."
+  }
+}

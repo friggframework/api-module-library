@@ -1,0 +1,318 @@
+openapi: 3.0.3
+info:
+  title: Jotform Public API (curated subset)
+  version: "1.0.0"
+  description: >-
+    Jotform is an online form builder. This file is Left Hook's curated subset
+    of the public REST API documented at https://api.jotform.com/docs/, covering
+    exactly the endpoints the @friggframework/api-module-jotform client in
+    api.js implements. Jotform does not publish a single downloadable official
+    OpenAPI document; paths and parameters were verified against the official
+    docs and the official Node (`jotform`) / Python SDKs. It is the source of
+    truth the hand-written client mirrors 1:1 (one method per operationId).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.jotform.com
+    description: Standard (US) — also eu-api.jotform.com / hipaa-api.jotform.com
+security:
+  - ApiKeyAuth: []
+tags:
+  - name: User
+  - name: Forms
+  - name: Submissions
+  - name: Webhooks
+paths:
+  /user:
+    get:
+      tags: [User]
+      operationId: getUser
+      summary: Get user account details
+      description: >-
+        Returns account type, avatar URL, name, email, website URL and account
+        limits for the authenticated user.
+      responses:
+        "200":
+          description: User details (wrapped in Jotform response envelope).
+        "401":
+          description: Unauthorized
+  /user/forms:
+    get:
+      tags: [Forms]
+      operationId: listForms
+      summary: List forms for this account
+      parameters:
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/Orderby"
+        - $ref: "#/components/parameters/Direction"
+      responses:
+        "200":
+          description: Form list.
+        "401":
+          description: Unauthorized
+  /user/submissions:
+    get:
+      tags: [Submissions]
+      operationId: listUserSubmissions
+      summary: List submissions across all forms on this account
+      parameters:
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/Orderby"
+        - $ref: "#/components/parameters/Direction"
+      responses:
+        "200":
+          description: Submission list.
+        "401":
+          description: Unauthorized
+  /form:
+    post:
+      tags: [Forms]
+      operationId: createForm
+      summary: Create a new form
+      description: >-
+        Creates a form with questions/properties encoded as
+        application/x-www-form-urlencoded nested fields
+        (questions[1][type]=…, properties[title]=…).
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Newly created form.
+        "401":
+          description: Unauthorized
+  /form/{formID}:
+    parameters:
+      - $ref: "#/components/parameters/FormID"
+    get:
+      tags: [Forms]
+      operationId: getForm
+      summary: Get basic information about a form
+      responses:
+        "200":
+          description: Form metadata.
+        "401":
+          description: Unauthorized
+    delete:
+      tags: [Forms]
+      operationId: deleteForm
+      summary: Delete a form
+      responses:
+        "200":
+          description: Deletion result.
+        "401":
+          description: Unauthorized
+  /form/{formID}/properties:
+    parameters:
+      - $ref: "#/components/parameters/FormID"
+    post:
+      tags: [Forms]
+      operationId: updateFormProperties
+      summary: Add or edit properties of a form
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated properties.
+        "401":
+          description: Unauthorized
+  /form/{formID}/questions:
+    parameters:
+      - $ref: "#/components/parameters/FormID"
+    get:
+      tags: [Forms]
+      operationId: listFormQuestions
+      summary: List all questions on a form
+      responses:
+        "200":
+          description: Question collection.
+        "401":
+          description: Unauthorized
+  /form/{formID}/submissions:
+    parameters:
+      - $ref: "#/components/parameters/FormID"
+    get:
+      tags: [Submissions]
+      operationId: listFormSubmissions
+      summary: List submissions of a form
+      parameters:
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/Orderby"
+        - $ref: "#/components/parameters/Direction"
+      responses:
+        "200":
+          description: Submission collection.
+        "401":
+          description: Unauthorized
+    post:
+      tags: [Submissions]
+      operationId: createFormSubmission
+      summary: Submit data to a form
+      description: >-
+        Body is application/x-www-form-urlencoded with submission[qid]=answer
+        fields (question IDs from GET /form/{formID}/questions).
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Newly created submission.
+        "401":
+          description: Unauthorized
+  /form/{formID}/webhooks:
+    parameters:
+      - $ref: "#/components/parameters/FormID"
+    get:
+      tags: [Webhooks]
+      operationId: listFormWebhooks
+      summary: List webhooks for a form
+      responses:
+        "200":
+          description: Webhook collection (id → URL map).
+        "401":
+          description: Unauthorized
+    post:
+      tags: [Webhooks]
+      operationId: createFormWebhook
+      summary: Register a webhook URL for form submissions
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [webhookURL]
+              properties:
+                webhookURL:
+                  type: string
+                  format: uri
+      responses:
+        "200":
+          description: Updated webhook list.
+        "401":
+          description: Unauthorized
+  /form/{formID}/webhooks/{webhookID}:
+    parameters:
+      - $ref: "#/components/parameters/FormID"
+      - in: path
+        name: webhookID
+        required: true
+        schema: { type: string }
+        description: Webhook id from GET /form/{formID}/webhooks.
+    delete:
+      tags: [Webhooks]
+      operationId: deleteFormWebhook
+      summary: Delete a webhook of a form
+      responses:
+        "200":
+          description: Remaining webhooks.
+        "401":
+          description: Unauthorized
+  /submission/{submissionID}:
+    parameters:
+      - $ref: "#/components/parameters/SubmissionID"
+    get:
+      tags: [Submissions]
+      operationId: getSubmission
+      summary: Get a single submission
+      responses:
+        "200":
+          description: Submission details and answers.
+        "401":
+          description: Unauthorized
+    post:
+      tags: [Submissions]
+      operationId: updateSubmission
+      summary: Edit a single submission
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated submission.
+        "401":
+          description: Unauthorized
+    delete:
+      tags: [Submissions]
+      operationId: deleteSubmission
+      summary: Delete a single submission
+      responses:
+        "200":
+          description: Deletion result.
+        "401":
+          description: Unauthorized
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: APIKEY
+      description: >-
+        Also accepted as the `apiKey` query parameter. This module sends the
+        header form documented under "Authenticate with HTTP Headers".
+  parameters:
+    FormID:
+      in: path
+      name: formID
+      required: true
+      schema: { type: string }
+      description: Numeric form id from the form URL / GET /user/forms.
+    SubmissionID:
+      in: path
+      name: submissionID
+      required: true
+      schema: { type: string }
+      description: Submission id from GET /form/{formID}/submissions.
+    Offset:
+      in: query
+      name: offset
+      schema: { type: integer, minimum: 0 }
+      description: Start of the result set (pagination).
+    Limit:
+      in: query
+      name: limit
+      schema: { type: integer, minimum: 1 }
+      description: Number of results in the result set (default 20).
+    Filter:
+      in: query
+      name: filter
+      schema: { type: string }
+      description: >-
+        JSON filter string, e.g. {"created_at:gt":"2013-01-01 00:00:00"}.
+        The client JSON.stringifies object values before sending.
+    Orderby:
+      in: query
+      name: orderby
+      schema: { type: string }
+      description: Field name to order by (e.g. created_at, id).
+    Direction:
+      in: query
+      name: direction
+      schema:
+        type: string
+        enum: [ASC, DESC]
+      description: Sort direction.

@@ -1,0 +1,10 @@
+{
+    "name": "quickbooks",
+    "config": {
+        "oauth": true,
+        "batch": {
+            "concurrency": 10,
+            "delay": 120
+        }
+    }
+}

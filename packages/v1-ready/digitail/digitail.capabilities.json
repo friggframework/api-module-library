@@ -1,0 +1,361 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "digitail",
+  "label": "Digitail",
+  "package": "@friggframework/api-module-digitail",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Account identity from GET /auth/me (clinic.id when include=clinic, else user id). Persisted as entity/credential externalId.",
+    "fields": [
+      {
+        "name": "clinicId",
+        "type": "string",
+        "description": "Digitail clinic id from auth/me clinic include or X-ClinicId context"
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User (Vet)",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "person.id" },
+        { "name": "first_name", "type": "string", "tag": "person.givenName" },
+        { "name": "last_name", "type": "string", "tag": "person.familyName" },
+        { "name": "full_name", "type": "string", "tag": "person.displayName" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "clinic.id", "type": "string", "tag": "org.id" },
+        { "name": "clinic.name", "type": "string", "tag": "org.name" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "user.get" }
+      }
+    },
+    "clinic": {
+      "label": "Clinic",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "org.id" },
+        { "name": "name", "type": "string", "tag": "org.name" },
+        { "name": "logo", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "clinic.list",
+          "items": "data",
+          "paging": "offset"
+        }
+      }
+    },
+    "petParent": {
+      "label": "Pet Parent",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "person.id" },
+        { "name": "name", "type": "string", "tag": "person.givenName" },
+        { "name": "last_name", "type": "string", "tag": "person.familyName" },
+        { "name": "email", "type": "email", "tag": "person.email" },
+        { "name": "phone", "type": "string", "tag": "person.phone" },
+        { "name": "secondary_phone", "type": "string" },
+        { "name": "address", "type": "string" },
+        { "name": "city", "type": "string" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "petParent.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": { "capability": "petParent.get", "id": "petParentId" },
+        "create": { "capability": "petParent.create", "body": "data" },
+        "update": { "capability": "petParent.update", "id": "petParentId", "body": "data" }
+      }
+    },
+    "pet": {
+      "label": "Pet",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "nickname", "type": "string", "tag": "record.displayName" },
+        { "name": "birthday", "type": "string" },
+        { "name": "gender", "type": "enum", "values": ["male", "female", "unknown"] },
+        { "name": "species_id", "type": "number" },
+        { "name": "breed_id", "type": "number" },
+        { "name": "chip_number", "type": "string" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "pet.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": { "capability": "pet.get", "id": "petId" },
+        "create": { "capability": "pet.create", "body": "data" }
+      }
+    },
+    "appointment": {
+      "label": "Appointment",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "clinic_id", "type": "number" },
+        { "name": "vet_id", "type": "number" },
+        { "name": "patient_id", "type": "number" },
+        { "name": "visit_type_id", "type": "number" },
+        { "name": "status", "type": "number" },
+        { "name": "datetime_start_utc", "type": "datetime" },
+        { "name": "datetime_end_utc", "type": "datetime" },
+        { "name": "observations", "type": "text" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "appointment.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": { "capability": "appointment.get", "id": "appointmentId" },
+        "create": { "capability": "appointment.create", "body": "data" }
+      }
+    },
+    "invoice": {
+      "label": "Invoice",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" },
+        { "name": "series", "type": "string" },
+        { "name": "number", "type": "number" },
+        { "name": "created_at", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated_at", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "invoice.list",
+          "items": "data",
+          "paging": "offset"
+        },
+        "get": { "capability": "invoice.get", "id": "invoiceId" }
+      }
+    },
+    "sale": {
+      "label": "Sale",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" }
+      ],
+      "sync": {
+        "id": "id",
+        "get": { "capability": "sale.get", "id": "saleId" }
+      }
+    },
+    "record": {
+      "label": "Medical Record",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true, "tag": "record.id" }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "record.list",
+          "cursor": "page",
+          "limit": "per_page",
+          "items": "data",
+          "paging": "offset"
+        }
+      }
+    }
+  },
+  "events": {},
+  "capabilities": {
+    "user.get": {
+      "kind": "read",
+      "method": "getAuthMe",
+      "input": {
+        "include[]": { "type": "array" }
+      },
+      "output": "user",
+      "args": ["$rest"]
+    },
+    "clinic.list": {
+      "kind": "read",
+      "method": "listClinics",
+      "input": {
+        "filter[clinic_id]": { "type": "string" },
+        "filter[is_admin]": { "type": "number" },
+        "include": { "type": "string" }
+      },
+      "output": "page<clinic>",
+      "args": ["$rest"]
+    },
+    "petParent.list": {
+      "kind": "read",
+      "method": "listPetParents",
+      "input": {
+        "page": { "type": "number" },
+        "per_page": { "type": "number" },
+        "filter[email]": { "type": "string" },
+        "filter[phone]": { "type": "string" },
+        "filter[query]": { "type": "string" }
+      },
+      "output": "page<petParent>",
+      "args": ["$rest"]
+    },
+    "petParent.get": {
+      "kind": "read",
+      "method": "getPetParent",
+      "input": {
+        "petParentId": { "type": "string", "required": true },
+        "include": { "type": "string" }
+      },
+      "output": "petParent",
+      "args": ["petParentId", "$rest"]
+    },
+    "petParent.create": {
+      "kind": "write",
+      "method": "createPetParent",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "petParent",
+      "args": ["data"]
+    },
+    "petParent.update": {
+      "kind": "write",
+      "method": "updatePetParent",
+      "input": {
+        "petParentId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "petParent",
+      "args": ["petParentId", "data"]
+    },
+    "pet.list": {
+      "kind": "read",
+      "method": "listPets",
+      "input": {
+        "filter[clinic_id]": { "type": "number", "required": true },
+        "page": { "type": "number" },
+        "per_page": { "type": "number" },
+        "filter[owner_id]": { "type": "number" }
+      },
+      "output": "page<pet>",
+      "args": ["$rest"]
+    },
+    "pet.get": {
+      "kind": "read",
+      "method": "getPet",
+      "input": {
+        "petId": { "type": "string", "required": true }
+      },
+      "output": "pet",
+      "args": ["petId", "$rest"]
+    },
+    "pet.create": {
+      "kind": "write",
+      "method": "createPet",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "pet",
+      "args": ["data"]
+    },
+    "appointment.list": {
+      "kind": "read",
+      "method": "listAppointments",
+      "input": {
+        "page": { "type": "number" },
+        "per_page": { "type": "number" },
+        "filter[date_after]": { "type": "string" },
+        "filter[date_before]": { "type": "string" },
+        "filter[last_fetched]": { "type": "string" }
+      },
+      "output": "page<appointment>",
+      "args": ["$rest"]
+    },
+    "appointment.get": {
+      "kind": "read",
+      "method": "getAppointment",
+      "input": {
+        "appointmentId": { "type": "string", "required": true }
+      },
+      "output": "appointment",
+      "args": ["appointmentId", "$rest"]
+    },
+    "appointment.create": {
+      "kind": "write",
+      "method": "createAppointment",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "appointment",
+      "args": ["data"]
+    },
+    "invoice.list": {
+      "kind": "read",
+      "method": "listInvoices",
+      "input": {
+        "filter[sale_id]": { "type": "number" },
+        "filter[updated_from]": { "type": "string" },
+        "include": { "type": "string" },
+        "detailed": { "type": "boolean" }
+      },
+      "output": "page<invoice>",
+      "args": ["$rest"]
+    },
+    "invoice.get": {
+      "kind": "read",
+      "method": "getInvoice",
+      "input": {
+        "invoiceId": { "type": "string", "required": true }
+      },
+      "output": "invoice",
+      "args": ["invoiceId", "$rest"]
+    },
+    "sale.get": {
+      "kind": "read",
+      "method": "getSale",
+      "input": {
+        "saleId": { "type": "string", "required": true },
+        "include": { "type": "string" }
+      },
+      "output": "sale",
+      "args": ["saleId", "$rest"]
+    },
+    "record.list": {
+      "kind": "read",
+      "method": "listRecords",
+      "input": {
+        "page": { "type": "number" },
+        "per_page": { "type": "number" },
+        "filter[id]": { "type": "number" },
+        "filter[sale_id]": { "type": "number" },
+        "include": { "type": "string" }
+      },
+      "output": "page<record>",
+      "args": ["$rest"]
+    }
+  },
+  "options": {
+    "clinic": {
+      "capability": "clinic.list",
+      "label": "{{item.name}}",
+      "value": "$.item.id",
+      "items": "data"
+    },
+    "petParent": {
+      "capability": "petParent.list",
+      "label": "{{item.name}} {{item.last_name}}",
+      "value": "$.item.id",
+      "items": "data"
+    }
+  }
+}

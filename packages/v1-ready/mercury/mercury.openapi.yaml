@@ -1,0 +1,496 @@
+openapi: 3.0.0
+info:
+  title: Mercury Banking API
+  version: "1.0.0"
+  description: >-
+    Mercury is a business banking platform. This file is a curated subset of the
+    official Mercury OpenAPI (https://docs.mercury.com/) covering exactly the
+    endpoints @friggframework/api-module-mercury implements in api.js. It is the
+    source of truth the hand-written client mirrors 1:1 (one method per
+    operationId). Official docs also document Basic auth (token as username,
+    empty password); this module uses Bearer.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+servers:
+  - url: https://api.mercury.com/api/v1
+    description: Mercury API URL
+security:
+  - bearerAuth: []
+tags:
+  - name: Accounts
+    description: Manage bank accounts
+  - name: Transactions
+    description: List and fetch transactions
+  - name: Webhooks
+    description: Manage webhook endpoints
+paths:
+  /accounts:
+    get:
+      tags: [Accounts]
+      operationId: getAccounts
+      summary: Get all accounts
+      description: >-
+        Retrieve a paginated list of accounts. Supports cursor-based pagination
+        with limit, order, start_after, and end_before query parameters.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, format: int64, minimum: 1, maximum: 1000, default: 1000 }
+        - in: query
+          name: order
+          schema: { type: string, enum: [asc, desc], default: asc }
+        - in: query
+          name: start_after
+          schema: { type: string, format: uuid }
+        - in: query
+          name: end_before
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Paginated accounts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountsPaginatedResponse"
+        "400":
+          description: Invalid query parameters
+
+  /account/{accountId}:
+    get:
+      tags: [Accounts]
+      operationId: getAccount
+      summary: Get account by ID
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "404":
+          description: accountId not found
+
+  /account/{accountId}/transactions:
+    get:
+      tags: [Transactions]
+      operationId: listAccountTransactions
+      summary: List account transactions
+      description: >-
+        Retrieve a paginated list of transactions for a specific account.
+        Supports filtering by date range, status, and search terms.
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: query
+          name: limit
+          schema: { type: integer, format: int64, minimum: 1, maximum: 1000, default: 1000 }
+        - in: query
+          name: start
+          schema: { type: string }
+          description: Earliest date (YYYY-MM-DD or ISO 8601). Defaults to 30 days before today.
+        - in: query
+          name: end
+          schema: { type: string }
+          description: Latest date (YYYY-MM-DD or ISO 8601). Defaults to today.
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, sent, cancelled, failed, reversed, blocked]
+        - in: query
+          name: offset
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: order
+          schema: { type: string, enum: [asc, desc], default: desc }
+        - in: query
+          name: requestId
+          schema: { type: string, format: uuid }
+        - in: query
+          name: mercuryCategory
+          schema: { type: string }
+        - in: query
+          name: categoryId
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Paginated account transactions
+        "400":
+          description: Invalid query parameters
+        "404":
+          description: accountId not found
+
+  /account/{accountId}/transaction/{transactionId}:
+    get:
+      tags: [Transactions]
+      operationId: getTransaction
+      summary: Get a transaction by ID
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: transactionId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "404":
+          description: Not found
+
+  /transactions:
+    get:
+      tags: [Transactions]
+      operationId: listTransactions
+      summary: List all transactions
+      description: >-
+        Retrieve a paginated list of all transactions across all accounts.
+        Supports advanced filtering and cursor-based pagination.
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [pending, sent, cancelled, failed, reversed, blocked]
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: start
+          schema: { type: string }
+        - in: query
+          name: end
+          schema: { type: string }
+        - in: query
+          name: postedStart
+          schema: { type: string }
+        - in: query
+          name: postedEnd
+          schema: { type: string }
+        - in: query
+          name: accountId
+          schema:
+            type: array
+            items: { type: string, format: uuid }
+        - in: query
+          name: cardId
+          schema:
+            type: array
+            items: { type: string }
+        - in: query
+          name: mercuryCategory
+          schema: { type: string }
+        - in: query
+          name: categoryId
+          schema: { type: string, format: uuid }
+        - in: query
+          name: start_at
+          schema: { type: string, format: uuid }
+        - in: query
+          name: start_after
+          schema: { type: string, format: uuid }
+        - in: query
+          name: end_before
+          schema: { type: string, format: uuid }
+        - in: query
+          name: limit
+          schema: { type: integer, format: int64, minimum: 1, maximum: 1000, default: 1000 }
+        - in: query
+          name: order
+          schema: { type: string, enum: [asc, desc], default: asc }
+      responses:
+        "200":
+          description: Paginated transactions
+        "400":
+          description: Invalid query parameters
+
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhooks
+      summary: Get webhook endpoints
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [active, paused, disabled, deleted]
+        - in: query
+          name: limit
+          schema: { type: integer, format: int64, minimum: 1, maximum: 1000, default: 1000 }
+        - in: query
+          name: start_after
+          schema: { type: string, format: uuid }
+        - in: query
+          name: end_before
+          schema: { type: string, format: uuid }
+        - in: query
+          name: order
+          schema: { type: string, enum: [asc, desc], default: asc }
+      responses:
+        "200":
+          description: Paginated webhook endpoints
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiWebhooksPaginatedResponse"
+        "400":
+          description: Invalid query parameters
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a new webhook endpoint
+      description: >-
+        Register a new webhook endpoint. The response includes `secret` once
+        (signing key for the Mercury-Signature header). Webhooks are not
+        available in the sandbox environment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWebhookParams"
+      responses:
+        "200":
+          description: Created webhook (includes secret)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiWebhookResponse"
+        "400":
+          description: Invalid body
+
+  /webhooks/{webhookEndpointId}:
+    get:
+      tags: [Webhooks]
+      operationId: getWebhook
+      summary: Get webhook endpoint by ID
+      parameters:
+        - in: path
+          name: webhookEndpointId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Webhook endpoint
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiWebhookResponse"
+        "404":
+          description: webhookEndpointId not found
+    post:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update an existing webhook endpoint
+      description: >-
+        Mercury documents this as POST (not PATCH). A webhook disabled for
+        delivery failures can be reactivated by setting status to active.
+      parameters:
+        - in: path
+          name: webhookEndpointId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWebhookParams"
+      responses:
+        "200":
+          description: Updated webhook
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiWebhookResponse"
+        "400":
+          description: Invalid body
+        "404":
+          description: webhookEndpointId not found
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook endpoint
+      parameters:
+        - in: path
+          name: webhookEndpointId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: webhookEndpointId not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        Bearer token authentication for Mercury API.
+        `Authorization: Bearer TOKEN` where TOKEN includes the `secret-token:`
+        prefix. Tokens are created under Settings → Tokens.
+  schemas:
+    AccountStatus:
+      type: string
+      enum: [active, deleted, pending, archived]
+    AccountType:
+      type: string
+      enum: [mercury, external, recipient]
+    Account:
+      type: object
+      required:
+        - id
+        - accountNumber
+        - routingNumber
+        - name
+        - status
+        - type
+        - createdAt
+        - availableBalance
+        - currentBalance
+        - kind
+        - canSendRealTimePayments
+        - legalBusinessName
+        - dashboardLink
+      properties:
+        id: { type: string, format: uuid }
+        accountNumber: { type: string }
+        routingNumber: { type: string }
+        name: { type: string }
+        nickname: { type: string, nullable: true }
+        status: { $ref: "#/components/schemas/AccountStatus" }
+        type: { $ref: "#/components/schemas/AccountType" }
+        createdAt: { type: string, format: date-time }
+        availableBalance: { type: number, multipleOf: 0.01 }
+        currentBalance: { type: number, multipleOf: 0.01 }
+        kind: { type: string }
+        canReceiveTransactions: { type: boolean, nullable: true }
+        canSendRealTimePayments: { type: boolean }
+        legalBusinessName: { type: string }
+        dashboardLink: { type: string }
+    AccountsPaginatedResponse:
+      type: object
+      required: [accounts, page]
+      properties:
+        accounts:
+          type: array
+          items: { $ref: "#/components/schemas/Account" }
+        page:
+          type: object
+          properties:
+            nextPage: { type: string, format: uuid }
+            previousPage: { type: string, format: uuid }
+    Transaction:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        accountId: { type: string, format: uuid }
+        amount: { type: number, multipleOf: 0.01 }
+        status:
+          type: string
+          enum: [pending, sent, cancelled, failed, reversed, blocked]
+        counterpartyName: { type: string }
+        counterpartyNickname: { type: string, nullable: true }
+        bankDescription: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        postedAt: { type: string, format: date-time, nullable: true }
+        note: { type: string, nullable: true }
+        mercuryCategory: { type: string, nullable: true }
+    WebhookEventType:
+      type: string
+      enum:
+        - transaction.created
+        - transaction.updated
+        - checkingAccount.balance.updated
+        - savingsAccount.balance.updated
+        - treasuryAccount.balance.updated
+        - investmentAccount.balance.updated
+        - creditAccount.balance.updated
+    ApiWebhookStatus:
+      type: string
+      enum: [active, paused, disabled]
+    CreateWebhookParams:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string }
+        eventTypes:
+          type: array
+          nullable: true
+          items: { $ref: "#/components/schemas/WebhookEventType" }
+        filterPaths:
+          type: array
+          nullable: true
+          items: { type: string }
+    UpdateWebhookParams:
+      type: object
+      properties:
+        url: { type: string, nullable: true }
+        eventTypes:
+          type: array
+          nullable: true
+          items: { $ref: "#/components/schemas/WebhookEventType" }
+        filterPaths:
+          type: array
+          nullable: true
+          items: { type: string }
+        status:
+          type: string
+          nullable: true
+          enum: [active, paused]
+    ApiWebhookResponse:
+      type: object
+      required: [id, url, status, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        url: { type: string }
+        status: { $ref: "#/components/schemas/ApiWebhookStatus" }
+        eventTypes:
+          type: array
+          nullable: true
+          items: { $ref: "#/components/schemas/WebhookEventType" }
+        filterPaths:
+          type: array
+          nullable: true
+          items: { type: string }
+        secret:
+          type: string
+          nullable: true
+          description: Signing secret; only returned on create.
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ApiWebhooksPaginatedResponse:
+      type: object
+      required: [webhooks, page]
+      properties:
+        webhooks:
+          type: array
+          items: { $ref: "#/components/schemas/ApiWebhookResponse" }
+        page:
+          type: object
+          properties:
+            nextPage: { type: string, format: uuid }
+            previousPage: { type: string, format: uuid }

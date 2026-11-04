@@ -1,0 +1,273 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "mercury",
+  "label": "Mercury",
+  "package": "@friggframework/api-module-mercury",
+  "version": "1.0.0",
+  "auth": "api_key",
+  "account": {
+    "description": "Connected Mercury organization identity derived from GET /accounts (first account id) or an API-token fingerprint fallback.",
+    "fields": [
+      {
+        "name": "externalId",
+        "type": "string",
+        "description": "Primary Mercury account id, or sha256 of the API token when no account is available."
+      },
+      {
+        "name": "legalBusinessName",
+        "type": "string",
+        "description": "legalBusinessName from the primary account when present."
+      }
+    ]
+  },
+  "objects": {
+    "account": {
+      "label": "Bank account",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "account.name" },
+        { "name": "nickname", "type": "string" },
+        { "name": "legalBusinessName", "type": "string", "tag": "org.name" },
+        { "name": "kind", "type": "string" },
+        { "name": "type", "type": "string", "readOnly": true },
+        { "name": "status", "type": "string", "readOnly": true },
+        { "name": "availableBalance", "type": "number", "tag": "money.available" },
+        { "name": "currentBalance", "type": "number", "tag": "money.current" },
+        { "name": "accountNumber", "type": "string", "readOnly": true },
+        { "name": "routingNumber", "type": "string", "readOnly": true },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "dashboardLink", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "account.list",
+          "items": "accounts",
+          "next": "page.nextPage"
+        },
+        "get": {
+          "capability": "account.get",
+          "id": "accountId"
+        }
+      }
+    },
+    "transaction": {
+      "label": "Bank transaction",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "accountId", "type": "string", "tag": "record.parentId" },
+        { "name": "amount", "type": "number", "tag": "money.amount" },
+        { "name": "status", "type": "string", "readOnly": true },
+        { "name": "counterpartyName", "type": "string", "tag": "counterparty.name" },
+        { "name": "counterpartyNickname", "type": "string" },
+        { "name": "bankDescription", "type": "string" },
+        { "name": "note", "type": "string" },
+        { "name": "mercuryCategory", "type": "string" },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "postedAt", "type": "datetime", "tag": "record.postedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "transaction.list",
+          "items": "transactions",
+          "next": "page.nextPage"
+        },
+        "get": {
+          "capability": "transaction.get",
+          "id": "transactionId"
+        }
+      }
+    },
+    "webhook": {
+      "label": "Webhook endpoint",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "url", "type": "string" },
+        { "name": "status", "type": "string" },
+        { "name": "eventTypes", "type": "json" },
+        { "name": "filterPaths", "type": "json" },
+        { "name": "createdAt", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updatedAt", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "webhook.list",
+          "items": "webhooks",
+          "next": "page.nextPage"
+        },
+        "get": {
+          "capability": "webhook.get",
+          "id": "webhookEndpointId"
+        },
+        "create": {
+          "capability": "webhook.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "webhook.update",
+          "id": "webhookEndpointId",
+          "body": "data"
+        }
+      }
+    }
+  },
+  "events": {
+    "transaction.created": {
+      "delivery": "webhook",
+      "object": "transaction",
+      "subscribe": "webhook.create",
+      "description": "Fired when a new transaction is created in the Mercury organization."
+    },
+    "transaction.updated": {
+      "delivery": "webhook",
+      "object": "transaction",
+      "subscribe": "webhook.create",
+      "description": "Fired when an existing transaction is modified."
+    },
+    "checkingAccount.balance.updated": {
+      "delivery": "webhook",
+      "object": "account",
+      "subscribe": "webhook.create",
+      "description": "Fired when checking account available/current/in-flight balances change."
+    },
+    "savingsAccount.balance.updated": {
+      "delivery": "webhook",
+      "object": "account",
+      "subscribe": "webhook.create",
+      "description": "Fired when savings account balances change."
+    },
+    "treasuryAccount.balance.updated": {
+      "delivery": "webhook",
+      "object": "account",
+      "subscribe": "webhook.create",
+      "description": "Fired when treasury account balances change."
+    },
+    "creditAccount.balance.updated": {
+      "delivery": "webhook",
+      "object": "account",
+      "subscribe": "webhook.create",
+      "description": "Fired when credit account balances change."
+    },
+    "investmentAccount.balance.updated": {
+      "delivery": "webhook",
+      "object": "account",
+      "subscribe": "webhook.create",
+      "description": "Fired when investment account balances change."
+    }
+  },
+  "capabilities": {
+    "account.list": {
+      "kind": "read",
+      "method": "getAccounts",
+      "input": {
+        "limit": { "type": "integer" },
+        "order": { "type": "string" },
+        "start_after": { "type": "string" },
+        "end_before": { "type": "string" }
+      },
+      "output": "page<account>",
+      "args": ["$rest"]
+    },
+    "account.get": {
+      "kind": "read",
+      "method": "getAccount",
+      "input": {
+        "accountId": { "type": "string", "required": true }
+      },
+      "output": "account",
+      "args": ["accountId"]
+    },
+    "transaction.listForAccount": {
+      "kind": "read",
+      "method": "listAccountTransactions",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "limit": { "type": "integer" },
+        "start": { "type": "string" },
+        "end": { "type": "string" },
+        "status": { "type": "string" },
+        "search": { "type": "string" },
+        "offset": { "type": "integer" },
+        "order": { "type": "string" }
+      },
+      "output": "page<transaction>",
+      "args": ["accountId", "$rest"]
+    },
+    "transaction.get": {
+      "kind": "read",
+      "method": "getTransaction",
+      "input": {
+        "accountId": { "type": "string", "required": true },
+        "transactionId": { "type": "string", "required": true }
+      },
+      "output": "transaction",
+      "args": ["accountId", "transactionId"]
+    },
+    "transaction.list": {
+      "kind": "read",
+      "method": "listTransactions",
+      "input": {
+        "limit": { "type": "integer" },
+        "order": { "type": "string" },
+        "start": { "type": "string" },
+        "end": { "type": "string" },
+        "start_after": { "type": "string" },
+        "end_before": { "type": "string" }
+      },
+      "output": "page<transaction>",
+      "args": ["$rest"]
+    },
+    "webhook.list": {
+      "kind": "read",
+      "method": "getWebhooks",
+      "input": {
+        "status": { "type": "array" },
+        "limit": { "type": "integer" },
+        "order": { "type": "string" },
+        "start_after": { "type": "string" },
+        "end_before": { "type": "string" }
+      },
+      "output": "page<webhook>",
+      "args": ["$rest"]
+    },
+    "webhook.get": {
+      "kind": "read",
+      "method": "getWebhook",
+      "input": {
+        "webhookEndpointId": { "type": "string", "required": true }
+      },
+      "output": "webhook",
+      "args": ["webhookEndpointId"]
+    },
+    "webhook.create": {
+      "kind": "subscribe",
+      "method": "createWebhook",
+      "input": {
+        "data": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["data"]
+    },
+    "webhook.update": {
+      "kind": "write",
+      "method": "updateWebhook",
+      "input": {
+        "webhookEndpointId": { "type": "string", "required": true },
+        "data": { "type": "object", "required": true }
+      },
+      "output": "webhook",
+      "args": ["webhookEndpointId", "data"]
+    },
+    "webhook.delete": {
+      "kind": "delete",
+      "method": "deleteWebhook",
+      "input": {
+        "webhookEndpointId": { "type": "string", "required": true }
+      },
+      "output": "void",
+      "args": ["webhookEndpointId"]
+    }
+  }
+}

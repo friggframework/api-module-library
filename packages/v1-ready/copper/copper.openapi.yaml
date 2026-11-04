@@ -1,0 +1,768 @@
+openapi: 3.0.3
+info:
+  title: Copper CRM Developer API
+  version: "1.0.0"
+  description: >-
+    Copper CRM Developer API surface documented at https://developer.copper.com/.
+    Copper does not publish a single downloadable OpenAPI document for the full
+    Developer API; this file is Left Hook's curated subset covering exactly the
+    endpoints the @friggframework/api-module-copper client in api.js implements.
+    It is the source of truth the hand-written client mirrors 1:1 (one method
+    per operationId).
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Copper Developer API
+    url: https://developer.copper.com/
+servers:
+  - url: https://api.copper.com/developer_api/v1
+    description: Copper Developer API v1
+security:
+  - CopperApiKeyAuth: []
+tags:
+  - name: Account
+  - name: People
+  - name: Companies
+  - name: Opportunities
+  - name: Leads
+  - name: Webhooks
+paths:
+  /account:
+    get:
+      tags: [Account]
+      operationId: getAccount
+      summary: Fetch account details
+      description: >-
+        Returns the Copper account for the authenticated API key.
+        https://developer.copper.com/account-and-users/fetch-account-details.html
+      responses:
+        "200":
+          description: Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+
+  /people/search:
+    post:
+      tags: [People]
+      operationId: listPeople
+      summary: List people (search)
+      description: >-
+        Search/list people. Filtering criteria have an AND relationship.
+        https://developer.copper.com/people/list-people-search.html
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PeopleSearchRequest"
+      responses:
+        "200":
+          description: Array of people
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Person"
+
+  /people:
+    post:
+      tags: [People]
+      operationId: createPerson
+      summary: Create a person
+      description: >-
+        https://developer.copper.com/people/create-a-new-person.html
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PersonWrite"
+      responses:
+        "200":
+          description: Created person
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+
+  /people/{id}:
+    get:
+      tags: [People]
+      operationId: getPerson
+      summary: Fetch a person by id
+      description: >-
+        https://developer.copper.com/people/fetch-a-person-by-id.html
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "200":
+          description: Person
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+    put:
+      tags: [People]
+      operationId: updatePerson
+      summary: Update a person
+      description: >-
+        Only fields present in the body are applied.
+        https://developer.copper.com/people/update-a-person.html
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PersonWrite"
+      responses:
+        "200":
+          description: Updated person
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+
+  /companies/search:
+    post:
+      tags: [Companies]
+      operationId: listCompanies
+      summary: List companies (search)
+      description: >-
+        https://developer.copper.com/companies/list-companies-search.html
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanySearchRequest"
+      responses:
+        "200":
+          description: Array of companies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Company"
+
+  /companies:
+    post:
+      tags: [Companies]
+      operationId: createCompany
+      summary: Create a company
+      description: >-
+        https://developer.copper.com/companies/create-a-new-company.html
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyWrite"
+      responses:
+        "200":
+          description: Created company
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+
+  /companies/{id}:
+    get:
+      tags: [Companies]
+      operationId: getCompany
+      summary: Fetch a company by id
+      description: >-
+        https://developer.copper.com/companies/fetch-a-company-by-id.html
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "200":
+          description: Company
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+    put:
+      tags: [Companies]
+      operationId: updateCompany
+      summary: Update a company
+      description: >-
+        https://developer.copper.com/companies/update-a-company.html
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyWrite"
+      responses:
+        "200":
+          description: Updated company
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+
+  /opportunities/search:
+    post:
+      tags: [Opportunities]
+      operationId: listOpportunities
+      summary: List opportunities (search)
+      description: >-
+        https://developer.copper.com/opportunities/list-opportunities-search.html
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Array of opportunities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Opportunity"
+
+  /opportunities:
+    post:
+      tags: [Opportunities]
+      operationId: createOpportunity
+      summary: Create an opportunity
+      description: >-
+        Required field: name.
+        https://developer.copper.com/opportunities/create-a-new-opportunity.html
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpportunityWrite"
+      responses:
+        "200":
+          description: Created opportunity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opportunity"
+
+  /opportunities/{id}:
+    get:
+      tags: [Opportunities]
+      operationId: getOpportunity
+      summary: Fetch an opportunity by id
+      description: >-
+        https://developer.copper.com/opportunities/fetch-an-opportunity-by-id.html
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "200":
+          description: Opportunity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opportunity"
+    put:
+      tags: [Opportunities]
+      operationId: updateOpportunity
+      summary: Update an opportunity
+      description: >-
+        https://developer.copper.com/opportunities/update-an-opportunity.html
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpportunityWrite"
+      responses:
+        "200":
+          description: Updated opportunity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opportunity"
+
+  /leads/search:
+    post:
+      tags: [Leads]
+      operationId: listLeads
+      summary: List leads (search)
+      description: >-
+        https://developer.copper.com/leads/list-leads-search.html
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Array of leads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lead"
+
+  /leads:
+    post:
+      tags: [Leads]
+      operationId: createLead
+      summary: Create a lead
+      description: >-
+        https://developer.copper.com/leads/create-a-new-lead.html
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeadWrite"
+      responses:
+        "200":
+          description: Created lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+
+  /leads/{id}:
+    get:
+      tags: [Leads]
+      operationId: getLead
+      summary: Fetch a lead by id
+      description: >-
+        https://developer.copper.com/leads/fetch-a-lead-by-id.html
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "200":
+          description: Lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+    put:
+      tags: [Leads]
+      operationId: updateLead
+      summary: Update a lead
+      description: >-
+        https://developer.copper.com/leads/update-a-lead.html
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeadWrite"
+      responses:
+        "200":
+          description: Updated lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      summary: List all webhook subscriptions
+      description: >-
+        https://developer.copper.com/webhooks/list-all-subscriptions.html
+      responses:
+        "200":
+          description: Array of subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WebhookSubscription"
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      summary: Create a webhook subscription
+      description: >-
+        Required: target, type, event.
+        Valid type values on create: lead, person, company, opportunity,
+        project, task. Valid event values: new, update, delete.
+        https://developer.copper.com/webhooks/create-new-subscription.html
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookCreate"
+      responses:
+        "200":
+          description: Created subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookSubscription"
+
+  /webhooks/{id}:
+    put:
+      tags: [Webhooks]
+      operationId: updateWebhook
+      summary: Update a webhook subscription
+      description: >-
+        https://developer.copper.com/webhooks/update-a-subscription.html
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookUpdate"
+      responses:
+        "200":
+          description: Updated subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookSubscription"
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook subscription
+      description: >-
+        https://developer.copper.com/webhooks/delete-subscription-unsubscribe.html
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "200":
+          description: Deleted subscription id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+
+components:
+  securitySchemes:
+    CopperApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-PW-AccessToken
+      description: >-
+        API key from System settings > API Keys. Requests must also send
+        X-PW-Application: developer_api and X-PW-UserEmail: <token owner email>.
+        https://developer.copper.com/introduction/requests.html
+
+  parameters:
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  schemas:
+    Account:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        primary_timezone: { type: string }
+        logo_mini_url: { type: string }
+        settings:
+          type: object
+          additionalProperties: true
+
+    EmailEntry:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        category: { type: string }
+
+    PhoneEntry:
+      type: object
+      properties:
+        number: { type: string }
+        category: { type: string }
+
+    Address:
+      type: object
+      properties:
+        street: { type: string }
+        city: { type: string }
+        state: { type: string }
+        postal_code: { type: string }
+        country: { type: string }
+
+    CustomField:
+      type: object
+      properties:
+        custom_field_definition_id: { type: integer }
+        value: {}
+
+    Person:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        first_name: { type: string }
+        middle_name: { type: string }
+        last_name: { type: string }
+        prefix: { type: string }
+        suffix: { type: string }
+        title: { type: string }
+        details: { type: string }
+        emails:
+          type: array
+          items: { $ref: "#/components/schemas/EmailEntry" }
+        phone_numbers:
+          type: array
+          items: { $ref: "#/components/schemas/PhoneEntry" }
+        address: { $ref: "#/components/schemas/Address" }
+        assignee_id: { type: integer, nullable: true }
+        company_id: { type: integer, nullable: true }
+        company_name: { type: string, nullable: true }
+        contact_type_id: { type: integer, nullable: true }
+        tags:
+          type: array
+          items: { type: string }
+        custom_fields:
+          type: array
+          items: { $ref: "#/components/schemas/CustomField" }
+        date_created: { type: integer }
+        date_modified: { type: integer }
+        interaction_count: { type: integer }
+
+    PersonWrite:
+      type: object
+      additionalProperties: true
+      properties:
+        name: { type: string }
+        emails:
+          type: array
+          items: { $ref: "#/components/schemas/EmailEntry" }
+        phone_numbers:
+          type: array
+          items: { $ref: "#/components/schemas/PhoneEntry" }
+        address: { $ref: "#/components/schemas/Address" }
+        details: { type: string }
+        title: { type: string }
+
+    PeopleSearchRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        ids:
+          type: array
+          items: { type: integer }
+        page_number: { type: integer, default: 1 }
+        page_size: { type: integer, default: 20 }
+        sort_by: { type: string }
+        sort_direction:
+          type: string
+          enum: [asc, desc]
+        name: { type: string }
+        phone_number: { type: string }
+        emails:
+          type: array
+          items: { type: string }
+
+    Company:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        address: { $ref: "#/components/schemas/Address" }
+        email_domain: { type: string, nullable: true }
+        details: { type: string, nullable: true }
+        phone_numbers:
+          type: array
+          items: { $ref: "#/components/schemas/PhoneEntry" }
+        primary_contact_id: { type: integer, nullable: true }
+        assignee_id: { type: integer, nullable: true }
+        tags:
+          type: array
+          items: { type: string }
+        custom_fields:
+          type: array
+          items: { $ref: "#/components/schemas/CustomField" }
+        date_created: { type: integer }
+        date_modified: { type: integer }
+
+    CompanyWrite:
+      type: object
+      additionalProperties: true
+      properties:
+        name: { type: string }
+        email_domain: { type: string }
+        details: { type: string }
+        address: { $ref: "#/components/schemas/Address" }
+        phone_numbers:
+          type: array
+          items: { $ref: "#/components/schemas/PhoneEntry" }
+        primary_contact_id: { type: integer }
+
+    CompanySearchRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        ids:
+          type: array
+          items: { type: integer }
+        page_number: { type: integer, default: 1 }
+        page_size: { type: integer, default: 20 }
+        sort_by: { type: string }
+        sort_direction:
+          type: string
+          enum: [asc, desc]
+        name: { type: string }
+        email_domains: { type: string }
+
+    Opportunity:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        status: { type: string }
+        monetary_value: { type: number, nullable: true }
+        win_probability: { type: number, nullable: true }
+        pipeline_id: { type: integer, nullable: true }
+        pipeline_stage_id: { type: integer, nullable: true }
+        company_id: { type: integer, nullable: true }
+        company_name: { type: string, nullable: true }
+        primary_contact_id: { type: integer, nullable: true }
+        assignee_id: { type: integer, nullable: true }
+        close_date: { type: string, nullable: true }
+        details: { type: string, nullable: true }
+        customer_source_id: { type: integer, nullable: true }
+        tags:
+          type: array
+          items: { type: string }
+        custom_fields:
+          type: array
+          items: { $ref: "#/components/schemas/CustomField" }
+        date_created: { type: integer }
+        date_modified: { type: integer }
+
+    OpportunityWrite:
+      type: object
+      additionalProperties: true
+      required: [name]
+      properties:
+        name: { type: string }
+        primary_contact_id: { type: integer }
+        customer_source_id: { type: integer }
+        details: { type: string }
+        monetary_value: { type: number }
+        pipeline_id: { type: integer }
+        pipeline_stage_id: { type: integer }
+
+    Lead:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        first_name: { type: string }
+        last_name: { type: string }
+        email: { $ref: "#/components/schemas/EmailEntry" }
+        phone_numbers:
+          type: array
+          items: { $ref: "#/components/schemas/PhoneEntry" }
+        address: { $ref: "#/components/schemas/Address" }
+        status: { type: string }
+        status_id: { type: integer, nullable: true }
+        company_name: { type: string, nullable: true }
+        monetary_value: { type: number, nullable: true }
+        customer_source_id: { type: integer, nullable: true }
+        assignee_id: { type: integer, nullable: true }
+        details: { type: string, nullable: true }
+        tags:
+          type: array
+          items: { type: string }
+        custom_fields:
+          type: array
+          items: { $ref: "#/components/schemas/CustomField" }
+        date_created: { type: integer }
+        date_modified: { type: integer }
+
+    LeadWrite:
+      type: object
+      additionalProperties: true
+      properties:
+        name: { type: string }
+        email: { $ref: "#/components/schemas/EmailEntry" }
+        phone_numbers:
+          type: array
+          items: { $ref: "#/components/schemas/PhoneEntry" }
+        address: { $ref: "#/components/schemas/Address" }
+        details: { type: string }
+        customer_source_id: { type: integer }
+        custom_fields:
+          type: array
+          items: { $ref: "#/components/schemas/CustomField" }
+
+    WebhookSubscription:
+      type: object
+      properties:
+        id: { type: integer }
+        target: { type: string, format: uri }
+        type:
+          type: string
+          enum: [lead, person, company, opportunity, project, task, activity_log]
+        event:
+          type: string
+          enum: [new, update, delete]
+        secret:
+          type: object
+          additionalProperties: { type: string }
+        headers:
+          type: object
+          additionalProperties: { type: string }
+        custom_field_computed_values: { type: boolean }
+        created_at: { type: integer }
+
+    WebhookCreate:
+      type: object
+      required: [target, type, event]
+      properties:
+        target: { type: string, format: uri }
+        type:
+          type: string
+          enum: [lead, person, company, opportunity, project, task]
+        event:
+          type: string
+          enum: [new, update, delete]
+        secret:
+          type: object
+          additionalProperties: { type: string }
+        headers:
+          type: object
+          additionalProperties: { type: string }
+        custom_field_computed_values: { type: boolean }
+
+    WebhookUpdate:
+      type: object
+      properties:
+        target: { type: string, format: uri }
+        secret:
+          type: object
+          additionalProperties: { type: string }
+        headers:
+          type: object
+          additionalProperties: { type: string }
+        custom_field_computed_values: { type: boolean }

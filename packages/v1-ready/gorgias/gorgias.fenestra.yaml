@@ -1,0 +1,85 @@
+# Fenestra Document: Gorgias HTTP Integrations & Widgets (draft)
+#
+# Gorgias exposes real UI extension points: HTTP Integrations fetch/push data on
+# ticket triggers, and Widgets render that data in the ticket / customer sidebar.
+# There is no iframe app SDK comparable to Zendesk ZAF; the surface is
+# declarative templates managed via the REST API.
+#
+# Sources:
+# - https://developers.gorgias.com/docs/create-integrations-and-widgets-programmatically
+# - https://developers.gorgias.com/reference/create-widget
+# - https://developers.gorgias.com/reference/create-integration
+
+fenestra: "0.1.0"
+
+info:
+  title: Gorgias HTTP Integrations and Widgets
+  version: "0.1.0"
+  description: |
+    Gorgias lets apps extend the helpdesk agent UI through HTTP Integrations
+    and Widgets. An HTTP Integration calls an external HTTPS endpoint when
+    ticket triggers fire (ticket-created, ticket-updated, ticket-message-created,
+    etc.). A Widget binds to an integration and renders JSON paths from the
+    response into the ticket or customer sidebar using a declarative template.
+
+    Key characteristic: UI is template-driven (not an iframe SDK). Create and
+    manage integrations/widgets via the Gorgias REST API
+    (`POST /api/integrations`, `POST /api/widgets`).
+  contact:
+    name: Gorgias Developer Relations
+    url: https://developers.gorgias.com/
+
+platform:
+  name: Gorgias
+  vendor: Gorgias, Inc.
+  documentation: https://developers.gorgias.com/docs/create-integrations-and-widgets-programmatically
+  appMarketplace: https://www.gorgias.com/apps
+  developerPortal: https://partners.gorgias.com/
+
+extensionPoints:
+  - id: ticket-sidebar-widget
+    name: Ticket sidebar widget
+    type: sidebar
+    extensionType: jsonResponse
+    description: |
+      Widgets with context `ticket` appear in the right-hand sidebar of the
+      ticket page. Bound to an HTTP integration via `integration_id`; template
+      cards/paths render fields from the integration JSON response.
+      Managed via POST/PUT /api/widgets.
+    supportedComponents:
+      - all
+    context:
+      provides:
+        - ticket
+        - customer
+
+  - id: customer-sidebar-widget
+    name: Customer sidebar widget
+    type: sidebar
+    extensionType: jsonResponse
+    description: |
+      Widgets with context `customer` appear on the customer page sidebar.
+      Managed via POST/PUT /api/widgets.
+    supportedComponents:
+      - all
+    context:
+      provides:
+        - customer
+
+  - id: http-integration
+    name: HTTP Integration
+    type: panel
+    extensionType: jsonResponse
+    description: |
+      Custom HTTP integration (`type: http`) that calls an external URL on
+      configured ticket triggers and supplies data for widgets (or acts as an
+      outbound webhook when method is POST). Triggers include ticket-created,
+      ticket-updated, ticket-status-updated, ticket-message-created,
+      ticket-message-failed. Managed via POST/PUT /api/integrations.
+    supportedComponents:
+      - all
+    context:
+      provides:
+        - ticket
+        - customer
+        - message

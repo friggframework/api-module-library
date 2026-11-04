@@ -1,0 +1,147 @@
+{
+  "$schema": "capability-manifest/v0.1",
+  "module": "gorgias",
+  "package": "@friggframework/api-module-gorgias",
+  "version": "1.0.0",
+  "auth": {
+    "type": "oauth2",
+    "alternate": "basic",
+    "notes": "OAuth2 Bearer per account subdomain for public apps; HTTP Basic (email + API key) for private apps only."
+  },
+  "objects": {
+    "account": {
+      "fields": [
+        { "name": "domain", "tags": ["identity", "read"] },
+        { "name": "status", "tags": ["read"] },
+        { "name": "created_datetime", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "getAccount", "surface": "data-read", "method": "getAccount" }
+      ]
+    },
+    "ticket": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "external_id", "tags": ["identity", "read", "write"] },
+        { "name": "subject", "tags": ["read", "write"] },
+        { "name": "status", "tags": ["read", "write"] },
+        { "name": "priority", "tags": ["read", "write"] },
+        { "name": "channel", "tags": ["read"] },
+        { "name": "customer", "tags": ["read", "write", "relation"] },
+        { "name": "assignee_user", "tags": ["read", "write", "relation"] },
+        { "name": "assignee_team", "tags": ["read", "write", "relation"] },
+        { "name": "tags", "tags": ["read", "write"] },
+        { "name": "created_datetime", "tags": ["read"] },
+        { "name": "updated_datetime", "tags": ["read"] },
+        { "name": "excerpt", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listTickets", "surface": "data-read", "method": "listTickets" },
+        { "name": "getTicket", "surface": "data-read", "method": "getTicket" },
+        { "name": "createTicket", "surface": "data-write", "method": "createTicket" },
+        { "name": "updateTicket", "surface": "data-write", "method": "updateTicket" },
+        { "name": "deleteTicket", "surface": "data-write", "method": "deleteTicket" }
+      ]
+    },
+    "message": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "ticket_id", "tags": ["relation", "read"] },
+        { "name": "body_text", "tags": ["read", "write"] },
+        { "name": "body_html", "tags": ["read", "write"] },
+        { "name": "channel", "tags": ["read", "write"] },
+        { "name": "from_agent", "tags": ["read", "write"] },
+        { "name": "created_datetime", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listMessages", "surface": "data-read", "method": "listMessages" },
+        { "name": "getMessage", "surface": "data-read", "method": "getMessage" },
+        { "name": "createTicketMessage", "surface": "data-write", "method": "createTicketMessage" }
+      ]
+    },
+    "customer": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "email", "tags": ["identity", "read", "write"] },
+        { "name": "name", "tags": ["read", "write"] },
+        { "name": "firstname", "tags": ["read", "write"] },
+        { "name": "lastname", "tags": ["read", "write"] },
+        { "name": "external_id", "tags": ["identity", "read", "write"] },
+        { "name": "language", "tags": ["read", "write"] }
+      ],
+      "operations": [
+        { "name": "listCustomers", "surface": "data-read", "method": "listCustomers" },
+        { "name": "getCustomer", "surface": "data-read", "method": "getCustomer" },
+        { "name": "createCustomer", "surface": "data-write", "method": "createCustomer" },
+        { "name": "updateCustomer", "surface": "data-write", "method": "updateCustomer" },
+        { "name": "deleteCustomer", "surface": "data-write", "method": "deleteCustomer" }
+      ]
+    },
+    "user": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "email", "tags": ["identity", "read"] },
+        { "name": "name", "tags": ["read"] },
+        { "name": "role", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listUsers", "surface": "data-read", "method": "listUsers" },
+        { "name": "getUser", "surface": "data-read", "method": "getUser" }
+      ]
+    },
+    "tag": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "name", "tags": ["read"] },
+        { "name": "decoration", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listTags", "surface": "data-read", "method": "listTags" },
+        { "name": "getTag", "surface": "data-read", "method": "getTag" }
+      ]
+    },
+    "satisfaction_survey": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "ticket_id", "tags": ["relation", "read"] },
+        { "name": "score", "tags": ["read"] },
+        { "name": "created_datetime", "tags": ["read"] }
+      ],
+      "operations": [
+        { "name": "listSatisfactionSurveys", "surface": "data-read", "method": "listSatisfactionSurveys" },
+        { "name": "getSatisfactionSurvey", "surface": "data-read", "method": "getSatisfactionSurvey" }
+      ]
+    },
+    "integration": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "name", "tags": ["read", "write"] },
+        { "name": "type", "tags": ["read", "write"] },
+        { "name": "http", "tags": ["read", "write"] }
+      ],
+      "operations": [
+        { "name": "listIntegrations", "surface": "data-read", "method": "listIntegrations" },
+        { "name": "getIntegration", "surface": "data-read", "method": "getIntegration" },
+        { "name": "createIntegration", "surface": "webhook-source", "method": "createIntegration" },
+        { "name": "updateIntegration", "surface": "data-write", "method": "updateIntegration" },
+        { "name": "deleteIntegration", "surface": "data-write", "method": "deleteIntegration" }
+      ]
+    },
+    "widget": {
+      "fields": [
+        { "name": "id", "tags": ["identity", "read"] },
+        { "name": "context", "tags": ["read", "write"] },
+        { "name": "type", "tags": ["read", "write"] },
+        { "name": "integration_id", "tags": ["relation", "read", "write"] },
+        { "name": "template", "tags": ["read", "write"] }
+      ],
+      "operations": [
+        { "name": "listWidgets", "surface": "data-read", "method": "listWidgets" },
+        { "name": "getWidget", "surface": "data-read", "method": "getWidget" },
+        { "name": "createWidget", "surface": "ui", "method": "createWidget" },
+        { "name": "updateWidget", "surface": "ui", "method": "updateWidget" },
+        { "name": "deleteWidget", "surface": "ui", "method": "deleteWidget" }
+      ]
+    }
+  }
+}

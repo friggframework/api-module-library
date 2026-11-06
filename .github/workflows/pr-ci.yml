@@ -22,7 +22,7 @@ concurrency:
 jobs:
   affected:
     name: Affected build & test
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - name: Checkout
@@ -37,8 +37,10 @@ jobs:
           node-version: '18'
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci --no-audit --no-fund
+      - name: Install (libssl1.1 + npm ci)
+        # Same bootstrap as Cloud Agents (.cursor/environment.json) so
+        # mongodb-memory-server modules work on Ubuntu 24.04 runners.
+        run: bash .cursor/install.sh
 
       - name: Run Nx affected build & test (packages only)
         shell: bash
@@ -46,10 +48,13 @@ jobs:
           set -euo pipefail
 
           BASE_REF="origin/${{ github.base_ref }}"
-          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}:${{ github.base_ref }}" || true
+          # Full history fetch into refs/remotes/origin/<base> — do not use
+          # --depth=1 (writes .git/shallow and breaks three-dot merge-base).
+          git fetch --no-tags origin "${{ github.base_ref }}"
 
+          # Fail the job if git cannot resolve the merge-base (no || true).
           mapfile -t CHANGED < <(
-            git diff --name-only "${BASE_REF}...HEAD" -- 'packages/**' || true
+            git diff --name-only "${BASE_REF}...HEAD" -- 'packages/**'
           )
 
           if [[ ${#CHANGED[@]} -eq 0 || -z "${CHANGED[0]:-}" ]]; then

@@ -1,0 +1,68 @@
+# Fast PR checks for module changes targeting next/main.
+# Uses Nx affected scoped to packages/** so lockfile-only fan-out does not
+# re-run every workspace's credentialed integration suites.
+#
+# Targets that actually exist & pass offline on next:
+#   - test  (most packages; Module Builder modules use nock/mocks)
+#   - build (TypeScript packages: clio, pipedrive, zoho-crm, frigg-scale-test)
+# lint is omitted: almost every package only has mutating `lint:fix`, and the
+# few `lint` scripts fail without unpublished eslint config packages.
+name: PR CI
+
+on:
+  pull_request:
+    branches:
+      - next
+      - main
+
+concurrency:
+  group: pr-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  affected:
+    name: Affected build & test
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # Match release.yml / package.json engines (>=18). .node-version is stale (16).
+          node-version: '18'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run Nx affected build & test (packages only)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE_REF="origin/${{ github.base_ref }}"
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}:${{ github.base_ref }}" || true
+
+          mapfile -t CHANGED < <(
+            git diff --name-only "${BASE_REF}...HEAD" -- 'packages/**' || true
+          )
+
+          if [[ ${#CHANGED[@]} -eq 0 || -z "${CHANGED[0]:-}" ]]; then
+            echo "No packages/** changes vs ${BASE_REF}; skipping Nx build/test."
+            exit 0
+          fi
+
+          echo "Package files changed (${#CHANGED[@]}):"
+          printf '  %s\n' "${CHANGED[@]}"
+
+          # Comma-separated list for nx --files (avoids lockfile marking every project affected)
+          FILES_CSV=$(printf '%s,' "${CHANGED[@]}")
+          FILES_CSV="${FILES_CSV%,}"
+
+          # Nx skips projects that lack a given target, so build only runs on TS packages.
+          npx nx affected -t build,test --files="$FILES_CSV" --parallel=3

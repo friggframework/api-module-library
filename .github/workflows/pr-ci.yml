@@ -1,0 +1,73 @@
+# Fast PR checks for module changes targeting next/main.
+# Uses Nx affected scoped to packages/** so lockfile-only fan-out does not
+# re-run every workspace's credentialed integration suites.
+#
+# Targets that actually exist & pass offline on next:
+#   - test  (most packages; Module Builder modules use nock/mocks)
+#   - build (TypeScript packages: clio, pipedrive, zoho-crm, frigg-scale-test)
+# lint is omitted: almost every package only has mutating `lint:fix`, and the
+# few `lint` scripts fail without unpublished eslint config packages.
+name: PR CI
+
+on:
+  pull_request:
+    branches:
+      - next
+      - main
+
+concurrency:
+  group: pr-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  affected:
+    name: Affected build & test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # Match release.yml / package.json engines (>=18). .node-version is stale (16).
+          node-version: '18'
+          cache: npm
+
+      - name: Install (libssl1.1 + npm ci)
+        # Same bootstrap as Cloud Agents (.cursor/environment.json) so
+        # mongodb-memory-server modules work on Ubuntu 24.04 runners.
+        run: bash .cursor/install.sh
+
+      - name: Run Nx affected build & test (packages only)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE_REF="origin/${{ github.base_ref }}"
+          # Full history fetch into refs/remotes/origin/<base> — do not use
+          # --depth=1 (writes .git/shallow and breaks three-dot merge-base).
+          git fetch --no-tags origin "${{ github.base_ref }}"
+
+          # Fail the job if git cannot resolve the merge-base (no || true).
+          mapfile -t CHANGED < <(
+            git diff --name-only "${BASE_REF}...HEAD" -- 'packages/**'
+          )
+
+          if [[ ${#CHANGED[@]} -eq 0 || -z "${CHANGED[0]:-}" ]]; then
+            echo "No packages/** changes vs ${BASE_REF}; skipping Nx build/test."
+            exit 0
+          fi
+
+          echo "Package files changed (${#CHANGED[@]}):"
+          printf '  %s\n' "${CHANGED[@]}"
+
+          # Comma-separated list for nx --files (avoids lockfile marking every project affected)
+          FILES_CSV=$(printf '%s,' "${CHANGED[@]}")
+          FILES_CSV="${FILES_CSV%,}"
+
+          # Nx skips projects that lack a given target, so build only runs on TS packages.
+          npx nx affected -t build,test --files="$FILES_CSV" --parallel=3

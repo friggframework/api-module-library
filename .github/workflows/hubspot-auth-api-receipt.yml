@@ -70,7 +70,9 @@ jobs:
             --out "${GITHUB_WORKSPACE}/artifacts/hubspot-auth-api-receipt.json" \
             --command "${AML_RECEIPT_COMMAND}" \
             --classification synthetic \
-            --expect-classification synthetic
+            --expect-classification synthetic \
+            --module-ref-branch next \
+            --module-ref-sha 9f5e5c627a0be42cd25cf28339142891e71eba07
 
       - name: Packet classification must byte-equal the CI artifact (T-C4-2)
         run: |

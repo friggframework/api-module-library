@@ -18,6 +18,10 @@ const {
     forbiddenEnvHits,
     applyRedaction,
     ENUM,
+    PINNED_API_JS_SHA256,
+    assertApiJsDigest,
+    BOUND_MODULE_REFS,
+    resolveModuleRef,
 } = require('./hubspot-auth-api-receipt.cjs');
 const { TRANSFORM_ID } = require('./redaction-transform.v1.cjs');
 const policy = require('./hubspot-4a-policy.cjs');
@@ -398,6 +402,10 @@ test('T-C4-8 regression: emitter invoked exactly as the workflow does (same env/
         'synthetic',
         '--expect-classification',
         'synthetic',
+        '--module-ref-branch',
+        'next',
+        '--module-ref-sha',
+        '9f5e5c627a0be42cd25cf28339142891e71eba07',
     ];
     const emitted = spawnSync(process.execPath, emitArgs, {
         env: workflowEnv,
@@ -414,6 +422,27 @@ test('T-C4-8 regression: emitter invoked exactly as the workflow does (same env/
     assert.equal(receipt.command || receipt.result && true, receipt.command ? workflowCommand : true);
     // command is a top-level or nested field — accept either if present
     if (receipt.command) assert.equal(receipt.command, workflowCommand);
+    // erratum-2: runtime api.js digest is recorded and equals the pin.
+    assert.equal(receipt.artifact.apiJs.path, 'packages/v1-ready/hubspot/api.js');
+    assert.equal(receipt.artifact.apiJs.sha256, 'af0b0bdc937820697a9bf158a6cc4f8a9e4fa22c96c535ee5af994720e4c3c60');
+    assert.equal(receipt.artifact.apiJs.pinnedSha256, receipt.artifact.apiJs.sha256);
+    // erratum-2 R1: moduleRef from the closed map, distinct from sourceCommitSha.
+    assert.deepEqual(
+        { branch: receipt.moduleRef.branch, sha: receipt.moduleRef.sha, table: receipt.moduleRef.table },
+        { branch: 'next', sha: '9f5e5c627a0be42cd25cf28339142891e71eba07', table: 'NEXT' }
+    );
+    assert.equal(receipt.moduleRef.apiJsSha256, receipt.artifact.apiJs.sha256);
+
+    // Same argv without --module-ref-* fails closed.
+    const noRefArgs = emitArgs.slice(0, emitArgs.indexOf('--module-ref-branch'));
+    const noRef = spawnSync(process.execPath, noRefArgs, { env: workflowEnv, encoding: 'utf8', cwd: REPO_ROOT });
+    assert.notEqual(noRef.status, 0);
+    assert.match(`${noRef.stderr}\n${noRef.stdout}`, /UNKNOWN_MODULE_REF|moduleRef/);
+    // Unlisted ref (the harness commit itself) fails closed.
+    const unlistedArgs = [...noRefArgs, '--module-ref-branch', 'next', '--module-ref-sha', '4c10075740d634f969316e944a6f60abbcf4ffa1'];
+    const unlisted = spawnSync(process.execPath, unlistedArgs, { env: workflowEnv, encoding: 'utf8', cwd: REPO_ROOT });
+    assert.notEqual(unlisted.status, 0);
+    assert.match(`${unlisted.stderr}\n${unlisted.stdout}`, /unknown moduleRef/);
 
     // Same argv but with the old HUBSPOT_RECEIPT_COMMAND env must still fail
     // because buildReceipt calls assertNoProviderEnv().
@@ -424,4 +453,48 @@ test('T-C4-8 regression: emitter invoked exactly as the workflow does (same env/
     });
     assert.notEqual(emittedBroken.status, 0);
     assert.match(`${emittedBroken.stderr}\n${emittedBroken.stdout}`, /HUBSPOT_RECEIPT_COMMAND/);
+});
+
+test('erratum-2: api.js pin is af0b0bdc…; a mismatched runtime digest fails 4a', () => {
+    assert.equal(PINNED_API_JS_SHA256, 'af0b0bdc937820697a9bf158a6cc4f8a9e4fa22c96c535ee5af994720e4c3c60');
+    assert.doesNotThrow(() => assertApiJsDigest(PINNED_API_JS_SHA256));
+    assert.throws(() => assertApiJsDigest('0'.repeat(64)), (err) => err.code === 'E2-APIJS');
+    assert.throws(() => assertApiJsDigest(undefined), (err) => err.code === 'E2-APIJS');
+});
+
+test('erratum-2 R1: closed moduleRef map is exactly V1 main@d50c6a9d and NEXT next@9f5e5c62', () => {
+    assert.deepEqual(
+        BOUND_MODULE_REFS.map((r) => `${r.table}:${r.branch}@${r.sha}`),
+        [
+            'V1:main@d50c6a9d8f6f8264aaf4e6e9447991b4074ec455',
+            'NEXT:next@9f5e5c627a0be42cd25cf28339142891e71eba07',
+        ]
+    );
+    const next = resolveModuleRef({ branch: 'next', sha: '9f5e5c627a0be42cd25cf28339142891e71eba07' });
+    assert.equal(next.table, 'NEXT');
+    assert.equal(next.apiJsSha256, 'af0b0bdc937820697a9bf158a6cc4f8a9e4fa22c96c535ee5af994720e4c3c60');
+    for (const bad of [
+        {},
+        { branch: 'next' },
+        { sha: '9f5e5c627a0be42cd25cf28339142891e71eba07' },
+        { branch: 'next', sha: '9f5e5c62' },
+        { branch: 'main', sha: '9f5e5c627a0be42cd25cf28339142891e71eba07' },
+        { branch: 'next', sha: '4c10075740d634f969316e944a6f60abbcf4ffa1' },
+    ]) {
+        assert.throws(() => resolveModuleRef(bad), (err) => err.code === 'UNKNOWN_MODULE_REF', JSON.stringify(bad));
+    }
+});
+
+test('erratum-2 R1: runtime api.js digest is checked against the moduleRef entry', () => {
+    const v1 = resolveModuleRef({ branch: 'main', sha: 'd50c6a9d8f6f8264aaf4e6e9447991b4074ec455' });
+    // The NEXT api.js on disk does not match the V1 entry, so a V1 claim fails.
+    assert.throws(() => assertApiJsDigest(PINNED_API_JS_SHA256, v1.apiJsSha256), (err) => err.code === 'E2-APIJS');
+    const next = resolveModuleRef({ branch: 'next', sha: '9f5e5c627a0be42cd25cf28339142891e71eba07' });
+    assert.doesNotThrow(() => assertApiJsDigest(PINNED_API_JS_SHA256, next.apiJsSha256));
+});
+
+test('erratum-2 R1: workflow passes the NEXT moduleRef to the emitter', () => {
+    const yml = fs.readFileSync(WORKFLOW_YML, 'utf8');
+    assert.match(yml, /--module-ref-branch next/);
+    assert.match(yml, /--module-ref-sha 9f5e5c627a0be42cd25cf28339142891e71eba07/);
 });

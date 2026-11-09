@@ -61,6 +61,49 @@ const REV2 = {
     sha256: '53d5f7b9bc07fe94e0a3d100467635916481b47ca928fddfc9a12e6ebd361085',
 };
 
+// erratum-2 (59cf708f…): the hubspot api.js loaded at runtime must hash to this
+// pin; a mismatch fails 4a.
+const PINNED_API_JS_SHA256 = 'af0b0bdc937820697a9bf158a6cc4f8a9e4fa22c96c535ee5af994720e4c3c60';
+
+// erratum-2 R1: closed moduleRef map (identity of the module code under
+// test). Exact branch + full sha only. Not the harness commit.
+const BOUND_MODULE_REFS = Object.freeze([
+    Object.freeze({
+        table: 'V1',
+        branch: 'main',
+        sha: 'd50c6a9d8f6f8264aaf4e6e9447991b4074ec455',
+        apiJsSha256: 'f7e3046dcf0870b82faaf219bd37873b245622b695e4e358e1ea20035bf7f3d3',
+    }),
+    Object.freeze({
+        table: 'NEXT',
+        branch: 'next',
+        sha: '9f5e5c627a0be42cd25cf28339142891e71eba07',
+        apiJsSha256: PINNED_API_JS_SHA256,
+    }),
+]);
+
+function resolveModuleRef({ branch, sha } = {}) {
+    const fail = (msg) => {
+        const err = new Error(`erratum-2 R1: ${msg}`);
+        err.code = 'UNKNOWN_MODULE_REF';
+        return err;
+    };
+    if (!branch || !sha) throw fail('moduleRef.branch and moduleRef.sha are required');
+    if (!/^[0-9a-f]{40}$/.test(String(sha))) throw fail(`moduleRef.sha must be a full 40-character commit: ${sha}`);
+    const hit = BOUND_MODULE_REFS.find((r) => r.branch === branch && r.sha === sha);
+    if (!hit) throw fail(`unknown moduleRef ${branch}@${sha}; not in the closed V1/NEXT map (fail closed)`);
+    return { ...hit };
+}
+
+function assertApiJsDigest(digest, expected = PINNED_API_JS_SHA256) {
+    if (digest !== expected) {
+        const err = new Error(`erratum-2: runtime api.js sha256 ${digest} != moduleRef pin ${expected}; 4a fails`);
+        err.code = 'E2-APIJS';
+        throw err;
+    }
+    return digest;
+}
+
 const ISO_OFFSET = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 // T-C4-8: any HUBSPOT_*, MATTERS_ACCESS_TOKEN, or peer token/secret env.
@@ -93,6 +136,8 @@ function parseArgs(argv) {
         command: null,
         classification: 'synthetic',
         expectClassification: null,
+        moduleRefBranch: null,
+        moduleRefSha: null,
         assertOfflineEnv: false,
     };
     for (let i = 2; i < argv.length; i += 1) {
@@ -107,6 +152,8 @@ function parseArgs(argv) {
         else if (key === '--command') args.command = val;
         else if (key === '--classification') args.classification = val;
         else if (key === '--expect-classification') args.expectClassification = val;
+        else if (key === '--module-ref-branch') args.moduleRefBranch = val;
+        else if (key === '--module-ref-sha') args.moduleRefSha = val;
         else continue;
         i += 1;
     }
@@ -469,6 +516,11 @@ function buildReceipt(opts) {
     }
     validateFreshnessAndOrigin(provenance, classification);
 
+    // Hash the exact file Node resolves for the module's Api at runtime.
+    const apiJsResolved = require.resolve(path.join(REPO_ROOT, MODULE_DIR, 'api'));
+    const moduleRef = resolveModuleRef({ branch: opts.moduleRefBranch, sha: opts.moduleRefSha });
+    const apiJsSha256 = assertApiJsDigest(sha256File(apiJsResolved), moduleRef.apiJsSha256);
+
     const generatorDigest = sha256File(path.join(REPO_ROOT, GENERATOR_REL));
     const transformDigest = sha256File(path.join(REPO_ROOT, TRANSFORM_REL));
 
@@ -525,6 +577,7 @@ function buildReceipt(opts) {
         bindingCItem: '4a',
         classification,
         classificationSha256: sha256Text(classification),
+        moduleRef,
         rev2: REV2,
         policy: {
             freshnessMaxAgeDays: FRESHNESS_MAX_AGE_DAYS,
@@ -548,6 +601,11 @@ function buildReceipt(opts) {
             packageVersion: pkg.version,
             packageDir: MODULE_DIR,
             packageTreeSha: git(['rev-parse', `HEAD:${MODULE_DIR}`]),
+            apiJs: {
+                path: path.relative(REPO_ROOT, apiJsResolved),
+                sha256: apiJsSha256,
+                pinnedSha256: PINNED_API_JS_SHA256,
+            },
             lockfile: {
                 path: lockfileRel,
                 byteSha256: sha256File(path.join(REPO_ROOT, lockfileRel)),
@@ -722,6 +780,8 @@ function main() {
         command,
         classification: args.classification,
         expectClassification: args.expectClassification,
+        moduleRefBranch: args.moduleRefBranch,
+        moduleRefSha: args.moduleRefSha,
     });
     const outAbs = path.resolve(args.out);
     fs.mkdirSync(path.dirname(outAbs), { recursive: true });
@@ -754,6 +814,10 @@ if (require.main === module) {
 
 module.exports = {
     ENUM,
+    PINNED_API_JS_SHA256,
+    assertApiJsDigest,
+    BOUND_MODULE_REFS,
+    resolveModuleRef,
     CLASS_4A,
     FRESHNESS_MAX_AGE_DAYS,
     DENIED_PROVIDER_HOSTS,

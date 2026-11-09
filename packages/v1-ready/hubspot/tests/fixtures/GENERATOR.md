@@ -16,6 +16,7 @@ transcribed against. Those contracts must continue to match
 `URLs.tokenIntrospect`, `URLs.userDetails`, `URLs.contacts`). A version or
 endpoint mismatch fails 4a (rev1 §4.1 / T-C4-9).
 
-Freshness also uses a concrete max-age-days constant (currently 90),
-marked PENDING_ARCHITECT in scripts/ci/hubspot-4a-policy.cjs, plus the
-API-version pins above. Both are required.
+Freshness uses the adopted `FRESHNESS_MAX_AGE_DAYS = 90` bound
+(Architect-pinned in rev2 §P2-FRESHNESS) AND the API-version pins above.
+Both are required. Synthetic fixtures are not on the 90-day clock; they
+still require the API-version pin.

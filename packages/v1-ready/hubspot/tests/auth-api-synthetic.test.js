@@ -510,3 +510,14 @@ describe('HubSpot auth/API synthetic receipt tests', () => {
         });
     });
 });
+
+describe('erratum-2: runtime api.js digest', () => {
+    it('the api.js loaded at runtime hashes to the pinned sha256', () => {
+        const crypto = require('crypto');
+        const fs = require('fs');
+        const loaded = require.resolve('../api');
+        expect(require('../api').Api).toBeDefined();
+        const digest = crypto.createHash('sha256').update(fs.readFileSync(loaded)).digest('hex');
+        expect(digest).toBe('af0b0bdc937820697a9bf158a6cc4f8a9e4fa22c96c535ee5af994720e4c3c60');
+    });
+});

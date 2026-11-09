@@ -1,6 +1,17 @@
-const { get, OAuth2Requester } = require('@friggframework/core');
+const {
+    get,
+    OAuth2Requester,
+    RateLimitError,
+    classifyRateLimit,
+} = require('@friggframework/core');
 const jsforce = require('jsforce');
 const crypto = require('crypto');
+
+const STATIC_WAIT_MS = { daily: 3_600_000, concurrency: 30_000 };
+const LIMITS_LINK = {
+    label: 'API request limits and allocations',
+    url: 'https://developer.salesforce.com/docs/platform/salesforce-app-limits-cheatsheet/guide/salesforce-app-limits-platform-api.html',
+};
 
 class Api extends OAuth2Requester {
     // URL-unreserved and outside the base64url alphabet.
@@ -14,6 +25,22 @@ class Api extends OAuth2Requester {
         'inactive_user',
         'inactive_org',
     ]);
+
+    static rateLimit = {
+        scope: 'entity',
+        windows: [{ name: 'daily', rollingMs: 86_400_000 }],
+        classify({ body }) {
+            if (body?.errorCode !== 'REQUEST_LIMIT_EXCEEDED') return null;
+            const reason = /concurrent/i.test(body.message ?? '')
+                ? 'concurrency'
+                : 'daily';
+            return { reason, waitMs: STATIC_WAIT_MS[reason], source: 'static' };
+        },
+        userHints: {
+            daily: { links: [LIMITS_LINK] },
+            concurrency: { links: [LIMITS_LINK] },
+        },
+    };
 
     constructor(params) {
         super(params);
@@ -156,23 +183,66 @@ class Api extends OAuth2Requester {
         return this.get('User', this.conn.userInfo.id);
     }
 
+    async withLimits(call) {
+        try {
+            return await call();
+        } catch (err) {
+            const rateLimitError = this._rateLimitErrorFor(err);
+            if (!rateLimitError) throw err;
+            await this._notifyRateLimited?.(rateLimitError);
+            throw rateLimitError;
+        }
+    }
+
+    _rateLimitErrorFor(err) {
+        if (
+            typeof classifyRateLimit !== 'function' ||
+            typeof RateLimitError !== 'function'
+        ) {
+            return null;
+        }
+        const hint = classifyRateLimit(this.constructor.rateLimit, {
+            status: err?.statusCode,
+            headers: {},
+            body: {
+                errorCode: err?.errorCode ?? err?.name,
+                message: err?.message,
+            },
+        });
+        if (!hint) return null;
+        return new RateLimitError({
+            hint,
+            module: this._telemetryModuleLabel(),
+            resource: this.conn.instanceUrl,
+            cause: err,
+        });
+    }
+
     async create(object, data) {
-        const response = await this.conn.sobject(object).create(data);
+        const response = await this.withLimits(() =>
+            this.conn.sobject(object).create(data)
+        );
         return response;
     }
 
     async update(object, data) {
-        const response = await this.conn.sobject(object).update(data);
+        const response = await this.withLimits(() =>
+            this.conn.sobject(object).update(data)
+        );
         return response;
     }
 
     async upsert(object, data) {
-        const response = await this.conn.sobject(object).upsert(data);
+        const response = await this.withLimits(() =>
+            this.conn.sobject(object).upsert(data)
+        );
         return response;
     }
 
     async list(object, ids = {}) {
-        const response = await this.conn.sobject(object).retrieve(ids);
+        const response = await this.withLimits(() =>
+            this.conn.sobject(object).retrieve(ids)
+        );
         return response;
     }
 
@@ -182,24 +252,30 @@ class Api extends OAuth2Requester {
         returnFields = { '*': 1 },
         options = {}
     ) {
-        const response = await this.conn
-            .sobject(object)
-            .find(findFilter, returnFields, options);
+        const response = await this.withLimits(() =>
+            this.conn.sobject(object).find(findFilter, returnFields, options)
+        );
         return response;
     }
 
     async getGlobalMetadata() {
-        const response = await this.conn.describeGlobal();
+        const response = await this.withLimits(() =>
+            this.conn.describeGlobal()
+        );
         return response;
     }
 
     async get(object, id) {
-        const response = await this.conn.sobject(object).retrieve(id);
+        const response = await this.withLimits(() =>
+            this.conn.sobject(object).retrieve(id)
+        );
         return response;
     }
 
     async delete(object, data) {
-        const response = await this.conn.sobject(object).del(data);
+        const response = await this.withLimits(() =>
+            this.conn.sobject(object).del(data)
+        );
         return response;
     }
 

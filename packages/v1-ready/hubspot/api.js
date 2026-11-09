@@ -1,6 +1,49 @@
 const {OAuth2Requester, get} = require('@friggframework/core');
 
+const DAILY_PROBE_INTERVAL_MS = 3_600_000;
+const SEARCH_WINDOW_MS = 1_000;
+
 class Api extends OAuth2Requester {
+    static rateLimit = {
+        scope: 'entity',
+        windows: [
+            { name: 'burst', limit: 110, perMs: 10_000 },
+            { name: 'search', limit: 5, perMs: SEARCH_WINDOW_MS },
+        ],
+        maxConcurrency: 10,
+        parsers: ['retryAfter', 'resetHeaders'],
+        classify({ status, body }) {
+            if (status !== 429) return null;
+            if (body?.policyName === 'SECONDLY') {
+                return {
+                    reason: 'burst',
+                    policy: 'SECONDLY',
+                    waitMs: SEARCH_WINDOW_MS,
+                    source: 'static',
+                };
+            }
+            if (body?.policyName === 'DAILY') {
+                return {
+                    reason: 'daily',
+                    policy: 'DAILY',
+                    waitMs: DAILY_PROBE_INTERVAL_MS,
+                    source: 'static',
+                };
+            }
+            return { reason: 'burst', policy: body?.policyName };
+        },
+        userHints: {
+            daily: {
+                links: [
+                    {
+                        label: 'API usage guidelines and limits',
+                        url: 'https://developers.hubspot.com/docs/developer-tooling/platform/usage-guidelines',
+                    },
+                ],
+            },
+        },
+    };
+
     constructor(params) {
         super(params);
         // The majority of the properties for OAuth are default loaded by OAuth2Requester.

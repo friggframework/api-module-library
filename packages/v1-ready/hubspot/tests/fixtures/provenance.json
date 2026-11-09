@@ -1,0 +1,135 @@
+{
+  "classification": "synthetic",
+  "recordedDate": "2026-11-09",
+  "recordedAt": "2026-11-09T13:01:00-05:00",
+  "timeZone": "America/New_York",
+  "note": "Hand-built doubles transcribed from HubSpot official documentation examples. They were not captured from a live provider account and imply no network contact with api.hubapi.com or app.hubspot.com. Because there is no capture command or recorder receipt, the only honest label is synthetic (not recorded).",
+  "fixtures": [
+    {
+      "path": "packages/v1-ready/hubspot/tests/fixtures/account-me.json",
+      "endpoint": "GET https://api.hubapi.com/integrations/v1/me",
+      "kind": "synthetic",
+      "capture": {
+        "method": "synthetic-from-docs",
+        "tool": "manual transcription of the official example JSON",
+        "sourceDocUrl": "https://developers.hubspot.com/docs/api-reference/legacy/account/account-information/v1/get-integrations-v1-me",
+        "sourceDocTitle": "Get details for a HubSpot account",
+        "sourceDocSection": "example1 \u2014 Account details example (OpenAPI AccountDetails)",
+        "sourceDocRetrievedAt": "2026-11-09T12:59:00-05:00",
+        "providerApiVersion": "integrations/v1",
+        "providerContract": "GET /integrations/v1/me",
+        "sourceVersionOrDate": "HubSpot Account Activity API v1 / legacy Account information, docs retrieved 2026-11-09",
+        "accountClassification": null,
+        "rawCaptureSha256": null,
+        "redactionTransform": null,
+        "postRedactionSha256": null,
+        "note": "Not a recorded capture chain. Origin is synthetic; generator is declared at the provenance root."
+      },
+      "adaptations": "None. Bytes match the official AccountDetails example fields: portalId, timeZone, currency, utcOffsetMilliseconds, utcOffset.",
+      "origin": "synthetic"
+    },
+    {
+      "path": "packages/v1-ready/hubspot/tests/fixtures/oauth-token.json",
+      "endpoint": "POST https://api.hubapi.com/oauth/2026-03/token",
+      "kind": "synthetic",
+      "capture": {
+        "method": "synthetic-from-docs",
+        "tool": "manual transcription of the official example JSON, with token values replaced by synthetic-* placeholders",
+        "sourceDocUrl": "https://developers.hubspot.com/docs/api-reference/2026-03/authentication/manage-oauth-tokens",
+        "sourceDocTitle": "Manage OAuth access tokens with the 2026-03 API",
+        "sourceDocSection": "Generate initial access and refresh tokens \u2014 example JSON response",
+        "sourceDocRetrievedAt": "2026-11-09T13:00:00-05:00",
+        "providerApiVersion": "2026-03",
+        "providerContract": "POST /oauth/2026-03/token",
+        "sourceVersionOrDate": "HubSpot OAuth API 2026-03, docs retrieved 2026-11-09",
+        "accountClassification": null,
+        "rawCaptureSha256": null,
+        "redactionTransform": null,
+        "postRedactionSha256": null,
+        "note": "Not a recorded capture chain. Origin is synthetic; generator is declared at the provenance root."
+      },
+      "adaptations": "Field set matches the official example (token_type, refresh_token, access_token, hub_id, scopes, expires_in). Official placeholder token strings were replaced with the clearly labelled values synthetic-access-token and synthetic-refresh-token so the artifact contains no secret-shaped material. hub_id 1234567, expires_in 1800, and the scopes list are from the official example.",
+      "origin": "synthetic"
+    },
+    {
+      "path": "packages/v1-ready/hubspot/tests/fixtures/token-introspect.json",
+      "endpoint": "POST https://api.hubapi.com/oauth/2026-03/token/introspect",
+      "kind": "synthetic",
+      "capture": {
+        "method": "synthetic-from-docs",
+        "tool": "manual transcription of the official access-token metadata example, with secret-shaped fields omitted or replaced",
+        "sourceDocUrl": "https://developers.hubspot.com/docs/api-reference/2026-03/authentication/manage-oauth-tokens",
+        "sourceDocTitle": "Manage OAuth access tokens with the 2026-03 API",
+        "sourceDocSection": "Retrieve access token metadata \u2014 Access token metadata example",
+        "sourceDocRetrievedAt": "2026-11-09T13:00:00-05:00",
+        "providerApiVersion": "2026-03",
+        "providerContract": "POST /oauth/2026-03/token/introspect",
+        "sourceVersionOrDate": "HubSpot OAuth API 2026-03, docs retrieved 2026-11-09",
+        "accountClassification": null,
+        "rawCaptureSha256": null,
+        "redactionTransform": null,
+        "postRedactionSha256": null,
+        "note": "Not a recorded capture chain. Origin is synthetic; generator is declared at the provenance root."
+      },
+      "adaptations": "Includes the official example's non-secret fields (active, hub_id, user_id, app_id, user, hub_domain, scopes, expires_in, is_private_distribution, token_use, token_type). token and client_id were replaced with synthetic-access-token and synthetic-client-id. signed_access_token (and signature / newSignature blobs in the official example) is omitted because those strings are secret-shaped. api.js introspectToken only requires response.active === true.",
+      "origin": "synthetic"
+    },
+    {
+      "path": "packages/v1-ready/hubspot/tests/fixtures/contacts-list.json",
+      "endpoint": "GET https://api.hubapi.com/crm/v3/objects/contacts",
+      "kind": "synthetic",
+      "capture": {
+        "method": "synthetic-from-docs",
+        "tool": "manual transcription of the official retrieve-all-contacts example JSON",
+        "sourceDocUrl": "https://developers.hubspot.com/docs/api-reference/legacy/crm/objects/contacts/guide",
+        "sourceDocTitle": "CRM API | Contacts \u2014 Retrieve all contacts",
+        "sourceDocSection": "example response for GET /crm/v3/objects/contacts",
+        "sourceDocRetrievedAt": "2026-11-09T13:01:00-05:00",
+        "providerApiVersion": "crm/v3",
+        "providerContract": "GET /crm/v3/objects/contacts",
+        "sourceVersionOrDate": "HubSpot CRM Contacts API v3 (legacy path used by this module), docs retrieved 2026-11-09",
+        "accountClassification": null,
+        "rawCaptureSha256": null,
+        "redactionTransform": null,
+        "postRedactionSha256": null,
+        "note": "Not a recorded capture chain. Origin is synthetic; generator is declared at the provenance root."
+      },
+      "adaptations": "None. Copied from the official example, including the fictional lorelai@thedragonfly.com contact and the paging.next.link path as published.",
+      "origin": "synthetic"
+    }
+  ],
+  "origin": "synthetic",
+  "generator": {
+    "tool": "manual transcription from official HubSpot developer documentation",
+    "command": "none (no generator program; see tests/fixtures/GENERATOR.md)",
+    "artifact": "packages/v1-ready/hubspot/tests/fixtures/GENERATOR.md"
+  },
+  "freshness": {
+    "rule": "max-age-days-and-provider-api-version-pin",
+    "maxAgeDays": 90,
+    "pins": [
+      {
+        "providerApiVersion": "2026-03",
+        "contract": "POST /oauth/2026-03/token",
+        "modulePin": "api.js tokenUri / URLs.access_token"
+      },
+      {
+        "providerApiVersion": "2026-03",
+        "contract": "POST /oauth/2026-03/token/introspect",
+        "modulePin": "api.js URLs.tokenIntrospect"
+      },
+      {
+        "providerApiVersion": "integrations/v1",
+        "contract": "GET /integrations/v1/me",
+        "modulePin": "api.js URLs.userDetails"
+      },
+      {
+        "providerApiVersion": "crm/v3",
+        "contract": "GET /crm/v3/objects/contacts",
+        "modulePin": "api.js URLs.contacts"
+      }
+    ],
+    "note": "Recorded traffic MUST bind both a concrete maxAgeDays and the provider API-version pins. maxAgeDays=90 is adopted (Architect-pinned in erratum rev2, sha256 53d5f7b9\u2026). Synthetic fixtures are not on the 90-day clock but still require the API-version pin. A missing, non-90, or stale bound fails recorded 4a (T-C4-9). A fixture whose providerApiVersion or endpoint no longer matches api.js also fails 4a.",
+    "maxAgeDaysStatus": "adopted"
+  }
+}

@@ -3,8 +3,8 @@
  * Emit a Binding C item 4a auth/API test receipt for packages/v1-ready/hubspot.
  *
  * Built to:
- *   /workspace/architect-contracts/2026-11-09-fc-b-qr-binding-c-item-4-synthetic-vs-live-erratum-rev1.md
- *   sha256 87bdb38c3797116ba328b27b0a5067b3b83107a714c5311061be2254f31d95db
+ *   /workspace/architect-contracts/2026-11-09-fc-b-qr-binding-c-item-4-synthetic-vs-live-erratum-rev2.md
+ *   sha256 53d5f7b9bc07fe94e0a3d100467635916481b47ca928fddfc9a12e6ebd361085
  *
  * Classification may be `synthetic` or `recorded` only. This script refuses
  * `authorized` / live (T-C4-2, T-C4-5). It does not read secrets or contact
@@ -56,9 +56,9 @@ const TRANSFORM_REL = 'scripts/ci/redaction-transform.v1.cjs';
 const SCHEMA = 'aml.hubspot.auth-api-receipt.v1';
 const ENUM = Object.freeze(['synthetic', 'recorded', 'authorized']);
 const CLASS_4A = new Set(['synthetic', 'recorded']);
-const REV1 = {
-    path: '2026-11-09-fc-b-qr-binding-c-item-4-synthetic-vs-live-erratum-rev1.md',
-    sha256: '87bdb38c3797116ba328b27b0a5067b3b83107a714c5311061be2254f31d95db',
+const REV2 = {
+    path: '2026-11-09-fc-b-qr-binding-c-item-4-synthetic-vs-live-erratum-rev2.md',
+    sha256: '53d5f7b9bc07fe94e0a3d100467635916481b47ca928fddfc9a12e6ebd361085',
 };
 
 const ISO_OFFSET = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
@@ -262,21 +262,26 @@ function validateFreshnessAndOrigin(provenance, classification) {
     }
 
     const freshness = provenance.freshness || {};
-    if (!isFreshnessBoundInPolicy(freshness.maxAgeDays)) {
-        errors.push(
-            `T-C4-9: freshness.maxAgeDays must equal the policy constant ${FRESHNESS_MAX_AGE_DAYS} (PENDING_ARCHITECT); got ${JSON.stringify(freshness.maxAgeDays)}`
-        );
-    }
-    if (freshness.recordedAt || provenance.recordedAt) {
-        const ts = freshness.recordedAt || provenance.recordedAt;
-        if (isStale(ts, freshness.maxAgeDays)) {
-            errors.push(`T-C4-9: provenance recordedAt ${ts} is stale under maxAgeDays=${freshness.maxAgeDays}`);
+    // Synthetic fixtures are not on the 90-day clock (erratum rev2).
+    // Recorded traffic must satisfy the adopted 90-day bound AND the pin
+    // (pin checks follow). A missing or non-90 bound fails recorded 4a.
+    if (classification === 'recorded') {
+        if (!isFreshnessBoundInPolicy(freshness.maxAgeDays)) {
+            errors.push(
+                `T-C4-9: freshness.maxAgeDays must equal the adopted policy constant ${FRESHNESS_MAX_AGE_DAYS}; got ${JSON.stringify(freshness.maxAgeDays)}`
+            );
         }
-    }
-    for (const fixture of provenance.fixtures || []) {
-        const retrieved = fixture.capture && fixture.capture.sourceDocRetrievedAt;
-        if (retrieved && isStale(retrieved, freshness.maxAgeDays)) {
-            errors.push(`T-C4-9: fixture ${fixture.path} sourceDocRetrievedAt is stale`);
+        if (freshness.recordedAt || provenance.recordedAt) {
+            const ts = freshness.recordedAt || provenance.recordedAt;
+            if (isStale(ts, freshness.maxAgeDays)) {
+                errors.push(`T-C4-9: provenance recordedAt ${ts} is stale under maxAgeDays=${freshness.maxAgeDays}`);
+            }
+        }
+        for (const fixture of provenance.fixtures || []) {
+            const retrieved = fixture.capture && fixture.capture.sourceDocRetrievedAt;
+            if (retrieved && isStale(retrieved, freshness.maxAgeDays)) {
+                errors.push(`T-C4-9: fixture ${fixture.path} sourceDocRetrievedAt is stale`);
+            }
         }
     }
 
@@ -520,7 +525,7 @@ function buildReceipt(opts) {
         bindingCItem: '4a',
         classification,
         classificationSha256: sha256Text(classification),
-        rev1: REV1,
+        rev2: REV2,
         policy: {
             freshnessMaxAgeDays: FRESHNESS_MAX_AGE_DAYS,
             freshnessMaxAgeDaysStatus: FRESHNESS_MAX_AGE_DAYS_STATUS,
@@ -627,6 +632,11 @@ function buildReceipt(opts) {
                 id: 'uncovered-api-surface',
                 reason: '4a synthetic tests cover getToken, refreshAccessToken, addAuthHeaders, testAuthRequest/getUserDetails, and listContacts. Other Api methods are not claimed.',
             },
+            {
+                id: 'hapikey-query-auth',
+                path: path.join(MODULE_DIR, 'api.js'),
+                reason: 'HubSpot hapikey / this.api_key query-auth at api.js L450–L451 and L521–L522 is a supported auth path not exercised in this 4a receipt. Excluded per erratum rev2 §5.2 (A-5).',
+            },
         ],
         noSecrets: true,
         gqr: {
@@ -705,7 +715,7 @@ function main() {
         console.error(`jest json not found: ${args.jestJson}`);
         process.exit(2);
     }
-    const command = args.command || process.env.HUBSPOT_RECEIPT_COMMAND || '(unspecified)';
+    const command = args.command || process.env.AML_RECEIPT_COMMAND || '(unspecified)';
     const { receipt, serialized } = buildReceipt({
         jestJson: args.jestJson,
         out: args.out,
@@ -761,5 +771,5 @@ module.exports = {
     assertNoSecrets,
     buildReceipt,
     applyRedaction,
-    REV1,
+    REV2,
 };

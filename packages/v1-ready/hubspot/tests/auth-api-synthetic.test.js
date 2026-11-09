@@ -26,6 +26,8 @@ const {
     matchesBearerAuthorization,
     matchesApiAuthHeader,
     tokenBody,
+    createPinnedHostSpy,
+    evaluateDenyAndSpy,
 } = require('../../../../scripts/ci/hubspot-4a-policy.cjs');
 
 const HUBAPI = 'https://api.hubapi.com';
@@ -93,12 +95,19 @@ function mockUserDetails({ me = meResponse, introspect = introspectResponse, meS
 }
 
 describe('HubSpot auth/API synthetic receipt tests', () => {
+    // Deny (nock.disableNetConnect) and spy (nock.emitter 'no match') are
+    // distinct T-C4-12 mechanisms over the same pinned host list.
+    const providerSpy = createPinnedHostSpy(DENIED_PROVIDER_HOSTS);
     beforeAll(() => {
         assertNoLiveTokenEnv();
         nock.disableNetConnect();
+        providerSpy.install();
     });
     afterEach(() => nock.cleanAll());
-    afterAll(() => nock.enableNetConnect());
+    afterAll(() => {
+        providerSpy.uninstall();
+        nock.enableNetConnect();
+    });
 
     describe('Definition.requiredAuthMethods.getToken() — real code path', () => {
         it('exchanges the redirect code via Api.getTokenFromCode POST /oauth/2026-03/token', async () => {
@@ -341,7 +350,7 @@ describe('HubSpot auth/API synthetic receipt tests', () => {
         });
     });
 
-    describe('outbound request shape — no always-200 transport (T-C4-1)', () => {
+    describe('T-C4-11: outbound request shape — wrong shape must not get 200', () => {
         it('rejects wrong method, URL, grant_type, missing client_id, and wrong Authorization form', () => {
             const goodExchange = {
                 method: 'POST',
@@ -349,6 +358,9 @@ describe('HubSpot auth/API synthetic receipt tests', () => {
                 body: {
                     grant_type: 'authorization_code',
                     client_id: 'synthetic-client-id',
+                    client_secret: 'synthetic-client-secret',
+                    redirect_uri: 'https://example.com/redirect/hubspot',
+                    scope: 'oauth',
                     code: 'synthetic-auth-code',
                 },
             };
@@ -370,6 +382,18 @@ describe('HubSpot auth/API synthetic receipt tests', () => {
                 matchesTokenExchange({
                     ...goodExchange,
                     body: { grant_type: 'authorization_code', code: 'synthetic-auth-code' },
+                })
+            ).toBe(false);
+            expect(
+                matchesTokenExchange({
+                    ...goodExchange,
+                    headers: { Authorization: 'Basic c3ludGhldGlj' },
+                })
+            ).toBe(false);
+            expect(
+                matchesTokenExchange({
+                    ...goodExchange,
+                    body: { ...goodExchange.body, client_secret: undefined },
                 })
             ).toBe(false);
 
@@ -434,15 +458,28 @@ describe('HubSpot auth/API synthetic receipt tests', () => {
             expect(DENIED_PROVIDER_HOSTS).toEqual([
                 'api.hubapi.com',
                 'app.hubspot.com',
-                'api.hubspot.com',
             ]);
         });
     });
 
-    describe('fail closed: no live provider contact', () => {
+    describe('T-C4-12: deny and spy are distinct; both cover the pinned hosts', () => {
+        it('rejects a deny-only, spy-only, or always-200 harness as insufficient', () => {
+            expect(evaluateDenyAndSpy({ denyInstalled: true, spyInstalled: true })).toEqual({
+                ok: true,
+                reason: null,
+            });
+            expect(evaluateDenyAndSpy({ denyInstalled: true, spyInstalled: false }).ok).toBe(false);
+            expect(evaluateDenyAndSpy({ denyInstalled: true, spyInstalled: false }).reason).toBe('deny-only');
+            expect(evaluateDenyAndSpy({ denyInstalled: false, spyInstalled: true }).reason).toBe('spy-only');
+            expect(evaluateDenyAndSpy({
+                denyInstalled: true,
+                spyInstalled: true,
+                treatsAlways200AsDeny: true,
+            }).reason).toBe('always-200-is-not-a-deny');
+        });
 
-
-        it('rejects an unmocked request to api.hubapi.com', async () => {
+        it('deny blocks and spy records an unmocked request to api.hubapi.com', async () => {
+            const before = providerSpy.records.length;
             const api = new Api({
                 ...apiParams,
                 access_token: 'synthetic-access-token',
@@ -451,9 +488,14 @@ describe('HubSpot auth/API synthetic receipt tests', () => {
             await expect(api.getUserDetails()).rejects.toThrow(
                 /Nock: Disallowed net connect|Disallowed net connect|An error ocurred while fetching|external resource/
             );
+            const hits = providerSpy.records.slice(before).filter((r) => r.host === 'api.hubapi.com');
+            expect(hits.length).toBeGreaterThan(0);
+            expect(hits[0].method).toMatch(/GET|POST/i);
+            expect(hits[0].path).toBeTruthy();
         });
 
-        it('rejects an unmocked request to app.hubspot.com', async () => {
+        it('deny blocks and spy records an unmocked request to app.hubspot.com', async () => {
+            const before = providerSpy.records.length;
             await expect(
                 new Promise((resolve, reject) => {
                     const https = require('https');
@@ -461,6 +503,10 @@ describe('HubSpot auth/API synthetic receipt tests', () => {
                     req.on('error', reject);
                 })
             ).rejects.toThrow(/Nock: Disallowed net connect|not allowed/i);
+            const hits = providerSpy.records.slice(before).filter((r) => r.host === 'app.hubspot.com');
+            expect(hits.length).toBeGreaterThan(0);
+            expect(hits[0].method).toMatch(/GET/i);
+            expect(hits[0].path).toMatch(/oauth\/authorize/);
         });
     });
 });

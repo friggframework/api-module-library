@@ -129,7 +129,7 @@
         "modulePin": "api.js URLs.contacts"
       }
     ],
-    "note": "MUST bind both a concrete maxAgeDays and the provider API-version pins. maxAgeDays=90 is a PENDING_ARCHITECT placeholder (not adopted, not Sean-held). A missing, non-policy, or stale bound fails 4a (T-C4-9). A fixture whose providerApiVersion or endpoint no longer matches api.js also fails 4a.",
-    "maxAgeDaysStatus": "pending-architect"
+    "note": "Recorded traffic MUST bind both a concrete maxAgeDays and the provider API-version pins. maxAgeDays=90 is adopted (Architect-pinned in erratum rev2, sha256 53d5f7b9\u2026). Synthetic fixtures are not on the 90-day clock but still require the API-version pin. A missing, non-90, or stale bound fails recorded 4a (T-C4-9). A fixture whose providerApiVersion or endpoint no longer matches api.js also fails 4a.",
+    "maxAgeDaysStatus": "adopted"
   }
 }

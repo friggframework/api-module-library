@@ -1,7 +1,11 @@
-# Binding C item 4a (rev1): synthetic auth/API test receipt for
+# Binding C item 4a (rev2): synthetic auth/API test receipt for
 # packages/v1-ready/hubspot. Never contacts the live provider, never
 # reads secrets, never emits authorized/live, fails closed on HUBSPOT_*
 # or MATTERS_ACCESS_TOKEN.
+#
+# The receipt command MUST NOT be passed via a HUBSPOT_* env var
+# (that prefix is on the T-C4-8 abort list). Use AML_RECEIPT_COMMAND
+# or the CLI --command argument only.
 name: HubSpot auth/API test receipt
 
 on:
@@ -59,12 +63,12 @@ jobs:
 
       - name: Write receipt and classification bytes
         env:
-          HUBSPOT_RECEIPT_COMMAND: npx jest --config jest.receipt.config.js --ci --watchman=false --forceExit --json --outputFile=artifacts/jest-results.json
+          AML_RECEIPT_COMMAND: npx jest --config jest.receipt.config.js --ci --watchman=false --forceExit --json --outputFile=artifacts/jest-results.json
         run: |
           node scripts/ci/hubspot-auth-api-receipt.cjs \
             --jest-json "${GITHUB_WORKSPACE}/artifacts/jest-results.json" \
             --out "${GITHUB_WORKSPACE}/artifacts/hubspot-auth-api-receipt.json" \
-            --command "${HUBSPOT_RECEIPT_COMMAND}" \
+            --command "${AML_RECEIPT_COMMAND}" \
             --classification synthetic \
             --expect-classification synthetic
 
@@ -82,7 +86,11 @@ jobs:
           PY
 
       - name: Upload receipt artifact
-        if: always()
+        # Only run (and therefore only claim success) when both files exist.
+        # hashFiles is empty when a path is missing; if: always() alone would
+        # still start the step and if-no-files-found: error would fail it,
+        # but a skipped upload must not be reported as a successful publish.
+        if: ${{ always() && hashFiles('artifacts/hubspot-auth-api-receipt.json') != '' && hashFiles('artifacts/classification') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: hubspot-auth-api-receipt

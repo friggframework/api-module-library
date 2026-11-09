@@ -2,6 +2,10 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { spawnSync } = require('child_process');
 const {
     assertClassificationEnum,
     assertPacketByteEqual,
@@ -17,6 +21,18 @@ const {
 } = require('./hubspot-auth-api-receipt.cjs');
 const { TRANSFORM_ID } = require('./redaction-transform.v1.cjs');
 const policy = require('./hubspot-4a-policy.cjs');
+
+const REPO_ROOT = path.resolve(__dirname, '../..');
+const EMITTER = path.join(__dirname, 'hubspot-auth-api-receipt.cjs');
+const WORKFLOW_YML = path.join(REPO_ROOT, '.github/workflows/hubspot-auth-api-receipt.yml');
+
+function cleanProviderEnv(base = process.env) {
+    const env = { ...base };
+    for (const key of Object.keys(env)) {
+        if (policy.isForbiddenEnvKey(key)) delete env[key];
+    }
+    return env;
+}
 
 test('enum is synthetic|recorded|authorized', () => {
     assert.deepEqual(ENUM, ['synthetic', 'recorded', 'authorized']);
@@ -35,16 +51,80 @@ test('T-C4-2: same bytes rewritten to authorized are not auto-accepted; packet m
     assert.throws(() => rejectUnauthorizedAuthorized(rewritten), /T-C4-5|T-C4-2|authorized/);
 });
 
-test('T-C4-9: stale, missing, or out-of-policy max-age bound fails', () => {
-    assert.equal(isStaleRecorded('2020-01-01T00:00:00-05:00', 90, new Date('2026-11-09T13:00:00-05:00')), true);
-    assert.equal(isStaleRecorded('2026-11-08T13:00:00-05:00', 90, new Date('2026-11-09T13:00:00-05:00')), false);
-    // Missing bound is fail-closed, not a vacuous pass.
-    assert.equal(isStaleRecorded('2026-11-08T13:00:00-05:00', null), true);
+test('T-C4-9: 90-day bound is adopted; synthetic is not on the clock', () => {
+    assert.equal(policy.FRESHNESS_MAX_AGE_DAYS, 90);
+    assert.equal(policy.FRESHNESS_MAX_AGE_DAYS_STATUS, 'adopted');
     assert.equal(policy.isFreshnessBoundInPolicy(90), true);
     assert.equal(policy.isFreshnessBoundInPolicy(99999), false);
     assert.equal(policy.isFreshnessBoundInPolicy(undefined), false);
-    assert.equal(policy.FRESHNESS_MAX_AGE_DAYS, 90);
-    assert.equal(policy.FRESHNESS_MAX_AGE_DAYS_STATUS, 'pending-architect');
+    // Synthetic fixtures are not on the 90-day clock, even if recordedAt is old.
+    const ancient = policy.evaluateFreshnessAndPin({
+        classification: 'synthetic',
+        capturedAt: '2020-01-01T00:00:00-05:00',
+        maxAgeDays: 90,
+        providerApiVersion: '2026-03',
+        contract: 'POST /oauth/2026-03/token',
+        now: new Date('2026-11-09T13:00:00-05:00'),
+    });
+    assert.equal(ancient.ok, true);
+    assert.equal(ancient.clockApplied, false);
+});
+
+test('T-C4-9a: stale-but-pinned recorded traffic fails', () => {
+    const result = policy.evaluateFreshnessAndPin({
+        classification: 'recorded',
+        capturedAt: '2020-01-01T00:00:00-05:00',
+        maxAgeDays: 90,
+        providerApiVersion: '2026-03',
+        contract: 'POST /oauth/2026-03/token',
+        now: new Date('2026-11-09T13:00:00-05:00'),
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'stale-but-pinned');
+    assert.equal(isStaleRecorded('2020-01-01T00:00:00-05:00', 90, new Date('2026-11-09T13:00:00-05:00')), true);
+    assert.equal(isStaleRecorded('2026-11-08T13:00:00-05:00', 90, new Date('2026-11-09T13:00:00-05:00')), false);
+});
+
+test('T-C4-9b: fresh-but-unpinned recorded traffic fails', () => {
+    const result = policy.evaluateFreshnessAndPin({
+        classification: 'recorded',
+        capturedAt: '2026-11-08T13:00:00-05:00',
+        maxAgeDays: 90,
+        providerApiVersion: '2026-03',
+        contract: 'POST /oauth/unpinned-endpoint',
+        now: new Date('2026-11-09T13:00:00-05:00'),
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'fresh-but-unpinned');
+});
+
+test('T-C4-9c: missing or non-90 bound fails recorded traffic', () => {
+    const now = new Date('2026-11-09T13:00:00-05:00');
+    const base = {
+        classification: 'recorded',
+        capturedAt: '2026-11-08T13:00:00-05:00',
+        providerApiVersion: '2026-03',
+        contract: 'POST /oauth/2026-03/token',
+        now,
+    };
+    assert.equal(policy.evaluateFreshnessAndPin({ ...base, maxAgeDays: null }).reason, 'missing-or-non-90-bound');
+    assert.equal(policy.evaluateFreshnessAndPin({ ...base, maxAgeDays: undefined }).reason, 'missing-or-non-90-bound');
+    assert.equal(policy.evaluateFreshnessAndPin({ ...base, maxAgeDays: 30 }).reason, 'missing-or-non-90-bound');
+    assert.equal(policy.evaluateFreshnessAndPin({ ...base, maxAgeDays: 99999 }).reason, 'missing-or-non-90-bound');
+    assert.equal(isStaleRecorded('2026-11-08T13:00:00-05:00', null), true);
+});
+
+test('T-C4-9d: API-version mismatch fails even when fresh and bound is 90', () => {
+    const result = policy.evaluateFreshnessAndPin({
+        classification: 'recorded',
+        capturedAt: '2026-11-08T13:00:00-05:00',
+        maxAgeDays: 90,
+        providerApiVersion: 'v1',
+        contract: 'POST /oauth/2026-03/token',
+        now: new Date('2026-11-09T13:00:00-05:00'),
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'api-version-mismatch');
 });
 
 test('T-C4-4: secret-shaped values are rejected; redaction binds transform id', () => {
@@ -108,7 +188,14 @@ test('T-C4-7: 4a present + deployer missing keeps G-QR OPEN', () => {
     assert.equal(evaluateGqr({ has4a: true, hasDeployer: false }), 'OPEN');
 });
 
-test('T-C4-8: HUBSPOT_* and MATTERS_ACCESS_TOKEN are forbidden; GITHUB_TOKEN and unrelated secrets are not', () => {
+test('T-C4-8: closed env list; set-but-empty counts as present; GITHUB_TOKEN is not forbidden', () => {
+    assert.deepEqual(policy.TOKEN_ENV_NAMES, [
+        'HUBSPOT_CLIENT_ID',
+        'HUBSPOT_CLIENT_SECRET',
+        'HUBSPOT_SCOPE',
+        'HUBSPOT_TIMELINE_EVENT_TEMPLATE_ID',
+        'MATTERS_ACCESS_TOKEN',
+    ]);
     assert.deepEqual(
         forbiddenEnvHits({ HUBSPOT_ACCESS_TOKEN: 'x', HUBSPOT_SCOPE: 'oauth', GITHUB_TOKEN: 'g', FOO: '1' }).sort(),
         ['HUBSPOT_ACCESS_TOKEN', 'HUBSPOT_SCOPE']
@@ -116,8 +203,17 @@ test('T-C4-8: HUBSPOT_* and MATTERS_ACCESS_TOKEN are forbidden; GITHUB_TOKEN and
     assert.deepEqual(forbiddenEnvHits({ MATTERS_ACCESS_TOKEN: 'x' }), ['MATTERS_ACCESS_TOKEN']);
     assert.deepEqual(forbiddenEnvHits({ HUBSPOT_CLIENT_ID: 'x' }), ['HUBSPOT_CLIENT_ID']);
     assert.deepEqual(forbiddenEnvHits({ HUBSPOT_LIVE_API: '1' }), ['HUBSPOT_LIVE_API']);
-    assert.deepEqual(forbiddenEnvHits({ HUBSPOT_LIVE_API: '' }), []);
-    assert.deepEqual(forbiddenEnvHits({ GITHUB_TOKEN: 'g', GH_TOKEN: 'g', FRONT_CLIENT_SECRET: 'x' }), []);
+    // Set-but-empty is present (rev2).
+    assert.deepEqual(forbiddenEnvHits({ HUBSPOT_LIVE_API: '' }), ['HUBSPOT_LIVE_API']);
+    assert.deepEqual(forbiddenEnvHits({ HUBSPOT_CLIENT_SECRET: '' }), ['HUBSPOT_CLIENT_SECRET']);
+    assert.deepEqual(forbiddenEnvHits({ GITHUB_TOKEN: 'g', GH_TOKEN: 'g', FRONT_CLIENT_SECRET: 'x', REDIRECT_URI: 'https://example.com' }), []);
+    // The CI bug: HUBSPOT_RECEIPT_COMMAND matches the HUBSPOT_ prefix.
+    assert.equal(policy.isForbiddenEnvKey('HUBSPOT_RECEIPT_COMMAND'), true);
+    assert.deepEqual(
+        forbiddenEnvHits({ HUBSPOT_RECEIPT_COMMAND: policy.WORKFLOW_RECEIPT_COMMAND }),
+        ['HUBSPOT_RECEIPT_COMMAND']
+    );
+    assert.deepEqual(forbiddenEnvHits({ AML_RECEIPT_COMMAND: policy.WORKFLOW_RECEIPT_COMMAND }), []);
 });
 
 test('T-C4-10: 4b missing only 4a fixture fields still resolves when §3+§5 hold', () => {
@@ -135,11 +231,18 @@ test('T-C4-10: 4b missing only 4a fixture fields still resolves when §3+§5 hol
     );
 });
 
-test('T-C4-1 extension: outbound shape matcher is not always-true', () => {
+test('T-C4-11: outbound shape matcher is not always-true; required body fields and no Authorization', () => {
     const good = {
         method: 'POST',
         url: policy.TOKEN_ENDPOINT,
-        body: { grant_type: 'authorization_code', client_id: 'id', code: 'c' },
+        body: {
+            grant_type: 'authorization_code',
+            client_id: 'id',
+            client_secret: 'secret',
+            redirect_uri: 'https://example.com/redirect/hubspot',
+            scope: 'oauth',
+            code: 'c',
+        },
     };
     assert.equal(policy.matchesTokenExchange(good), true);
     assert.equal(policy.matchesTokenExchange({ ...good, method: 'GET' }), false);
@@ -147,7 +250,7 @@ test('T-C4-1 extension: outbound shape matcher is not always-true', () => {
     assert.equal(
         policy.matchesTokenExchange({
             ...good,
-            body: { grant_type: 'client_credentials', client_id: 'id', code: 'c' },
+            body: { ...good.body, grant_type: 'client_credentials' },
         }),
         false
     );
@@ -158,21 +261,167 @@ test('T-C4-1 extension: outbound shape matcher is not always-true', () => {
         }),
         false
     );
+    assert.equal(
+        policy.matchesTokenExchange({
+            ...good,
+            headers: { Authorization: 'Basic abc' },
+        }),
+        false
+    );
+    const goodRefresh = {
+        method: 'POST',
+        url: policy.TOKEN_ENDPOINT,
+        body: {
+            grant_type: 'refresh_token',
+            client_id: 'id',
+            client_secret: 'secret',
+            redirect_uri: 'https://example.com/redirect/hubspot',
+            refresh_token: 'synthetic-refresh-token',
+        },
+    };
+    assert.equal(policy.matchesTokenRefresh(goodRefresh), true);
+    assert.equal(
+        policy.matchesTokenRefresh({
+            ...goodRefresh,
+            headers: { Authorization: 'Basic abc' },
+        }),
+        false
+    );
     assert.equal(policy.matchesBearerAuthorization('Bearer x'), true);
     assert.equal(policy.matchesBearerAuthorization('Basic x'), false);
 });
 
-test('T-C4-8: denied host list and closed token-env list are pinned', () => {
+test('T-C4-8: denied host list is the two module hosts; closed token-env prefixes are pinned', () => {
     assert.deepEqual(policy.DENIED_PROVIDER_HOSTS, [
         'api.hubapi.com',
         'app.hubspot.com',
-        'api.hubspot.com',
     ]);
     assert.equal(policy.isDeniedProviderHost('api.hubapi.com'), true);
+    assert.equal(policy.isDeniedProviderHost('app.hubspot.com'), true);
+    assert.equal(policy.isDeniedProviderHost('api.hubspot.com'), false);
     assert.equal(policy.isDeniedProviderHost('example.com'), false);
-    assert.ok(policy.TOKEN_ENV_NAMES.includes('HUBSPOT_ACCESS_TOKEN'));
     assert.ok(policy.TOKEN_ENV_NAMES.includes('HUBSPOT_CLIENT_SECRET'));
+    assert.ok(policy.TOKEN_ENV_NAMES.includes('HUBSPOT_TIMELINE_EVENT_TEMPLATE_ID'));
     assert.ok(policy.TOKEN_ENV_NAMES.includes('MATTERS_ACCESS_TOKEN'));
     assert.ok(policy.TOKEN_ENV_PREFIXES.includes('HUBSPOT_'));
     assert.ok(policy.TOKEN_ENV_PREFIXES.includes('MATTERS_'));
+});
+
+test('T-C4-12: deny and spy must both be present and distinct; a 200 fake is not a deny', () => {
+    assert.deepEqual(policy.evaluateDenyAndSpy({ denyInstalled: true, spyInstalled: true }), {
+        ok: true,
+        reason: null,
+    });
+    assert.equal(policy.evaluateDenyAndSpy({ denyInstalled: true, spyInstalled: false }).reason, 'deny-only');
+    assert.equal(policy.evaluateDenyAndSpy({ denyInstalled: false, spyInstalled: true }).reason, 'spy-only');
+    assert.equal(
+        policy.evaluateDenyAndSpy({ denyInstalled: true, spyInstalled: true, treatsAlways200AsDeny: true }).reason,
+        'always-200-is-not-a-deny'
+    );
+    const spy = policy.createPinnedHostSpy();
+    assert.equal(spy.kind, 'spy');
+    assert.equal(spy.mechanism, 'nock.emitter:no-match');
+    assert.notEqual(spy.mechanism, 'nock.disableNetConnect');
+});
+
+test('T-C4-8 regression: workflow must not pass the command via a HUBSPOT_* env var', () => {
+    const yml = fs.readFileSync(WORKFLOW_YML, 'utf8');
+    assert.equal(yml.includes('HUBSPOT_RECEIPT_COMMAND'), false);
+    assert.match(yml, /AML_RECEIPT_COMMAND:/);
+    assert.match(yml, /--command "\$\{AML_RECEIPT_COMMAND\}"/);
+    assert.equal(yml.includes(policy.WORKFLOW_RECEIPT_COMMAND), true);
+    // Upload only runs when both receipt files exist; it must not claim
+    // success for a missing artifact (CI run 42673233531 follow-up).
+    assert.match(
+        yml,
+        /hashFiles\('artifacts\/hubspot-auth-api-receipt\.json'\) != '' && hashFiles\('artifacts\/classification'\) != ''/
+    );
+});
+
+test('T-C4-8 regression: emitter invoked exactly as the workflow does (same env/args) passes the env gate; HUBSPOT_RECEIPT_COMMAND fails', () => {
+    const workflowCommand = policy.WORKFLOW_RECEIPT_COMMAND;
+    const workflowEnv = cleanProviderEnv();
+    workflowEnv.AML_RECEIPT_COMMAND = workflowCommand;
+    // First workflow step: --assert-offline-env, no HUBSPOT_* present.
+    const offline = spawnSync(process.execPath, [EMITTER, '--assert-offline-env'], {
+        env: workflowEnv,
+        encoding: 'utf8',
+        cwd: REPO_ROOT,
+    });
+    assert.equal(offline.status, 0, offline.stderr || offline.stdout);
+
+    // The broken invocation from CI run 42673233531.
+    const brokenEnv = { ...workflowEnv, HUBSPOT_RECEIPT_COMMAND: workflowCommand };
+    const broken = spawnSync(process.execPath, [EMITTER, '--assert-offline-env'], {
+        env: brokenEnv,
+        encoding: 'utf8',
+        cwd: REPO_ROOT,
+    });
+    assert.notEqual(broken.status, 0);
+    assert.match(`${broken.stderr}\n${broken.stdout}`, /HUBSPOT_RECEIPT_COMMAND/);
+
+    // Write-receipt step: same env (AML_RECEIPT_COMMAND) and the same argv
+    // the workflow uses.
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hubspot-4a-receipt-'));
+    const jestJson = path.join(tmp, 'jest-results.json');
+    const out = path.join(tmp, 'hubspot-auth-api-receipt.json');
+    fs.writeFileSync(
+        jestJson,
+        JSON.stringify({
+            success: true,
+            numPassedTests: 4,
+            numFailedTests: 0,
+            numPendingTests: 0,
+            numTotalTests: 4,
+            testResults: [
+                {
+                    name: path.join(REPO_ROOT, 'packages/v1-ready/hubspot/tests/auth-api-synthetic.test.js'),
+                    assertionResults: [
+                        { status: 'passed', fullName: 'exchanges via getTokenFromCode authorization_code', title: 'getTokenFromCode' },
+                        { status: 'passed', fullName: 'refreshes via POST refresh_token refreshAccessToken', title: 'refreshAccessToken' },
+                        { status: 'passed', fullName: 'addAuthHeaders Bearer header / signing', title: 'addAuthHeaders' },
+                        { status: 'passed', fullName: 'rejects invalid_grant 401 inactive tampered expired', title: 'rejects invalid_grant' },
+                    ],
+                },
+            ],
+        })
+    );
+    const emitArgs = [
+        EMITTER,
+        '--jest-json',
+        jestJson,
+        '--out',
+        out,
+        '--command',
+        workflowCommand,
+        '--classification',
+        'synthetic',
+        '--expect-classification',
+        'synthetic',
+    ];
+    const emitted = spawnSync(process.execPath, emitArgs, {
+        env: workflowEnv,
+        encoding: 'utf8',
+        cwd: REPO_ROOT,
+    });
+    assert.equal(emitted.status, 0, emitted.stderr || emitted.stdout);
+    assert.equal(fs.existsSync(out), true);
+    const classificationPath = path.join(tmp, 'classification');
+    assert.equal(fs.existsSync(classificationPath), true);
+    assert.equal(fs.readFileSync(classificationPath, 'utf8'), 'synthetic');
+    const receipt = JSON.parse(fs.readFileSync(out, 'utf8'));
+    assert.equal(receipt.classification, 'synthetic');
+    assert.equal(receipt.command || receipt.result && true, receipt.command ? workflowCommand : true);
+    // command is a top-level or nested field — accept either if present
+    if (receipt.command) assert.equal(receipt.command, workflowCommand);
+
+    // Same argv but with the old HUBSPOT_RECEIPT_COMMAND env must still fail
+    // because buildReceipt calls assertNoProviderEnv().
+    const emittedBroken = spawnSync(process.execPath, emitArgs, {
+        env: brokenEnv,
+        encoding: 'utf8',
+        cwd: REPO_ROOT,
+    });
+    assert.notEqual(emittedBroken.status, 0);
+    assert.match(`${emittedBroken.stderr}\n${emittedBroken.stdout}`, /HUBSPOT_RECEIPT_COMMAND/);
 });

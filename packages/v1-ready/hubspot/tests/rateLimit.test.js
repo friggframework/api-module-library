@@ -1,4 +1,8 @@
-const { FetchError, RateLimitError } = require('@friggframework/core');
+const {
+    FetchError,
+    RateLimitError,
+    runWithInvocationDeadline,
+} = require('@friggframework/core');
 const { Api } = require('../api');
 
 const ONE_HOUR_MS = 3_600_000;
@@ -17,6 +21,14 @@ const dailyLimitBody = {
     errorType: 'RATE_LIMIT',
     correlationId: '00000000-0000-4000-8000-000000000000',
     policyName: 'DAILY',
+};
+
+const searchLimitBody = {
+    status: 'error',
+    message: 'You have reached your secondly limit.',
+    errorType: 'RATE_LIMIT',
+    correlationId: '00000000-0000-4000-8000-000000000000',
+    policyName: 'SECONDLY',
 };
 
 const burstHeaders = {
@@ -139,6 +151,18 @@ describe('HubSpot rate limits', () => {
         });
     });
 
+    describe('a SECONDLY 429 from a search endpoint', () => {
+        it('waits the 1 second search window, then retries', async () => {
+            const fetch = throttledFetch([limited(searchLimitBody), ok]);
+
+            const result = await makeApi(fetch).searchCompanies({});
+
+            expect(result).toEqual({ results: [] });
+            expect(delays).toEqual([1_000]);
+            expect(fetch).toHaveBeenCalledTimes(2);
+        });
+    });
+
     describe('a DAILY 429', () => {
         it('throws a RateLimitError that probes again in one hour', async () => {
             const fetch = throttledFetch([limited(dailyLimitBody), ok]);
@@ -171,15 +195,12 @@ describe('HubSpot rate limits', () => {
         });
 
         it('sleeps the probe interval and retries when the in-process budget allows it', async () => {
-            class PatientApi extends Api {
-                static rateLimit = {
-                    ...Api.rateLimit,
-                    maxInProcessWaitMs: ONE_HOUR_MS + 60_000,
-                };
-            }
             const fetch = throttledFetch([limited(dailyLimitBody), ok]);
 
-            const result = await makeApi(fetch, PatientApi).listCompanies();
+            const result = await runWithInvocationDeadline(
+                { maxInProcessWaitMs: ONE_HOUR_MS + 60_000 },
+                () => makeApi(fetch).listCompanies()
+            );
 
             expect(result).toEqual({ results: [] });
             expect(delays).toEqual([ONE_HOUR_MS]);
@@ -223,7 +244,10 @@ describe('HubSpot rate limits', () => {
     it('declares its limits', () => {
         expect(Api.rateLimit).toMatchObject({
             scope: 'entity',
-            windows: [{ name: 'burst', limit: 110, perMs: 10_000 }],
+            windows: [
+                { name: 'burst', limit: 110, perMs: 10_000 },
+                { name: 'search', limit: 5, perMs: 1_000 },
+            ],
             maxConcurrency: 10,
             parsers: ['retryAfter', 'resetHeaders'],
         });

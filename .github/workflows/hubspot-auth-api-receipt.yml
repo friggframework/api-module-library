@@ -1,0 +1,104 @@
+# Binding C item 4a (rev1): synthetic auth/API test receipt for
+# packages/v1-ready/hubspot. Never contacts the live provider, never
+# reads secrets, never emits authorized/live, fails closed on HUBSPOT_*
+# or MATTERS_ACCESS_TOKEN.
+name: HubSpot auth/API test receipt
+
+on:
+  push:
+    paths:
+      - 'packages/v1-ready/hubspot/**'
+      - 'scripts/ci/**'
+      - '.github/workflows/hubspot-auth-api-receipt.yml'
+      - 'package-lock.json'
+  pull_request:
+    paths:
+      - 'packages/v1-ready/hubspot/**'
+      - 'scripts/ci/**'
+      - '.github/workflows/hubspot-auth-api-receipt.yml'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hubspot-auth-api-receipt:
+    name: Synthetic auth/API receipt
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fail closed if provider token env is present (T-C4-8)
+        run: node scripts/ci/hubspot-auth-api-receipt.cjs --assert-offline-env
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      # Full lock-exact install. A workspace-filtered ci would miss
+      # @aws-sdk/client-scheduler, which @friggframework/core@2.0.0-next.89
+      # requires (but does not declare) when loading the HubSpot Api.
+      - name: Install (npm ci, lock exact)
+        run: npm ci --ignore-scripts
+
+      - name: Receipt script checks (T-C4-2..T-C4-10 policy)
+        run: node --test scripts/ci/hubspot-auth-api-receipt.test.cjs
+
+      - name: Run 4a HubSpot auth/API tests (JSON report)
+        id: tests
+        working-directory: packages/v1-ready/hubspot
+        continue-on-error: true
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/artifacts"
+          npx jest --config jest.receipt.config.js --ci --watchman=false --forceExit \
+            --json --outputFile="${GITHUB_WORKSPACE}/artifacts/jest-results.json"
+
+      - name: Write receipt and classification bytes
+        env:
+          HUBSPOT_RECEIPT_COMMAND: npx jest --config jest.receipt.config.js --ci --watchman=false --forceExit --json --outputFile=artifacts/jest-results.json
+        run: |
+          node scripts/ci/hubspot-auth-api-receipt.cjs \
+            --jest-json "${GITHUB_WORKSPACE}/artifacts/jest-results.json" \
+            --out "${GITHUB_WORKSPACE}/artifacts/hubspot-auth-api-receipt.json" \
+            --command "${HUBSPOT_RECEIPT_COMMAND}" \
+            --classification synthetic \
+            --expect-classification synthetic
+
+      - name: Packet classification must byte-equal the CI artifact (T-C4-2)
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          artifact = Path("artifacts/classification").read_bytes()
+          receipt = Path("artifacts/hubspot-auth-api-receipt.json").read_text()
+          import json
+          classify = json.loads(receipt)["classification"].encode("utf-8")
+          if artifact != classify or artifact != b"synthetic":
+              raise SystemExit(f"T-C4-2 mismatch: file={artifact!r} receipt={classify!r}")
+          print("T-C4-2: classification bytes equal", artifact)
+          PY
+
+      - name: Upload receipt artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hubspot-auth-api-receipt
+          path: |
+            artifacts/hubspot-auth-api-receipt.json
+            artifacts/classification
+          if-no-files-found: error
+
+      - name: Fail the job if tests or receipt failed
+        if: always()
+        run: |
+          if [ "${{ steps.tests.outcome }}" != "success" ]; then
+            echo "4a tests did not succeed (outcome=${{ steps.tests.outcome }})."
+            exit 1
+          fi
+          if [ ! -f artifacts/hubspot-auth-api-receipt.json ] || [ ! -f artifacts/classification ]; then
+            echo "Receipt or classification file missing."
+            exit 1
+          fi

@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "lint:fix": "prettier --write --loglevel error . && eslint . --fix",
-    "test": "jest"
+    "test": "jest",
+    "test:receipt": "jest --config jest.receipt.config.js"
   },
   "author": "",
   "license": "MIT",

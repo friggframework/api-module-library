@@ -20,7 +20,13 @@ const parsedBody = async function async(resp) {
     return body;
 }
 
-describe(`${config.label} API tests`, () => {
+// Live interactive OAuth suite (Authenticator.oauth2). Not part of the
+// Binding C item 4a synthetic receipt. This CI job never sets
+// HUBSPOT_LIVE_API and does not wire tokens or secrets. The suite is
+// reported as skipped/excluded on the receipt. It is not a 4b path.
+const describeLiveApi = process.env.HUBSPOT_LIVE_API === '1' ? describe : describe.skip;
+
+describeLiveApi(`${config.label} API tests`, () => {
     const apiParams = {
         client_id: process.env.HUBSPOT_CLIENT_ID,
         client_secret: process.env.HUBSPOT_CLIENT_SECRET,

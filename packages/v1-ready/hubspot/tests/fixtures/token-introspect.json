@@ -1,0 +1,19 @@
+{
+  "active": true,
+  "token": "synthetic-access-token",
+  "hub_id": 1234567,
+  "user_id": 222222,
+  "client_id": "synthetic-client-id",
+  "app_id": 1234444,
+  "user": "jdoe@hubspot.com",
+  "hub_domain": "example.com",
+  "scopes": [
+    "oauth",
+    "crm.objects.contacts.read",
+    "crm.objects.contacts.write"
+  ],
+  "expires_in": 1789,
+  "is_private_distribution": true,
+  "token_use": "access_token",
+  "token_type": "Bearer"
+}

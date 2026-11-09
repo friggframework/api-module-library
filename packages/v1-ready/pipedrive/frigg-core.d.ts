@@ -73,7 +73,6 @@ declare module '@friggframework/core' {
     windows?: RateLimitWindow[];
     maxConcurrency?: number;
     minRetryAfterMs?: number;
-    maxInProcessWaitMs?: number;
     parsers?: Array<"retryAfter" | "resetHeaders" | "ietf">;
     classify?(signal: RateLimitSignal):
       | (Partial<Omit<RateLimitHint, "source">> & {

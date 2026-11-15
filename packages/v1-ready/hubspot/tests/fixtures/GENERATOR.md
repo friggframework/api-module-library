@@ -14,9 +14,8 @@ Freshness is tied to the provider API version and endpoint each fixture was
 transcribed against. Those contracts must continue to match
 `packages/v1-ready/hubspot/api.js` (`tokenUri`, `URLs.access_token`,
 `URLs.tokenIntrospect`, `URLs.userDetails`, `URLs.contacts`). A version or
-endpoint mismatch fails 4a (rev1 §4.1 / T-C4-9).
+endpoint mismatch fails the receipt freshness check.
 
-Freshness uses the adopted `FRESHNESS_MAX_AGE_DAYS = 90` bound
-(Architect-pinned in rev2 §P2-FRESHNESS) AND the API-version pins above.
-Both are required. Synthetic fixtures are not on the 90-day clock; they
-still require the API-version pin.
+Freshness uses the adopted `FRESHNESS_MAX_AGE_DAYS = 90` bound AND the
+API-version pins above. Both are required. Synthetic fixtures are not on
+the 90-day clock; they still require the API-version pin.

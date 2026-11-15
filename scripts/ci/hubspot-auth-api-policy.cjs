@@ -1,18 +1,14 @@
 /**
- * HubSpot Binding C item 4a policy constants.
- *
- * Built to erratum rev2 (sha256
- * 53d5f7b9bc07fe94e0a3d100467635916481b47ca928fddfc9a12e6ebd361085).
+ * HubSpot auth/API receipt policy constants.
  *
  * Freshness: recorded traffic must satisfy age <= FRESHNESS_MAX_AGE_DAYS
- * (90, Architect-pinned, adopted) AND the provider API-version pin.
+ * (90, adopted) AND the provider API-version pin.
  * Synthetic fixtures are not on the 90-day clock; they still require the
  * API-version pin.
  *
  * Token / refresh / Bearer request shapes follow this module on `next`
- * (POST /oauth/2026-03/token, not the main@d50c6a9d /oauth/v1/token table
- * in the erratum). 42matters account.json access_token query shape is a
- * separate PR.
+ * (POST /oauth/2026-03/token, not the main@d50c6a9d /oauth/v1/token shape).
+ * 42matters account.json access_token query shape is a separate PR.
  */
 'use strict';
 
@@ -27,7 +23,7 @@ const CONTACTS_PATH = '/crm/v3/objects/contacts';
 const AUTHORIZE_PATH = '/oauth/authorize';
 
 /**
- * Pinned provider hosts for fail-closed deny + spy (T-C4-8 / T-C4-12).
+ * Pinned provider hosts for fail-closed deny + spy (PROVIDER_ENV / DENY_SPY).
  * Exact hostnames from packages/v1-ready/hubspot/api.js (baseUrl, authorize
  * URI, tokenUri). Regional peers and api.hubspot.com are not in this
  * module's source and are not on the list.
@@ -38,7 +34,7 @@ const DENIED_PROVIDER_HOSTS = Object.freeze([
 ]);
 
 /**
- * Closed env list for this 4a job (T-C4-8 / P3-TOKEN-ENV-CLOSED-LIST).
+ * Closed env list for this offline receipt job (PROVIDER_ENV).
  * "Present" includes a set-but-empty value. A prefix entry matches any
  * env key that begins with that prefix. GITHUB_TOKEN / GH_TOKEN are not
  * on this list. REDIRECT_URI is not a provider token and is not listed.
@@ -63,7 +59,7 @@ const API_VERSION_PINS = Object.freeze([
 ]);
 
 const WORKFLOW_RECEIPT_COMMAND =
-    'npx jest --config jest.receipt.config.js --ci --watchman=false --forceExit --json --outputFile=artifacts/jest-results.json';
+    'npx jest --config jest.receipt.config.js --ci --watchman=false --forceExit --json --outputFile=../../../artifacts/jest-results.json';
 
 function isForbiddenEnvKey(key) {
     if (TOKEN_ENV_NAMES.includes(key)) return true;
@@ -72,7 +68,7 @@ function isForbiddenEnvKey(key) {
 }
 
 function forbiddenEnvHits(env) {
-    // Presence of the key is enough, including set-but-empty (rev2).
+    // Presence of the key is enough, including set-but-empty.
     return Object.keys(env).filter((key) => isForbiddenEnvKey(key));
 }
 
@@ -86,7 +82,7 @@ function isFreshnessBoundInPolicy(maxAgeDays) {
 }
 
 function isStale(isoTimestamp, maxAgeDays = FRESHNESS_MAX_AGE_DAYS, now = new Date()) {
-    if (maxAgeDays == null) return true; // missing bound fails (T-C4-9)
+    if (maxAgeDays == null) return true; // missing bound fails (FRESHNESS)
     const captured = new Date(isoTimestamp);
     if (Number.isNaN(captured.getTime())) return true;
     return now.getTime() - captured.getTime() > maxAgeDays * 24 * 60 * 60 * 1000;
@@ -104,7 +100,7 @@ function pinMatches(providerApiVersion, contract, pins = API_VERSION_PINS) {
 }
 
 /**
- * T-C4-9 recorded-freshness evaluator.
+ * Recorded-freshness evaluator (FRESHNESS).
  * Recorded traffic is accepted only when age <= 90 AND the API-version pin
  * matches. Synthetic fixtures skip the 90-day clock but still require the pin.
  *
@@ -214,7 +210,7 @@ function matchesApiAuthHeader(req) {
 }
 
 /**
- * T-C4-12: deny and spy are distinct required mechanisms over the same
+ * DENY_SPY: deny and spy are distinct required mechanisms over the same
  * pinned host list. A 200 fake is not a deny. A silent deny is not a spy.
  */
 function evaluateDenyAndSpy({ denyInstalled, spyInstalled, treatsAlways200AsDeny } = {}) {

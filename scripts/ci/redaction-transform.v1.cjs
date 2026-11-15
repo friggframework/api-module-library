@@ -1,5 +1,5 @@
 /**
- * aml.redaction.v1 — Binding C rev1 §4.4
+ * aml.redaction.v1
  *
  * Replace secret-shaped values with stable placeholders of the form
  * [REDACTED:<kind>] that preserve JSON types (string) for replay.

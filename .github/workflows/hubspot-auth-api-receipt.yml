@@ -1,10 +1,9 @@
-# Binding C item 4a (rev2): synthetic auth/API test receipt for
-# packages/v1-ready/hubspot. Never contacts the live provider, never
-# reads secrets, never emits authorized/live, fails closed on HUBSPOT_*
-# or MATTERS_ACCESS_TOKEN.
+# Synthetic auth/API test receipt for packages/v1-ready/hubspot.
+# Never contacts the live provider, never reads secrets, never emits
+# authorized/live, fails closed on HUBSPOT_* or MATTERS_ACCESS_TOKEN.
 #
 # The receipt command MUST NOT be passed via a HUBSPOT_* env var
-# (that prefix is on the T-C4-8 abort list). Use AML_RECEIPT_COMMAND
+# (that prefix is on the PROVIDER_ENV abort list). Use AML_RECEIPT_COMMAND
 # or the CLI --command argument only.
 name: HubSpot auth/API test receipt
 
@@ -34,7 +33,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Fail closed if provider token env is present (T-C4-8)
+      - name: Fail closed if provider token env is present (PROVIDER_ENV)
         run: node scripts/ci/hubspot-auth-api-receipt.cjs --assert-offline-env
 
       - name: Setup Node
@@ -49,21 +48,21 @@ jobs:
       - name: Install (npm ci, lock exact)
         run: npm ci --ignore-scripts
 
-      - name: Receipt script checks (T-C4-2..T-C4-10 policy)
+      - name: Receipt script checks
         run: node --test scripts/ci/hubspot-auth-api-receipt.test.cjs
 
-      - name: Run 4a HubSpot auth/API tests (JSON report)
+      - name: Run HubSpot auth/API contract tests (JSON report)
         id: tests
         working-directory: packages/v1-ready/hubspot
         continue-on-error: true
         run: |
           mkdir -p "${GITHUB_WORKSPACE}/artifacts"
           npx jest --config jest.receipt.config.js --ci --watchman=false --forceExit \
-            --json --outputFile="${GITHUB_WORKSPACE}/artifacts/jest-results.json"
+            --json --outputFile=../../../artifacts/jest-results.json
 
       - name: Write receipt and classification bytes
         env:
-          AML_RECEIPT_COMMAND: npx jest --config jest.receipt.config.js --ci --watchman=false --forceExit --json --outputFile=artifacts/jest-results.json
+          AML_RECEIPT_COMMAND: npx jest --config jest.receipt.config.js --ci --watchman=false --forceExit --json --outputFile=../../../artifacts/jest-results.json
         run: |
           node scripts/ci/hubspot-auth-api-receipt.cjs \
             --jest-json "${GITHUB_WORKSPACE}/artifacts/jest-results.json" \
@@ -74,7 +73,7 @@ jobs:
             --module-ref-branch next \
             --module-ref-sha 9f5e5c627a0be42cd25cf28339142891e71eba07
 
-      - name: Packet classification must byte-equal the CI artifact (T-C4-2)
+      - name: Classification must byte-equal the CI artifact (CLASSIFICATION)
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -83,8 +82,8 @@ jobs:
           import json
           classify = json.loads(receipt)["classification"].encode("utf-8")
           if artifact != classify or artifact != b"synthetic":
-              raise SystemExit(f"T-C4-2 mismatch: file={artifact!r} receipt={classify!r}")
-          print("T-C4-2: classification bytes equal", artifact)
+              raise SystemExit(f"CLASSIFICATION mismatch: file={artifact!r} receipt={classify!r}")
+          print("CLASSIFICATION: classification bytes equal", artifact)
           PY
 
       - name: Upload receipt artifact
@@ -105,7 +104,7 @@ jobs:
         if: always()
         run: |
           if [ "${{ steps.tests.outcome }}" != "success" ]; then
-            echo "4a tests did not succeed (outcome=${{ steps.tests.outcome }})."
+            echo "Auth/API contract tests did not succeed (outcome=${{ steps.tests.outcome }})."
             exit 1
           fi
           if [ ! -f artifacts/hubspot-auth-api-receipt.json ] || [ ! -f artifacts/classification ]; then

@@ -1,7 +1,7 @@
 /*
- * Jest config for the Binding C item 4a receipt job.
+ * Jest config for the HubSpot auth/API synthetic receipt job.
  *
- * Omits the package's MongoMemoryServer globalSetup/Teardown: the 4a tests
+ * Omits the package's MongoMemoryServer globalSetup/Teardown: these tests
  * exercise Definition.requiredAuthMethods and Api against nock, and do not
  * need a database. Full `npm test` (jest.config.js) still uses mongo and is
  * excluded from this command (see the receipt exclusions).

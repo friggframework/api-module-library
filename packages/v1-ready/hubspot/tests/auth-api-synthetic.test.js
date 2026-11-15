@@ -1,5 +1,5 @@
 /**
- * Binding C item 4a synthetic tests.
+ * HubSpot auth/API synthetic receipt tests.
  *
  * Loads the selected artifact's real auth implementation
  * (Definition.requiredAuthMethods.getToken, testAuthRequest, and Api)
@@ -28,7 +28,7 @@ const {
     tokenBody,
     createPinnedHostSpy,
     evaluateDenyAndSpy,
-} = require('../../../../scripts/ci/hubspot-4a-policy.cjs');
+} = require('../../../../scripts/ci/hubspot-auth-api-policy.cjs');
 
 const HUBAPI = 'https://api.hubapi.com';
 const APP_HOST = 'https://app.hubspot.com';
@@ -39,7 +39,7 @@ function assertNoLiveTokenEnv() {
     const hits = forbiddenEnvHits(process.env);
     if (hits.length) {
         throw new Error(
-            `4a fail-closed: token-like env var present: ${hits.join(', ')}. Unset them; this job must not use a Sean-held or live provider token.`
+            `Fail-closed: token-like env var present: ${hits.join(', ')}. Unset them; this job must not use a live provider token.`
         );
     }
 }
@@ -96,7 +96,7 @@ function mockUserDetails({ me = meResponse, introspect = introspectResponse, meS
 
 describe('HubSpot auth/API synthetic receipt tests', () => {
     // Deny (nock.disableNetConnect) and spy (nock.emitter 'no match') are
-    // distinct T-C4-12 mechanisms over the same pinned host list.
+    // distinct DENY_SPY mechanisms over the same pinned host list.
     const providerSpy = createPinnedHostSpy(DENIED_PROVIDER_HOSTS);
     beforeAll(() => {
         assertNoLiveTokenEnv();
@@ -214,7 +214,7 @@ describe('HubSpot auth/API synthetic receipt tests', () => {
 
             const api = new Api(apiParams);
             // Real setTokens() requires access_token; a tampered fixture
-            // missing that field must fail the auth path (T-C4-1 negative).
+            // missing that field must fail the auth path (AUTH_COVERAGE negative).
             await expect(
                 Definition.requiredAuthMethods.getToken(api, {
                     code: 'synthetic-auth-code',
@@ -350,7 +350,7 @@ describe('HubSpot auth/API synthetic receipt tests', () => {
         });
     });
 
-    describe('T-C4-11: outbound request shape — wrong shape must not get 200', () => {
+    describe('REQUEST_SHAPE: outbound request shape — wrong shape must not get 200', () => {
         it('rejects wrong method, URL, grant_type, missing client_id, and wrong Authorization form', () => {
             const goodExchange = {
                 method: 'POST',
@@ -462,7 +462,7 @@ describe('HubSpot auth/API synthetic receipt tests', () => {
         });
     });
 
-    describe('T-C4-12: deny and spy are distinct; both cover the pinned hosts', () => {
+    describe('DENY_SPY: deny and spy are distinct; both cover the pinned hosts', () => {
         it('rejects a deny-only, spy-only, or always-200 harness as insufficient', () => {
             expect(evaluateDenyAndSpy({ denyInstalled: true, spyInstalled: true })).toEqual({
                 ok: true,
@@ -511,7 +511,7 @@ describe('HubSpot auth/API synthetic receipt tests', () => {
     });
 });
 
-describe('erratum-2: runtime api.js digest', () => {
+describe('API_JS_DIGEST: runtime api.js digest', () => {
     it('the api.js loaded at runtime hashes to the pinned sha256', () => {
         const crypto = require('crypto');
         const fs = require('fs');

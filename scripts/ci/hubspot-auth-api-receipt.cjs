@@ -1,14 +1,10 @@
 #!/usr/bin/env node
 /**
- * Emit a Binding C item 4a auth/API test receipt for packages/v1-ready/hubspot.
- *
- * Built to:
- *   /workspace/architect-contracts/2026-11-09-fc-b-qr-binding-c-item-4-synthetic-vs-live-erratum-rev2.md
- *   sha256 53d5f7b9bc07fe94e0a3d100467635916481b47ca928fddfc9a12e6ebd361085
+ * Emit a HubSpot auth/API test receipt for packages/v1-ready/hubspot.
  *
  * Classification may be `synthetic` or `recorded` only. This script refuses
- * `authorized` / live (T-C4-2, T-C4-5). It does not read secrets or contact
- * the live HubSpot API.
+ * `authorized` / live (CLASSIFICATION, AUTHORIZED_EVIDENCE). It does not read
+ * secrets or contact the live HubSpot API.
  *
  * Usage:
  *   node scripts/ci/hubspot-auth-api-receipt.cjs --assert-offline-env
@@ -32,7 +28,7 @@ const {
     BEARER_RE,
     applyRedaction,
 } = require('./redaction-transform.v1.cjs');
-const policy = require('./hubspot-4a-policy.cjs');
+const policy = require('./hubspot-auth-api-policy.cjs');
 const {
     FRESHNESS_MAX_AGE_DAYS,
     FRESHNESS_MAX_AGE_DAYS_STATUS,
@@ -53,29 +49,22 @@ const PROVENANCE_REL = path.join(MODULE_DIR, 'tests/fixtures/provenance.json');
 const GENERATOR_REL = path.join(MODULE_DIR, 'tests/fixtures/GENERATOR.md');
 const TRANSFORM_REL = 'scripts/ci/redaction-transform.v1.cjs';
 
-const SCHEMA = 'aml.hubspot.auth-api-receipt.v1';
+const SCHEMA = 'hubspot-auth-api-receipt.v1';
 const ENUM = Object.freeze(['synthetic', 'recorded', 'authorized']);
-const CLASS_4A = new Set(['synthetic', 'recorded']);
-const REV2 = {
-    path: '2026-11-09-fc-b-qr-binding-c-item-4-synthetic-vs-live-erratum-rev2.md',
-    sha256: '53d5f7b9bc07fe94e0a3d100467635916481b47ca928fddfc9a12e6ebd361085',
-};
+const ALLOWED_CLASSIFICATIONS = new Set(['synthetic', 'recorded']);
 
-// erratum-2 (59cf708f…): the hubspot api.js loaded at runtime must hash to this
-// pin; a mismatch fails 4a.
+// The hubspot api.js loaded at runtime must hash to this pin; a mismatch fails.
 const PINNED_API_JS_SHA256 = 'af0b0bdc937820697a9bf158a6cc4f8a9e4fa22c96c535ee5af994720e4c3c60';
 
-// erratum-2 R1: closed moduleRef map (identity of the module code under
-// test). Exact branch + full sha only. Not the harness commit.
+// Closed moduleRef map (identity of the module code under test). Exact branch
+// + full sha only. Not the harness commit.
 const BOUND_MODULE_REFS = Object.freeze([
     Object.freeze({
-        table: 'V1',
         branch: 'main',
         sha: 'd50c6a9d8f6f8264aaf4e6e9447991b4074ec455',
         apiJsSha256: 'f7e3046dcf0870b82faaf219bd37873b245622b695e4e358e1ea20035bf7f3d3',
     }),
     Object.freeze({
-        table: 'NEXT',
         branch: 'next',
         sha: '9f5e5c627a0be42cd25cf28339142891e71eba07',
         apiJsSha256: PINNED_API_JS_SHA256,
@@ -84,21 +73,21 @@ const BOUND_MODULE_REFS = Object.freeze([
 
 function resolveModuleRef({ branch, sha } = {}) {
     const fail = (msg) => {
-        const err = new Error(`erratum-2 R1: ${msg}`);
+        const err = new Error(msg);
         err.code = 'UNKNOWN_MODULE_REF';
         return err;
     };
     if (!branch || !sha) throw fail('moduleRef.branch and moduleRef.sha are required');
     if (!/^[0-9a-f]{40}$/.test(String(sha))) throw fail(`moduleRef.sha must be a full 40-character commit: ${sha}`);
     const hit = BOUND_MODULE_REFS.find((r) => r.branch === branch && r.sha === sha);
-    if (!hit) throw fail(`unknown moduleRef ${branch}@${sha}; not in the closed V1/NEXT map (fail closed)`);
+    if (!hit) throw fail(`unknown moduleRef ${branch}@${sha}; not in the closed module ref map (fail closed)`);
     return { ...hit };
 }
 
 function assertApiJsDigest(digest, expected = PINNED_API_JS_SHA256) {
     if (digest !== expected) {
-        const err = new Error(`erratum-2: runtime api.js sha256 ${digest} != moduleRef pin ${expected}; 4a fails`);
-        err.code = 'E2-APIJS';
+        const err = new Error(`runtime api.js sha256 ${digest} != moduleRef pin ${expected}`);
+        err.code = 'API_JS_DIGEST';
         throw err;
     }
     return digest;
@@ -106,9 +95,8 @@ function assertApiJsDigest(digest, expected = PINNED_API_JS_SHA256) {
 
 const ISO_OFFSET = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
-// T-C4-8: any HUBSPOT_*, MATTERS_ACCESS_TOKEN, or peer token/secret env.
+// PROVIDER_ENV: any HUBSPOT_*, MATTERS_ACCESS_TOKEN, or peer token/secret env.
 // GITHUB_TOKEN / GH_TOKEN / ACTIONS_* are not provider secrets.
-// rev1 T-C4-8: HUBSPOT_* and MATTERS_ACCESS_TOKEN (the named 42matters peer).
 // Do not treat unrelated provider secrets on a shared machine (e.g. FRONT_CLIENT_SECRET)
 // or GITHUB_TOKEN as HubSpot/Matters tokens.
 const FORBIDDEN_ENV = /^(HUBSPOT_.*|MATTERS_ACCESS_TOKEN)$/i;
@@ -168,9 +156,9 @@ function assertNoProviderEnv(env = process.env) {
     const hits = forbiddenEnvHits(env);
     if (hits.length) {
         const err = new Error(
-            `T-C4-8: 4a fail-closed: provider token/secret env present: ${hits.join(', ')}`
+            `PROVIDER_ENV: fail-closed: provider token/secret env present: ${hits.join(', ')}`
         );
-        err.code = 'T-C4-8';
+        err.code = 'PROVIDER_ENV';
         throw err;
     }
     return true;
@@ -181,20 +169,20 @@ function assertClassificationEnum(value) {
         const err = new Error(
             `classification must be one of ${ENUM.join('|')}, got ${JSON.stringify(value)}`
         );
-        err.code = 'T-C4-2';
+        err.code = 'CLASSIFICATION';
         throw err;
     }
     return true;
 }
 
-function assertPacketByteEqual(packetClassification, artifactClassification) {
+function assertClassificationByteEqual(receiptClassification, artifactClassification) {
     const a = Buffer.from(String(artifactClassification), 'utf8');
-    const b = Buffer.from(String(packetClassification), 'utf8');
+    const b = Buffer.from(String(receiptClassification), 'utf8');
     if (!a.equals(b)) {
         const err = new Error(
-            `T-C4-2: packet classification is not byte-equal to the CI artifact classification`
+            `CLASSIFICATION: receipt classification is not byte-equal to the CI artifact classification`
         );
-        err.code = 'T-C4-2';
+        err.code = 'CLASSIFICATION';
         throw err;
     }
     return true;
@@ -202,32 +190,30 @@ function assertPacketByteEqual(packetClassification, artifactClassification) {
 
 function rejectUnauthorizedAuthorized(receipt) {
     if (receipt.classification !== 'authorized') return 'n/a';
-    if (!receipt.liveCiSubject || !receipt.seanHeldTokenEvidence) {
+    if (!receipt.liveCiSubject || !receipt.liveTokenEvidence) {
         const err = new Error(
-            'T-C4-5: classification "authorized" without Sean-held token evidence / live CI subject'
+            'AUTHORIZED_EVIDENCE: classification "authorized" without live token evidence / live CI subject'
         );
-        err.code = 'T-C4-5';
+        err.code = 'AUTHORIZED_EVIDENCE';
         throw err;
     }
     return 'resolves';
 }
 
-function evaluate42mattersLiveApiAlone({ onlyLiveApiTestJs, has4a, has4b }) {
-    // T-C4-6
-    if (onlyLiveApiTestJs && !has4a && !has4b) return 'unresolved-not-item-4';
+function evaluateLiveSuiteAlone({ onlyLiveApiTestJs, hasAuthReceipt, hasAuthorizedEvidence }) {
+    if (onlyLiveApiTestJs && !hasAuthReceipt && !hasAuthorizedEvidence) return 'unresolved-live-suite-alone';
     return 'ok';
 }
 
-function evaluateGqr({ has4a, hasDeployer }) {
-    // T-C4-7
-    if (has4a && !hasDeployer) return 'OPEN';
-    if (has4a && hasDeployer) return 'not-decided-here';
+function evaluateDeployerGate({ hasAuthReceipt, hasDeployer }) {
+    if (hasAuthReceipt && !hasDeployer) return 'OPEN';
+    if (hasAuthReceipt && hasDeployer) return 'not-decided-here';
     return 'OPEN';
 }
 
-function evaluate4bMissingOnly4aFields({ classification, liveCiSubject, seanHeldTokenEvidence }) {
-    // T-C4-10: 4b does not require 4a fixture fields
-    if (classification === 'authorized' && liveCiSubject && seanHeldTokenEvidence) {
+function evaluateAuthorizedWithoutSyntheticFields({ classification, liveCiSubject, liveTokenEvidence }) {
+    // AUTHORIZED_FIELDS: authorized runs do not require synthetic fixture fields
+    if (classification === 'authorized' && liveCiSubject && liveTokenEvidence) {
         return 'resolves';
     }
     return 'unresolved';
@@ -252,15 +238,15 @@ function readModuleContracts() {
 function validateFreshnessAndOrigin(provenance, classification) {
     const errors = [];
     if (!ISO_OFFSET.test(provenance.recordedAt || '')) {
-        errors.push('T-C4-3: recordedAt must be ISO-8601 with time and offset (date-only is not enough)');
+        errors.push('PROVENANCE: recordedAt must be ISO-8601 with time and offset (date-only is not enough)');
     }
     if (classification === 'synthetic') {
         const gen = provenance.generator;
         if (!gen || !gen.tool || !gen.artifact) {
-            errors.push('T-C4-3: synthetic provenance missing generator (tool/command/artifact)');
+            errors.push('PROVENANCE: synthetic provenance missing generator (tool/command/artifact)');
         }
         if (gen && gen.artifact && !fs.existsSync(path.join(REPO_ROOT, gen.artifact))) {
-            errors.push(`T-C4-3: generator artifact missing: ${gen.artifact}`);
+            errors.push(`PROVENANCE: generator artifact missing: ${gen.artifact}`);
         }
     }
     if (classification === 'recorded') {
@@ -293,41 +279,41 @@ function validateFreshnessAndOrigin(provenance, classification) {
             };
             const missing = required.filter((k) => !have[k]);
             if (missing.length) {
-                errors.push(`T-C4-3: recorded fixture ${f.path} missing capture chain: ${missing.join(', ')}`);
+                errors.push(`PROVENANCE: recorded fixture ${f.path} missing capture chain: ${missing.join(', ')}`);
             }
             if (have.capturedAt && !ISO_OFFSET.test(have.capturedAt)) {
-                errors.push(`T-C4-3: recorded fixture ${f.path} capturedAt must include time and offset`);
+                errors.push(`PROVENANCE: recorded fixture ${f.path} capturedAt must include time and offset`);
             }
             const maxAge = (provenance.freshness && provenance.freshness.maxAgeDays) || c.maxAgeDays;
             if (have.capturedAt && isStaleRecorded(have.capturedAt, maxAge)) {
-                errors.push(`T-C4-9: recorded fixture ${f.path} is stale (past max age ${maxAge} days)`);
+                errors.push(`FRESHNESS: recorded fixture ${f.path} is stale (past max age ${maxAge} days)`);
             }
         }
         if (!(provenance.freshness && (provenance.freshness.maxAgeDays || provenance.freshness.rule))) {
-            errors.push('T-C4-3: recorded provenance missing freshness rule');
+            errors.push('PROVENANCE: recorded provenance missing freshness rule');
         }
     }
 
     const freshness = provenance.freshness || {};
-    // Synthetic fixtures are not on the 90-day clock (erratum rev2).
+    // Synthetic fixtures are not on the 90-day clock.
     // Recorded traffic must satisfy the adopted 90-day bound AND the pin
-    // (pin checks follow). A missing or non-90 bound fails recorded 4a.
+    // (pin checks follow). A missing or non-90 bound fails recorded receipts.
     if (classification === 'recorded') {
         if (!isFreshnessBoundInPolicy(freshness.maxAgeDays)) {
             errors.push(
-                `T-C4-9: freshness.maxAgeDays must equal the adopted policy constant ${FRESHNESS_MAX_AGE_DAYS}; got ${JSON.stringify(freshness.maxAgeDays)}`
+                `FRESHNESS: freshness.maxAgeDays must equal the adopted policy constant ${FRESHNESS_MAX_AGE_DAYS}; got ${JSON.stringify(freshness.maxAgeDays)}`
             );
         }
         if (freshness.recordedAt || provenance.recordedAt) {
             const ts = freshness.recordedAt || provenance.recordedAt;
             if (isStale(ts, freshness.maxAgeDays)) {
-                errors.push(`T-C4-9: provenance recordedAt ${ts} is stale under maxAgeDays=${freshness.maxAgeDays}`);
+                errors.push(`FRESHNESS: provenance recordedAt ${ts} is stale under maxAgeDays=${freshness.maxAgeDays}`);
             }
         }
         for (const fixture of provenance.fixtures || []) {
             const retrieved = fixture.capture && fixture.capture.sourceDocRetrievedAt;
             if (retrieved && isStale(retrieved, freshness.maxAgeDays)) {
-                errors.push(`T-C4-9: fixture ${fixture.path} sourceDocRetrievedAt is stale`);
+                errors.push(`FRESHNESS: fixture ${fixture.path} sourceDocRetrievedAt is stale`);
             }
         }
     }
@@ -338,16 +324,16 @@ function validateFreshnessAndOrigin(provenance, classification) {
         const contract = (fixture.capture && fixture.capture.providerContract) || fixture.endpoint || '';
         const version = fixture.capture && fixture.capture.providerApiVersion;
         if (!contract || !version) {
-            errors.push(`T-C4-3: fixture ${fixture.path} missing provider contract or API version`);
+            errors.push(`PROVENANCE: fixture ${fixture.path} missing provider contract or API version`);
             continue;
         }
         const pin = pins.find((p) => p.contract === contract || contract.endsWith(p.contract.replace(/^(GET|POST) /, '')));
         if (!pin) {
-            errors.push(`T-C4-9: fixture ${fixture.path} contract ${contract} is not in the freshness pin list`);
+            errors.push(`FRESHNESS: fixture ${fixture.path} contract ${contract} is not in the freshness pin list`);
             continue;
         }
         if (pin.providerApiVersion !== version) {
-            errors.push(`T-C4-9: fixture ${fixture.path} API version ${version} mismatches pin ${pin.providerApiVersion}`);
+            errors.push(`FRESHNESS: fixture ${fixture.path} API version ${version} mismatches pin ${pin.providerApiVersion}`);
         }
         // module surface check
         const pathPart = contract.replace(/^(GET|POST)\s+https?:\/\/api\.hubapi\.com/, '').replace(/^(GET|POST)\s+/, '');
@@ -359,13 +345,13 @@ function validateFreshnessAndOrigin(provenance, classification) {
             contracts.contactsPath,
         ].filter(Boolean).join('\n');
         if (pathPart && !moduleText.includes(pathPart) && !moduleText.includes(pathPart.replace(/^https:\/\/api\.hubapi\.com/, ''))) {
-            errors.push(`T-C4-9: fixture ${fixture.path} contract ${pathPart} does not match api.js pins`);
+            errors.push(`FRESHNESS: fixture ${fixture.path} contract ${pathPart} does not match api.js pins`);
         }
     }
 
     if (errors.length) {
         const err = new Error(errors.join('; '));
-        err.code = errors.some((e) => e.startsWith('T-C4-9')) ? 'T-C4-9' : 'T-C4-3';
+        err.code = errors.some((e) => e.startsWith('FRESHNESS')) ? 'FRESHNESS' : 'PROVENANCE';
         err.details = errors;
         throw err;
     }
@@ -419,8 +405,8 @@ function assertNoSecrets(label, objOrText) {
         hits = secretShapedHits(objOrText, null, [], []);
     }
     if (hits.length) {
-        const err = new Error(`T-C4-4: secret-shaped material in ${label}: ${hits.map((h) => h.reason).join('; ')}`);
-        err.code = 'T-C4-4';
+        const err = new Error(`SECRET_SHAPED: secret-shaped material in ${label}: ${hits.map((h) => h.reason).join('; ')}`);
+        err.code = 'SECRET_SHAPED';
         err.hits = hits;
         throw err;
     }
@@ -496,22 +482,22 @@ function buildReceipt(opts) {
     assertNoProviderEnv();
     const classification = opts.classification;
     assertClassificationEnum(classification);
-    if (!CLASS_4A.has(classification)) {
+    if (!ALLOWED_CLASSIFICATIONS.has(classification)) {
         const err = new Error(
-            'This 4a job will not emit authorized/live receipts (T-C4-2, T-C4-5).'
+            'This job will not emit authorized/live receipts (CLASSIFICATION, AUTHORIZED_EVIDENCE).'
         );
-        err.code = 'T-C4-2';
+        err.code = 'CLASSIFICATION';
         throw err;
     }
     if (opts.expectClassification != null) {
-        assertPacketByteEqual(opts.expectClassification, classification);
+        assertClassificationByteEqual(opts.expectClassification, classification);
     }
 
     const pkg = JSON.parse(fs.readFileSync(PACKAGE_JSON, 'utf8'));
     const provenance = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, PROVENANCE_REL), 'utf8'));
     if (provenance.classification && provenance.classification !== classification) {
         const err = new Error('provenance.classification does not match receipt classification');
-        err.code = 'T-C4-2';
+        err.code = 'CLASSIFICATION';
         throw err;
     }
     validateFreshnessAndOrigin(provenance, classification);
@@ -544,8 +530,8 @@ function buildReceipt(opts) {
         if (!exercised.headerSigning) missing.push('header/signing');
         if (!exercised.negative) missing.push('mutation/negative');
         if (missing.length) {
-            const err = new Error(`T-C4-1: 4a green requires real auth paths + a failing negative; missing: ${missing.join(', ')}`);
-            err.code = 'T-C4-1';
+            const err = new Error(`AUTH_COVERAGE: green requires real auth paths + a failing negative; missing: ${missing.join(', ')}`);
+            err.code = 'AUTH_COVERAGE';
             throw err;
         }
     }
@@ -558,7 +544,7 @@ function buildReceipt(opts) {
         path.join(MODULE_DIR, 'jest-teardown.js'),
         'scripts/ci/hubspot-auth-api-receipt.cjs',
         'scripts/ci/redaction-transform.v1.cjs',
-        'scripts/ci/hubspot-4a-policy.cjs',
+        'scripts/ci/hubspot-auth-api-policy.cjs',
         '.github/workflows/hubspot-auth-api-receipt.yml',
     ];
     const configFiles = [
@@ -574,11 +560,9 @@ function buildReceipt(opts) {
 
     const receipt = {
         schema: SCHEMA,
-        bindingCItem: '4a',
         classification,
         classificationSha256: sha256Text(classification),
         moduleRef,
-        rev2: REV2,
         policy: {
             freshnessMaxAgeDays: FRESHNESS_MAX_AGE_DAYS,
             freshnessMaxAgeDaysStatus: FRESHNESS_MAX_AGE_DAYS_STATUS,
@@ -658,47 +642,45 @@ function buildReceipt(opts) {
         },
         ciArtifact: ciArtifactRef(opts.out),
         reviewer: {
-            binding: 'unresolved',
-            role: 'independent-reviewer',
-            note: 'This CI job emits the receipt over consumed bytes. It does not review or self-attest. Independent review (Taskmaster gate / Architect receipt) binds later.',
+            note: 'This job only emits the summary and does not claim human review.',
         },
         exclusions: [
             {
                 id: 'live-api-interactive-suite',
                 path: path.join(MODULE_DIR, 'tests/api.test.js'),
-                reason: 'Interactive OAuth suite (Authenticator.oauth2). Not part of the 4a command (jest.receipt.config.js). Always skipped in this job. Not a 4b path.',
+                reason: 'Interactive OAuth suite (Authenticator.oauth2). Not part of the receipt command (jest.receipt.config.js). Always skipped in this job. Not an authorized live path.',
             },
             {
                 id: 'live-auther-suite',
                 path: path.join(MODULE_DIR, 'tests/auther.test.js'),
-                reason: "describe.skip('HubSpot Module Live Tests') and the mocked testAutherDefinition suite (needs MongoMemoryServer). Excluded from the 4a command.",
+                reason: "describe.skip('HubSpot Module Live Tests') and the mocked testAutherDefinition suite (needs MongoMemoryServer). Excluded from the receipt command.",
             },
             {
                 id: 'webhook-signature',
                 path: path.join(MODULE_DIR, 'tests/extensions/webhooks.test.js'),
-                reason: 'Webhook signature verification is not a Binding C item-3 auth path (token exchange / refresh / request header). Excluded from the 4a command.',
+                reason: 'Webhook signature verification is not an auth path (token exchange / refresh / request header). Excluded from the receipt command.',
             },
             {
                 id: 'basic-auth-token-exchange',
                 reason: 'OAuth2Requester.getTokenFromCodeBasicAuthHeader is not used by the HubSpot module (exchange is form-encoded client_id/client_secret in the body). Not exercised.',
             },
             {
-                id: 'item-4b-authorized-live',
-                reason: 'An authorized live run is Binding C item 4b, Sean-held, and out of scope. This receipt must never be relabelled authorized or live (T-C4-2, T-C4-5).',
+                id: 'authorized-live-out-of-scope',
+                reason: 'An authorized live run is out of scope for this offline receipt. This receipt must never be relabelled authorized or live (CLASSIFICATION, AUTHORIZED_EVIDENCE).',
             },
             {
                 id: 'uncovered-api-surface',
-                reason: '4a synthetic tests cover getToken, refreshAccessToken, addAuthHeaders, testAuthRequest/getUserDetails, and listContacts. Other Api methods are not claimed.',
+                reason: 'Synthetic tests cover getToken, refreshAccessToken, addAuthHeaders, testAuthRequest/getUserDetails, and listContacts. Other Api methods are not claimed.',
             },
             {
                 id: 'hapikey-query-auth',
                 path: path.join(MODULE_DIR, 'api.js'),
-                reason: 'HubSpot hapikey / this.api_key query-auth at api.js L450–L451 and L521–L522 is a supported auth path not exercised in this 4a receipt. Excluded per erratum rev2 §5.2 (A-5).',
+                reason: 'HubSpot hapikey / this.api_key query-auth at api.js L450–L451 and L521–L522 is a supported auth path not exercised in this receipt.',
             },
         ],
         noSecrets: true,
-        gqr: {
-            note: 'T-C4-7: 4a alone does not unblock FC-C / G-QR. Deployer (Binding C item 6) is still missing.',
+        deploymentNote: {
+            note: 'Offline synthetic tests alone do not cover deployment.',
             statusIfDeployerMissing: 'OPEN',
         },
     };
@@ -739,16 +721,15 @@ function writeStepSummary(receipt) {
     if (!summaryFile) return;
     const counts = receipt.result.counts;
     const md = [
-        '## HubSpot auth/API test receipt (Binding C item 4a, rev1)',
+        '## HubSpot auth/API test receipt',
         '',
         `- classification: \`${receipt.classification}\` (sha256 ${receipt.classificationSha256})`,
         `- result: **${receipt.result.status}** (passed ${counts.passed}, failed ${counts.failed}, skipped ${counts.skipped}, total ${counts.total})`,
         `- auth mode: ${receipt.authMode.type} ${receipt.authMode.flow}`,
         `- exercised: exchange=${receipt.result.exercisedAuthPaths.tokenExchange} refresh=${receipt.result.exercisedAuthPaths.refresh} header=${receipt.result.exercisedAuthPaths.headerSigning} negative=${receipt.result.exercisedAuthPaths.negative}`,
         `- source commit: \`${receipt.source.sourceCommitSha}\``,
-        `- reviewer: ${receipt.reviewer.binding}`,
         '',
-        'This receipt is synthetic only. It is not a live or authorized run. 4a does not unblock G-QR (deployer still missing).',
+        'This receipt is synthetic only. It is not a live or authorized run. Offline tests alone do not cover deployment.',
         '',
         '```json',
         JSON.stringify(receipt, null, 2),
@@ -762,7 +743,7 @@ function main() {
     const args = parseArgs(process.argv);
     if (args.assertOfflineEnv) {
         assertNoProviderEnv();
-        console.log('T-C4-8: no provider token env present');
+        console.log('PROVIDER_ENV: no provider token env present');
         return;
     }
     if (!args.jestJson || !args.out) {
@@ -787,14 +768,13 @@ function main() {
     fs.mkdirSync(path.dirname(outAbs), { recursive: true });
     fs.writeFileSync(outAbs, serialized);
     const classAbs = path.join(path.dirname(outAbs), 'classification');
-    // Exact classification string bytes, no trailing newline, for packet byte-equality.
+    // Exact classification string bytes, no trailing newline, for classification byte-equality.
     fs.writeFileSync(classAbs, Buffer.from(receipt.classification, 'utf8'));
     writeStepSummary(receipt);
     console.log(`wrote ${path.relative(REPO_ROOT, outAbs) || outAbs}`);
     console.log(`wrote classification bytes (${receipt.classification}) sha256=${receipt.classificationSha256}`);
     console.log(JSON.stringify({
         schema: receipt.schema,
-        bindingCItem: receipt.bindingCItem,
         classification: receipt.classification,
         result: receipt.result.status,
         counts: receipt.result.counts,
@@ -818,22 +798,21 @@ module.exports = {
     assertApiJsDigest,
     BOUND_MODULE_REFS,
     resolveModuleRef,
-    CLASS_4A,
+    ALLOWED_CLASSIFICATIONS,
     FRESHNESS_MAX_AGE_DAYS,
     DENIED_PROVIDER_HOSTS,
     TOKEN_ENV_NAMES,
     forbiddenEnvHits,
     assertNoProviderEnv,
     assertClassificationEnum,
-    assertPacketByteEqual,
+    assertClassificationByteEqual,
     rejectUnauthorizedAuthorized,
-    evaluate42mattersLiveApiAlone,
-    evaluateGqr,
-    evaluate4bMissingOnly4aFields,
+    evaluateLiveSuiteAlone,
+    evaluateDeployerGate,
+    evaluateAuthorizedWithoutSyntheticFields,
     isStaleRecorded,
     validateFreshnessAndOrigin,
     assertNoSecrets,
     buildReceipt,
     applyRedaction,
-    REV2,
 };

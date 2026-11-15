@@ -1,0 +1,12 @@
+{
+  "token_type": "bearer",
+  "refresh_token": "synthetic-refresh-token",
+  "access_token": "synthetic-access-token",
+  "hub_id": 1234567,
+  "scopes": [
+    "oauth",
+    "crm.objects.contacts.write",
+    "crm.objects.contacts.read"
+  ],
+  "expires_in": 1800
+}

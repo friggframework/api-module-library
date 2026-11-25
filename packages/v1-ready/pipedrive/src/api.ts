@@ -22,18 +22,11 @@ import {
   ListLeadsParams,
 } from "./types";
 
-const DAILY_PROBE_INTERVAL_MS = 3_600_000;
-
 export class Api extends OAuth2Requester {
   static rateLimit = {
     scope: "entity",
-    windows: [
-      { name: "burst", limit: 80, perMs: 2_000 },
-      { name: "search", limit: 10, perMs: 2_000 },
-    ],
+    windows: [{ name: "burst", limit: 80, perMs: 2_000 }],
     parsers: ["retryAfter", "resetHeaders"],
-    // Pipedrive documents no marker for a spent daily budget. A 429 that
-    // leaves requests in the 2 s window is not the burst limit.
     classify({
       status,
       headers,
@@ -42,23 +35,8 @@ export class Api extends OAuth2Requester {
       headers?: { get?(name: string): string | null };
     }) {
       if (status !== 429) return null;
-      const remaining = Number(headers?.get?.("x-ratelimit-remaining"));
-      if (!(remaining > 0)) return null;
-      return {
-        reason: "daily",
-        waitMs: DAILY_PROBE_INTERVAL_MS,
-        source: "static",
-      };
-    },
-    userHints: {
-      daily: {
-        links: [
-          {
-            label: "Pipedrive API rate limiting",
-            url: "https://pipedrive.readme.io/docs/core-api-concepts-rate-limiting",
-          },
-        ],
-      },
+      const remaining = headers?.get?.("x-ratelimit-remaining")?.trim();
+      return remaining === "0" ? { reason: "burst" } : null;
     },
   };
 

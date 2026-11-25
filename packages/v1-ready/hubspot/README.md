@@ -119,13 +119,19 @@ colliding.
 `Api.rateLimit` tells the Frigg Requester how HubSpot limits calls. The numbers come
 from the [API usage guidelines and limits](https://developers.hubspot.com/docs/developer-tooling/platform/usage-guidelines).
 
+HubSpot's docs name two `policyName` values for a `429`: `DAILY` and
+`TEN_SECONDLY_ROLLING`.
+
 - **Burst:** each account that installs a marketplace OAuth app is limited to 110
-  requests every 10 seconds. A throttled call returns `429` with `policyName`
-  `TEN_SECONDLY_ROLLING`. The Requester waits for `Retry-After` when the response has
-  one, and for the 10 second window when it has none.
+  requests every 10 seconds, the figure the module declares. A privately distributed
+  app gets 100 (Free, Starter), 190 (Professional, Enterprise) or 250 (with the API
+  limit increase) requests every 10 seconds. The Requester waits for `Retry-After`
+  when the response has one, and for the 10 second window when it has none.
 - **Search:** the CRM search endpoints have their own limit of 5 requests per second
-  per account, outside the burst limit. A throttled search returns `429` with
-  `policyName` `SECONDLY`. The Requester waits 1 second, then retries.
+  per account, outside the burst limit. HubSpot does not document what a throttled
+  search returns. If a `429` has `policyName` `SECONDLY`, the module treats it as this
+  limit: the Requester waits 1 second, then retries. Any other search `429` gets the
+  burst handling.
 - **Daily:** a `429` with `policyName` `DAILY`. HubSpot resets the daily limit at
   midnight in the account's time zone, which the module does not know, so it does not
   compute a reset time. It reports a one hour probe interval: the Requester throws a

@@ -1,9 +1,4 @@
-import {
-  get,
-  OAuth2Requester,
-  RateLimitPolicy,
-  RequestOptions,
-} from "@friggframework/core";
+import { get, OAuth2Requester, RequestOptions } from "@friggframework/core";
 import {
   OAuth2RequesterOptions,
   ActivityParams,
@@ -28,7 +23,7 @@ import {
 } from "./types";
 
 export class Api extends OAuth2Requester {
-  static rateLimit: RateLimitPolicy = {
+  static rateLimit = {
     scope: "entity",
     windows: [{ name: "burst", limit: 80, perMs: 2_000 }],
     parsers: ["retryAfter", "resetHeaders"],

@@ -1,0 +1,738 @@
+openapi: 3.0.3
+info:
+  title: RingCentral RingEX API (Frigg subset)
+  version: "1.0.0"
+  description: >-
+    Curated OpenAPI subset of the RingCentral RingEX REST API covering exactly
+    the endpoints implemented by @friggframework/api-module-ringcentral.
+    Paths, parameters, and operationIds are taken from the official RingCentral
+    OpenAPI (https://github.com/ringcentral/ringcentral-api-specifications) and
+    the live API Reference (https://developers.ringcentral.com/api-reference).
+    Every operationId has a matching Api method in api.js.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: RingCentral API Reference
+    url: https://developers.ringcentral.com/api-reference
+servers:
+  - url: https://platform.ringcentral.com
+    description: Production Platform API
+  - url: https://platform.devtest.ringcentral.com
+    description: Developer sandbox Platform API
+security:
+  - OAuth2: []
+tags:
+  - name: Account
+  - name: Extension
+  - name: Phone Number
+  - name: Message Store
+  - name: SMS
+  - name: Call Log
+  - name: Address Book
+  - name: Subscription
+paths:
+  /restapi/v1.0/account/{accountId}:
+    get:
+      tags: [Account]
+      operationId: readAccountInfo
+      summary: Get account info
+      description: >-
+        Returns basic account information. Use accountId `~` for the account
+        tied to the current authorization session.
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+      responses:
+        '200':
+          description: Account info
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /restapi/v1.0/account/{accountId}/extension:
+    get:
+      tags: [Extension]
+      operationId: listExtensions
+      summary: List extensions
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: perPage
+          schema: { type: integer, default: 100 }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: extensionNumber
+          schema: { type: string }
+        - in: query
+          name: email
+          schema: { type: string }
+      responses:
+        '200':
+          description: Extension list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExtensionList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /restapi/v1.0/account/{accountId}/extension/{extensionId}:
+    get:
+      tags: [Extension]
+      operationId: readExtension
+      summary: Get extension info
+      description: Use `~` for both path params to read the authorized extension.
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/extensionId'
+      responses:
+        '200':
+          description: Extension info
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExtensionInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      tags: [Extension]
+      operationId: updateExtension
+      summary: Update extension
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/extensionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: Updated extension
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExtensionInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /restapi/v1.0/account/{accountId}/phone-number:
+    get:
+      tags: [Phone Number]
+      operationId: listAccountPhoneNumbers
+      summary: List company phone numbers
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: perPage
+          schema: { type: integer, default: 100 }
+        - in: query
+          name: usageType
+          schema: { type: string }
+      responses:
+        '200':
+          description: Phone number list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PhoneNumberList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /restapi/v1.0/account/{accountId}/extension/{extensionId}/message-store:
+    get:
+      tags: [Message Store]
+      operationId: listMessages
+      summary: List messages
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/extensionId'
+        - in: query
+          name: availability
+          schema: { type: string }
+        - in: query
+          name: direction
+          schema: { type: string, enum: [Inbound, Outbound] }
+        - in: query
+          name: messageType
+          schema: { type: string }
+        - in: query
+          name: readStatus
+          schema: { type: string, enum: [Read, Unread] }
+        - in: query
+          name: dateFrom
+          schema: { type: string, format: date-time }
+        - in: query
+          name: dateTo
+          schema: { type: string, format: date-time }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: perPage
+          schema: { type: integer, default: 100 }
+      responses:
+        '200':
+          description: Message list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /restapi/v1.0/account/{accountId}/extension/{extensionId}/message-store/{messageId}:
+    get:
+      tags: [Message Store]
+      operationId: readMessage
+      summary: Get message
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/extensionId'
+        - $ref: '#/components/parameters/messageId'
+      responses:
+        '200':
+          description: Message info
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      tags: [Message Store]
+      operationId: updateMessage
+      summary: Update message (e.g. readStatus)
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/extensionId'
+        - $ref: '#/components/parameters/messageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: Updated message
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /restapi/v1.0/account/{accountId}/extension/{extensionId}/sms:
+    post:
+      tags: [SMS]
+      operationId: createSMSMessage
+      summary: Send SMS
+      description: >-
+        Creates and sends a text message. Requires SMS app permission.
+        Body must include from.phoneNumber, to[].phoneNumber, and text.
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/extensionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateSMSMessage' }
+      responses:
+        '200':
+          description: Sent message
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /restapi/v1.0/account/{accountId}/extension/{extensionId}/call-log:
+    get:
+      tags: [Call Log]
+      operationId: readUserCallLog
+      summary: List user call log records
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/extensionId'
+        - in: query
+          name: view
+          schema: { type: string, enum: [Simple, Detailed] }
+        - in: query
+          name: direction
+          schema: { type: string, enum: [Inbound, Outbound] }
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: dateFrom
+          schema: { type: string, format: date-time }
+        - in: query
+          name: dateTo
+          schema: { type: string, format: date-time }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: perPage
+          schema: { type: integer, default: 100 }
+      responses:
+        '200':
+          description: Call log list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CallLogList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /restapi/v1.0/account/{accountId}/extension/{extensionId}/call-log/{callRecordId}:
+    get:
+      tags: [Call Log]
+      operationId: readUserCallRecord
+      summary: Get a user call log record
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/extensionId'
+        - name: callRecordId
+          in: path
+          required: true
+          schema: { type: string }
+        - in: query
+          name: view
+          schema: { type: string, enum: [Simple, Detailed] }
+      responses:
+        '200':
+          description: Call record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CallLogRecord' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /restapi/v1.0/account/{accountId}/extension/{extensionId}/address-book/contact:
+    get:
+      tags: [Address Book]
+      operationId: listContacts
+      summary: List address-book contacts
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/extensionId'
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: perPage
+          schema: { type: integer, default: 100 }
+        - in: query
+          name: startsWith
+          schema: { type: string }
+      responses:
+        '200':
+          description: Contact list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContactList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Address Book]
+      operationId: createContact
+      summary: Create address-book contact
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/extensionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: Created contact
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContactInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /restapi/v1.0/account/{accountId}/extension/{extensionId}/address-book/contact/{contactId}:
+    get:
+      tags: [Address Book]
+      operationId: readContact
+      summary: Get address-book contact
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/extensionId'
+        - $ref: '#/components/parameters/contactId'
+      responses:
+        '200':
+          description: Contact
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContactInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      tags: [Address Book]
+      operationId: updateContact
+      summary: Update address-book contact
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/extensionId'
+        - $ref: '#/components/parameters/contactId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: Updated contact
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContactInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /restapi/v1.0/subscription:
+    get:
+      tags: [Subscription]
+      operationId: listSubscriptions
+      summary: List event subscriptions
+      responses:
+        '200':
+          description: Subscription list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Subscription]
+      operationId: createSubscription
+      summary: Create event subscription (webhook)
+      description: >-
+        Register a WebHook delivery subscription. The target URL must echo the
+        Validation-Token header during verification. Optional
+        deliveryMode.verificationToken is echoed on every delivery as the
+        Verification-Token header.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateSubscriptionRequest' }
+      responses:
+        '200':
+          description: Created subscription
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /restapi/v1.0/subscription/{subscriptionId}:
+    get:
+      tags: [Subscription]
+      operationId: readSubscription
+      summary: Get subscription
+      parameters:
+        - $ref: '#/components/parameters/subscriptionId'
+      responses:
+        '200':
+          description: Subscription
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      tags: [Subscription]
+      operationId: updateSubscription
+      summary: Update / renew subscription
+      parameters:
+        - $ref: '#/components/parameters/subscriptionId'
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: Updated subscription
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [Subscription]
+      operationId: deleteSubscription
+      summary: Delete subscription
+      parameters:
+        - $ref: '#/components/parameters/subscriptionId'
+      responses:
+        '204':
+          description: Deleted
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /restapi/v1.0/subscription/{subscriptionId}/renew:
+    post:
+      tags: [Subscription]
+      operationId: renewSubscription
+      summary: Renew subscription
+      parameters:
+        - $ref: '#/components/parameters/subscriptionId'
+      responses:
+        '200':
+          description: Renewed subscription
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://platform.ringcentral.com/restapi/oauth/authorize
+          tokenUrl: https://platform.ringcentral.com/restapi/oauth/token
+          scopes:
+            ReadAccounts: View user account information
+            EditExtensions: Modify extension settings
+            ReadMessages: View user messages
+            EditMessages: Modify / mark messages
+            SMS: Send and receive SMS
+            ReadCallLog: View call log records
+            Contacts: View and modify address-book contacts
+            SubscriptionWebhook: Create webhook subscriptions
+  parameters:
+    accountId:
+      in: path
+      name: accountId
+      required: true
+      schema: { type: string, default: '~' }
+      description: >-
+        Account id, or `~` for the account associated with the current
+        authorization session.
+    extensionId:
+      in: path
+      name: extensionId
+      required: true
+      schema: { type: string, default: '~' }
+      description: >-
+        Extension id, or `~` for the extension associated with the current
+        authorization session.
+    messageId:
+      in: path
+      name: messageId
+      required: true
+      schema: { type: string }
+    contactId:
+      in: path
+      name: contactId
+      required: true
+      schema: { type: string }
+    subscriptionId:
+      in: path
+      name: subscriptionId
+      required: true
+      schema: { type: string }
+  responses:
+    Unauthorized:
+      description: Missing or invalid access token
+  schemas:
+    AccountInfo:
+      type: object
+      properties:
+        id: { type: string }
+        uri: { type: string, format: uri }
+        mainNumber: { type: string }
+        operator:
+          type: object
+          properties:
+            id: { type: string }
+            name: { type: string }
+        serviceInfo:
+          type: object
+          properties:
+            servicePlanName: { type: string }
+    ExtensionInfo:
+      type: object
+      properties:
+        id: { type: [string, integer] }
+        uri: { type: string, format: uri }
+        extensionNumber: { type: string }
+        name: { type: string }
+        type: { type: string }
+        status: { type: string }
+        contact:
+          type: object
+          properties:
+            firstName: { type: string }
+            lastName: { type: string }
+            email: { type: string, format: email }
+            businessPhone: { type: string }
+    ExtensionList:
+      type: object
+      properties:
+        uri: { type: string }
+        records:
+          type: array
+          items: { $ref: '#/components/schemas/ExtensionInfo' }
+        paging: { type: object }
+        navigation: { type: object }
+    PhoneNumberInfo:
+      type: object
+      properties:
+        id: { type: [string, integer] }
+        phoneNumber: { type: string }
+        usageType: { type: string }
+        type: { type: string }
+        label: { type: string }
+    PhoneNumberList:
+      type: object
+      properties:
+        uri: { type: string }
+        records:
+          type: array
+          items: { $ref: '#/components/schemas/PhoneNumberInfo' }
+        paging: { type: object }
+    MessageInfo:
+      type: object
+      properties:
+        id: { type: [string, integer] }
+        uri: { type: string }
+        type: { type: string }
+        direction: { type: string }
+        subject: { type: string }
+        creationTime: { type: string, format: date-time }
+        lastModifiedTime: { type: string, format: date-time }
+        readStatus: { type: string }
+        messageStatus: { type: string }
+        from:
+          type: object
+          properties:
+            phoneNumber: { type: string }
+            name: { type: string }
+        to:
+          type: array
+          items:
+            type: object
+            properties:
+              phoneNumber: { type: string }
+              name: { type: string }
+    MessageList:
+      type: object
+      properties:
+        uri: { type: string }
+        records:
+          type: array
+          items: { $ref: '#/components/schemas/MessageInfo' }
+        paging: { type: object }
+    CreateSMSMessage:
+      type: object
+      required: [from, to, text]
+      properties:
+        from:
+          type: object
+          required: [phoneNumber]
+          properties:
+            phoneNumber: { type: string }
+        to:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [phoneNumber]
+            properties:
+              phoneNumber: { type: string }
+        text: { type: string }
+    CallLogRecord:
+      type: object
+      properties:
+        id: { type: string }
+        uri: { type: string }
+        sessionId: { type: string }
+        startTime: { type: string, format: date-time }
+        duration: { type: integer }
+        type: { type: string }
+        direction: { type: string }
+        action: { type: string }
+        result: { type: string }
+        from:
+          type: object
+          properties:
+            phoneNumber: { type: string }
+            name: { type: string }
+        to:
+          type: object
+          properties:
+            phoneNumber: { type: string }
+            name: { type: string }
+    CallLogList:
+      type: object
+      properties:
+        uri: { type: string }
+        records:
+          type: array
+          items: { $ref: '#/components/schemas/CallLogRecord' }
+        paging: { type: object }
+    ContactInfo:
+      type: object
+      properties:
+        id: { type: [string, integer] }
+        uri: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        company: { type: string }
+        email: { type: string, format: email }
+        businessPhone: { type: string }
+        mobilePhone: { type: string }
+        notes: { type: string }
+    ContactList:
+      type: object
+      properties:
+        uri: { type: string }
+        records:
+          type: array
+          items: { $ref: '#/components/schemas/ContactInfo' }
+        paging: { type: object }
+    CreateSubscriptionRequest:
+      type: object
+      required: [eventFilters, deliveryMode]
+      properties:
+        eventFilters:
+          type: array
+          items: { type: string }
+          description: >-
+            Event filter paths, e.g.
+            `/restapi/v1.0/account/~/extension/~/message-store`
+        expiresIn:
+          type: integer
+          description: Subscription lifetime in seconds
+        deliveryMode:
+          type: object
+          required: [transportType, address]
+          properties:
+            transportType:
+              type: string
+              enum: [WebHook]
+            address:
+              type: string
+              format: uri
+            verificationToken:
+              type: string
+              description: >-
+                Optional token echoed on every delivery as Verification-Token.
+    SubscriptionInfo:
+      type: object
+      properties:
+        id: { type: string }
+        uri: { type: string }
+        status: { type: string }
+        creationTime: { type: string, format: date-time }
+        expirationTime: { type: string, format: date-time }
+        expiresIn: { type: integer }
+        eventFilters:
+          type: array
+          items: { type: string }
+        deliveryMode:
+          type: object
+          properties:
+            transportType: { type: string }
+            address: { type: string, format: uri }
+    SubscriptionList:
+      type: object
+      properties:
+        uri: { type: string }
+        records:
+          type: array
+          items: { $ref: '#/components/schemas/SubscriptionInfo' }

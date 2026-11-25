@@ -25,6 +25,8 @@ function throttledFetch(responses: FakeResponse[]) {
   });
 }
 
+const ONE_HOUR_MS = 3_600_000;
+
 const ok: FakeResponse = { status: 200, body: { success: true, data: [] } };
 const limited = (headers?: Record<string, string>): FakeResponse => ({
   status: 429,
@@ -101,11 +103,71 @@ describe("Pipedrive rate limits", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  it("declares the lowest documented OAuth burst allowance", () => {
+  describe("a 429 that leaves requests in the 2 second window", () => {
+    it("throws a RateLimitError that probes the daily budget again in one hour", async () => {
+      const fetch = throttledFetch([
+        limited({
+          "x-ratelimit-limit": "80",
+          "x-ratelimit-remaining": "79",
+          "x-ratelimit-reset": "2",
+        }),
+        ok,
+      ]);
+      const before = Date.now();
+
+      const error = await makeApi(fetch)
+        .listDeals()
+        .catch((e) => e);
+
+      expect(error).toMatchObject({
+        isRateLimited: true,
+        statusCode: 429,
+        reason: "daily",
+        source: "static",
+        waitMs: ONE_HOUR_MS,
+      });
+      expect(error.retryAt.getTime()).toBeGreaterThanOrEqual(
+        before + ONE_HOUR_MS
+      );
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(delays).toEqual([]);
+    });
+
+    it("is not a limit when the status is not 429", async () => {
+      const fetch = throttledFetch([
+        {
+          status: 400,
+          headers: { "x-ratelimit-remaining": "79" },
+          body: { success: false, error: "Bad request" },
+        },
+      ]);
+
+      const error = await makeApi(fetch)
+        .listDeals()
+        .catch((e) => e);
+
+      expect(error.isRateLimited).toBeUndefined();
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("declares the lowest documented OAuth burst allowance and the search limit", () => {
     expect(Api.rateLimit).toMatchObject({
       scope: "entity",
-      windows: [{ name: "burst", limit: 80, perMs: 2_000 }],
+      windows: [
+        { name: "burst", limit: 80, perMs: 2_000 },
+        { name: "search", limit: 10, perMs: 2_000 },
+      ],
       parsers: ["retryAfter", "resetHeaders"],
     });
+  });
+
+  it("links the daily reason to Pipedrive's rate limiting guide", () => {
+    expect(Api.rateLimit.userHints.daily.links).toEqual([
+      {
+        label: expect.any(String),
+        url: "https://pipedrive.readme.io/docs/core-api-concepts-rate-limiting",
+      },
+    ]);
   });
 });

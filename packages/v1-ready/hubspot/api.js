@@ -6,12 +6,8 @@ const SEARCH_WINDOW_MS = 1_000;
 class Api extends OAuth2Requester {
     static rateLimit = {
         scope: 'entity',
-        windows: [
-            { name: 'burst', limit: 110, perMs: 10_000 },
-            { name: 'search', limit: 5, perMs: SEARCH_WINDOW_MS },
-        ],
-        maxConcurrency: 10,
-        parsers: ['retryAfter', 'resetHeaders'],
+        windows: [{ name: 'burst', limit: 110, perMs: 10_000 }],
+        parsers: ['retryAfter'],
         classify({ status, body }) {
             if (status !== 429) return null;
             if (body?.policyName === 'SECONDLY') {

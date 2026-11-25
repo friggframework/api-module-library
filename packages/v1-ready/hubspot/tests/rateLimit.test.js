@@ -151,8 +151,8 @@ describe('HubSpot rate limits', () => {
         });
     });
 
-    describe('a SECONDLY 429 from a search endpoint', () => {
-        it('waits the 1 second search window, then retries', async () => {
+    describe('a SECONDLY 429, read as the search limit', () => {
+        it('waits 1 second, then retries', async () => {
             const fetch = throttledFetch([limited(searchLimitBody), ok]);
 
             const result = await makeApi(fetch).searchCompanies({});
@@ -244,12 +244,9 @@ describe('HubSpot rate limits', () => {
     it('declares its limits', () => {
         expect(Api.rateLimit).toMatchObject({
             scope: 'entity',
-            windows: [
-                { name: 'burst', limit: 110, perMs: 10_000 },
-                { name: 'search', limit: 5, perMs: 1_000 },
-            ],
-            maxConcurrency: 10,
-            parsers: ['retryAfter', 'resetHeaders'],
+            windows: [{ name: 'burst', limit: 110, perMs: 10_000 }],
+            parsers: ['retryAfter'],
         });
+        expect(Api.rateLimit.maxConcurrency).toBeUndefined();
     });
 });

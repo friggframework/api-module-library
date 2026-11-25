@@ -1,0 +1,757 @@
+openapi: 3.0.3
+info:
+  title: ConnectWise PSA REST API (curated Frigg subset)
+  version: "1.0.4"
+  description: |
+    Curated OpenAPI contract for `@friggframework/api-module-connectwise`.
+    Mirrors `api.js` 1:1 (one operationId per Api method that calls PSA REST).
+
+    Official reference (login-gated / approval required):
+      https://developer.connectwise.com/Products/ConnectWise_PSA/Developer_Guide
+
+    URL shape (from PSA Developer Guide):
+      `https://<site>/<codebase>apis/3.0/...`
+    when codebase is not `v4_6_release`, cloud hosts may require an `API-` prefix
+    on the site hostname. This module currently hardcodes codebase `v4_6_release/`.
+
+    Required headers on every call:
+      - `clientId: <registered client id>`
+      - `Accept: application/vnd.connectwise.com+json; version=<pin>`
+        (module default pin `2019.1`; override via `CONNECTWISE_API_VERSION` / `api_version`)
+      - `Authorization: Basic base64(companyId+publicKey:privateKey)`
+
+    OPEN QUESTIONS (response/request field shapes): public PSA REST reference is
+    login-gated; schemas below are structural placeholders inferred from how
+    `api.js` builds requests, not verified against a published vendor OpenAPI.
+  contact:
+    name: Frigg Framework
+    url: https://friggframework.org
+servers:
+  - url: https://api-na.myconnectwise.net
+    description: >-
+      Example ConnectWise PSA cloud site (North America). The module's `baseUrl`
+      is the authenticated `site` URL (same pattern for eu/au/za/custom hosts).
+security:
+  - BasicAuth: []
+    ClientIdHeader: []
+tags:
+  - name: Companies
+  - name: Contacts
+  - name: CompanyTypes
+  - name: CommunicationTypes
+  - name: Countries
+  - name: Finance
+  - name: Procurement
+  - name: Callbacks
+
+# Shared path params reused on every path
+x-common-parameters: &commonParameters
+  - $ref: "#/components/parameters/Codebase"
+  - $ref: "#/components/parameters/AcceptHeader"
+  - $ref: "#/components/parameters/ClientIdHeader"
+
+paths:
+  /{codebase}apis/3.0/company/companies:
+    parameters: *commonParameters
+    get:
+      tags: [Companies]
+      operationId: listCompanies
+      summary: List companies
+      parameters:
+        - $ref: "#/components/parameters/ConditionsQuery"
+      responses:
+        "200":
+          description: Company list (shape UNVERIFIED — login-gated docs)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Company" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Companies]
+      operationId: createCompany
+      summary: Create a company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Company" }
+      responses:
+        "200":
+          description: Created company (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Company" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/company/companies/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Codebase"
+      - $ref: "#/components/parameters/AcceptHeader"
+      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Companies]
+      operationId: getCompanyById
+      summary: Get company by id
+      responses:
+        "200":
+          description: Company (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Company" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    patch:
+      tags: [Companies]
+      operationId: patchCompanyById
+      summary: Patch company by id (JSON Patch from FormatPatchBody)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: "#/components/schemas/PatchOperation" }
+      responses:
+        "200":
+          description: Updated company (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Company" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Companies]
+      operationId: deleteCompanyById
+      summary: Delete company by id
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/company/companies/{id}/typeAssociations:
+    parameters:
+      - $ref: "#/components/parameters/Codebase"
+      - $ref: "#/components/parameters/AcceptHeader"
+      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "#/components/parameters/ResourceId"
+    post:
+      tags: [CompanyTypes]
+      operationId: addTypeToCompany
+      summary: Associate a company type with a company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type:
+                  type: object
+                  required: [id]
+                  properties:
+                    id: { type: integer }
+      responses:
+        "200":
+          description: Association result (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/company/companies/types:
+    parameters: *commonParameters
+    get:
+      tags: [CompanyTypes]
+      operationId: listCompanyTypes
+      summary: List company types
+      parameters:
+        - $ref: "#/components/parameters/ConditionsQuery"
+      responses:
+        "200":
+          description: Company type list (shape UNVERIFIED)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CompanyType" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [CompanyTypes]
+      operationId: createCompanyType
+      summary: Create a company type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        "200":
+          description: Created company type (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CompanyType" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/company/companies/types/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Codebase"
+      - $ref: "#/components/parameters/AcceptHeader"
+      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "#/components/parameters/ResourceId"
+    delete:
+      tags: [CompanyTypes]
+      operationId: deleteCompanyType
+      summary: Delete a company type
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/company/communicationTypes:
+    parameters: *commonParameters
+    get:
+      tags: [CommunicationTypes]
+      operationId: listCommunicationTypes
+      summary: List communication types
+      parameters:
+        - $ref: "#/components/parameters/ConditionsQuery"
+      responses:
+        "200":
+          description: Communication type list (shape UNVERIFIED)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/company/countries:
+    parameters: *commonParameters
+    get:
+      tags: [Countries]
+      operationId: listCountries
+      summary: List countries
+      description: >-
+        Client currently appends `?pageSize=1000` on the request URL.
+      responses:
+        "200":
+          description: Country list (shape UNVERIFIED)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/company/contacts:
+    parameters: *commonParameters
+    get:
+      tags: [Contacts]
+      operationId: listContacts
+      summary: List contacts
+      parameters:
+        - $ref: "#/components/parameters/ConditionsQuery"
+      responses:
+        "200":
+          description: Contact list (shape UNVERIFIED)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Contact" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Contacts]
+      operationId: createContact
+      summary: Create a contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Contact" }
+      responses:
+        "200":
+          description: Created contact (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contact" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/company/contacts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Codebase"
+      - $ref: "#/components/parameters/AcceptHeader"
+      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Contacts]
+      operationId: getContact
+      summary: Get contact by id
+      responses:
+        "200":
+          description: Contact (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contact" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    patch:
+      tags: [Contacts]
+      operationId: updateContact
+      summary: Patch contact by id (JSON Patch from FormatPatchBody)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: "#/components/schemas/PatchOperation" }
+      responses:
+        "200":
+          description: Updated contact (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contact" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Contacts]
+      operationId: deleteContact
+      summary: Delete contact by id
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/finance/invoices:
+    parameters: *commonParameters
+    get:
+      tags: [Finance]
+      operationId: listInvoices
+      summary: List invoices
+      parameters:
+        - $ref: "#/components/parameters/ConditionsQuery"
+      responses:
+        "200":
+          description: Invoice list (shape UNVERIFIED)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Invoice" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Finance]
+      operationId: createInvoiceForCompany
+      summary: Create an invoice for a company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, company]
+              properties:
+                type: { type: string }
+                company:
+                  type: object
+                  required: [id]
+                  properties:
+                    id: { type: integer }
+      responses:
+        "200":
+          description: Created invoice (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Invoice" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/finance/invoices/{id}/payments:
+    parameters:
+      - $ref: "#/components/parameters/Codebase"
+      - $ref: "#/components/parameters/AcceptHeader"
+      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Finance]
+      operationId: getPaymentsForInvoice
+      summary: List payments for an invoice
+      parameters:
+        - $ref: "#/components/parameters/ConditionsQuery"
+      responses:
+        "200":
+          description: Payment list (shape UNVERIFIED)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/procurement/unitOfMeasures:
+    parameters: *commonParameters
+    get:
+      tags: [Procurement]
+      operationId: listUnitOfMeasures
+      summary: List unit of measures
+      parameters:
+        - $ref: "#/components/parameters/ConditionsQuery"
+      responses:
+        "200":
+          description: Unit-of-measure list (shape UNVERIFIED)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/procurement/subcategories:
+    parameters: *commonParameters
+    get:
+      tags: [Procurement]
+      operationId: listProductSubcategories
+      summary: List product subcategories
+      parameters:
+        - $ref: "#/components/parameters/ConditionsQuery"
+      responses:
+        "200":
+          description: Subcategory list (shape UNVERIFIED)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/procurement/categories:
+    parameters: *commonParameters
+    get:
+      tags: [Procurement]
+      operationId: listProductCategories
+      summary: List product categories
+      parameters:
+        - $ref: "#/components/parameters/ConditionsQuery"
+      responses:
+        "200":
+          description: Category list (shape UNVERIFIED)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/procurement/catalog:
+    parameters: *commonParameters
+    get:
+      tags: [Procurement]
+      operationId: listCatalogItems
+      summary: List catalog items
+      parameters:
+        - $ref: "#/components/parameters/ConditionsQuery"
+      responses:
+        "200":
+          description: Catalog list (shape UNVERIFIED)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CatalogItem" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Procurement]
+      operationId: createCatalogItem
+      summary: Create a catalog item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CatalogItemCreate" }
+      responses:
+        "200":
+          description: Created catalog item (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CatalogItem" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/procurement/types:
+    parameters: *commonParameters
+    get:
+      tags: [Procurement]
+      operationId: listProductTypes
+      summary: List product types
+      parameters:
+        - $ref: "#/components/parameters/ConditionsQuery"
+      responses:
+        "200":
+          description: Product type list (shape UNVERIFIED)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Procurement]
+      operationId: createProductType
+      summary: Create a product type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        "200":
+          description: Created product type (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/procurement/products:
+    parameters: *commonParameters
+    post:
+      tags: [Procurement]
+      operationId: addProductToInvoice
+      summary: Add a catalog product line to an invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InvoiceProductCreate" }
+      responses:
+        "200":
+          description: Created invoice product (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/system/callbacks:
+    parameters: *commonParameters
+    get:
+      tags: [Callbacks]
+      operationId: listCallbacks
+      summary: List system callbacks
+      responses:
+        "200":
+          description: Callback list (shape UNVERIFIED)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Callback" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Callbacks]
+      operationId: createCallback
+      summary: Create a system callback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Callback" }
+      responses:
+        "200":
+          description: Created callback (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Callback" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /{codebase}apis/3.0/system/callbacks/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Codebase"
+      - $ref: "#/components/parameters/AcceptHeader"
+      - $ref: "#/components/parameters/ClientIdHeader"
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      tags: [Callbacks]
+      operationId: getCallbackId
+      summary: Get callback by id
+      responses:
+        "200":
+          description: Callback (shape UNVERIFIED)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Callback" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Callbacks]
+      operationId: deleteCallbackId
+      summary: Delete callback by id
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: >-
+        `Authorization: Basic base64(<companyId>+<publicKey>:<privateKey>)`.
+    ClientIdHeader:
+      type: apiKey
+      in: header
+      name: clientId
+      description: Required ConnectWise clientId on every API call.
+  parameters:
+    Codebase:
+      name: codebase
+      in: path
+      required: true
+      description: >-
+        PSA codebase path segment including trailing slash. This module pins
+        `v4_6_release/`. Guide form is `<codebase>apis/3.0` (no extra slash).
+      schema:
+        type: string
+        default: v4_6_release/
+    AcceptHeader:
+      name: Accept
+      in: header
+      required: true
+      description: >-
+        PSA REST model version. Module default
+        `application/vnd.connectwise.com+json; version=2019.1`.
+      schema:
+        type: string
+        default: "application/vnd.connectwise.com+json; version=2019.1"
+    ClientIdHeader:
+      name: clientId
+      in: header
+      required: true
+      description: Registered ConnectWise clientId (required on all calls).
+      schema:
+        type: string
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        oneOf:
+          - type: integer
+          - type: string
+    ConditionsQuery:
+      name: conditions
+      in: query
+      required: false
+      description: >-
+        ConnectWise conditions filter (and other query keys the client forwards).
+        Exact query param catalog UNVERIFIED against login-gated docs.
+      schema:
+        type: string
+  responses:
+    Unauthorized:
+      description: Missing/invalid Basic auth or clientId.
+  schemas:
+    Company:
+      type: object
+      description: Company resource (fields UNVERIFIED)
+      additionalProperties: true
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        identifier: { type: string }
+    CompanyType:
+      type: object
+      description: Company type (fields UNVERIFIED)
+      additionalProperties: true
+      properties:
+        id: { type: integer }
+        name: { type: string }
+    Contact:
+      type: object
+      description: Contact resource (fields UNVERIFIED)
+      additionalProperties: true
+      properties:
+        id: { type: integer }
+        firstName: { type: string }
+        lastName: { type: string }
+    Invoice:
+      type: object
+      description: Invoice resource (fields UNVERIFIED)
+      additionalProperties: true
+      properties:
+        id: { type: integer }
+        type: { type: string }
+    CatalogItem:
+      type: object
+      description: Catalog item (fields UNVERIFIED)
+      additionalProperties: true
+      properties:
+        id: { type: integer }
+        identifier: { type: string }
+        description: { type: string }
+    CatalogItemCreate:
+      type: object
+      description: Body built by Api.createCatalogItem (field requirements UNVERIFIED)
+      additionalProperties: true
+      properties:
+        identifier: { type: string }
+        description: { type: string }
+        inactiveFlag: { type: boolean }
+        productClass: { type: string }
+        price: { type: number }
+        cost: { type: number }
+        customerDescription: { type: string }
+        subcategory:
+          type: object
+          properties:
+            id: {}
+        type:
+          type: object
+          properties:
+            id: {}
+        unitOfMeasure:
+          type: object
+          properties:
+            id: {}
+        category:
+          type: object
+          properties:
+            id: {}
+    InvoiceProductCreate:
+      type: object
+      description: Body built by Api.addProductToInvoice (field requirements UNVERIFIED)
+      additionalProperties: true
+      properties:
+        catalogItem:
+          type: object
+          properties:
+            id: {}
+            identifier: { type: string }
+        quantity: { type: number }
+        price: { type: number }
+        cost: { type: number }
+        discount: { type: number }
+        billableOption: { type: string }
+        customerDescription: { type: string }
+        listPrice: { type: number }
+        invoice:
+          type: object
+          properties:
+            id: {}
+    Callback:
+      type: object
+      description: System callback (fields UNVERIFIED)
+      additionalProperties: true
+      properties:
+        id: { type: integer }
+        url: { type: string }
+        type: { type: string }
+    PatchOperation:
+      type: object
+      description: JSON Patch operation produced by FormatPatchBody (op/path/value UNVERIFIED vs PSA)
+      additionalProperties: true
+      properties:
+        op: { type: string }
+        path: { type: string }
+        value: {}

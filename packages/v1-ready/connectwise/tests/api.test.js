@@ -1,7 +1,15 @@
 require('dotenv').config();
 const {Api} = require('../api');
 
-describe('Connectwise API Tests', () => {
+const hasLiveCreds = Boolean(
+    process.env.CONNECTWISE_PUBLIC_KEY &&
+        process.env.CONNECTWISE_PRIVATE_KEY &&
+        process.env.CONNECTWISE_COMPANY_ID &&
+        process.env.CONNECTWISE_CLIENT_ID &&
+        process.env.CONNECTWISE_SITE
+);
+
+(hasLiveCreds ? describe : describe.skip)('Connectwise API Tests', () => {
     /* eslint-disable camelcase */
     const apiParams = {
         public_key: process.env.CONNECTWISE_PUBLIC_KEY,

@@ -611,7 +611,6 @@ describe('Salesforce Api rate limits', () => {
 
     afterEach(() => {
         jest.restoreAllMocks();
-        jest.dontMock('@friggframework/core');
         delete api.conn.sobject;
         delete api.conn.describeGlobal;
     });
@@ -673,40 +672,6 @@ describe('Salesforce Api rate limits', () => {
             expect(error).toBe(original);
         });
 
-        it('tells the delegate about the limit before it throws', async () => {
-            const notify = jest.fn().mockResolvedValue(undefined);
-            api._notifyRateLimited = notify;
-
-            const error = await rejectionOf(
-                api.withLimits(() => Promise.reject(limitError()))
-            );
-
-            expect(error).toBeInstanceOf(RateLimitError);
-            expect(notify).toHaveBeenCalledTimes(1);
-            expect(notify).toHaveBeenCalledWith(error);
-        });
-
-        it('does not tell the delegate about an error that is not a limit', async () => {
-            const notify = jest.fn().mockResolvedValue(undefined);
-            api._notifyRateLimited = notify;
-
-            await rejectionOf(
-                api.withLimits(() => Promise.reject(invalidField()))
-            );
-
-            expect(notify).not.toHaveBeenCalled();
-        });
-
-        it('still throws the RateLimitError on a core that cannot notify', async () => {
-            api._notifyRateLimited = undefined;
-
-            const error = await rejectionOf(
-                api.withLimits(() => Promise.reject(limitError()))
-            );
-
-            expect(error).toBeInstanceOf(RateLimitError);
-        });
-
         it.each([
             'ConcurrentPerOrgLongTxn Concurrent API Request Limit exceeded',
             'Concurrent requests limit exceeded.',
@@ -749,32 +714,6 @@ describe('Salesforce Api rate limits', () => {
             expect(Api.rateLimit.userHints.concurrency.links).toEqual(
                 Api.rateLimit.userHints.daily.links
             );
-        });
-
-        it('rethrows the original error on a core without the rate-limit exports', async () => {
-            let OldCoreApi;
-            jest.isolateModules(() => {
-                jest.doMock('@friggframework/core', () => {
-                    const {
-                        RateLimitError: _error,
-                        classifyRateLimit: _classify,
-                        ...rest
-                    } = jest.requireActual('@friggframework/core');
-                    return rest;
-                });
-                OldCoreApi = require('../api').Api;
-            });
-            const oldApi = new OldCoreApi({
-                ...baseParams,
-                delegate: { ...baseParams.delegate, name: 'salesforce' },
-            });
-            const cause = limitError();
-
-            const error = await rejectionOf(
-                oldApi.withLimits(() => Promise.reject(cause))
-            );
-
-            expect(error).toBe(cause);
         });
 
         it('links the daily reason to the Salesforce API request limits', () => {

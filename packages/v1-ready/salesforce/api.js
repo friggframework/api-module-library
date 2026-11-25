@@ -187,20 +187,11 @@ class Api extends OAuth2Requester {
         try {
             return await call();
         } catch (err) {
-            const rateLimitError = this._rateLimitErrorFor(err);
-            if (!rateLimitError) throw err;
-            await this._notifyRateLimited?.(rateLimitError);
-            throw rateLimitError;
+            throw this._rateLimitErrorFor(err) ?? err;
         }
     }
 
     _rateLimitErrorFor(err) {
-        if (
-            typeof classifyRateLimit !== 'function' ||
-            typeof RateLimitError !== 'function'
-        ) {
-            return null;
-        }
         const hint = classifyRateLimit(this.constructor.rateLimit, {
             status: err?.statusCode,
             headers: {},

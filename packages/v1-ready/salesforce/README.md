@@ -58,5 +58,3 @@ const result = await api.withLimits(() => api.conn.query(soql));
 ```
 
 Salesforce also returns `REQUEST_LIMIT_EXCEEDED` when too many requests that run for 20 seconds or longer are in flight at once (25 in a production org, 5 in a Developer Edition org). That limit clears in seconds, not in a day. Salesforce documents no field that tells the two apart, so `withLimits` reads the error message: a message that contains "concurrent" (Salesforce sends `ConcurrentPerOrgLongTxn` for it) is reported as `reason: 'concurrency'` with a `retryAt` 30 seconds ahead. Any other message stays a daily limit.
-
-When it throws a `RateLimitError` for a limit that lasts longer than the in-process cap (5 minutes by default: the daily limit, not the 30 second concurrency limit), `withLimits` also has the integration record one rate-limit warning for its users, as the Frigg Requester does. On a core that cannot record the warning, it only throws. A core that does not export `RateLimitError` and `classifyRateLimit` (older than the release that added them) makes `withLimits` rethrow the original jsforce error.

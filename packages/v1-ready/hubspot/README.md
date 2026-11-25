@@ -118,7 +118,6 @@ colliding.
 
 `Api.rateLimit` tells the Frigg Requester how HubSpot limits calls. The numbers come
 from the [API usage guidelines and limits](https://developers.hubspot.com/docs/developer-tooling/platform/usage-guidelines).
-A `@friggframework/core` release without rate-limit awareness ignores the declaration.
 
 - **Burst:** each account that installs a marketplace OAuth app is limited to 110
   requests every 10 seconds. A throttled call returns `429` with `policyName`

@@ -21,7 +21,7 @@
     "prettier": "^2.7.1"
   },
   "dependencies": {
-    "@friggframework/core": "^2.0.0-next.110",
+    "@friggframework/core": "^2.0.0-next.129",
     "jsforce": "^3.8.1"
   }
 }

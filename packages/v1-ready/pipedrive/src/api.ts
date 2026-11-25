@@ -23,6 +23,23 @@ import {
 } from "./types";
 
 export class Api extends OAuth2Requester {
+  static rateLimit = {
+    scope: "entity",
+    windows: [{ name: "burst", limit: 80, perMs: 2_000 }],
+    parsers: ["retryAfter", "resetHeaders"],
+    classify({
+      status,
+      headers,
+    }: {
+      status?: number;
+      headers?: { get?(name: string): string | null };
+    }) {
+      if (status !== 429) return null;
+      const remaining = headers?.get?.("x-ratelimit-remaining")?.trim();
+      return remaining === "0" ? { reason: "burst" } : null;
+    },
+  };
+
   companyDomain: string | null;
   URLs: {
     activities: string;

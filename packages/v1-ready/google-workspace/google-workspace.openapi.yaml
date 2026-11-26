@@ -1,0 +1,517 @@
+openapi: 3.0.3
+info:
+  title: Google Workspace — Drive API v3 + Calendar API v3 (subset)
+  version: "1.0.0"
+  description: >-
+    Curated subset of Google's Drive API v3 and Calendar API v3 covering about,
+    shared drives, files (list/get/create/update/export), Drive change/file
+    watch channels, calendarList, calendars, events (list/get/create/update),
+    and Calendar event watch channels. Paths, methods, and parameters are taken
+    from the official REST references and discovery documents
+    (https://www.googleapis.com/discovery/v1/apis/drive/v3/rest,
+    https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest) — nothing
+    invented. operationIds are camelCase aliases matching the hand-written Api
+    methods 1:1. Identity uses Google OAuth2 userinfo (outside this curated
+    surface) and is not listed here.
+  contact:
+    name: Left Hook
+    url: https://lefthook.com
+  externalDocs:
+    description: Google Workspace developer documentation
+    url: https://developers.google.com/workspace
+servers:
+  - url: https://www.googleapis.com
+    description: Google APIs root (Drive /drive/v3, Calendar /calendar/v3)
+security:
+  - oauth2: []
+tags:
+  - name: DriveAbout
+  - name: Drives
+  - name: Files
+  - name: DriveChanges
+  - name: DriveChannels
+  - name: Calendars
+  - name: Events
+  - name: CalendarChannels
+paths:
+  /drive/v3/about:
+    get:
+      tags: [DriveAbout]
+      operationId: getAbout
+      summary: Gets information about the user, the user's Drive, and system capabilities
+      description: Discovery id drive.about.get.
+      parameters:
+        - in: query
+          name: fields
+          schema: { type: string }
+      responses:
+        "200":
+          description: About resource
+
+  /drive/v3/drives:
+    get:
+      tags: [Drives]
+      operationId: listDrives
+      summary: Lists the user's shared drives
+      description: Discovery id drive.drives.list.
+      parameters:
+        - in: query
+          name: pageSize
+          schema: { type: integer }
+        - in: query
+          name: pageToken
+          schema: { type: string }
+        - in: query
+          name: q
+          schema: { type: string }
+      responses:
+        "200":
+          description: Drive list
+
+  /drive/v3/files:
+    get:
+      tags: [Files]
+      operationId: listFiles
+      summary: Lists the user's files
+      description: Discovery id drive.files.list.
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: pageSize
+          schema: { type: integer }
+        - in: query
+          name: pageToken
+          schema: { type: string }
+        - in: query
+          name: fields
+          schema: { type: string }
+        - in: query
+          name: orderBy
+          schema: { type: string }
+        - in: query
+          name: corpora
+          schema: { type: string }
+        - in: query
+          name: driveId
+          schema: { type: string }
+        - in: query
+          name: includeItemsFromAllDrives
+          schema: { type: boolean }
+        - in: query
+          name: supportsAllDrives
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: File list
+    post:
+      tags: [Files]
+      operationId: createFile
+      summary: Creates a file metadata resource
+      description: >-
+        Discovery id drive.files.create (metadata-only; media upload uses
+        /upload/drive/v3/files and is out of this curated subset).
+      parameters:
+        - in: query
+          name: supportsAllDrives
+          schema: { type: boolean }
+        - in: query
+          name: fields
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: File created
+
+  /drive/v3/files/{fileId}:
+    get:
+      tags: [Files]
+      operationId: getFile
+      summary: Gets a file's metadata or content by ID
+      description: Discovery id drive.files.get.
+      parameters:
+        - in: path
+          name: fileId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: fields
+          schema: { type: string }
+        - in: query
+          name: supportsAllDrives
+          schema: { type: boolean }
+        - in: query
+          name: alt
+          schema: { type: string }
+          description: Set to media to download content.
+      responses:
+        "200":
+          description: File resource or media
+    patch:
+      tags: [Files]
+      operationId: updateFile
+      summary: Updates a file's metadata (patch semantics)
+      description: Discovery id drive.files.update.
+      parameters:
+        - in: path
+          name: fileId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: supportsAllDrives
+          schema: { type: boolean }
+        - in: query
+          name: fields
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated file
+
+  /drive/v3/files/{fileId}/export:
+    get:
+      tags: [Files]
+      operationId: exportFile
+      summary: Exports a Google Workspace document
+      description: Discovery id drive.files.export.
+      parameters:
+        - in: path
+          name: fileId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: mimeType
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Exported bytes
+
+  /drive/v3/files/{fileId}/watch:
+    post:
+      tags: [DriveChannels]
+      operationId: watchFile
+      summary: Subscribes to changes for a file
+      description: Discovery id drive.files.watch. See Drive push notifications guide.
+      parameters:
+        - in: path
+          name: fileId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: supportsAllDrives
+          schema: { type: boolean }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, type, address]
+              properties:
+                id: { type: string }
+                type: { type: string, enum: [web_hook] }
+                address: { type: string }
+                token: { type: string }
+                expiration: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: Channel created
+
+  /drive/v3/changes/startPageToken:
+    get:
+      tags: [DriveChanges]
+      operationId: getChangesStartPageToken
+      summary: Gets the starting pageToken for listing future changes
+      description: Discovery id drive.changes.getStartPageToken.
+      parameters:
+        - in: query
+          name: driveId
+          schema: { type: string }
+        - in: query
+          name: supportsAllDrives
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Start page token
+
+  /drive/v3/changes/watch:
+    post:
+      tags: [DriveChannels]
+      operationId: watchChanges
+      summary: Subscribes to changes for a user
+      description: Discovery id drive.changes.watch.
+      parameters:
+        - in: query
+          name: pageToken
+          required: true
+          schema: { type: string }
+        - in: query
+          name: supportsAllDrives
+          schema: { type: boolean }
+        - in: query
+          name: includeItemsFromAllDrives
+          schema: { type: boolean }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, type, address]
+              properties:
+                id: { type: string }
+                type: { type: string, enum: [web_hook] }
+                address: { type: string }
+                token: { type: string }
+                expiration: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: Channel created
+
+  /drive/v3/channels/stop:
+    post:
+      tags: [DriveChannels]
+      operationId: stopDriveChannel
+      summary: Stops watching resources through this Drive channel
+      description: Discovery id drive.channels.stop.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, resourceId]
+              properties:
+                id: { type: string }
+                resourceId: { type: string }
+      responses:
+        "204":
+          description: Channel stopped
+
+  /calendar/v3/users/me/calendarList:
+    get:
+      tags: [Calendars]
+      operationId: listCalendars
+      summary: Returns the calendars on the user's calendar list
+      description: Discovery id calendar.calendarList.list.
+      parameters:
+        - in: query
+          name: maxResults
+          schema: { type: integer }
+        - in: query
+          name: pageToken
+          schema: { type: string }
+        - in: query
+          name: showDeleted
+          schema: { type: boolean }
+        - in: query
+          name: showHidden
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: CalendarList
+
+  /calendar/v3/calendars/{calendarId}:
+    get:
+      tags: [Calendars]
+      operationId: getCalendar
+      summary: Returns metadata for a calendar
+      description: Discovery id calendar.calendars.get.
+      parameters:
+        - in: path
+          name: calendarId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Calendar
+
+  /calendar/v3/calendars/{calendarId}/events:
+    get:
+      tags: [Events]
+      operationId: listEvents
+      summary: Returns events on the specified calendar
+      description: Discovery id calendar.events.list.
+      parameters:
+        - in: path
+          name: calendarId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: timeMin
+          schema: { type: string, format: date-time }
+        - in: query
+          name: timeMax
+          schema: { type: string, format: date-time }
+        - in: query
+          name: maxResults
+          schema: { type: integer }
+        - in: query
+          name: pageToken
+          schema: { type: string }
+        - in: query
+          name: singleEvents
+          schema: { type: boolean }
+        - in: query
+          name: orderBy
+          schema: { type: string }
+        - in: query
+          name: q
+          schema: { type: string }
+      responses:
+        "200":
+          description: Events
+    post:
+      tags: [Events]
+      operationId: createEvent
+      summary: Creates an event
+      description: Discovery id calendar.events.insert.
+      parameters:
+        - in: path
+          name: calendarId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: sendUpdates
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Event created
+
+  /calendar/v3/calendars/{calendarId}/events/{eventId}:
+    get:
+      tags: [Events]
+      operationId: getEvent
+      summary: Returns an event by ID
+      description: Discovery id calendar.events.get.
+      parameters:
+        - in: path
+          name: calendarId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Event
+    patch:
+      tags: [Events]
+      operationId: updateEvent
+      summary: Updates an event (patch semantics)
+      description: Discovery id calendar.events.patch.
+      parameters:
+        - in: path
+          name: calendarId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: sendUpdates
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: Updated event
+
+  /calendar/v3/calendars/{calendarId}/events/watch:
+    post:
+      tags: [CalendarChannels]
+      operationId: watchCalendarEvents
+      summary: Watch for changes to Calendar events
+      description: Discovery id calendar.events.watch.
+      parameters:
+        - in: path
+          name: calendarId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, type, address]
+              properties:
+                id: { type: string }
+                type: { type: string, enum: [web_hook] }
+                address: { type: string }
+                token: { type: string }
+                expiration: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: Channel created
+
+  /calendar/v3/channels/stop:
+    post:
+      tags: [CalendarChannels]
+      operationId: stopCalendarChannel
+      summary: Stop watching resources through this Calendar channel
+      description: Discovery id calendar.channels.stop.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, resourceId]
+              properties:
+                id: { type: string }
+                resourceId: { type: string }
+      responses:
+        "204":
+          description: Channel stopped
+
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      description: >-
+        Google OAuth 2.0 authorization-code flow. Use access_type=offline and
+        prompt=consent to obtain a refresh token.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts.google.com/o/oauth2/v2/auth
+          tokenUrl: https://oauth2.googleapis.com/token
+          scopes:
+            https://www.googleapis.com/auth/drive: >-
+              See, edit, create, and delete all Google Drive files
+            https://www.googleapis.com/auth/drive.file: >-
+              See, edit, create, and delete only Google Drive files opened or
+              created with this app
+            https://www.googleapis.com/auth/drive.readonly: >-
+              See and download all Google Drive files
+            https://www.googleapis.com/auth/calendar: >-
+              See, edit, share, and permanently delete all calendars
+            https://www.googleapis.com/auth/calendar.events: >-
+              View and edit events on all calendars
+            https://www.googleapis.com/auth/calendar.readonly: >-
+              See and download any calendar
+            https://www.googleapis.com/auth/userinfo.email: >-
+              See your primary Google Account email address
+            https://www.googleapis.com/auth/userinfo.profile: >-
+              See your personal info, including any personal info you've made
+              publicly available

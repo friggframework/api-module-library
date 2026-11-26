@@ -1,0 +1,328 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "google-workspace",
+  "label": "Google Workspace",
+  "package": "@friggframework/api-module-google-workspace",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Google user identity from GET https://www.googleapis.com/oauth2/v2/userinfo.",
+    "fields": [
+      {
+        "name": "user_id",
+        "type": "string",
+        "description": "Google user id used as entity externalId."
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "email", "type": "email", "tag": "contact.email", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName", "readOnly": true },
+        { "name": "given_name", "type": "string", "readOnly": true },
+        { "name": "family_name", "type": "string", "readOnly": true },
+        { "name": "picture", "type": "string", "readOnly": true },
+        { "name": "locale", "type": "string", "readOnly": true },
+        { "name": "hd", "type": "string", "readOnly": true }
+      ]
+    },
+    "about": {
+      "label": "Drive About",
+      "fields": [
+        { "name": "user.emailAddress", "type": "email", "tag": "contact.email", "readOnly": true },
+        { "name": "user.displayName", "type": "string", "tag": "person.displayName", "readOnly": true },
+        { "name": "storageQuota", "type": "json", "readOnly": true }
+      ]
+    },
+    "drive": {
+      "label": "Shared drive",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.name" },
+        { "name": "kind", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "drive.list",
+          "items": "drives"
+        }
+      }
+    },
+    "file": {
+      "label": "Drive file",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "file.name" },
+        { "name": "mimeType", "type": "string", "readOnly": true },
+        { "name": "parents", "type": "json" },
+        { "name": "webViewLink", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "createdTime", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "modifiedTime", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "size", "type": "string", "tag": "file.size", "readOnly": true },
+        { "name": "trashed", "type": "boolean", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "modifiedTime",
+        "list": {
+          "capability": "file.list",
+          "items": "files"
+        },
+        "get": {
+          "capability": "file.get",
+          "id": "fileId"
+        },
+        "create": {
+          "capability": "file.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "file.update",
+          "id": "fileId",
+          "body": "data"
+        }
+      }
+    },
+    "calendar": {
+      "label": "Calendar",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "summary", "type": "string", "tag": "record.name" },
+        { "name": "description", "type": "string" },
+        { "name": "timeZone", "type": "string" },
+        { "name": "primary", "type": "boolean", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "calendar.list",
+          "items": "items"
+        },
+        "get": {
+          "capability": "calendar.get",
+          "id": "calendarId"
+        }
+      }
+    },
+    "event": {
+      "label": "Calendar event",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "summary", "type": "string", "tag": "record.name" },
+        { "name": "description", "type": "string" },
+        { "name": "location", "type": "string" },
+        { "name": "start", "type": "json", "tag": "record.startAt" },
+        { "name": "end", "type": "json", "tag": "record.endAt" },
+        { "name": "status", "type": "string" },
+        { "name": "htmlLink", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "attendees", "type": "json" },
+        { "name": "organizer", "type": "json", "readOnly": true },
+        { "name": "created", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "updated", "type": "datetime", "tag": "record.updatedAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "updated",
+        "list": {
+          "capability": "event.list",
+          "items": "items"
+        },
+        "get": {
+          "capability": "event.get",
+          "id": "eventId"
+        },
+        "create": {
+          "capability": "event.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "event.update",
+          "id": "eventId",
+          "body": "data"
+        }
+      }
+    },
+    "channel": {
+      "label": "Push notification channel",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "resourceId", "type": "string", "readOnly": true },
+        { "name": "resourceUri", "type": "string", "readOnly": true },
+        { "name": "token", "type": "string" },
+        { "name": "expiration", "type": "integer", "readOnly": true },
+        { "name": "type", "type": "string" },
+        { "name": "address", "type": "string" }
+      ]
+    }
+  },
+  "capabilities": {
+    "user.me.get": {
+      "kind": "read",
+      "method": "getUserDetails",
+      "output": "user"
+    },
+    "about.get": {
+      "kind": "read",
+      "method": "getAbout",
+      "args": ["params"],
+      "output": "about"
+    },
+    "drive.list": {
+      "kind": "read",
+      "method": "listDrives",
+      "args": ["params"],
+      "output": "page<drive>"
+    },
+    "file.list": {
+      "kind": "read",
+      "method": "listFiles",
+      "args": ["params"],
+      "output": "page<file>"
+    },
+    "file.get": {
+      "kind": "read",
+      "method": "getFile",
+      "args": ["fileId", "params"],
+      "input": {
+        "fileId": { "type": "string" }
+      },
+      "output": "file"
+    },
+    "file.create": {
+      "kind": "write",
+      "method": "createFile",
+      "args": ["data", "params"],
+      "input": {
+        "name": { "type": "string" },
+        "mimeType": { "type": "string" },
+        "parents": { "type": "json" }
+      },
+      "output": "file"
+    },
+    "file.update": {
+      "kind": "write",
+      "method": "updateFile",
+      "args": ["fileId", "data", "params"],
+      "input": {
+        "fileId": { "type": "string" },
+        "name": { "type": "string" }
+      },
+      "output": "file"
+    },
+    "file.export": {
+      "kind": "read",
+      "method": "exportFile",
+      "args": ["fileId", "params"],
+      "input": {
+        "fileId": { "type": "string" },
+        "mimeType": { "type": "string" }
+      }
+    },
+    "changes.startPageToken.get": {
+      "kind": "read",
+      "method": "getChangesStartPageToken",
+      "args": ["params"]
+    },
+    "file.watch": {
+      "kind": "write",
+      "method": "watchFile",
+      "args": ["fileId", "data", "params"],
+      "output": "channel"
+    },
+    "changes.watch": {
+      "kind": "write",
+      "method": "watchChanges",
+      "args": ["data", "params"],
+      "output": "channel"
+    },
+    "drive.channel.stop": {
+      "kind": "delete",
+      "method": "stopDriveChannel",
+      "args": ["data"]
+    },
+    "calendar.list": {
+      "kind": "read",
+      "method": "listCalendars",
+      "args": ["params"],
+      "output": "page<calendar>"
+    },
+    "calendar.get": {
+      "kind": "read",
+      "method": "getCalendar",
+      "args": ["calendarId"],
+      "input": {
+        "calendarId": { "type": "string" }
+      },
+      "output": "calendar"
+    },
+    "event.list": {
+      "kind": "read",
+      "method": "listEvents",
+      "args": ["calendarId", "params"],
+      "input": {
+        "calendarId": { "type": "string" }
+      },
+      "output": "page<event>"
+    },
+    "event.get": {
+      "kind": "read",
+      "method": "getEvent",
+      "args": ["calendarId", "eventId", "params"],
+      "input": {
+        "calendarId": { "type": "string" },
+        "eventId": { "type": "string" }
+      },
+      "output": "event"
+    },
+    "event.create": {
+      "kind": "write",
+      "method": "createEvent",
+      "args": ["calendarId", "data", "params"],
+      "input": {
+        "calendarId": { "type": "string" },
+        "summary": { "type": "string" },
+        "start": { "type": "json" },
+        "end": { "type": "json" }
+      },
+      "output": "event"
+    },
+    "event.update": {
+      "kind": "write",
+      "method": "updateEvent",
+      "args": ["calendarId", "eventId", "data", "params"],
+      "input": {
+        "calendarId": { "type": "string" },
+        "eventId": { "type": "string" }
+      },
+      "output": "event"
+    },
+    "event.watch": {
+      "kind": "write",
+      "method": "watchCalendarEvents",
+      "args": ["calendarId", "data", "params"],
+      "output": "channel"
+    },
+    "calendar.channel.stop": {
+      "kind": "delete",
+      "method": "stopCalendarChannel",
+      "args": ["data"]
+    }
+  },
+  "webhooks": {
+    "transport": "google-push-notifications",
+    "docs": [
+      "https://developers.google.com/workspace/drive/api/guides/push",
+      "https://developers.google.com/workspace/calendar/api/guides/push"
+    ],
+    "verification": "X-Goog-Channel-Token matched to channel token set on watch",
+    "topics": [
+      "drive.files",
+      "drive.changes",
+      "calendar.events"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "google-workspace",
+  "label": "Google Workspace",
+  "productUrl": "https://workspace.google.com",
+  "apiDocs": "https://developers.google.com/workspace",
+  "logoUrl": "https://friggframework.org/assets/img/google-drive.jpeg",
+  "categories": [
+    "Productivity",
+    "Files",
+    "Calendar",
+    "Google Workspace"
+  ],
+  "description": "Google Workspace Drive and Calendar APIs for files, shared drives, calendars, events, and push-notification channels"
+}

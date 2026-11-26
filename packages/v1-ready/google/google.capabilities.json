@@ -1,0 +1,450 @@
+{
+  "$schema": "https://friggframework.org/schemas/capability-manifest/v0.1.json",
+  "module": "google",
+  "label": "Google",
+  "package": "@friggframework/api-module-google",
+  "version": "1.0.0",
+  "auth": "oauth2",
+  "account": {
+    "description": "Connected Google user identity from GET https://openidconnect.googleapis.com/v1/userinfo (sub).",
+    "fields": [
+      {
+        "name": "sub",
+        "type": "string",
+        "description": "OpenID Connect subject used as entity externalId."
+      }
+    ]
+  },
+  "objects": {
+    "user": {
+      "label": "User",
+      "fields": [
+        { "name": "sub", "type": "id", "readOnly": true },
+        { "name": "email", "type": "email", "tag": "contact.email", "readOnly": true },
+        { "name": "email_verified", "type": "boolean", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "person.fullName", "readOnly": true },
+        { "name": "picture", "type": "string", "readOnly": true },
+        { "name": "locale", "type": "string", "readOnly": true },
+        { "name": "hd", "type": "string", "readOnly": true }
+      ]
+    },
+    "message": {
+      "label": "Gmail Message",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "threadId", "type": "string", "readOnly": true },
+        { "name": "labelIds", "type": "json" },
+        { "name": "snippet", "type": "string", "readOnly": true },
+        { "name": "payload", "type": "json", "readOnly": true },
+        { "name": "internalDate", "type": "string", "tag": "record.createdAt", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "gmail.messages.list",
+          "cursor": "pageToken",
+          "items": "messages",
+          "next": "nextPageToken"
+        },
+        "get": {
+          "capability": "gmail.messages.get",
+          "id": "id"
+        }
+      }
+    },
+    "label": {
+      "label": "Gmail Label",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "record.name" },
+        { "name": "type", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "gmail.labels.list",
+          "items": "labels"
+        }
+      }
+    },
+    "calendar": {
+      "label": "Calendar",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "summary", "type": "string", "tag": "record.name" },
+        { "name": "timeZone", "type": "string" },
+        { "name": "primary", "type": "boolean", "readOnly": true },
+        { "name": "accessRole", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "calendar.list",
+          "cursor": "pageToken",
+          "items": "items",
+          "next": "nextPageToken"
+        }
+      }
+    },
+    "event": {
+      "label": "Calendar Event",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "summary", "type": "string", "tag": "record.name" },
+        { "name": "description", "type": "text" },
+        { "name": "location", "type": "string" },
+        { "name": "start", "type": "json", "tag": "record.startAt" },
+        { "name": "end", "type": "json", "tag": "record.endAt" },
+        { "name": "attendees", "type": "json" },
+        { "name": "status", "type": "string" },
+        { "name": "htmlLink", "type": "string", "tag": "record.url", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "list": {
+          "capability": "calendar.events.list",
+          "cursor": "pageToken",
+          "items": "items",
+          "next": "nextPageToken"
+        },
+        "get": {
+          "capability": "calendar.events.get",
+          "id": "eventId"
+        },
+        "create": {
+          "capability": "calendar.events.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "calendar.events.update",
+          "id": "eventId",
+          "body": "data"
+        },
+        "delete": {
+          "capability": "calendar.events.delete",
+          "id": "eventId"
+        }
+      }
+    },
+    "file": {
+      "label": "Drive File",
+      "fields": [
+        { "name": "id", "type": "id", "readOnly": true },
+        { "name": "name", "type": "string", "tag": "file.name" },
+        { "name": "mimeType", "type": "string", "tag": "file.mimeType" },
+        { "name": "parents", "type": "json" },
+        { "name": "webViewLink", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "createdTime", "type": "datetime", "tag": "record.createdAt", "readOnly": true },
+        { "name": "modifiedTime", "type": "datetime", "tag": "record.updatedAt", "readOnly": true },
+        { "name": "owners", "type": "json", "tag": "record.owner", "readOnly": true },
+        { "name": "size", "type": "string", "tag": "file.size", "readOnly": true }
+      ],
+      "sync": {
+        "id": "id",
+        "updatedAt": "modifiedTime",
+        "list": {
+          "capability": "drive.files.list",
+          "cursor": "pageToken",
+          "items": "files",
+          "next": "nextPageToken"
+        },
+        "get": {
+          "capability": "drive.files.get",
+          "id": "fileId"
+        },
+        "create": {
+          "capability": "drive.files.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "drive.files.update",
+          "id": "fileId",
+          "body": "data"
+        }
+      }
+    },
+    "document": {
+      "label": "Google Doc",
+      "fields": [
+        { "name": "documentId", "type": "id", "readOnly": true },
+        { "name": "title", "type": "string", "tag": "file.name" },
+        { "name": "revisionId", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "documentId",
+        "get": {
+          "capability": "docs.documents.get",
+          "id": "documentId"
+        },
+        "create": {
+          "capability": "docs.documents.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "docs.documents.batchUpdate",
+          "id": "documentId",
+          "body": "data"
+        }
+      }
+    },
+    "spreadsheet": {
+      "label": "Spreadsheet",
+      "fields": [
+        { "name": "spreadsheetId", "type": "id", "readOnly": true },
+        { "name": "spreadsheetUrl", "type": "string", "tag": "record.url", "readOnly": true },
+        { "name": "properties.title", "type": "string", "tag": "file.name" }
+      ],
+      "sync": {
+        "id": "spreadsheetId",
+        "get": {
+          "capability": "sheets.spreadsheets.get",
+          "id": "spreadsheetId"
+        },
+        "create": {
+          "capability": "sheets.spreadsheets.create",
+          "body": "data"
+        },
+        "update": {
+          "capability": "sheets.spreadsheets.batchUpdate",
+          "id": "spreadsheetId",
+          "body": "data"
+        }
+      }
+    },
+    "analyticsAccount": {
+      "label": "Analytics Account",
+      "fields": [
+        { "name": "name", "type": "id", "readOnly": true },
+        { "name": "displayName", "type": "string", "tag": "record.name" },
+        { "name": "regionCode", "type": "string" }
+      ],
+      "sync": {
+        "id": "name",
+        "list": {
+          "capability": "analytics.accounts.list",
+          "cursor": "pageToken",
+          "items": "accounts",
+          "next": "nextPageToken"
+        }
+      }
+    },
+    "site": {
+      "label": "Search Console Site",
+      "fields": [
+        { "name": "siteUrl", "type": "id", "readOnly": true },
+        { "name": "permissionLevel", "type": "string", "readOnly": true }
+      ],
+      "sync": {
+        "id": "siteUrl",
+        "list": {
+          "capability": "searchconsole.sites.list",
+          "items": "siteEntry"
+        }
+      }
+    },
+    "adsCustomer": {
+      "label": "Google Ads Customer",
+      "fields": [
+        { "name": "resourceName", "type": "id", "readOnly": true }
+      ],
+      "sync": {
+        "id": "resourceName",
+        "list": {
+          "capability": "ads.customers.listAccessible",
+          "items": "resourceNames"
+        }
+      }
+    }
+  },
+  "capabilities": {
+    "user.me.get": {
+      "kind": "read",
+      "method": "getUserInfo",
+      "output": "user"
+    },
+    "gmail.messages.list": {
+      "kind": "read",
+      "method": "listMessages",
+      "args": ["userId", "params"],
+      "output": "page<message>"
+    },
+    "gmail.messages.get": {
+      "kind": "read",
+      "method": "getMessage",
+      "args": ["userId", "id", "params"],
+      "output": "message"
+    },
+    "gmail.labels.list": {
+      "kind": "read",
+      "method": "listLabels",
+      "args": ["userId"],
+      "output": "page<label>"
+    },
+    "gmail.mailbox.watch": {
+      "kind": "webhook",
+      "method": "watchMailbox",
+      "args": ["userId", "data"]
+    },
+    "calendar.list": {
+      "kind": "read",
+      "method": "listCalendars",
+      "args": ["params"],
+      "output": "page<calendar>"
+    },
+    "calendar.events.list": {
+      "kind": "read",
+      "method": "listEvents",
+      "args": ["calendarId", "params"],
+      "output": "page<event>"
+    },
+    "calendar.events.get": {
+      "kind": "read",
+      "method": "getEvent",
+      "args": ["calendarId", "eventId", "params"],
+      "output": "event"
+    },
+    "calendar.events.create": {
+      "kind": "write",
+      "method": "createEvent",
+      "args": ["calendarId", "data", "params"],
+      "output": "event"
+    },
+    "calendar.events.update": {
+      "kind": "write",
+      "method": "updateEvent",
+      "args": ["calendarId", "eventId", "data", "params"],
+      "output": "event"
+    },
+    "calendar.events.delete": {
+      "kind": "delete",
+      "method": "deleteEvent",
+      "args": ["calendarId", "eventId", "params"]
+    },
+    "calendar.events.watch": {
+      "kind": "webhook",
+      "method": "watchEvents",
+      "args": ["calendarId", "data", "params"]
+    },
+    "channels.stop": {
+      "kind": "webhook",
+      "method": "stopChannel",
+      "args": ["data"]
+    },
+    "drive.files.list": {
+      "kind": "read",
+      "method": "listFiles",
+      "args": ["params"],
+      "output": "page<file>"
+    },
+    "drive.files.get": {
+      "kind": "read",
+      "method": "getFile",
+      "args": ["fileId", "params"],
+      "output": "file"
+    },
+    "drive.files.create": {
+      "kind": "write",
+      "method": "createFile",
+      "args": ["data", "params"],
+      "output": "file"
+    },
+    "drive.files.update": {
+      "kind": "write",
+      "method": "updateFile",
+      "args": ["fileId", "data", "params"],
+      "output": "file"
+    },
+    "drive.changes.startPageToken": {
+      "kind": "read",
+      "method": "getChangesStartPageToken",
+      "args": ["params"]
+    },
+    "drive.changes.list": {
+      "kind": "read",
+      "method": "listChanges",
+      "args": ["params"]
+    },
+    "drive.changes.watch": {
+      "kind": "webhook",
+      "method": "watchChanges",
+      "args": ["data", "params"]
+    },
+    "docs.documents.create": {
+      "kind": "write",
+      "method": "createDocument",
+      "args": ["data"],
+      "output": "document"
+    },
+    "docs.documents.get": {
+      "kind": "read",
+      "method": "getDocument",
+      "args": ["documentId", "params"],
+      "output": "document"
+    },
+    "docs.documents.batchUpdate": {
+      "kind": "write",
+      "method": "batchUpdateDocument",
+      "args": ["documentId", "data"],
+      "output": "document"
+    },
+    "sheets.spreadsheets.create": {
+      "kind": "write",
+      "method": "createSpreadsheet",
+      "args": ["data"],
+      "output": "spreadsheet"
+    },
+    "sheets.spreadsheets.get": {
+      "kind": "read",
+      "method": "getSpreadsheet",
+      "args": ["spreadsheetId", "params"],
+      "output": "spreadsheet"
+    },
+    "sheets.spreadsheets.batchUpdate": {
+      "kind": "write",
+      "method": "batchUpdateSpreadsheet",
+      "args": ["spreadsheetId", "data"],
+      "output": "spreadsheet"
+    },
+    "sheets.values.get": {
+      "kind": "read",
+      "method": "getValues",
+      "args": ["spreadsheetId", "range", "params"]
+    },
+    "sheets.values.update": {
+      "kind": "write",
+      "method": "updateValues",
+      "args": ["spreadsheetId", "range", "data", "params"]
+    },
+    "analytics.accounts.list": {
+      "kind": "read",
+      "method": "listAnalyticsAccounts",
+      "args": ["params"],
+      "output": "page<analyticsAccount>"
+    },
+    "analytics.properties.runReport": {
+      "kind": "read",
+      "method": "runReport",
+      "args": ["propertyId", "data"]
+    },
+    "searchconsole.sites.list": {
+      "kind": "read",
+      "method": "listSites",
+      "output": "page<site>"
+    },
+    "searchconsole.searchAnalytics.query": {
+      "kind": "read",
+      "method": "querySearchAnalytics",
+      "args": ["siteUrl", "data"]
+    },
+    "ads.customers.listAccessible": {
+      "kind": "read",
+      "method": "listAccessibleCustomers",
+      "output": "page<adsCustomer>"
+    },
+    "ads.googleAds.search": {
+      "kind": "read",
+      "method": "searchGoogleAds",
+      "args": ["customerId", "data", "headers"]
+    }
+  }
+}

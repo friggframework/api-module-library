@@ -1,4 +1,8 @@
-const {Api} = require('./api');
+const {
+    Api,
+    DEFAULT_MINOR_VERSION,
+    MINOR_VERSIONS_DOCS_URL,
+} = require('./api');
 const {Credential} = require('./models/credential');
 const {Entity} = require('./models/entity');
 const ModuleManager = require('./manager');
@@ -10,4 +14,6 @@ module.exports = {
     Entity,
     ModuleManager,
     Config,
+    DEFAULT_MINOR_VERSION,
+    MINOR_VERSIONS_DOCS_URL,
 };

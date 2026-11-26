@@ -1,5 +1,30 @@
 const {get, OAuth2Requester} = require('@friggframework/core');
 
+// Hosts verified against Deel developer docs (developer.deel.com):
+// - Production API: https://developer.deel.com/api/stable/sandbox.md
+// - Production OAuth: https://developer.deel.com/api/stable/oauth.md
+// - Sandbox API + partner OAuth: https://developer.deel.com/api/stable/sandbox.md
+//   and https://developer.deel.com/api/stable/partners/getting-started.md
+const PRODUCTION_HOSTS = {
+    baseUrl: 'https://api.letsdeel.com/rest/v1',
+    authorizeUrl: 'https://app.deel.com/oauth2/authorize',
+    tokenUri: 'https://app.deel.com/oauth2/tokens',
+};
+
+const SANDBOX_HOSTS = {
+    baseUrl: 'https://api-staging.letsdeel.com/rest/v1',
+    authorizeUrl: 'https://app-sandbox.letsdeel.com/oauth/authorize',
+    tokenUri: 'https://app-sandbox.letsdeel.com/oauth/token',
+};
+
+function resolveHosts(params = {}) {
+    const environment = get(
+        params,
+        'environment',
+        process.env.DEEL_ENVIRONMENT || 'production'
+    );
+    return environment === 'sandbox' ? SANDBOX_HOSTS : PRODUCTION_HOSTS;
+}
 
 class Api extends OAuth2Requester {
     constructor(params) {
@@ -7,7 +32,11 @@ class Api extends OAuth2Requester {
         this.access_token = get(params, 'access_token', null);
         // consider setting backOff as refreshAuth request gets a 500 with bad token
         this.backOff = [1, 3];
-        this.baseUrl = 'https://api-staging.letsdeel.com/rest/v1';
+
+        const hosts = resolveHosts(params);
+        this.environment =
+            hosts === SANDBOX_HOSTS ? 'sandbox' : 'production';
+        this.baseUrl = hosts.baseUrl;
         this.endpoints = {
             listPeople: '/people',
             getPerson: (id) => `/people/${id}`,
@@ -20,19 +49,13 @@ class Api extends OAuth2Requester {
         this.generateUrls();
         this.state = 'STATE';
         this.authorizationUri = encodeURI(
-            // PROD
-            // `https://app.deel.com/oauth2/authorize?response_type=code` +
-            // SANDBOX
-            `https://demo.letsdeel.com/oauth2/authorize?response_type=code` +
+            `${hosts.authorizeUrl}?response_type=code` +
             `&scope=${this.scope}` +
             `&client_id=${this.client_id}` +
             `&redirect_uri=${this.redirect_uri}` +
             `&state=${this.state}`
         )
-        // PROD
-        // this.tokenUri = 'https://auth.letsdeel.com/oauth2/tokens';
-        //SANDBOX
-        this.tokenUri = 'https://auth-demo.letsdeel.com/oauth2/tokens';
+        this.tokenUri = hosts.tokenUri;
     }
 
     generateUrls() {
@@ -147,4 +170,4 @@ class Api extends OAuth2Requester {
     }
 }
 
-module.exports = {Api};
+module.exports = {Api, resolveHosts, PRODUCTION_HOSTS, SANDBOX_HOSTS};

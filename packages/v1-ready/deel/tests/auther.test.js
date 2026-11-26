@@ -3,7 +3,15 @@ const {connectToDatabase, disconnectFromDatabase, createObjectId, Auther} = requ
 const {Definition} = require('../definition');
 const {Authenticator, testDefinitionRequiredAuthMethods} = require("@friggframework/test-environment");
 
-describe('Deel Auther Tests', () => {
+const hasLiveCredentials =
+    process.env.DEEL_CLIENT_ID &&
+    process.env.DEEL_CLIENT_SECRET &&
+    process.env.REDIRECT_URI &&
+    process.env.DEEL_SCOPE;
+
+const describeLive = hasLiveCredentials ? describe : describe.skip;
+
+describeLive('Deel Auther Tests', () => {
     let auther, authUrl;
     beforeAll(async () => {
         await connectToDatabase();

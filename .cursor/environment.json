@@ -1,0 +1,4 @@
+{
+  "name": "frigg-api-module-library",
+  "install": "bash .cursor/install.sh"
+}
